@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <title>PoolApp</title>
 
-<!-- PWA manifest & icônes -->
+<!-- PWA manifest & ic&#244;nes -->
 <link rel="manifest" href="manifest.json" />
 <meta name="theme-color" content="#0b3f3a" />
 <link rel="apple-touch-icon" href="icon-192.png" />
@@ -69,12 +69,12 @@
 </style>
 
 <script>
-  // Filet de sécurité : si un script externe échoue à charger ou qu'une
-  // erreur JS survient avant le rendu de l'app, on l'affiche à l'écran
-  // plutôt que de rester bloqué sur l'écran de chargement sans explication.
+  // Filet de s&#233;curit&#233; : si un script externe &#233;choue &#224; charger ou qu'une
+  // erreur JS survient avant le rendu de l'app, on l'affiche &#224; l'&#233;cran
+  // plut&#244;t que de rester bloqu&#233; sur l'&#233;cran de chargement sans explication.
   window.__bootErrors = [];
   window.addEventListener("error", function (e) {
-    var msg = e.message || (e.target && e.target.src ? "Échec de chargement : " + e.target.src : "Erreur inconnue");
+    var msg = e.message || (e.target && e.target.src ? "&#201;chec de chargement : " + e.target.src : "Erreur inconnue");
     window.__bootErrors.push(msg);
     window.__showBootError && window.__showBootError();
   }, true);
@@ -88,13 +88,13 @@
 <!-- Recharts (graphique historique) -->
 <script crossorigin src="https://unpkg.com/prop-types@15/prop-types.min.js"></script>
 <script crossorigin src="https://unpkg.com/recharts@2.15.1/umd/Recharts.js"></script>
-<!-- Icônes (shim local, pas de dépendance CDN fragile) -->
+<!-- Ic&#244;nes (shim local, pas de d&#233;pendance CDN fragile) -->
 <script src="lucide-shim.js"></script>
 
 </head>
 <body>
 <div id="boot-loader">
-  <div>Chargement…</div>
+  <div>Chargement&#8230;</div>
   <div id="boot-error-detail" style="display:none;"></div>
 </div>
 <div id="root"></div>
@@ -105,22 +105,22 @@
     var detail = document.getElementById("boot-error-detail");
     if (!loader || !detail) return;
     loader.classList.add("error");
-    loader.firstElementChild.textContent = "Erreur au chargement — détail ci-dessous :";
+    loader.firstElementChild.textContent = "Erreur au chargement \u2014 d\u00e9tail ci-dessous :";
     detail.style.display = "block";
     detail.textContent = window.__bootErrors.join("\n\n");
   };
 
-  // Si rien ne s'est passé après 8 secondes (root toujours vide), c'est
-  // qu'un script a échoué sans déclencher d'erreur JS classique (ex: CDN
-  // bloqué/lent). On le signale plutôt que de laisser un écran figé.
+  // Si rien ne s'est pass&#233; apr&#232;s 8 secondes (root toujours vide), c'est
+  // qu'un script a &#233;chou&#233; sans d&#233;clencher d'erreur JS classique (ex: CDN
+  // bloqu&#233;/lent). On le signale plut&#244;t que de laisser un &#233;cran fig&#233;.
   setTimeout(function () {
     var root = document.getElementById("root");
     if (root && root.children.length === 0) {
       window.__bootErrors.push(
-        "Timeout : l'application n'a pas démarré après 8 secondes.\n" +
-        "Vérifie ta connexion internet (les librairies React/Recharts se chargent depuis unpkg.com).\n" +
-        "Si le problème persiste, vérifie que les fichiers PoolApp.jsx et lucide-shim.js sont bien" +
-        " présents à la racine du dépôt GitHub."
+        "Timeout : l'application n'a pas d\u00e9marr\u00e9 apr\u00e8s 8 secondes.\n" +
+        "V\u00e9rifie ta connexion internet (les librairies React/Recharts se chargent depuis unpkg.com).\n" +
+        "Si le probl\u00e8me persiste, v\u00e9rifie que les fichiers PoolApp.jsx et lucide-shim.js sont bien" +
+        " pr\u00e9sents \u00e0 la racine du d\u00e9p\u00f4t GitHub."
       );
       window.__showBootError();
     }
@@ -130,8 +130,8 @@
 <script>
   // ---------- Polyfill window.storage (IndexedDB) ----------
   // Reproduit l'API { get(key), set(key, value), delete(key), list(prefix) }
-  // utilisée par PoolApp.jsx, en remplaçant le stockage propriétaire Claude
-  // par une vraie persistance locale au navigateur (survit à la fermeture de l'app).
+  // utilis&#233;e par PoolApp.jsx, en rempla&#231;ant le stockage propri&#233;taire Claude
+  // par une vraie persistance locale au navigateur (survit &#224; la fermeture de l'app).
   (function () {
     const DB_NAME = "poolapp-db";
     const STORE_NAME = "kv";
@@ -232,13 +232,13 @@
   })();
 </script>
 
-<!-- Composant principal + point d'entrée (transformé par Babel au chargement) -->
+<!-- Composant principal + point d'entr&#233;e (transform&#233; par Babel au chargement) -->
 <script type="text/babel" data-presets="react" src="PoolApp.jsx"></script>
 
-<!-- Service worker désactivé pour l'instant : un SW déjà installé sur un
-     appareil peut servir une version périmée de l'app indéfiniment, ce qui
-     est trop piégeux en phase de test. On le réactivera une fois l'app
-     stabilisée. Ce script désinstalle aussi tout SW déjà présent. -->
+<!-- Service worker d&#233;sactiv&#233; pour l'instant : un SW d&#233;j&#224; install&#233; sur un
+     appareil peut servir une version p&#233;rim&#233;e de l'app ind&#233;finiment, ce qui
+     est trop pi&#233;geux en phase de test. On le r&#233;activera une fois l'app
+     stabilis&#233;e. Ce script d&#233;sinstalle aussi tout SW d&#233;j&#224; pr&#233;sent. -->
 <script>
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.getRegistrations().then((regs) => {
