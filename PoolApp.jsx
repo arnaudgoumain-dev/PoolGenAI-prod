@@ -8,6 +8,8 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
+const APP_VERSION = "0.1";
+
 const TARGETS = {
   pH: { min: 7.2, max: 7.4, unit: "", label: "pH" },
   fCl: { min: 1, max: 3, unit: "mg/L", label: "Chlore libre" },
@@ -2013,6 +2015,8 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
       <button style={styles.dangerLinkBtn} onClick={onDeleteAllMeasures}>
         <Trash2 size={14} /> Supprimer toutes les mesures de ce bassin
       </button>
+
+      <div style={styles.versionTag}>PoolApp v{APP_VERSION}</div>
     </div>
   );
 }
@@ -2918,6 +2922,13 @@ const styles = {
     fontSize: 13,
     fontWeight: 600,
     cursor: "pointer",
+  },
+  versionTag: {
+    textAlign: "center",
+    fontSize: 11,
+    color: "#9aa9a5",
+    marginTop: 24,
+    marginBottom: 4,
   },
   primaryBtn: {
     marginTop: 12,
