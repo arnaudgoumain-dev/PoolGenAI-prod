@@ -235,12 +235,18 @@
 <!-- Composant principal + point d'entrée (transformé par Babel au chargement) -->
 <script type="text/babel" data-presets="react" src="PoolApp.jsx"></script>
 
-<!-- Enregistrement du service worker pour le mode installable / hors-ligne -->
+<!-- Service worker désactivé pour l'instant : un SW déjà installé sur un
+     appareil peut servir une version périmée de l'app indéfiniment, ce qui
+     est trop piégeux en phase de test. On le réactivera une fois l'app
+     stabilisée. Ce script désinstalle aussi tout SW déjà présent. -->
 <script>
   if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("sw.js").catch(() => {});
+    navigator.serviceWorker.getRegistrations().then((regs) => {
+      regs.forEach((reg) => reg.unregister());
     });
+    if (window.caches) {
+      caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
+    }
   }
 </script>
 
