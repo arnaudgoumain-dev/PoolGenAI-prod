@@ -14,7 +14,7 @@ const TARGETS = {
   tCl: { min: 0, max: 99, unit: "mg/L", label: "Chlore total" },
   tac: { min: 80, max: 120, unit: "mg/L", label: "TAC" },
   cya: { min: 30, max: 50, unit: "mg/L", label: "Stabilisant (CYA)" },
-  temp: { min: 24, max: 30, unit: "\u00b0C", label: "Temp\u00e9rature de l'eau" },
+  temp: { min: 24, max: 30, unit: "°C", label: "Température de l'eau" },
 };
 
 const DEFAULT_PRODUCTS = [
@@ -27,7 +27,7 @@ const DEFAULT_PRODUCTS = [
     effectAmount: 0.1,
     effectPer: 10, // par 10 m3
     waitHours: 2,
-    note: "V\u00e9rifier le pH avant chaque ajout. Max 1 kg/100 m\u00b3/jour, ou espacer de 2h.",
+    note: "Vérifier le pH avant chaque ajout. Max 1 kg/100 m³/jour, ou espacer de 2h.",
   },
   {
     id: "ph-plus",
@@ -38,41 +38,41 @@ const DEFAULT_PRODUCTS = [
     effectAmount: 0.1,
     effectPer: 10,
     waitHours: 2,
-    note: "R\u00e9partir sur tout le bassin, filtration en marche.",
+    note: "Répartir sur tout le bassin, filtration en marche.",
   },
   {
     id: "chlore-choc",
-    name: "Chlore choc non stabilis\u00e9 (type Chloryte)",
+    name: "Chlore choc non stabilisé (type Chloryte)",
     action: "chlore",
     doseAmount: 150,
     doseUnit: "g",
     effectAmount: 1,
     effectPer: 10, // 150g / 10m3 -> ~1 ppm
     waitHours: 12,
-    note: "\u00c0 verser le soir, soleil couch\u00e9. Ne stabilise pas (n'augmente pas le CYA).",
+    note: "À verser le soir, soleil couché. Ne stabilise pas (n'augmente pas le CYA).",
   },
   {
     id: "galets-stabilises",
-    name: "Galets chlore stabilis\u00e9 5-en-1 (type Chlorilong)",
+    name: "Galets chlore stabilisé 5-en-1 (type Chlorilong)",
     action: "chlore-stabilise",
     doseAmount: 250,
     doseUnit: "g",
     effectAmount: 1,
     effectPer: 30,
     waitHours: 24,
-    note: "Augmente le CYA \u00e0 chaque utilisation. \u00c0 \u00e9viter si CYA d\u00e9j\u00e0 > 50 mg/L.",
+    note: "Augmente le CYA à chaque utilisation. À éviter si CYA déjà > 50 mg/L.",
   },
 ];
 
 const PRODUCT_ACTIONS = [
   { value: "ph-", label: "Baisse le pH" },
   { value: "ph+", label: "Monte le pH" },
-  { value: "chlore", label: "Chlore non stabilis\u00e9 (choc)" },
-  { value: "chlore-stabilise", label: "Chlore stabilis\u00e9 (CYA +)" },
+  { value: "chlore", label: "Chlore non stabilisé (choc)" },
+  { value: "chlore-stabilise", label: "Chlore stabilisé (CYA +)" },
   { value: "tac+", label: "Monte le TAC" },
 ];
 
-// D\u00e9lai d'attente par d\u00e9faut (heures) selon le type d'action si le produit n'en pr\u00e9cise pas
+// Délai d'attente par défaut (heures) selon le type d'action si le produit n'en précise pas
 const DEFAULT_WAIT_HOURS = {
   "ph-": 2,
   "ph+": 2,
@@ -81,7 +81,7 @@ const DEFAULT_WAIT_HOURS = {
   "tac+": 6,
 };
 
-// Ordre de priorit\u00e9 des traitements (les plus petits nombres se font en premier)
+// Ordre de priorité des traitements (les plus petits nombres se font en premier)
 const ACTION_PRIORITY = {
   "tac+": 1,
   "ph-": 2,
@@ -131,7 +131,7 @@ function statusLabel(status) {
   if (status === "ok") return "Dans la cible";
   if (status === "low") return "Trop bas";
   if (status === "high") return "Trop haut";
-  return "\u2014";
+  return "—";
 }
 
 function isSameDay(isoA, isoB) {
@@ -169,15 +169,15 @@ async function analyzeStripPhoto(dataUrl) {
   const parsed = parseDataUrl(dataUrl);
   if (!parsed) throw new Error("Image invalide");
 
-  const prompt = `Tu regardes une photo d'un tube de bandelettes de test pour piscine, avec une bandelette imbib\u00e9e pos\u00e9e \u00e0 c\u00f4t\u00e9 ou sur la l\u00e9gende imprim\u00e9e sur le tube. Le tube affiche une l\u00e9gende de couleurs avec des valeurs num\u00e9riques (mg/L ou ppm) pour chaque param\u00e8tre (pH, chlore libre, chlore total, TAC/alcalinit\u00e9, stabilisant CYA, duret\u00e9 TH, brome).
+  const prompt = `Tu regardes une photo d'un tube de bandelettes de test pour piscine, avec une bandelette imbibée posée à côté ou sur la légende imprimée sur le tube. Le tube affiche une légende de couleurs avec des valeurs numériques (mg/L ou ppm) pour chaque paramètre (pH, chlore libre, chlore total, TAC/alcalinité, stabilisant CYA, dureté TH, brome).
 
-Pour chaque param\u00e8tre visible \u00e0 la fois sur la bandelette ET sur la l\u00e9gende du tube :
-1. Identifie la couleur du carr\u00e9 correspondant sur la bandelette test\u00e9e
-2. Compare-la \u00e0 l'\u00e9chelle de couleurs de la l\u00e9gende du tube pour ce m\u00eame param\u00e8tre
-3. Estime la valeur num\u00e9rique la plus proche
+Pour chaque paramètre visible à la fois sur la bandelette ET sur la légende du tube :
+1. Identifie la couleur du carré correspondant sur la bandelette testée
+2. Compare-la à l'échelle de couleurs de la légende du tube pour ce même paramètre
+3. Estime la valeur numérique la plus proche
 
-R\u00e9ponds UNIQUEMENT en JSON, sans aucun texte avant ou apr\u00e8s, sans balises markdown, selon ce format exact (utilise null si un param\u00e8tre n'est pas visible ou pas mesur\u00e9 par cette bandelette) :
-{"pH": nombre ou null, "fCl": nombre ou null, "tCl": nombre ou null, "tac": nombre ou null, "cya": nombre ou null, "confidence": "haute" ou "moyenne" ou "basse", "note": "courte remarque en fran\u00e7ais sur la lisibilit\u00e9 de la photo, en une phrase"}`;
+Réponds UNIQUEMENT en JSON, sans aucun texte avant ou après, sans balises markdown, selon ce format exact (utilise null si un paramètre n'est pas visible ou pas mesuré par cette bandelette) :
+{"pH": nombre ou null, "fCl": nombre ou null, "tCl": nombre ou null, "tac": nombre ou null, "cya": nombre ou null, "confidence": "haute" ou "moyenne" ou "basse", "note": "courte remarque en français sur la lisibilité de la photo, en une phrase"}`;
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -203,7 +203,7 @@ R\u00e9ponds UNIQUEMENT en JSON, sans aucun texte avant ou apr\u00e8s, sans bali
   if (!response.ok) throw new Error("Erreur API");
   const data = await response.json();
   const textBlock = (data.content || []).find((b) => b.type === "text");
-  if (!textBlock) throw new Error("Pas de r\u00e9ponse texte");
+  if (!textBlock) throw new Error("Pas de réponse texte");
 
   const cleaned = textBlock.text.replace(/```json|```/g, "").trim();
   return JSON.parse(cleaned);
@@ -265,7 +265,7 @@ function PoolApp() {
         loadedPools = [
           { id: "default", name: legacyName, location: legacyLocation, volume: legacyVolume },
         ];
-        // Les mesures/produits existants n'avaient pas de poolId : on les rattache au bassin par d\u00e9faut
+        // Les mesures/produits existants n'avaient pas de poolId : on les rattache au bassin par défaut
         loadedMeasures = loadedMeasures.map((m) => (m.poolId ? m : { ...m, poolId: "default" }));
       }
       setPools(loadedPools);
@@ -282,7 +282,7 @@ function PoolApp() {
 
       setMeasures(loadedMeasures);
       if (loadedProducts) {
-        // Anciens produits sans poolId (avant la saisie par bassin) : rattach\u00e9s au bassin actif
+        // Anciens produits sans poolId (avant la saisie par bassin) : rattachés au bassin actif
         loadedProducts = loadedProducts.map((p) =>
           p.poolId ? p : { ...p, poolId: loadedActiveId }
         );
@@ -580,7 +580,7 @@ function Header({ poolName, location, isPremium, pools, activePoolId, onSwitchPo
                 )}
                 <div style={{ flex: 1, textAlign: "left" }}>
                   <div style={{ fontWeight: 700, fontSize: 13.5, color: "#16302c" }}>{p.name}</div>
-                  <div style={{ fontSize: 11.5, color: "#7a8a93" }}>{p.location} \u00b7 {p.volume} m\u00b3</div>
+                  <div style={{ fontSize: 11.5, color: "#7a8a93" }}>{p.location} · {p.volume} m³</div>
                 </div>
                 {p.id === activePoolId && <CheckCircle2 size={16} color="#1f8a70" />}
               </button>
@@ -607,7 +607,7 @@ function TabBar({ tab, setTab }) {
     { id: "dashboard", label: "Bassin", icon: Droplets },
     { id: "history", label: "Historique", icon: History },
     { id: "products", label: "Produits", icon: Beaker },
-    { id: "settings", label: "R\u00e9glages", icon: Settings2 },
+    { id: "settings", label: "Réglages", icon: Settings2 },
   ];
   return (
     <nav style={styles.tabBar}>
@@ -645,10 +645,10 @@ function Dashboard({ latest, volume, products, onAddMeasure, blockedByLimit, isP
     return (
       <div style={styles.emptyState}>
         <Droplets size={40} color="#9fc9c3" strokeWidth={1.5} />
-        <p style={styles.emptyTitle}>Aucune mesure enregistr\u00e9e</p>
+        <p style={styles.emptyTitle}>Aucune mesure enregistrée</p>
         <p style={styles.emptyText}>
-          Ajoute ta premi\u00e8re s\u00e9rie de mesures pour voir l'\u00e9tat de ton bassin et les
-          traitements recommand\u00e9s.
+          Ajoute ta première série de mesures pour voir l'état de ton bassin et les
+          traitements recommandés.
         </p>
         <button style={styles.primaryBtn} onClick={onAddMeasure}>
           <Plus size={18} /> Ajouter une mesure
@@ -664,7 +664,7 @@ function Dashboard({ latest, volume, products, onAddMeasure, blockedByLimit, isP
   return (
     <div>
       <div style={styles.sectionRow}>
-        <span style={styles.sectionLabel}>Derni\u00e8re mesure</span>
+        <span style={styles.sectionLabel}>Dernière mesure</span>
         <span style={styles.sectionDate}>{formatDate(latest.date)}</span>
       </div>
 
@@ -682,7 +682,7 @@ function Dashboard({ latest, volume, products, onAddMeasure, blockedByLimit, isP
 
       {blockedByLimit ? (
         <button style={styles.addMeasureBtnLocked} onClick={onAddMeasure}>
-          <Lock size={16} /> Limite quotidienne atteinte \u2014 passer en illimit\u00e9
+          <Lock size={16} /> Limite quotidienne atteinte — passer en illimité
         </button>
       ) : (
         <button style={styles.addMeasureBtn} onClick={onAddMeasure}>
@@ -698,14 +698,14 @@ function Dashboard({ latest, volume, products, onAddMeasure, blockedByLimit, isP
         <div style={styles.allGoodCard}>
           <CheckCircle2 size={22} color="#1f8a70" />
           <span style={{ color: "#0f5e56", fontWeight: 600, fontSize: 14 }}>
-            Tous les param\u00e8tres mesur\u00e9s sont dans la cible.
+            Tous les paramètres mesurés sont dans la cible.
           </span>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {recs.length > 1 && (
             <p style={styles.helpText}>
-              Suis les \u00e9tapes dans l'ordre : chaque traitement modifie l'\u00e9quilibre de l'eau et
+              Suis les étapes dans l'ordre : chaque traitement modifie l'équilibre de l'eau et
               peut fausser le suivant s'il n'a pas eu le temps d'agir.
             </p>
           )}
@@ -734,7 +734,7 @@ function ParamCard({ param, value }) {
       </div>
       <div style={{ ...styles.paramStatus, color }}>{statusLabel(status)}</div>
       <div style={styles.paramRange}>
-        cible {t.min}\u2013{t.max} {t.unit}
+        cible {t.min}–{t.max} {t.unit}
       </div>
     </div>
   );
@@ -751,7 +751,7 @@ function RecoCard({ reco, isLast }) {
       {reco.startsAfterHours > 0 && (
         <div style={styles.recoTiming}>
           <Clock size={13} color="#a8721a" />
-          \u00c0 d\u00e9buter au moins {reco.startsAfterHours}h apr\u00e8s l'\u00e9tape pr\u00e9c\u00e9dente
+          À débuter au moins {reco.startsAfterHours}h après l'étape précédente
         </div>
       )}
 
@@ -773,7 +773,7 @@ function RecoCard({ reco, isLast }) {
       {!!reco.waitHours && (
         <div style={styles.recoWait}>
           <Clock size={13} color="#0f5e56" />
-          Attendre {reco.waitHours}h avant {isLast ? "de mesurer \u00e0 nouveau" : "le traitement suivant"}
+          Attendre {reco.waitHours}h avant {isLast ? "de mesurer à nouveau" : "le traitement suivant"}
         </div>
       )}
 
@@ -786,7 +786,7 @@ function RecoCard({ reco, isLast }) {
 function computeRecommendations(latest, volume, products) {
   const steps = [];
 
-  // TAC (trait\u00e9 en premier car influence le pH)
+  // TAC (traité en premier car influence le pH)
   const tac = parseFloat(latest.tac);
   if (!Number.isNaN(tac) && tac < TARGETS.tac.min) {
     const prod = products.find((p) => p.action === "tac+");
@@ -797,8 +797,8 @@ function computeRecommendations(latest, volume, products) {
       productAvailable: !!prod,
       productPhoto: prod?.photo || null,
       doseText: prod
-        ? `Voir dosage : ${prod.doseAmount} ${prod.doseUnit} \u2192 +${prod.effectAmount} mg/L sur ${prod.effectPer} m\u00b3`
-        : "Aucun produit TAC+ dans ta liste \u2014 ajoute-en un dans l'onglet Produits.",
+        ? `Voir dosage : ${prod.doseAmount} ${prod.doseUnit} → +${prod.effectAmount} mg/L sur ${prod.effectPer} m³`
+        : "Aucun produit TAC+ dans ta liste — ajoute-en un dans l'onglet Produits.",
       note: prod?.note || "Un TAC bas rend le pH instable.",
       waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["tac+"],
     });
@@ -818,8 +818,8 @@ function computeRecommendations(latest, volume, products) {
         productAvailable: !!prod,
         productPhoto: prod?.photo || null,
         doseText: prod
-          ? `\u2248 ${Math.round(prod.doseAmount * (volume / prod.effectPer) * (diff / prod.effectAmount))} ${prod.doseUnit} pour viser ${targetMid}`
-          : "Aucun produit pH- dans ta liste \u2014 ajoute-en un dans l'onglet Produits.",
+          ? `≈ ${Math.round(prod.doseAmount * (volume / prod.effectPer) * (diff / prod.effectAmount))} ${prod.doseUnit} pour viser ${targetMid}`
+          : "Aucun produit pH- dans ta liste — ajoute-en un dans l'onglet Produits.",
         note: prod?.note,
         waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["ph-"],
       });
@@ -833,15 +833,15 @@ function computeRecommendations(latest, volume, products) {
         productAvailable: !!prod,
         productPhoto: prod?.photo || null,
         doseText: prod
-          ? `\u2248 ${Math.round(prod.doseAmount * (volume / prod.effectPer) * (diff / prod.effectAmount))} ${prod.doseUnit} pour viser ${targetMid}`
-          : "Aucun produit pH+ dans ta liste \u2014 ajoute-en un dans l'onglet Produits.",
+          ? `≈ ${Math.round(prod.doseAmount * (volume / prod.effectPer) * (diff / prod.effectAmount))} ${prod.doseUnit} pour viser ${targetMid}`
+          : "Aucun produit pH+ dans ta liste — ajoute-en un dans l'onglet Produits.",
         note: prod?.note,
         waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["ph+"],
       });
     }
   }
 
-  // Chlore libre / combin\u00e9
+  // Chlore libre / combiné
   const fCl = parseFloat(latest.fCl);
   const tCl = parseFloat(latest.tCl);
   const combined = !Number.isNaN(fCl) && !Number.isNaN(tCl) ? Math.max(0, tCl - fCl) : null;
@@ -852,14 +852,14 @@ function computeRecommendations(latest, volume, products) {
       const prod = products.find((p) => p.action === "chlore");
       steps.push({
         action: "chlore",
-        title: `Chlore combin\u00e9 \u00e9lev\u00e9 (${combined.toFixed(2)} mg/L)`,
-        productName: prod ? prod.name : "Chlore choc non stabilis\u00e9",
+        title: `Chlore combiné élevé (${combined.toFixed(2)} mg/L)`,
+        productName: prod ? prod.name : "Chlore choc non stabilisé",
         productAvailable: !!prod,
         productPhoto: prod?.photo || null,
         doseText: prod
-          ? `\u2248 ${Math.round(prod.doseAmount * (volume / prod.effectPer) * (targetFcl / prod.effectAmount))} ${prod.doseUnit} ce soir (choc renforc\u00e9)`
-          : "Aucun produit chlore choc dans ta liste \u2014 ajoute-en un dans l'onglet Produits.",
-        note: "Chlore combin\u00e9 = chloramines, signe d'une d\u00e9sinfection insuffisante. Verser le soir, filtration en continu.",
+          ? `≈ ${Math.round(prod.doseAmount * (volume / prod.effectPer) * (targetFcl / prod.effectAmount))} ${prod.doseUnit} ce soir (choc renforcé)`
+          : "Aucun produit chlore choc dans ta liste — ajoute-en un dans l'onglet Produits.",
+        note: "Chlore combiné = chloramines, signe d'une désinfection insuffisante. Verser le soir, filtration en continu.",
         waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["chlore"],
       });
     } else if (fCl < TARGETS.fCl.min) {
@@ -869,12 +869,12 @@ function computeRecommendations(latest, volume, products) {
       steps.push({
         action: "chlore",
         title: `Chlore libre trop bas (${fCl} mg/L)`,
-        productName: prod ? prod.name : "Chlore choc non stabilis\u00e9",
+        productName: prod ? prod.name : "Chlore choc non stabilisé",
         productAvailable: !!prod,
         productPhoto: prod?.photo || null,
         doseText: prod
-          ? `\u2248 ${Math.round(prod.doseAmount * (volume / prod.effectPer) * (diff / prod.effectAmount))} ${prod.doseUnit} pour viser ${targetFcl} mg/L`
-          : "Aucun produit chlore dans ta liste \u2014 ajoute-en un dans l'onglet Produits.",
+          ? `≈ ${Math.round(prod.doseAmount * (volume / prod.effectPer) * (diff / prod.effectAmount))} ${prod.doseUnit} pour viser ${targetFcl} mg/L`
+          : "Aucun produit chlore dans ta liste — ajoute-en un dans l'onglet Produits.",
         note: prod?.note,
         waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["chlore"],
       });
@@ -882,9 +882,9 @@ function computeRecommendations(latest, volume, products) {
       steps.push({
         action: "chlore-excess",
         title: `Chlore libre trop haut (${fCl} mg/L)`,
-        productName: "Aucun produit n\u00e9cessaire",
+        productName: "Aucun produit nécessaire",
         productAvailable: true,
-        doseText: "Laisser le chlore se d\u00e9grader naturellement au soleil, ne pas se baigner en attendant.",
+        doseText: "Laisser le chlore se dégrader naturellement au soleil, ne pas se baigner en attendant.",
         waitHours: 0,
       });
     }
@@ -895,19 +895,19 @@ function computeRecommendations(latest, volume, products) {
   if (!Number.isNaN(cya) && cya > TARGETS.cya.max) {
     steps.push({
       action: "renouvellement",
-      title: `Stabilisant trop \u00e9lev\u00e9 (${cya} mg/L)`,
+      title: `Stabilisant trop élevé (${cya} mg/L)`,
       productName: "Renouvellement d'eau partiel",
       productAvailable: true,
-      doseText: `Renouveler \u2248 ${Math.round((1 - 40 / cya) * 100)} % du volume pour revenir vers 40 mg/L`,
-      note: "Aucun produit ne fait baisser le CYA chimiquement, seule la dilution fonctionne. \u00c9viter le chlore stabilis\u00e9 tant que le CYA est haut.",
+      doseText: `Renouveler ≈ ${Math.round((1 - 40 / cya) * 100)} % du volume pour revenir vers 40 mg/L`,
+      note: "Aucun produit ne fait baisser le CYA chimiquement, seule la dilution fonctionne. Éviter le chlore stabilisé tant que le CYA est haut.",
       waitHours: 0,
     });
   }
 
-  // Tri par ordre de priorit\u00e9 chimique (TAC -> pH -> chlore -> reste)
+  // Tri par ordre de priorité chimique (TAC -> pH -> chlore -> reste)
   steps.sort((a, b) => (ACTION_PRIORITY[a.action] ?? 9) - (ACTION_PRIORITY[b.action] ?? 9));
 
-  // Calcul des d\u00e9lais cumul\u00e9s entre chaque \u00e9tape du plan
+  // Calcul des délais cumulés entre chaque étape du plan
   let cumulativeHours = 0;
   const plan = steps.map((step, i) => {
     const startsAfter = cumulativeHours;
@@ -942,7 +942,7 @@ function HistoryView({ measures, onDelete, onAdd, isPremium, poolName }) {
     { key: "tCl", color: "#8a6fd1", label: "Chlore total", axis: "left" },
     { key: "tac", color: "#d98c2b", label: "TAC", axis: "right" },
     { key: "cya", color: "#c4502f", label: "CYA", axis: "right" },
-    { key: "temp", color: "#e0578a", label: "Temp\u00e9rature", axis: "right" },
+    { key: "temp", color: "#e0578a", label: "Température", axis: "right" },
   ];
 
   const allKeys = chartParams.map((cp) => cp.key);
@@ -963,7 +963,7 @@ function HistoryView({ measures, onDelete, onAdd, isPremium, poolName }) {
       <div style={styles.emptyState}>
         <History size={40} color="#9fc9c3" strokeWidth={1.5} />
         <p style={styles.emptyTitle}>Pas encore d'historique</p>
-        <p style={styles.emptyText}>Tes mesures appara\u00eetront ici au fil du temps.</p>
+        <p style={styles.emptyText}>Tes mesures apparaîtront ici au fil du temps.</p>
         <button style={styles.primaryBtn} onClick={onAdd}>
           <Plus size={18} /> Ajouter une mesure
         </button>
@@ -975,7 +975,7 @@ function HistoryView({ measures, onDelete, onAdd, isPremium, poolName }) {
     <div>
       {poolName && <div style={styles.poolNameTag}>{poolName}</div>}
       <div style={styles.sectionRow}>
-        <span style={styles.sectionLabel}>\u00c9volution</span>
+        <span style={styles.sectionLabel}>Évolution</span>
       </div>
 
       <div style={styles.chipsRow}>
@@ -1003,14 +1003,14 @@ function HistoryView({ measures, onDelete, onAdd, isPremium, poolName }) {
             }}
           >
             {cp.label}
-            <span style={styles.chipAxisTag}>{cp.axis === "left" ? "\u1d1c" : "\u1d05"}</span>
+            <span style={styles.chipAxisTag}>{cp.axis === "left" ? "ᴜ" : "ᴅ"}</span>
           </button>
         ))}
       </div>
 
       <p style={styles.axisLegend}>
-        <span style={styles.axisLegendItem}><b>\u1d1c</b> \u00e9chelle unit\u00e9s (pH, chlore) \u2014 gauche</span>
-        <span style={styles.axisLegendItem}><b>\u1d05</b> \u00e9chelle dizaines (TAC, CYA, temp\u00e9rature) \u2014 droite</span>
+        <span style={styles.axisLegendItem}><b>ᴜ</b> échelle unités (pH, chlore) — gauche</span>
+        <span style={styles.axisLegendItem}><b>ᴅ</b> échelle dizaines (TAC, CYA, température) — droite</span>
       </p>
 
       <div style={styles.chartCard}>
@@ -1168,10 +1168,10 @@ function AddMeasureModal({ onClose, onSave, isPremium, onWantPremium }) {
       if (result.tac !== null && result.tac !== undefined) setTac(String(result.tac));
       if (result.cya !== null && result.cya !== undefined) setCya(String(result.cya));
       setAnalyzeNote(
-        `Lecture ${result.confidence || "estim\u00e9e"} \u2014 ${result.note || "v\u00e9rifie les valeurs avant d'enregistrer."}`
+        `Lecture ${result.confidence || "estimée"} — ${result.note || "vérifie les valeurs avant d'enregistrer."}`
       );
     } catch (err) {
-      setAnalyzeError("Analyse impossible. V\u00e9rifie la photo (l\u00e9gende et bandelette bien visibles) ou saisis les valeurs manuellement.");
+      setAnalyzeError("Analyse impossible. Vérifie la photo (légende et bandelette bien visibles) ou saisis les valeurs manuellement.");
     } finally {
       setAnalyzing(false);
     }
@@ -1187,7 +1187,7 @@ function AddMeasureModal({ onClose, onSave, isPremium, onWantPremium }) {
     { key: "tCl", label: "Chlore total (mg/L)", value: tCl, set: setTCl, step: "0.01", placeholder: "1.30" },
     { key: "tac", label: "TAC (mg/L)", value: tac, set: setTac, step: "1", placeholder: "100" },
     { key: "cya", label: "Stabilisant CYA (mg/L)", value: cya, set: setCya, step: "1", placeholder: "40" },
-    { key: "temp", label: "Temp\u00e9rature de l'eau (\u00b0C)", value: temp, set: setTemp, step: "0.1", placeholder: "27" },
+    { key: "temp", label: "Température de l'eau (°C)", value: temp, set: setTemp, step: "0.1", placeholder: "27" },
   ];
 
   return (
@@ -1200,7 +1200,7 @@ function AddMeasureModal({ onClose, onSave, isPremium, onWantPremium }) {
         style={styles.input}
       />
 
-      <label style={styles.fieldLabel}>M\u00e9thode de mesure</label>
+      <label style={styles.fieldLabel}>Méthode de mesure</label>
       <div style={styles.methodRow}>
         <button
           type="button"
@@ -1210,7 +1210,7 @@ function AddMeasureModal({ onClose, onSave, isPremium, onWantPremium }) {
             ...(method === "photometre" ? styles.methodBtnActive : {}),
           }}
         >
-          Photom\u00e8tre
+          Photomètre
         </button>
         <button
           type="button"
@@ -1226,7 +1226,7 @@ function AddMeasureModal({ onClose, onSave, isPremium, onWantPremium }) {
 
       {method === "bandelette" && (
         <div style={styles.stripHint}>
-          Place le tube de l\u00e9gende et ta bandelette imbib\u00e9e c\u00f4te \u00e0 c\u00f4te dans le m\u00eame cadre,
+          Place le tube de légende et ta bandelette imbibée côte à côte dans le même cadre,
           puis prends la photo. {isPremium ? "L'analyse automatique lira les couleurs." : ""}
         </div>
       )}
@@ -1255,7 +1255,7 @@ function AddMeasureModal({ onClose, onSave, isPremium, onWantPremium }) {
         <div>
           {photo ? (
             <div style={styles.photoPreviewWrap}>
-              <img src={photo} alt="Aper\u00e7u" style={styles.photoPreview} />
+              <img src={photo} alt="Aperçu" style={styles.photoPreview} />
               <div style={styles.photoActionsRow}>
                 <button
                   style={styles.photoRemoveBtn}
@@ -1302,6 +1302,7 @@ function AddMeasureModal({ onClose, onSave, isPremium, onWantPremium }) {
             ref={fileInputRef}
             type="file"
             accept="image/*"
+            capture="environment"
             onChange={handlePhotoChange}
             style={styles.hiddenFileInput}
           />
@@ -1311,8 +1312,8 @@ function AddMeasureModal({ onClose, onSave, isPremium, onWantPremium }) {
           <Lock size={16} />
           <span>
             {method === "bandelette"
-              ? "Photo + analyse IA r\u00e9serv\u00e9es \u00e0 la version illimit\u00e9e"
-              : "Photo r\u00e9serv\u00e9e \u00e0 la version illimit\u00e9e"}
+              ? "Photo + analyse IA réservées à la version illimitée"
+              : "Photo réservée à la version illimitée"}
           </span>
         </button>
       )}
@@ -1321,7 +1322,7 @@ function AddMeasureModal({ onClose, onSave, isPremium, onWantPremium }) {
       <textarea
         value={note}
         onChange={(e) => setNote(e.target.value)}
-        placeholder="Eau trouble, fort ensoleillement, baignade pr\u00e9vue..."
+        placeholder="Eau trouble, fort ensoleillement, baignade prévue..."
         style={{ ...styles.input, minHeight: 64, resize: "vertical" }}
       />
 
@@ -1345,8 +1346,8 @@ function ProductsView({ products, onEdit, onAddNew, onDelete, isPremium, poolNam
       </div>
 
       <p style={styles.helpText}>
-        Le dosage est calcul\u00e9 selon : {"{quantit\u00e9 produit}"} pour faire varier le param\u00e8tre de{" "}
-        {"{effet}"} sur {"{volume de r\u00e9f\u00e9rence}"} m\u00b3. Ces produits sont propres \u00e0 ce bassin.
+        Le dosage est calculé selon : {"{quantité produit}"} pour faire varier le paramètre de{" "}
+        {"{effet}"} sur {"{volume de référence}"} m³. Ces produits sont propres à ce bassin.
       </p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -1362,9 +1363,9 @@ function ProductsView({ products, onEdit, onAddNew, onDelete, isPremium, poolNam
             <div style={{ flex: 1, textAlign: "left" }}>
               <div style={styles.productName}>{p.name}</div>
               <div style={styles.productMeta}>
-                {p.doseAmount} {p.doseUnit} \u2192 {p.effectAmount} sur {p.effectPer} m\u00b3 \u00b7{" "}
+                {p.doseAmount} {p.doseUnit} → {p.effectAmount} sur {p.effectPer} m³ ·{" "}
                 {PRODUCT_ACTIONS.find((a) => a.value === p.action)?.label}
-                {!!p.waitHours && ` \u00b7 attente ${p.waitHours}h`}
+                {!!p.waitHours && ` · attente ${p.waitHours}h`}
               </div>
             </div>
             <ChevronRight size={16} color="#7a8a93" />
@@ -1438,12 +1439,12 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium }) {
         ) : null
       }
     >
-      <label style={styles.fieldLabel}>Photo du produit (\u00e9tiquette)</label>
+      <label style={styles.fieldLabel}>Photo du produit (étiquette)</label>
       {isPremium ? (
         <div>
           {photo ? (
             <div style={styles.photoPreviewWrap}>
-              <img src={photo} alt="Aper\u00e7u" style={styles.photoPreview} />
+              <img src={photo} alt="Aperçu" style={styles.photoPreview} />
               <button style={styles.photoRemoveBtn} onClick={() => setPhoto(null)}>
                 <X size={14} /> Retirer
               </button>
@@ -1462,6 +1463,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium }) {
             ref={fileInputRef}
             type="file"
             accept="image/*"
+            capture="environment"
             onChange={handlePhotoChange}
             style={styles.hiddenFileInput}
           />
@@ -1469,7 +1471,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium }) {
       ) : (
         <button style={styles.photoLockedBtn} onClick={onWantPremium}>
           <Lock size={16} />
-          <span>Photo r\u00e9serv\u00e9e \u00e0 la version illimit\u00e9e</span>
+          <span>Photo réservée à la version illimitée</span>
         </button>
       )}
 
@@ -1492,7 +1494,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium }) {
 
       <div style={styles.fieldGrid}>
         <div>
-          <label style={styles.fieldLabel}>Quantit\u00e9</label>
+          <label style={styles.fieldLabel}>Quantité</label>
           <input
             type="number"
             style={styles.input}
@@ -1501,7 +1503,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium }) {
           />
         </div>
         <div>
-          <label style={styles.fieldLabel}>Unit\u00e9</label>
+          <label style={styles.fieldLabel}>Unité</label>
           <input
             style={styles.input}
             value={doseUnit}
@@ -1519,7 +1521,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium }) {
           />
         </div>
         <div>
-          <label style={styles.fieldLabel}>Pour X m\u00b3</label>
+          <label style={styles.fieldLabel}>Pour X m³</label>
           <input
             type="number"
             style={styles.input}
@@ -1529,7 +1531,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium }) {
         </div>
       </div>
 
-      <label style={styles.fieldLabel}>D\u00e9lai d'attente avant le traitement suivant (heures)</label>
+      <label style={styles.fieldLabel}>Délai d'attente avant le traitement suivant (heures)</label>
       <input
         type="number"
         style={styles.input}
@@ -1538,7 +1540,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium }) {
         placeholder="2"
       />
 
-      <label style={styles.fieldLabel}>Note / pr\u00e9caution</label>
+      <label style={styles.fieldLabel}>Note / précaution</label>
       <textarea
         style={{ ...styles.input, minHeight: 64, resize: "vertical" }}
         value={note}
@@ -1552,7 +1554,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium }) {
   );
 }
 
-// ---------- R\u00e9glages ----------
+// ---------- Réglages ----------
 function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, isPremium, setIsPremium }) {
   const activePool = pools.find((p) => p.id === activePoolId) || pools[0];
 
@@ -1567,10 +1569,10 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
           <Crown size={18} color={isPremium ? "#a8721a" : "#9aa9a5"} />
           <div>
             <div style={{ fontWeight: 700, fontSize: 13.5, color: "#16302c" }}>
-              {isPremium ? "Mode illimit\u00e9 actif" : "Version gratuite"}
+              {isPremium ? "Mode illimité actif" : "Version gratuite"}
             </div>
             <div style={{ fontSize: 11.5, color: "#7a8a93" }}>
-              Interrupteur de test \u2014 pas de vrai paiement ici
+              Interrupteur de test — pas de vrai paiement ici
             </div>
           </div>
         </div>
@@ -1579,7 +1581,7 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
 
       <p style={styles.helpText}>
         En version gratuite : 1 mesure par jour (tous bassins confondus), plusieurs bassins
-        avec photo d'identification. En illimit\u00e9 : mesures sans limite, photos sur mesures
+        avec photo d'identification. En illimité : mesures sans limite, photos sur mesures
         et produits.
       </p>
 
@@ -1607,7 +1609,7 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
               )}
               <div style={{ flex: 1, textAlign: "left" }}>
                 <div style={{ fontWeight: 700, fontSize: 13.5, color: "#16302c" }}>{p.name}</div>
-                <div style={{ fontSize: 11.5, color: "#7a8a93" }}>{p.location} \u00b7 {p.volume} m\u00b3</div>
+                <div style={{ fontSize: 11.5, color: "#7a8a93" }}>{p.location} · {p.volume} m³</div>
               </div>
               {p.id === activePoolId && <CheckCircle2 size={16} color="#1f8a70" />}
             </button>
@@ -1638,7 +1640,7 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
         onChange={(e) => onUpdatePool(activePool.id, { location: e.target.value })}
       />
 
-      <label style={styles.fieldLabel}>Volume du bassin (m\u00b3)</label>
+      <label style={styles.fieldLabel}>Volume du bassin (m³)</label>
       <input
         type="number"
         style={styles.input}
@@ -1647,9 +1649,9 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
       />
 
       <p style={styles.helpText}>
-        Le volume est utilis\u00e9 pour calculer toutes les doses de produits. Les cibles de
-        param\u00e8tres (pH 7.2\u20137.4, chlore libre 1\u20133 mg/L, etc.) suivent les recommandations
-        standards pour piscines priv\u00e9es et ne sont pas modifiables ici pour rester fiables.
+        Le volume est utilisé pour calculer toutes les doses de produits. Les cibles de
+        paramètres (pH 7.2–7.4, chlore libre 1–3 mg/L, etc.) suivent les recommandations
+        standards pour piscines privées et ne sont pas modifiables ici pour rester fiables.
       </p>
     </div>
   );
@@ -1691,18 +1693,18 @@ function ToggleSwitch({ checked, onChange }) {
 // ---------- Paywall ----------
 function PaywallModal({ onClose, onActivate }) {
   const perks = [
-    "Mesures illimit\u00e9es (au lieu d'1 par jour)",
+    "Mesures illimitées (au lieu d'1 par jour)",
     "Photo de chaque mesure (preuve, archive visuelle)",
-    "Photo de chaque produit (\u00e9tiquette, dosage)",
-    "Historique illimit\u00e9",
+    "Photo de chaque produit (étiquette, dosage)",
+    "Historique illimité",
     "Multi-bassins",
   ];
   return (
-    <ModalShell onClose={onClose} title="Passer en illimit\u00e9">
+    <ModalShell onClose={onClose} title="Passer en illimité">
       <div style={styles.paywallHero}>
         <Crown size={30} color="#a8721a" />
-        <div style={styles.paywallPrice}>2,99 \u20ac / mois</div>
-        <div style={styles.paywallPriceSub}>ou 19,99 \u20ac / an</div>
+        <div style={styles.paywallPrice}>2,99 € / mois</div>
+        <div style={styles.paywallPriceSub}>ou 19,99 € / an</div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 9, margin: "16px 2px" }}>
         {perks.map((perk, i) => (
@@ -1713,10 +1715,10 @@ function PaywallModal({ onClose, onActivate }) {
         ))}
       </div>
       <button style={styles.primaryBtn} onClick={onActivate}>
-        Activer (test \u2014 sans paiement)
+        Activer (test — sans paiement)
       </button>
       <p style={{ ...styles.helpText, textAlign: "center" }}>
-        Ceci est une version de test. Aucun paiement r\u00e9el n'est effectu\u00e9.
+        Ceci est une version de test. Aucun paiement réel n'est effectué.
       </p>
     </ModalShell>
   );
@@ -1756,7 +1758,7 @@ function AddPoolModal({ onClose, onSave }) {
       <div>
         {photo ? (
           <div style={styles.photoPreviewWrap}>
-            <img src={photo} alt="Aper\u00e7u" style={styles.photoPreview} />
+            <img src={photo} alt="Aperçu" style={styles.photoPreview} />
             <button style={styles.photoRemoveBtn} onClick={() => setPhoto(null)}>
               <X size={14} /> Retirer
             </button>
@@ -1775,6 +1777,7 @@ function AddPoolModal({ onClose, onSave }) {
           ref={fileInputRef}
           type="file"
           accept="image/*"
+          capture="environment"
           onChange={handlePhotoChange}
           style={styles.hiddenFileInput}
         />
@@ -1796,7 +1799,7 @@ function AddPoolModal({ onClose, onSave }) {
         placeholder="ex: Valbonne (06)"
       />
 
-      <label style={styles.fieldLabel}>Volume (m\u00b3)</label>
+      <label style={styles.fieldLabel}>Volume (m³)</label>
       <input
         type="number"
         style={styles.input}
@@ -1805,7 +1808,7 @@ function AddPoolModal({ onClose, onSave }) {
       />
 
       <button style={styles.primaryBtn} onClick={handleSave}>
-        Cr\u00e9er le bassin
+        Créer le bassin
       </button>
     </ModalShell>
   );
@@ -2504,7 +2507,7 @@ const styles = {
   },
 };
 
-// ---------- Point d'entr\u00e9e ----------
+// ---------- Point d'entrée ----------
 const __root = ReactDOM.createRoot(document.getElementById("root"));
 __root.render(React.createElement(PoolApp));
 const __loader = document.getElementById("boot-loader");
