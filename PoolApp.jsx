@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.0";
+const APP_VERSION = "0.11";
 
 // Tous les paramètres possibles, tous traitements confondus
 const TARGETS = {
@@ -1920,21 +1920,8 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
         ))}
       </div>
 
-      {method === "bandelette" && (
-        <div style={styles.stripHint}>
-          Place le tube de légende et ta bandelette imbibée côte à côte dans le même cadre,
-          puis prends la photo.{" "}
-          {isPremium && apiKey
-            ? "L'analyse IA lira les couleurs automatiquement."
-            : isPremium
-            ? "Renseigne une clé API dans les Réglages pour activer l'analyse automatique."
-            : ""}
-        </div>
-      )}
 
-      <label style={styles.fieldLabel}>
-        {method === "bandelette" ? "Photos bandelette + tube" : "Photos de la mesure"}
-      </label>
+      <label style={styles.fieldLabel}>Photos de la mesure</label>
       {isPremium ? (
         <div>
           {/* Grille de miniatures */}
@@ -1951,22 +1938,32 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
             </div>
           )}
 
-          {/* Bouton ajouter photo — toujours visible */}
-          <button
-            type="button"
-            style={{ ...styles.photoCaptureBtn, marginTop: photos.length ? 8 : 0 }}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Camera size={17} />
-            {photoBusy ? "Chargement..." : photos.length ? "Ajouter une photo" : "Prendre / choisir une photo"}
-          </button>
+          {/* 2 boutons : appareil photo + bibliothèque */}
+          <div style={{ ...styles.photoCaptureBtnRow, marginTop: photos.length ? 8 : 0 }}>
+            <button
+              type="button"
+              style={styles.photoCaptureBtnHalf}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Camera size={17} />
+              {photoBusy ? "..." : photos.length ? "Autre photo" : "Appareil photo"}
+            </button>
+            <button
+              type="button"
+              style={styles.photoCaptureBtnHalf}
+              onClick={() => galleryInputRef.current?.click()}
+            >
+              <ImageOff size={17} />
+              {photoBusy ? "..." : photos.length ? "Autre depuis biblio" : "Bibliothèque"}
+            </button>
+          </div>
 
-          <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handlePhotoChange} style={styles.hiddenFileInput} />
+          <input ref={fileInputRef} type="file" accept="image/*" capture="environment" multiple onChange={handlePhotoChange} style={styles.hiddenFileInput} />
           <input ref={galleryInputRef} type="file" accept="image/*" multiple onChange={handlePhotoChange} style={styles.hiddenFileInput} />
 
           {/* Bouton analyser + confirmation */}
           {photos.length > 0 && apiKey && (
-            <div style={{ marginTop: 8 }}>
+            <div style={{ marginTop: 10 }}>
               {!confirmAnalyze ? (
                 <button
                   type="button"
@@ -1975,14 +1972,16 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
                   disabled={analyzing}
                 >
                   <Sparkles size={14} />
-                  Analyser {photos.length > 1 ? `${photos.length} photos` : "la photo"}
+                  Analyser {photos.length > 1 ? `les ${photos.length} photos` : "la photo"}
                 </button>
               ) : (
                 <div style={styles.confirmAnalyzeBox}>
                   <span>Tu as terminé d'ajouter des photos ?</span>
                   <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                     <button style={styles.confirmYesBtn} onClick={handleAnalyze} disabled={analyzing}>
-                      {analyzing ? <><Loader2 size={13} className="spin" /> Analyse…</> : "Oui, analyser"}
+                      {analyzing
+                        ? <><Loader2 size={13} className="spin" /> Analyse…</>
+                        : "Oui, analyser"}
                     </button>
                     <button style={styles.confirmNoBtn} onClick={() => setConfirmAnalyze(false)}>
                       Ajouter d'autres
@@ -1999,11 +1998,7 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
       ) : (
         <button style={styles.photoLockedBtn} onClick={onWantPremium}>
           <Lock size={16} />
-          <span>
-            {method === "bandelette"
-              ? "Photo + analyse IA réservées à la version illimitée"
-              : "Photo réservée à la version illimitée"}
-          </span>
+          <span>Photo + analyse IA réservées à la version illimitée</span>
         </button>
       )}
 
