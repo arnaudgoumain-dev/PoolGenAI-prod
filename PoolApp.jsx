@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "0.13";
+const APP_VERSION = "0.14";
 
 // Tous les paramètres possibles, tous traitements confondus
 const TARGETS = {
@@ -648,6 +648,20 @@ function PoolApp() {
   }
 
   function saveApplication(measureId, steps, allApplied) {
+    // Déduire le stock consommé pour chaque produit utilisé
+    if (allApplied) {
+      setProducts((prev) => prev.map((prod) => {
+        const step = steps.find((s) => s.productName === prod.name);
+        if (!step || !step.appliedAmount || !prod.doseAmount) return prod;
+        // Calculer la quantité max du contenant (on estime 1kg/L comme référence)
+        // On déduit le % consommé : appliedAmount / (doseAmount * 10) * 100
+        // doseAmount = dose pour effectPer m3, appliedAmount = dose calculée pour le bassin
+        const containerRef = prod.containerAmount || 1000; // g ou mL, défaut 1000
+        const consumed = (step.appliedAmount / containerRef) * 100;
+        const newStock = Math.max(0, (prod.stockPercent ?? 100) - consumed);
+        return { ...prod, stockPercent: Math.round(newStock * 10) / 10 };
+      }));
+    }
     setApplications((prev) => {
       const withoutThisMeasure = prev.filter((a) => a.measureId !== measureId);
       return [
@@ -658,7 +672,7 @@ function PoolApp() {
           measureId,
           appliedAt: new Date().toISOString(),
           allApplied: !!allApplied,
-          steps, // [{action, title, productName, appliedAmount, doseUnit}]
+          steps,
         },
       ];
     });
@@ -675,7 +689,7 @@ function PoolApp() {
     setProducts((prev) => {
       const exists = prev.find((x) => x.id === p.id);
       if (exists) return prev.map((x) => (x.id === p.id ? { ...x, ...p } : x));
-      return [...prev, { ...p, id: uid(), poolId: activePoolId }];
+      return [...prev, { ...p, id: uid(), poolId: activePoolId, stockPercent: p.stockPercent ?? 100 }];
     });
     setEditingProduct(null);
     setShowAddProduct(false);
@@ -1118,6 +1132,12 @@ Réponds directement en français, sans titre ni introduction.`;
       {latest.photo && (
         <div style={styles.measurePhotoWrap}>
           <img src={latest.photo} alt="Photo de la mesure" style={styles.measurePhoto} />
+        </div>
+      )}
+
+      {latest.note && (
+        <div style={styles.latestNoteBox}>
+          <span style={styles.latestNoteText}>{latest.note}</span>
         </div>
       )}
 
@@ -2151,6 +2171,16 @@ function ProductsView({ products, onEdit, onAddNew, onDelete, onResetAll, isPrem
                 {PRODUCT_ACTIONS.find((a) => a.value === p.action)?.label}
                 {!!p.waitHours && ` · attente ${p.waitHours}h`}
               </div>
+              {p.stockPercent !== undefined && p.stockPercent !== null && (
+                <div style={{
+                  ...styles.productStockBadge,
+                  color: p.stockPercent <= 20 ? "#c0392b" : "#4a6480",
+                  borderColor: p.stockPercent <= 20 ? "#f5c6c2" : "#d0e4f5",
+                  background: p.stockPercent <= 20 ? "#fdf0ef" : "#f0f6fb",
+                }}>
+                  Stock : {p.stockPercent} %
+                </div>
+              )}
             </div>
             <ChevronRight size={16} color="#6a7d90" />
           </button>
@@ -2179,6 +2209,8 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium }) {
   const [waitHours, setWaitHours] = useState(product?.waitHours ?? DEFAULT_WAIT_HOURS[product?.action || "ph-"] ?? 2);
   const [note, setNote] = useState(product?.note || "");
   const [photo, setPhoto] = useState(product?.photo || null);
+  const [stockPercent, setStockPercent] = useState(product?.stockPercent ?? null);
+  const [containerAmount, setContainerAmount] = useState(product?.containerAmount ?? 1000);
   const [photoBusy, setPhotoBusy] = useState(false);
   const fileInputRef = useRef(null);
   const galleryInputRef = useRef(null);
@@ -2210,6 +2242,8 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium }) {
       waitHours: parseFloat(waitHours) || 0,
       note,
       photo,
+      stockPercent: stockPercent ?? 100,
+      containerAmount: parseFloat(containerAmount) || 1000,
     });
   }
 
@@ -2347,6 +2381,54 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium }) {
         onChange={(e) => setWaitHours(e.target.value)}
         placeholder="2"
       />
+
+      <label style={styles.fieldLabel}>Contenant (g ou mL)</label>
+      <input
+        type="number"
+        style={styles.input}
+        value={containerAmount}
+        onChange={(e) => setContainerAmount(e.target.value)}
+        placeholder="1000"
+        min="1"
+      />
+
+      <label style={styles.fieldLabel}>Stock actuel</label>
+      {stockPercent === null ? (
+        <div style={styles.stockInitRow}>
+          <button
+            type="button"
+            style={styles.stockInitBtn}
+            onClick={() => setStockPercent(100)}
+          >
+            Produit neuf (100 %)
+          </button>
+          <button
+            type="button"
+            style={styles.stockInitBtn}
+            onClick={() => setStockPercent(50)}
+          >
+            Saisir manuellement
+          </button>
+        </div>
+      ) : (
+        <div style={styles.stockSliderWrap}>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={stockPercent}
+            onChange={(e) => setStockPercent(Number(e.target.value))}
+            style={{ flex: 1 }}
+          />
+          <span style={{
+            ...styles.stockPercentLabel,
+            color: stockPercent <= 20 ? "#c0392b" : "#0d2b4e",
+            fontWeight: 700,
+          }}>
+            {stockPercent} %
+          </span>
+        </div>
+      )}
 
       <label style={styles.fieldLabel}>Note / précaution</label>
       <textarea
@@ -4157,6 +4239,54 @@ const styles = {
     fontWeight: 600,
     fontSize: 13,
     cursor: "pointer",
+  },
+  latestNoteBox: {
+    marginBottom: 10,
+    padding: "9px 13px",
+    borderRadius: 10,
+    background: "#f0f6fb",
+    border: "1px solid #d0e4f5",
+  },
+  latestNoteText: {
+    fontSize: 13,
+    color: "#2d4a6e",
+    fontStyle: "italic",
+  },
+  stockInitRow: {
+    display: "flex",
+    gap: 8,
+    marginBottom: 4,
+  },
+  stockInitBtn: {
+    flex: 1,
+    padding: "10px 0",
+    borderRadius: 10,
+    border: "1.5px solid #d0e4f5",
+    background: "#f0f6fb",
+    color: "#0a6ebd",
+    fontWeight: 600,
+    fontSize: 13,
+    cursor: "pointer",
+  },
+  stockSliderWrap: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 4,
+  },
+  stockPercentLabel: {
+    minWidth: 44,
+    textAlign: "right",
+    fontSize: 15,
+  },
+  productStockBadge: {
+    display: "inline-block",
+    fontSize: 11.5,
+    fontWeight: 600,
+    padding: "2px 8px",
+    borderRadius: 99,
+    border: "1px solid",
+    marginTop: 3,
   },
   photoLockedBtn: {
     display: "flex",
