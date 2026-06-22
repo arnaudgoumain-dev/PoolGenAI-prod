@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "0.15-debug";
+const APP_VERSION = "0.16";
 
 // Tous les paramètres possibles, tous traitements confondus
 const TARGETS = {
@@ -97,7 +97,7 @@ function getEffectiveTargets(treatmentType) {
 // Retourne la liste des clés de paramètres actifs pour le traitement donné
 function getActiveParams(treatmentType) {
   const tt = TREATMENT_TYPES.find((t) => t.value === treatmentType) || TREATMENT_TYPES[0];
-  return tt.params.map((p) => p.toLowerCase());
+  return tt.params; // conserve la casse d'origine ex: "pH", "fCl", "tCl"
 }
 
 const DEFAULT_PRODUCTS = [
@@ -629,7 +629,6 @@ function PoolApp() {
   }, [validatingMeasure, applications]);
 
   function addMeasure(entry) {
-    console.log("addMeasure entry:", JSON.stringify(entry));
     if (entry.id) {
       // Édition d'une mesure existante
       setMeasures((prev) => prev.map((m) => (m.id === entry.id ? { ...m, ...entry } : m)));
@@ -1115,11 +1114,8 @@ Réponds directement en français, sans titre ni introduction.`;
 
   // Paramètres actifs selon le traitement, filtrés par ceux effectivement saisis
   const allPossibleParams = activeParamKeys || ["pH", "fCl", "tCl", "tac", "cya", "temp"];
-  // Chercher la valeur dans latest de façon insensible à la casse
   const params = allPossibleParams.filter((p) => {
-    // Chercher la clé réelle dans latest (pH peut être stocké sous "pH")
-    const key = Object.keys(latest).find((k) => k.toLowerCase() === p.toLowerCase()) || p;
-    const v = latest[key];
+    const v = latest[p];
     return v !== undefined && v !== "" && v !== null;
   });
 
@@ -1148,10 +1144,9 @@ Réponds directement en français, sans titre ni introduction.`;
       )}
 
       <div style={styles.grid}>
-        {params.map((p) => {
-          const key = Object.keys(latest).find((k) => k.toLowerCase() === p.toLowerCase()) || p;
-          return <ParamCard key={p} param={p} value={latest[key]} effectiveTargets={effectiveTargets} />;
-        })}
+        {params.map((p) => (
+          <ParamCard key={p} param={p} value={latest[p]} effectiveTargets={effectiveTargets} />
+        ))}
       </div>
 
       {blockedByLimit ? (
@@ -1320,7 +1315,7 @@ function RecoCard({ reco, isLast }) {
 function computeRecommendations(latest, volume, products, effectiveTargets, activeParamKeys) {
   // Fallback vers le traitement chlore standard si non précisé
   const targets = effectiveTargets || getEffectiveTargets("chlore");
-  const paramKeys = activeParamKeys || getActiveParams("chlore");
+  const paramKeys = activeParamKeys || ["pH", "fCl", "tCl", "tac", "cya", "temp"];
 
   const steps = [];
   const has = (key) => paramKeys.includes(key);
@@ -1919,10 +1914,9 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
     { key: "brome",label: "Brome (mg/L)",              value: brome, set: setBrome, step: "0.1",  placeholder: "3.0" },
     { key: "o2",   label: "Oxygène actif (mg/L)",      value: o2,    set: setO2,    step: "0.5",  placeholder: "20" },
   ];
-  const activeParamKeysLower = activeParamKeys ? activeParamKeys.map((k) => k.toLowerCase()) : null;
-  const fields = activeParamKeysLower
-    ? ALL_FIELDS.filter((f) => activeParamKeysLower.includes(f.key.toLowerCase()))
-    : ALL_FIELDS.filter((f) => ["ph","fcl","tcl","tac","cya","temp"].includes(f.key.toLowerCase()));
+  const fields = activeParamKeys
+    ? ALL_FIELDS.filter((f) => activeParamKeys.includes(f.key))
+    : ALL_FIELDS.filter((f) => ["pH","fCl","tCl","tac","cya","temp"].includes(f.key));
 
   return (
     <ModalShell onClose={onClose} title={isEditing ? "Modifier la mesure" : "Nouvelle mesure"}>
@@ -3805,12 +3799,14 @@ const styles = {
   },
   tabVersion: {
     position: "absolute",
-    bottom: 3,
-    right: 6,
+    top: "50%",
+    right: 8,
+    transform: "translateY(-50%)",
     fontSize: 9,
     color: "#b0bec8",
     pointerEvents: "none",
-    letterSpacing: 0.2,
+    letterSpacing: 0.3,
+    whiteSpace: "nowrap",
   },
   tabBtn: {
     flex: 1,
