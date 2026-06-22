@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "0.15";
+const APP_VERSION = "0.15-debug";
 
 // Tous les paramètres possibles, tous traitements confondus
 const TARGETS = {
@@ -629,6 +629,7 @@ function PoolApp() {
   }, [validatingMeasure, applications]);
 
   function addMeasure(entry) {
+    console.log("addMeasure entry:", JSON.stringify(entry));
     if (entry.id) {
       // Édition d'une mesure existante
       setMeasures((prev) => prev.map((m) => (m.id === entry.id ? { ...m, ...entry } : m)));
@@ -1009,7 +1010,7 @@ function TabBar({ tab, setTab }) {
     { id: "settings", label: "Réglages", icon: Settings2 },
   ];
   return (
-    <nav style={styles.tabBar}>
+    <nav style={{ ...styles.tabBar, position: "relative" }}>
       {tabs.map((t) => {
         const Icon = t.icon;
         const active = tab === t.id;
@@ -1029,6 +1030,7 @@ function TabBar({ tab, setTab }) {
           </button>
         );
       })}
+      <div style={styles.tabVersion}>v{APP_VERSION}</div>
     </nav>
   );
 }
@@ -3799,6 +3801,16 @@ const styles = {
     maxWidth: 480,
     margin: "0 auto",
     width: "100%",
+    alignItems: "center",
+  },
+  tabVersion: {
+    position: "absolute",
+    bottom: 3,
+    right: 6,
+    fontSize: 9,
+    color: "#b0bec8",
+    pointerEvents: "none",
+    letterSpacing: 0.2,
   },
   tabBtn: {
     flex: 1,
