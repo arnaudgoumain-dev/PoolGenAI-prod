@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "0.28";
+const APP_VERSION = "0.29";
 
 // Tous les paramètres possibles, tous traitements confondus
 const TARGETS = {
@@ -833,6 +833,7 @@ function PoolApp() {
             poolName={activePool?.name}
             manageStock={!!activePool?.manageStock}
             onWantPremium={() => setShowPaywall(true)}
+            onWantSettings={() => setTab("settings")}
           />
         )}
         {tab === "settings" && (
@@ -2202,7 +2203,7 @@ function ValidateApplicationModal({ measure, recs, existingApplication, onClose,
 }
 
 // ---------- Produits ----------
-function ProductsView({ products, onEdit, onAddNew, onDelete, onResetAll, isPremium, onWantPremium, poolName, manageStock }) {
+function ProductsView({ products, onEdit, onAddNew, onDelete, onResetAll, isPremium, onWantPremium, onWantSettings, poolName, manageStock }) {
   function handleResetAll() {
     if (products.length === 0) return;
     const ok = window.confirm(
@@ -2216,11 +2217,22 @@ function ProductsView({ products, onEdit, onAddNew, onDelete, onResetAll, isPrem
       {poolName && <div style={styles.poolNameTag}>{poolName}</div>}
       <div style={styles.sectionRow}>
         <span style={styles.sectionLabel}>Mes produits</span>
-        <button style={styles.smallAddBtn} onClick={onAddNew}>
-          <Plus size={16} />
-        </button>
+        {(!isPremium || manageStock) && (
+          <button style={styles.smallAddBtn} onClick={onAddNew}>
+            <Plus size={16} />
+          </button>
+        )}
       </div>
 
+      {isPremium && !manageStock ? (
+        <div style={styles.stockNotManagedBox}>
+          <span>La gestion du stock n'est pas activée pour ce bassin. Active-la dans Réglages pour gérer les quantités et voir les consommations.</span>
+          <button type="button" style={styles.stockActivateLink} onClick={isPremium ? onWantSettings : onWantPremium}>
+            Activer dans Réglages →
+          </button>
+        </div>
+      ) : (
+        <>
       <p style={styles.helpText}>
         Le dosage est calculé selon : {"{quantité produit}"} pour faire varier le paramètre de{" "}
         {"{effet}"} sur {"{volume de référence}"} m³. Ces produits sont propres à ce bassin.
@@ -2286,6 +2298,8 @@ function ProductsView({ products, onEdit, onAddNew, onDelete, onResetAll, isPrem
         <button style={styles.dangerLinkBtn} onClick={handleResetAll}>
           <Trash2 size={14} /> Supprimer tous les produits de ce bassin
         </button>
+      )}
+        </>
       )}
     </div>
   );
@@ -2468,84 +2482,70 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
         placeholder="2"
       />
 
-      {isPremium && !manageStock && (
+      {!isPremium ? (
+        <button style={styles.photoLockedBtn} onClick={onWantPremium}>
+          <Lock size={16} />
+          <span>Gestion du stock réservée à la version illimitée</span>
+        </button>
+      ) : !manageStock ? (
         <div style={styles.stockNotManagedBox}>
           <span>La gestion du stock n'est pas activée pour ce bassin.</span>
           <button type="button" style={styles.stockActivateLink} onClick={onWantManageStock}>
             Activer dans Réglages →
           </button>
         </div>
-      )}
-      {isPremium && manageStock ? (<>
-      <label style={styles.fieldLabel}>Taille du contenant</label>
-      <div style={styles.segmentedControl}>
-        {["kg", "L"].map((u) => (
-          <button
-            key={u}
-            type="button"
-            onClick={() => setContainerUnit(u)}
-            style={{
-              ...styles.segmentedBtn,
-              ...(containerUnit === u ? styles.segmentedBtnActive : {}),
-            }}
-          >
-            {u}
-          </button>
-        ))}
-      </div>
-      <input
-        type="number"
-        style={styles.input}
-        value={containerAmount}
-        onChange={(e) => setContainerAmount(e.target.value)}
-        placeholder="1"
-        min="0.01"
-        step="0.1"
-      />
-
-      <label style={styles.fieldLabel}>Stock actuel</label>
-      {stockPercent === null ? (
-        <div style={styles.stockInitRow}>
-          <button
-            type="button"
-            style={styles.stockInitBtn}
-            onClick={() => setStockPercent(100)}
-          >
-            Produit neuf (100 %)
-          </button>
-          <button
-            type="button"
-            style={styles.stockInitBtn}
-            onClick={() => setStockPercent(50)}
-          >
-            Saisir manuellement
-          </button>
-        </div>
       ) : (
-        <div style={styles.stockSliderWrap}>
+        <>
+          <label style={styles.fieldLabel}>Taille du contenant</label>
+          <div style={styles.segmentedControl}>
+            {["kg", "L"].map((u) => (
+              <button
+                key={u}
+                type="button"
+                onClick={() => setContainerUnit(u)}
+                style={{
+                  ...styles.segmentedBtn,
+                  ...(containerUnit === u ? styles.segmentedBtnActive : {}),
+                }}
+              >
+                {u}
+              </button>
+            ))}
+          </div>
           <input
-            type="range"
-            min="0"
-            max="100"
-            value={stockPercent}
-            onChange={(e) => setStockPercent(Number(e.target.value))}
-            style={{ flex: 1 }}
+            type="number"
+            style={styles.input}
+            value={containerAmount}
+            onChange={(e) => setContainerAmount(e.target.value)}
+            placeholder="1"
+            min="0.01"
+            step="0.1"
           />
-          <span style={{
-            ...styles.stockPercentLabel,
-            color: stockPercent <= 20 ? "#c0392b" : "#0d2b4e",
-            fontWeight: 700,
-          }}>
-            {stockPercent} %
-          </span>
-        </div>
-      )}
 
-      </>) : (
-        <button style={styles.photoLockedBtn} onClick={onWantPremium}>
-          <Lock size={16} />
-          <span>Gestion du stock réservée à la version illimitée</span>
-        </button>
+          <label style={styles.fieldLabel}>Stock actuel</label>
+          {stockPercent === null ? (
+            <div style={styles.stockInitRow}>
+              <button type="button" style={styles.stockInitBtn} onClick={() => setStockPercent(100)}>
+                Produit neuf (100 %)
+              </button>
+              <button type="button" style={styles.stockInitBtn} onClick={() => setStockPercent(50)}>
+                Saisir manuellement
+              </button>
+            </div>
+          ) : (
+            <div style={styles.stockSliderWrap}>
+              <input
+                type="range" min="0" max="100"
+                value={stockPercent}
+                onChange={(e) => setStockPercent(Number(e.target.value))}
+                style={{ flex: 1 }}
+              />
+              <span style={{ ...styles.stockPercentLabel, color: stockPercent <= 20 ? "#c0392b" : "#0d2b4e", fontWeight: 700 }}>
+                {stockPercent} %
+              </span>
+            </div>
+          )}
+        </>
       )}
 
       {isPremium && product && (() => {
