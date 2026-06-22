@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "0.29";
+const APP_VERSION = "0.30";
 
 // Tous les paramètres possibles, tous traitements confondus
 const TARGETS = {
@@ -937,6 +937,7 @@ function PoolApp() {
           applications={poolApplications}
           products={poolProducts}
           onClose={() => setShowReport(false)}
+          manageStock={!!activePool?.manageStock}
         />
       )}
     </div>
