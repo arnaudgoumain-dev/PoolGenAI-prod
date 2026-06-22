@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "0.20";
+const APP_VERSION = "0.21";
 
 // Tous les paramètres possibles, tous traitements confondus
 const TARGETS = {
@@ -1315,13 +1315,13 @@ function RecoCard({ reco, isLast }) {
 // Formate une dose avec conversion automatique g→kg et mL→L
 function formatDose(amount, unit) {
   if (!amount && amount !== 0) return `? ${unit}`;
-  if ((unit === "g") && amount >= 1000) {
-    const kg = (amount / 1000);
-    return `${Number.isInteger(kg) ? kg : kg.toFixed(2).replace(/\.?0+$/, "")} kg (${amount} g)`;
+  if (unit === "g" && amount >= 1000) {
+    const kg = amount / 1000;
+    return `${Number.isInteger(kg) ? kg : kg.toFixed(2).replace(/\.?0+$/, "")} kg`;
   }
-  if ((unit === "mL") && amount >= 1000) {
-    const L = (amount / 1000);
-    return `${Number.isInteger(L) ? L : L.toFixed(2).replace(/\.?0+$/, "")} L (${amount} mL)`;
+  if (unit === "mL" && amount >= 1000) {
+    const L = amount / 1000;
+    return `${Number.isInteger(L) ? L : L.toFixed(2).replace(/\.?0+$/, "")} L`;
   }
   return `${amount} ${unit}`;
 }
@@ -2199,15 +2199,11 @@ function ProductsView({ products, onEdit, onAddNew, onDelete, onResetAll, isPrem
               {p.stockPercent !== undefined && p.stockPercent !== null && (() => {
                 const pct = p.stockPercent;
                 const low = pct <= 20;
-                const container = p.containerAmount || 1000;
-                const remaining = Math.round(container * pct / 100);
-                const unit = p.doseUnit || "g";
-                // Convertir en kg ou L si >= 1000
-                const displayUnit = (unit === "g" && remaining >= 1000) ? "kg"
-                  : (unit === "mL" && remaining >= 1000) ? "L" : unit;
-                const displayVal = (displayUnit === "kg" || displayUnit === "L")
-                  ? (remaining / 1000).toFixed(2).replace(/\.?0+$/, "")
-                  : remaining;
+                const container = p.containerAmount || 1;
+                const cUnit = p.containerUnit || "kg";
+                const remaining = (container * pct / 100);
+                const displayVal = Number.isInteger(remaining) ? remaining : remaining.toFixed(2).replace(/\.?0+$/, "");
+                const displayUnit = cUnit;
                 return (
                   <div style={{ marginTop: 6 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
@@ -2259,7 +2255,8 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium }) {
   const [note, setNote] = useState(product?.note || "");
   const [photo, setPhoto] = useState(product?.photo || null);
   const [stockPercent, setStockPercent] = useState(product?.stockPercent ?? null);
-  const [containerAmount, setContainerAmount] = useState(product?.containerAmount ?? 1000);
+  const [containerAmount, setContainerAmount] = useState(product?.containerAmount ?? 1);
+  const [containerUnit, setContainerUnit] = useState(product?.containerUnit ?? "kg");
   const [photoBusy, setPhotoBusy] = useState(false);
   const fileInputRef = useRef(null);
   const galleryInputRef = useRef(null);
@@ -2292,7 +2289,8 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium }) {
       note,
       photo,
       stockPercent: stockPercent ?? 100,
-      containerAmount: parseFloat(containerAmount) || 1000,
+      containerAmount: parseFloat(containerAmount) || 1,
+      containerUnit: containerUnit || "kg",
     });
   }
 
@@ -2393,26 +2391,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium }) {
             onChange={(e) => setDoseAmount(e.target.value)}
           />
         </div>
-        <div>
-          <label style={styles.fieldLabel}>Unité</label>
-          <div style={{ ...styles.segmentedControl, marginTop: 0 }}>
-            {["g", "kg", "mL", "L"].map((u) => (
-              <button
-                key={u}
-                type="button"
-                onClick={() => setDoseUnit(u)}
-                style={{
-                  ...styles.segmentedBtn,
-                  ...(doseUnit === u ? styles.segmentedBtnActive : {}),
-                  flex: 1,
-                  padding: "8px 0",
-                }}
-              >
-                {u}
-              </button>
-            ))}
-          </div>
-        </div>
+
         <div>
           <label style={styles.fieldLabel}>Effet (variation)</label>
           <input
@@ -2442,17 +2421,30 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium }) {
         placeholder="2"
       />
 
-      <label style={styles.fieldLabel}>
-        Taille du contenant ({doseUnit === "kg" ? "kg" : doseUnit === "L" ? "L" : doseUnit === "mL" ? "mL" : "g"})
-      </label>
+      <label style={styles.fieldLabel}>Taille du contenant</label>
+      <div style={styles.segmentedControl}>
+        {["kg", "L"].map((u) => (
+          <button
+            key={u}
+            type="button"
+            onClick={() => setContainerUnit(u)}
+            style={{
+              ...styles.segmentedBtn,
+              ...(containerUnit === u ? styles.segmentedBtnActive : {}),
+            }}
+          >
+            {u}
+          </button>
+        ))}
+      </div>
       <input
         type="number"
         style={styles.input}
         value={containerAmount}
         onChange={(e) => setContainerAmount(e.target.value)}
-        placeholder={doseUnit === "kg" || doseUnit === "L" ? "1" : "1000"}
-        min="0.001"
-        step={doseUnit === "kg" || doseUnit === "L" ? "0.1" : "1"}
+        placeholder="1"
+        min="0.01"
+        step="0.1"
       />
 
       <label style={styles.fieldLabel}>Stock actuel</label>
