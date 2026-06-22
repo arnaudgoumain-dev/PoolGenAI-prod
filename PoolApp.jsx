@@ -294,13 +294,20 @@ async function callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl }) {
     const data = await response.json();
     return data.choices?.[0]?.message?.content || "";
   } else {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    // Si apiKey commence par "http", c'est une URL de proxy
+    const endpoint = apiKey.startsWith("http")
+      ? apiKey.replace(/\/+$/, "") + "/v1/messages"
+      : "https://api.anthropic.com/v1/messages";
+    const authHeaders = apiKey.startsWith("http")
+      ? {}
+      : { "x-api-key": apiKey, "anthropic-dangerous-direct-browser-access": "true" };
+
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": apiKey,
         "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true",
+        ...authHeaders,
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
@@ -346,13 +353,19 @@ async function callAIText({ apiKey, apiProvider, prompt }) {
     const data = await response.json();
     return data.choices?.[0]?.message?.content || "";
   } else {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const endpoint = apiKey.startsWith("http")
+      ? apiKey.replace(/\/+$/, "") + "/v1/messages"
+      : "https://api.anthropic.com/v1/messages";
+    const authHeaders = apiKey.startsWith("http")
+      ? {}
+      : { "x-api-key": apiKey, "anthropic-dangerous-direct-browser-access": "true" };
+
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": apiKey,
         "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true",
+        ...authHeaders,
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
@@ -2537,15 +2550,14 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
               style={{ ...styles.input, flex: 1 }}
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              placeholder={apiProvider === "openai" ? "sk-..." : "sk-ant-..."}
+              placeholder={apiProvider === "openai" ? "sk-..." : "sk-ant-... ou URL du proxy"}
               autoComplete="off"
               autoCorrect="off"
               spellCheck={false}
             />
           </div>
           <p style={styles.helpTextSmall}>
-            Ta clé est stockée localement sur cet appareil, jamais transmise ailleurs qu'au
-            provider choisi. Utilisée pour l'analyse de bandelettes et le commentaire IA.
+            Ta clé est stockée localement. Pour Anthropic, tu peux saisir une clé sk-ant-... ou l'URL de ton proxy Cloudflare Worker (recommandé).
           </p>
         </>
       )}
