@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "0.11";
+const APP_VERSION = "0.13";
 
 // Tous les paramètres possibles, tous traitements confondus
 const TARGETS = {
@@ -384,19 +384,25 @@ async function callAIText({ apiKey, apiProvider, prompt }) {
 }
 
 async function analyzeStripPhoto({ apiKey, apiProvider, dataUrl }) {
-  const prompt = `Tu regardes une photo d'un tube de bandelettes de test pour piscine, avec une bandelette imbibée posée à côté ou sur la légende imprimée sur le tube. Le tube affiche une légende de couleurs avec des valeurs numériques (mg/L ou ppm) pour chaque paramètre (pH, chlore libre, chlore total, TAC/alcalinité, stabilisant CYA, dureté TH, brome).
+  const prompt = `Tu es un expert en chimie de l'eau de piscine. Analyse cette photo qui montre soit :
+- Un écran de photomètre affichant des valeurs numériques
+- Une bandelette de test posée à côté de la légende colorée de son tube
 
-Pour chaque paramètre visible à la fois sur la bandelette ET sur la légende du tube :
-1. Identifie la couleur du carré correspondant sur la bandelette testée
-2. Compare-la à l'échelle de couleurs de la légende du tube pour ce même paramètre
-3. Estime la valeur numérique la plus proche
+Lis toutes les valeurs visibles et retourne-les.
 
-Réponds UNIQUEMENT en JSON, sans aucun texte avant ou après, sans balises markdown, selon ce format exact (utilise null si un paramètre n'est pas visible ou pas mesuré par cette bandelette) :
-{"pH": nombre ou null, "fCl": nombre ou null, "tCl": nombre ou null, "tac": nombre ou null, "cya": nombre ou null, "confidence": "haute" ou "moyenne" ou "basse", "note": "courte remarque en français sur la lisibilité de la photo, en une phrase"}`;
+Réponds UNIQUEMENT en JSON valide, sans texte avant ou après, sans markdown, sans commentaires :
+{"pH": nombre ou null, "fCl": nombre ou null, "tCl": nombre ou null, "tac": nombre ou null, "cya": nombre ou null, "confidence": "haute" ou "moyenne" ou "basse", "note": "une phrase en français sur la lisibilité"}
+
+Règles strictes :
+- Les valeurs doivent être des nombres (pas des chaînes)
+- null si le paramètre n'est pas visible
+- JSON pur, rien d'autre`;
 
   const text = await callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl: dataUrl });
-  const cleaned = text.replace(/```json|```/g, "").trim();
-  return JSON.parse(cleaned);
+  // Extraction robuste du JSON même si l'IA ajoute du texte autour
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error("Réponse IA non parseable : " + text.slice(0, 200));
+  return JSON.parse(match[0]);
 }
 
 // ---------- Composant principal ----------
@@ -1848,7 +1854,7 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
         `${photos.length} photo(s) analysée(s) — ${notes.join(" / ") || "vérifie les valeurs avant d'enregistrer."}`
       );
     } catch (err) {
-      setAnalyzeError("Analyse impossible. Vérifie les photos ou saisis les valeurs manuellement.");
+      setAnalyzeError("Analyse impossible : " + (err?.message || "erreur inconnue") + ". Vérifie ta connexion et les photos.");
     } finally {
       setAnalyzing(false);
     }
@@ -1900,26 +1906,14 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
         style={styles.input}
       />
 
-      <label style={styles.fieldLabel}>Méthode de mesure</label>
-      <div style={styles.segmentedControl}>
-        {[
-          { value: "photometre", label: "Photomètre" },
-          { value: "bandelette", label: "Bandelette" },
-        ].map((opt) => (
-          <button
-            key={opt.value}
-            type="button"
-            onClick={() => setMethod(opt.value)}
-            style={{
-              ...styles.segmentedBtn,
-              ...(method === opt.value ? styles.segmentedBtnActive : {}),
-            }}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
-
+      {isPremium ? (
+        <div style={styles.photoHintBox}>
+          <Camera size={15} style={{ flexShrink: 0, marginTop: 1 }} />
+          <span>
+            Prends en photo l'écran de ton photomètre avec les valeurs lisibles, ou place ta bandelette imbibée à côté de la légende du tube et photographie les deux ensemble.
+          </span>
+        </div>
+      ) : null}
 
       <label style={styles.fieldLabel}>Photos de la mesure</label>
       {isPremium ? (
@@ -4079,6 +4073,19 @@ const styles = {
     fontSize: 13,
     cursor: "pointer",
     boxSizing: "border-box",
+  },
+  photoHintBox: {
+    display: "flex",
+    alignItems: "flex-start",
+    gap: 8,
+    padding: "10px 12px",
+    borderRadius: 10,
+    background: "#e8f4fd",
+    border: "1px solid #90c4e8",
+    color: "#0d2b4e",
+    fontSize: 13,
+    lineHeight: 1.5,
+    marginBottom: 10,
   },
   photoGrid: {
     display: "flex",
