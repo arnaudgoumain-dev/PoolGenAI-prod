@@ -772,6 +772,7 @@ function PoolApp() {
             poolMeasureCount={poolMeasures.length}
             onGenerateReport={() => setShowReport(true)}
             onWantPremiumForReport={() => setShowPaywall(true)}
+            onWantPremium={() => setShowPaywall(true)}
             isPremium={isPremium}
             setIsPremium={setIsPremium}
             apiKey={apiKey}
@@ -2286,7 +2287,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium }) {
 }
 
 // ---------- Réglages ----------
-function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, onDeleteAllMeasures: onDeleteAllMeasuresRaw, poolMeasureCount, onGenerateReport, onWantPremiumForReport, isPremium, setIsPremium, apiKey, setApiKey, apiProvider, setApiProvider }) {
+function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, onDeleteAllMeasures: onDeleteAllMeasuresRaw, poolMeasureCount, onGenerateReport, onWantPremiumForReport, onWantPremium, isPremium, setIsPremium, apiKey, setApiKey, apiProvider, setApiProvider }) {
   const activePool = pools.find((p) => p.id === activePoolId) || pools[0];
 
   function onDeleteAllMeasures() {
@@ -2457,51 +2458,60 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
         <span style={styles.sectionLabel}>Clé API (analyse IA)</span>
       </div>
 
-      {!apiKey && (
-        <p style={{ ...styles.helpTextSmall, marginBottom: 10, color: "#a0a8b0" }}>
-          Saisis une clé API pour activer l'analyse IA des bandelettes et le commentaire automatique.
-        </p>
+      {!isPremium ? (
+        <button style={styles.photoLockedBtn} onClick={onWantPremium}>
+          <Lock size={16} />
+          <span>Analyse IA réservée à la version illimitée</span>
+        </button>
+      ) : (
+        <>
+          {!apiKey && (
+            <p style={{ ...styles.helpTextSmall, marginBottom: 10, color: "#a0a8b0" }}>
+              Saisis une clé API pour activer l'analyse IA des bandelettes et le commentaire automatique.
+            </p>
+          )}
+
+          <label style={{ ...styles.fieldLabel, opacity: !apiKey ? 0.45 : 1 }}>Provider</label>
+          <div style={{ ...styles.segmentedControl, opacity: !apiKey ? 0.45 : 1, pointerEvents: !apiKey ? "none" : "auto" }}>
+            {[
+              { value: "anthropic", label: "Anthropic (Claude)" },
+              { value: "openai", label: "OpenAI (ChatGPT)" },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setApiProvider(opt.value)}
+                style={{
+                  ...styles.segmentedBtn,
+                  ...(apiProvider === opt.value ? styles.segmentedBtnActive : {}),
+                }}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
+          <label style={styles.fieldLabel}>
+            Clé API {apiProvider === "openai" ? "OpenAI" : "Anthropic"}
+          </label>
+          <div style={styles.apiKeyRow}>
+            <input
+              type="password"
+              style={{ ...styles.input, flex: 1 }}
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder={apiProvider === "openai" ? "sk-..." : "sk-ant-..."}
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
+            />
+          </div>
+          <p style={styles.helpTextSmall}>
+            Ta clé est stockée localement sur cet appareil, jamais transmise ailleurs qu'au
+            provider choisi. Utilisée pour l'analyse de bandelettes et le commentaire IA.
+          </p>
+        </>
       )}
-
-      <label style={{ ...styles.fieldLabel, opacity: !apiKey ? 0.45 : 1 }}>Provider</label>
-      <div style={{ ...styles.segmentedControl, opacity: !apiKey ? 0.45 : 1, pointerEvents: !apiKey ? "none" : "auto" }}>
-        {[
-          { value: "anthropic", label: "Anthropic (Claude)" },
-          { value: "openai", label: "OpenAI (ChatGPT)" },
-        ].map((opt) => (
-          <button
-            key={opt.value}
-            type="button"
-            onClick={() => setApiProvider(opt.value)}
-            style={{
-              ...styles.segmentedBtn,
-              ...(apiProvider === opt.value ? styles.segmentedBtnActive : {}),
-            }}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
-
-      <label style={styles.fieldLabel}>
-        Clé API {apiProvider === "openai" ? "OpenAI" : "Anthropic"}
-      </label>
-      <div style={styles.apiKeyRow}>
-        <input
-          type="password"
-          style={{ ...styles.input, flex: 1 }}
-          value={apiKey}
-          onChange={(e) => setApiKey(e.target.value)}
-          placeholder={apiProvider === "openai" ? "sk-..." : "sk-ant-..."}
-          autoComplete="off"
-          autoCorrect="off"
-          spellCheck={false}
-        />
-      </div>
-      <p style={styles.helpTextSmall}>
-        Ta clé est stockée localement sur cet appareil, jamais transmise ailleurs qu'au
-        provider choisi. Utilisée pour l'analyse de bandelettes et le commentaire IA.
-      </p>
 
       <div style={styles.sectionRow}>
         <span style={styles.sectionLabel}>Zone sensible</span>
