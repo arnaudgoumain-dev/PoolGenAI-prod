@@ -4,11 +4,11 @@ const {
 } = Recharts;
 const {
   Plus, Trash2, Droplets, X, ChevronRight, ChevronDown, Settings2, AlertTriangle, CheckCircle2,
-  History, Beaker, Camera, Lock, Crown, ImageOff, Sparkles, Loader2, Clock, FileText, Download, Eye, EyeOff
+  History, Beaker, Camera, Lock, Crown, ImageOff, Sparkles, Loader2, Clock, FileText, Download
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "0.9-debug";
+const APP_VERSION = "0.9";
 
 // Tous les paramètres possibles, tous traitements confondus
 const TARGETS = {
@@ -404,15 +404,18 @@ Réponds UNIQUEMENT en JSON, sans aucun texte avant ou après, sans balises mark
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { error: null };
+    this.state = { error: null, info: null };
   }
   static getDerivedStateFromError(error) {
-    return { error: error.message + "\n" + error.stack };
+    return { error: error.message };
+  }
+  componentDidCatch(error, info) {
+    this.setState({ error: error.message + "\n\nSTACK:\n" + error.stack + "\n\nCOMPONENT STACK:\n" + (info && info.componentStack ? info.componentStack : "N/A") });
   }
   render() {
     if (this.state.error) {
       return React.createElement("div", {
-        style: { padding: 24, fontFamily: "monospace", fontSize: 12, color: "#c00", whiteSpace: "pre-wrap", overflowY: "auto", maxHeight: "100vh" }
+        style: { padding: 24, fontFamily: "monospace", fontSize: 11, color: "#c00", whiteSpace: "pre-wrap", overflowY: "auto", maxHeight: "100vh", background: "#fff5f5" }
       }, "CRASH DÉTECTÉ:\n\n" + this.state.error);
     }
     return this.props.children;
@@ -2598,7 +2601,10 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
               style={styles.eyeBtn}
               title={showApiKey ? "Masquer" : "Afficher"}
             >
-              {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
+              {showApiKey
+                ? <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                : <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              }
             </button>
           </div>
           <p style={styles.helpTextSmall}>
@@ -4177,6 +4183,6 @@ const styles = {
 })();
 
 const __root = ReactDOM.createRoot(document.getElementById("root"));
-__root.render(React.createElement(ErrorBoundary, null, React.createElement(PoolApp)));
+__root.render(React.createElement(PoolApp));
 const __loader = document.getElementById("boot-loader");
 if (__loader) __loader.remove();
