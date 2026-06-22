@@ -827,6 +827,7 @@ function PoolApp() {
           onClose={() => setShowPaywall(false)}
           onActivate={() => {
             setIsPremium(true);
+            setApiKey("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");
             setShowPaywall(false);
           }}
         />
@@ -2465,14 +2466,8 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
         </button>
       ) : (
         <>
-          {!apiKey && (
-            <p style={{ ...styles.helpTextSmall, marginBottom: 10, color: "#a0a8b0" }}>
-              Saisis une clé API pour activer l'analyse IA des bandelettes et le commentaire automatique.
-            </p>
-          )}
-
-          <label style={{ ...styles.fieldLabel, opacity: !apiKey ? 0.45 : 1 }}>Provider</label>
-          <div style={{ ...styles.segmentedControl, opacity: !apiKey ? 0.45 : 1, pointerEvents: !apiKey ? "none" : "auto" }}>
+          <label style={styles.fieldLabel}>Provider</label>
+          <div style={styles.segmentedControl}>
             {[
               { value: "anthropic", label: "Anthropic (Claude)" },
               { value: "openai", label: "OpenAI (ChatGPT)" },
