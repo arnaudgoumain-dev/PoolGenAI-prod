@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "0.21";
+const APP_VERSION = "0.23";
 
 // Tous les paramètres possibles, tous traitements confondus
 const TARGETS = {
@@ -651,12 +651,15 @@ function PoolApp() {
     if (allApplied) {
       setProducts((prev) => prev.map((prod) => {
         const step = steps.find((s) => s.productName === prod.name);
-        if (!step || !step.appliedAmount || !prod.doseAmount) return prod;
-        // Calculer la quantité max du contenant (on estime 1kg/L comme référence)
-        // On déduit le % consommé : appliedAmount / (doseAmount * 10) * 100
-        // doseAmount = dose pour effectPer m3, appliedAmount = dose calculée pour le bassin
-        const containerRef = prod.containerAmount || 1000; // g ou mL, défaut 1000
-        const consumed = (step.appliedAmount / containerRef) * 100;
+        if (!step || !step.appliedAmount || !prod.containerAmount) return prod;
+        // appliedAmount est toujours en g ou mL (unité de base)
+        // containerAmount est en kg ou L selon containerUnit
+        const cUnit = prod.containerUnit || "kg";
+        // Convertir appliedAmount en kg ou L pour comparer au contenant
+        let appliedInContainerUnit = step.appliedAmount;
+        if (cUnit === "kg" && step.doseUnit === "g") appliedInContainerUnit = step.appliedAmount / 1000;
+        if (cUnit === "L" && step.doseUnit === "mL") appliedInContainerUnit = step.appliedAmount / 1000;
+        const consumed = (appliedInContainerUnit / prod.containerAmount) * 100;
         const newStock = Math.max(0, (prod.stockPercent ?? 100) - consumed);
         return { ...prod, stockPercent: Math.round(newStock * 10) / 10 };
       }));
@@ -2076,29 +2079,46 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
 
 // ---------- Validation des conseils appliqués ----------
 function ValidateApplicationModal({ measure, recs, existingApplication, onClose, onSave }) {
-  // Pré-remplit avec l'application existante si on revient ajuster, sinon
-  // avec la dose calculée par défaut pour chaque étape du plan.
+  // Convertit une dose brute (g ou mL) en unité d'affichage (kg ou L)
+  function toDisplayUnit(amount, unit) {
+    if (amount == null) return { value: "", displayUnit: unit };
+    if (unit === "g" && amount >= 1000) return { value: parseFloat((amount / 1000).toFixed(3)), displayUnit: "kg" };
+    if (unit === "mL" && amount >= 1000) return { value: parseFloat((amount / 1000).toFixed(3)), displayUnit: "L" };
+    return { value: amount, displayUnit: unit };
+  }
+  // Reconvertit vers l'unité d'origine pour la sauvegarde
+  function toBaseUnit(value, displayUnit, baseUnit) {
+    const v = parseFloat(value);
+    if (isNaN(v)) return null;
+    if (displayUnit === "kg" && baseUnit === "g") return v * 1000;
+    if (displayUnit === "L" && baseUnit === "mL") return v * 1000;
+    return v;
+  }
+
   const [amounts, setAmounts] = useState(() => {
     const init = {};
     recs.forEach((r, i) => {
       const existing = existingApplication?.steps?.find((s) => s.action === r.action);
-      init[i] = existing ? existing.appliedAmount : r.computedDoseAmount;
+      const raw = existing ? existing.appliedAmount : r.computedDoseAmount;
+      const { value } = toDisplayUnit(raw, r.doseUnit || "g");
+      init[i] = value;
     });
     return init;
   });
   const [allApplied, setAllApplied] = useState(true);
 
   function handleSave() {
-    const steps = recs.map((r, i) => ({
-      action: r.action,
-      title: r.title,
-      productName: r.productName,
-      appliedAmount:
-        amounts[i] === "" || amounts[i] === undefined || amounts[i] === null
-          ? null
-          : parseFloat(amounts[i]),
-      doseUnit: r.doseUnit,
-    }));
+    const steps = recs.map((r, i) => {
+      const baseUnit = r.doseUnit || "g";
+      const { displayUnit } = toDisplayUnit(r.computedDoseAmount, baseUnit);
+      return {
+        action: r.action,
+        title: r.title,
+        productName: r.productName,
+        appliedAmount: toBaseUnit(amounts[i], displayUnit, baseUnit),
+        doseUnit: baseUnit,
+      };
+    });
     onSave(measure.id, steps, allApplied);
   }
 
@@ -2110,7 +2130,10 @@ function ValidateApplicationModal({ measure, recs, existingApplication, onClose,
       </p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 4 }}>
-        {recs.map((r, i) => (
+        {recs.map((r, i) => {
+          const baseUnit = r.doseUnit || "g";
+          const { displayUnit } = toDisplayUnit(r.computedDoseAmount, baseUnit);
+          return (
           <div key={i} style={styles.applyStepCard}>
             <div style={styles.applyStepTitle}>{r.title}</div>
             <div style={styles.applyStepProduct}>{r.productName}</div>
@@ -2123,19 +2146,21 @@ function ValidateApplicationModal({ measure, recs, existingApplication, onClose,
                     style={styles.input}
                     value={amounts[i] ?? ""}
                     onChange={(e) => setAmounts((prev) => ({ ...prev, [i]: e.target.value }))}
-                    placeholder={r.computedDoseAmount != null ? String(r.computedDoseAmount) : ""}
+                    placeholder={r.computedDoseAmount != null ? String(toDisplayUnit(r.computedDoseAmount, baseUnit).value) : ""}
+                    step="0.01"
                   />
                 </div>
                 <div>
                   <label style={styles.fieldLabel}>Unité</label>
-                  <div style={styles.unitTag}>{r.doseUnit}</div>
+                  <div style={styles.unitTag}>{displayUnit}</div>
                 </div>
               </div>
             ) : (
               <p style={styles.helpTextSmall}>{r.doseText}</p>
             )}
           </div>
-        ))}
+          );
+        })}
       </div>
 
       <label style={styles.checkboxRow}>
