@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "0.46";
+const APP_VERSION = "0.47";
 
 const TRANSLATIONS = {
   fr: {
@@ -187,6 +187,14 @@ const TRANSLATIONS = {
     param_ph: "pH",
     param_fcl: "Chlore libre (mg/L)",
     axis_legend_u: "ᴜ échelle unités (pH, chlore) — gauche",
+    action_ph_minus: "Baisse le pH",
+    action_ph_plus: "Monte le pH",
+    action_chlore: "Chlore non stabilisé (choc)",
+    action_chlore_stabilise: "Chlore stabilisé (CYA +)",
+    action_tac_plus: "Monte le TAC",
+    action_brome: "Brome",
+    action_o2: "Oxygène actif",
+    action_sel: "Sel (salinité)",
     axis_legend_d: "ᴅ échelle dizaines (TAC, CYA, température) — droite",
     reco_tac_low: "TAC trop bas ({val} mg/L)",
     reco_ph_high: "pH trop haut ({val})",
@@ -425,6 +433,14 @@ const TRANSLATIONS = {
     param_ph: "pH",
     param_fcl: "Free chlorine (mg/L)",
     axis_legend_u: "ᴜ unit scale (pH, chlorine) — left",
+    action_ph_minus: "Lowers pH",
+    action_ph_plus: "Raises pH",
+    action_chlore: "Unstabilised chlorine (shock)",
+    action_chlore_stabilise: "Stabilised chlorine (CYA +)",
+    action_tac_plus: "Raises alkalinity",
+    action_brome: "Bromine",
+    action_o2: "Active oxygen",
+    action_sel: "Salt (salinity)",
     axis_legend_d: "ᴅ tens scale (TAC, CYA, temperature) — right",
     reco_tac_low: "TAC too low ({val} mg/L)",
     reco_ph_high: "pH too high ({val})",
@@ -663,6 +679,14 @@ const TRANSLATIONS = {
     param_ph: "pH",
     param_fcl: "Freies Chlor (mg/L)",
     axis_legend_u: "ᴜ Einheitsskala (pH, Chlor) — links",
+    action_ph_minus: "pH senken",
+    action_ph_plus: "pH erhöhen",
+    action_chlore: "Nicht stabilisiertes Chlor (Schock)",
+    action_chlore_stabilise: "Stabilisiertes Chlor (CYA +)",
+    action_tac_plus: "KH erhöhen",
+    action_brome: "Brom",
+    action_o2: "Aktivsauerstoff",
+    action_sel: "Salz (Salzgehalt)",
     axis_legend_d: "ᴅ Zehnerskala (TAC, CYA, Temperatur) — rechts",
     reco_tac_low: "KH zu niedrig ({val} mg/L)",
     reco_ph_high: "pH zu hoch ({val})",
@@ -901,6 +925,14 @@ const TRANSLATIONS = {
     param_ph: "pH",
     param_fcl: "Cloro libero (mg/L)",
     axis_legend_u: "ᴜ scala unità (pH, cloro) — sinistra",
+    action_ph_minus: "Abbassa il pH",
+    action_ph_plus: "Alza il pH",
+    action_chlore: "Cloro non stabilizzato (shock)",
+    action_chlore_stabilise: "Cloro stabilizzato (CYA +)",
+    action_tac_plus: "Alza il TAC",
+    action_brome: "Bromo",
+    action_o2: "Ossigeno attivo",
+    action_sel: "Sale (salinità)",
     axis_legend_d: "ᴅ scala decine (TAC, CYA, temperatura) — destra",
     reco_tac_low: "TAC troppo basso ({val} mg/L)",
     reco_ph_high: "pH troppo alto ({val})",
@@ -1139,6 +1171,14 @@ const TRANSLATIONS = {
     param_ph: "pH",
     param_fcl: "Cloro libre (mg/L)",
     axis_legend_u: "ᴜ escala unidades (pH, cloro) — izquierda",
+    action_ph_minus: "Baja el pH",
+    action_ph_plus: "Sube el pH",
+    action_chlore: "Cloro no estabilizado (choque)",
+    action_chlore_stabilise: "Cloro estabilizado (CYA +)",
+    action_tac_plus: "Sube el TAC",
+    action_brome: "Bromo",
+    action_o2: "Oxígeno activo",
+    action_sel: "Sal (salinidad)",
     axis_legend_d: "ᴅ escala decenas (TAC, CYA, temperatura) — derecha",
     reco_tac_low: "TAC demasiado bajo ({val} mg/L)",
     reco_ph_high: "pH demasiado alto ({val})",
@@ -1377,6 +1417,14 @@ const TRANSLATIONS = {
     param_ph: "pH",
     param_fcl: "Cloro livre (mg/L)",
     axis_legend_u: "ᴜ escala unidades (pH, cloro) — esquerda",
+    action_ph_minus: "Baixa o pH",
+    action_ph_plus: "Sobe o pH",
+    action_chlore: "Cloro não estabilizado (choque)",
+    action_chlore_stabilise: "Cloro estabilizado (CYA +)",
+    action_tac_plus: "Sobe o TAC",
+    action_brome: "Bromo",
+    action_o2: "Oxigênio ativo",
+    action_sel: "Sal (salinidade)",
     axis_legend_d: "ᴅ escala dezenas (TAC, CYA, temperatura) — direita",
     reco_tac_low: "TAC muito baixo ({val} mg/L)",
     reco_ph_high: "pH muito alto ({val})",
@@ -1619,16 +1667,21 @@ const DEFAULT_PRODUCTS = [
   },
 ];
 
-const PRODUCT_ACTIONS = [
-  { value: "ph-",             label: "Baisse le pH" },
-  { value: "ph+",             label: "Monte le pH" },
-  { value: "chlore",          label: "Chlore non stabilisé (choc)" },
-  { value: "chlore-stabilise",label: "Chlore stabilisé (CYA +)" },
-  { value: "tac+",            label: "Monte le TAC" },
-  { value: "brome",           label: "Brome" },
-  { value: "o2",              label: "Oxygène actif" },
-  { value: "sel",             label: "Sel (salinité)" },
-];
+function getProductActions(lang) {
+  const dict = TRANSLATIONS[lang] || TRANSLATIONS.fr;
+  return [
+    { value: "ph-",              label: dict.action_ph_minus || "Baisse le pH" },
+    { value: "ph+",              label: dict.action_ph_plus || "Monte le pH" },
+    { value: "chlore",           label: dict.action_chlore || "Chlore non stabilisé (choc)" },
+    { value: "chlore-stabilise", label: dict.action_chlore_stabilise || "Chlore stabilisé (CYA +)" },
+    { value: "tac+",             label: dict.action_tac_plus || "Monte le TAC" },
+    { value: "brome",            label: dict.action_brome || "Brome" },
+    { value: "o2",               label: dict.action_o2 || "Oxygène actif" },
+    { value: "sel",              label: dict.action_sel || "Sel (salinité)" },
+  ];
+}
+// Fallback statique pour les usages sans lang (prompts IA)
+const PRODUCT_ACTIONS = getProductActions("fr");
 
 const DEFAULT_WAIT_HOURS = {
   "ph-": 2,
@@ -2512,7 +2565,7 @@ function Header({ poolName, location, poolPhoto, isPremium, pools, activePoolId,
                 onAddPool();
               }}
             >
-              <Plus size={16} /> Ajouter un bassin
+              <Plus size={16} /> {t("add_pool")}
             </button>
           </div>
         </div>
@@ -3918,7 +3971,7 @@ function ProductsView({ products, onEdit, onAddNew, onDelete, onResetAll, isPrem
                   <div style={styles.productName}>{p.name}</div>
                   <div style={styles.productMeta}>
                     {p.doseAmount} {p.doseUnit} → {p.effectAmount} / {p.effectPer} m³ ·{" "}
-                    {PRODUCT_ACTIONS.find((a) => a.value === p.action)?.label}
+                    {getProductActions(lang).find((a) => a.value === p.action)?.label}
                     {!!p.waitHours && ` · ${p.waitHours}h`}
                   </div>
                   {(() => {
@@ -4024,74 +4077,48 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
   return (
     <ModalShell
       onClose={onClose}
-      title={product ? "Modifier le produit" : "Nouveau produit"}
+      title={product ? t("edit_product") : t("new_product")}
       rightAction={
         product ? (
-          <button
-            style={styles.modalDeleteBtn}
-            onClick={() => {
-              onSave({ ...product, __delete: true });
-            }}
-          >
+          <button style={styles.modalDeleteBtn} onClick={() => onSave({ ...product, __delete: true })}>
             <Trash2 size={16} />
           </button>
         ) : null
       }
     >
-      <label style={styles.fieldLabel}>Photo du produit (étiquette)</label>
+      <label style={styles.fieldLabel}>{t("product_photo")}</label>
       {isPremium ? (
         <div>
           {photo ? (
             <div style={styles.photoPreviewWrap}>
-              <img src={photo} alt="Aperçu" style={styles.photoPreview} />
+              <img src={photo} alt="" style={styles.photoPreview} />
               <button style={styles.photoRemoveBtn} onClick={() => setPhoto(null)}>
-                <X size={14} /> Retirer
+                <X size={14} /> {t("remove")}
               </button>
             </div>
           ) : (
             <div style={styles.photoCaptureBtnRow}>
-              <button
-                type="button"
-                style={styles.photoCaptureBtnHalf}
-                onClick={() => fileInputRef.current?.click()}
-              >
+              <button type="button" style={styles.photoCaptureBtnHalf} onClick={() => fileInputRef.current?.click()}>
                 <Camera size={17} />
-                {photoBusy ? "..." : "Appareil photo"}
+                {photoBusy ? "..." : t("camera_btn")}
               </button>
-              <button
-                type="button"
-                style={styles.photoCaptureBtnHalf}
-                onClick={() => galleryInputRef.current?.click()}
-              >
+              <button type="button" style={styles.photoCaptureBtnHalf} onClick={() => galleryInputRef.current?.click()}>
                 <ImageOff size={17} />
-                {photoBusy ? "..." : "Bibliothèque"}
+                {photoBusy ? "..." : t("gallery_btn")}
               </button>
             </div>
           )}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={handlePhotoChange}
-            style={styles.hiddenFileInput}
-          />
-          <input
-            ref={galleryInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handlePhotoChange}
-            style={styles.hiddenFileInput}
-          />
+          <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoChange} style={styles.hiddenFileInput} />
+          <input ref={galleryInputRef} type="file" accept="image/*" onChange={handlePhotoChange} style={styles.hiddenFileInput} />
         </div>
       ) : (
         <button style={styles.photoLockedBtn} onClick={onWantPremium}>
           <Lock size={16} />
-          <span>Photo réservée à la version illimitée</span>
+          <span>{t("analyze_locked")}</span>
         </button>
       )}
 
-      <label style={styles.fieldLabel}>Nom du produit</label>
+      <label style={styles.fieldLabel}>{t("product_name")}</label>
       <input
         style={styles.input}
         value={name}
@@ -4099,113 +4126,71 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
         placeholder="ex: Chlore choc XYZ"
       />
 
-      <label style={styles.fieldLabel}>Effet</label>
+      <label style={styles.fieldLabel}>{t("effect")}</label>
       <select style={styles.input} value={action} onChange={(e) => setAction(e.target.value)}>
-        {PRODUCT_ACTIONS.map((a) => (
-          <option key={a.value} value={a.value}>
-            {a.label}
-          </option>
+        {getProductActions(lang).map((a) => (
+          <option key={a.value} value={a.value}>{a.label}</option>
         ))}
       </select>
 
       <div style={styles.fieldGrid}>
         <div>
-          <label style={styles.fieldLabel}>Quantité</label>
-          <input
-            type="number"
-            style={styles.input}
-            value={doseAmount}
-            onChange={(e) => setDoseAmount(e.target.value)}
-          />
-        </div>
-
-        <div>
-          <label style={styles.fieldLabel}>Effet (variation)</label>
-          <input
-            type="number"
-            style={styles.input}
-            value={effectAmount}
-            onChange={(e) => setEffectAmount(e.target.value)}
-          />
+          <label style={styles.fieldLabel}>{t("quantity")}</label>
+          <input type="number" style={styles.input} value={doseAmount} onChange={(e) => setDoseAmount(e.target.value)} />
         </div>
         <div>
-          <label style={styles.fieldLabel}>Pour X m³</label>
-          <input
-            type="number"
-            style={styles.input}
-            value={effectPer}
-            onChange={(e) => setEffectPer(e.target.value)}
-          />
+          <label style={styles.fieldLabel}>{t("effect_variation")}</label>
+          <input type="number" style={styles.input} value={effectAmount} onChange={(e) => setEffectAmount(e.target.value)} />
+        </div>
+        <div>
+          <label style={styles.fieldLabel}>{t("for_x_m3")}</label>
+          <input type="number" style={styles.input} value={effectPer} onChange={(e) => setEffectPer(e.target.value)} />
         </div>
       </div>
 
-      <label style={styles.fieldLabel}>Délai d'attente avant le traitement suivant (heures)</label>
-      <input
-        type="number"
-        style={styles.input}
-        value={waitHours}
-        onChange={(e) => setWaitHours(e.target.value)}
-        placeholder="2"
-      />
+      <label style={styles.fieldLabel}>{t("wait_hours")}</label>
+      <input type="number" style={styles.input} value={waitHours} onChange={(e) => setWaitHours(e.target.value)} placeholder="2" />
 
       {!isPremium ? (
         <button style={styles.photoLockedBtn} onClick={onWantPremium}>
           <Lock size={16} />
-          <span>Gestion du stock réservée à la version illimitée</span>
+          <span>{t("stock_locked")}</span>
         </button>
       ) : !manageStock ? (
         <div style={styles.stockNotManagedBox}>
-          <span>La gestion du stock n'est pas activée pour ce bassin.</span>
+          <span>{t("stock_not_managed_modal")}</span>
           <button type="button" style={styles.stockActivateLink} onClick={onWantManageStock}>
-            Activer dans Réglages →
+            {t("activate_in_settings")}
           </button>
         </div>
       ) : (
         <>
-          <label style={styles.fieldLabel}>Taille du contenant</label>
+          <label style={styles.fieldLabel}>{t("container_size")}</label>
           <div style={styles.segmentedControl}>
             {["kg", "L"].map((u) => (
-              <button
-                key={u}
-                type="button"
-                onClick={() => setContainerUnit(u)}
-                style={{
-                  ...styles.segmentedBtn,
-                  ...(containerUnit === u ? styles.segmentedBtnActive : {}),
-                }}
-              >
+              <button key={u} type="button" onClick={() => setContainerUnit(u)}
+                style={{ ...styles.segmentedBtn, ...(containerUnit === u ? styles.segmentedBtnActive : {}) }}>
                 {u}
               </button>
             ))}
           </div>
-          <input
-            type="number"
-            style={styles.input}
-            value={containerAmount}
-            onChange={(e) => setContainerAmount(e.target.value)}
-            placeholder="1"
-            min="0.01"
-            step="0.1"
-          />
+          <input type="number" style={styles.input} value={containerAmount}
+            onChange={(e) => setContainerAmount(e.target.value)} placeholder="1" min="0.01" step="0.1" />
 
-          <label style={styles.fieldLabel}>Stock actuel</label>
+          <label style={styles.fieldLabel}>{t("current_stock")}</label>
           {stockPercent === null ? (
             <div style={styles.stockInitRow}>
               <button type="button" style={styles.stockInitBtn} onClick={() => setStockPercent(100)}>
-                Produit neuf (100 %)
+                {t("new_product_btn")}
               </button>
               <button type="button" style={styles.stockInitBtn} onClick={() => setStockPercent(50)}>
-                Saisir manuellement
+                {t("manual_entry")}
               </button>
             </div>
           ) : (
             <div style={styles.stockSliderWrap}>
-              <input
-                type="range" min="0" max="100"
-                value={stockPercent}
-                onChange={(e) => setStockPercent(Number(e.target.value))}
-                style={{ flex: 1 }}
-              />
+              <input type="range" min="0" max="100" value={stockPercent}
+                onChange={(e) => setStockPercent(Number(e.target.value))} style={{ flex: 1 }} />
               <span style={{ ...styles.stockPercentLabel, color: stockPercent <= 20 ? "#c0392b" : "#0d2b4e", fontWeight: 700 }}>
                 {stockPercent} %
               </span>
@@ -4215,7 +4200,6 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
       )}
 
       {isPremium && product && (() => {
-        // Extraire les 10 dernières consommations de ce produit
         const history = (applications || [])
           .flatMap((app) => (app.steps || [])
             .filter((s) => s.productName === product.name && s.appliedAmount)
@@ -4226,7 +4210,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
         if (!history.length) return null;
         return (
           <div style={{ marginBottom: 12 }}>
-            <label style={styles.fieldLabel}>10 dernières consommations</label>
+            <label style={styles.fieldLabel}>{t("last_consumptions")}</label>
             <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
               {history.map((h, i) => {
                 const unit = h.unit || "g";
@@ -4248,15 +4232,12 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
         );
       })()}
 
-      <label style={styles.fieldLabel}>Note / précaution</label>
-      <textarea
-        style={{ ...styles.input, minHeight: 64, resize: "vertical" }}
-        value={note}
-        onChange={(e) => setNote(e.target.value)}
-      />
+      <label style={styles.fieldLabel}>{t("note_precaution")}</label>
+      <textarea style={{ ...styles.input, minHeight: 64, resize: "vertical" }}
+        value={note} onChange={(e) => setNote(e.target.value)} />
 
       <button style={styles.primaryBtn} onClick={handleSave}>
-        Enregistrer le produit
+        {t("save_product")}
       </button>
     </ModalShell>
   );
