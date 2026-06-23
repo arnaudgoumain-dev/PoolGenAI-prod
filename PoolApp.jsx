@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "0.45";
+const APP_VERSION = "0.46";
 
 const TRANSLATIONS = {
   fr: {
@@ -3743,9 +3743,9 @@ function ValidateApplicationModal({ measure, recs, existingApplication, onClose,
 
   if (step === "select") {
     return (
-      <ModalShell onClose={onClose} title="Appliquer ces conseils">
+      <ModalShell onClose={onClose} title={t("apply_title")}>
         <p style={styles.helpText}>
-          Sélectionne les conseils que tu as appliqués pour la mesure du {formatDate(measure.date)}.
+          {t("apply_subtitle")} {formatDate(measure.date)}.
         </p>
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 4 }}>
           {recs.map((r, i) => (
@@ -3785,7 +3785,7 @@ function ValidateApplicationModal({ measure, recs, existingApplication, onClose,
           onClick={handleConfirmSelection}
           disabled={selectedCount === 0}
         >
-          Confirmer ({selectedCount} conseil{selectedCount > 1 ? "s" : ""})
+          {t("confirm_btn")} ({selectedCount} {selectedCount > 1 ? t("confirm_count_plural") : t("confirm_count")})
         </button>
       </ModalShell>
     );
@@ -3793,10 +3793,8 @@ function ValidateApplicationModal({ measure, recs, existingApplication, onClose,
 
   // Étape 2 : saisie des quantités
   return (
-    <ModalShell onClose={onClose} title="Quantités appliquées">
-      <p style={styles.helpText}>
-        Ajuste les quantités si besoin — ces informations serviront pour ton rapport.
-      </p>
+    <ModalShell onClose={onClose} title={t("quantities_title")}>
+      <p style={styles.helpText}>{t("quantities_subtitle")}</p>
       <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 4 }}>
         {recs.filter((_, i) => selected[i]).map((r) => {
           const i = recs.indexOf(r);
@@ -3809,16 +3807,16 @@ function ValidateApplicationModal({ measure, recs, existingApplication, onClose,
               {manageStock && products && r.productAvailable &&
                 !products.find((p) => p.name === r.productName && (p.stockPercent ?? 100) > 0) && (
                 <div style={{ padding: "8px 10px", borderRadius: 8, background: "#fdf0ef", border: "1px solid #f5c6c2", marginBottom: 8, fontSize: 12, color: "#c0392b", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span><AlertTriangle size={12} style={{ marginRight: 4 }} />Stock épuisé pour ce produit.</span>
+                  <span><AlertTriangle size={12} style={{ marginRight: 4 }} />{t("stock_empty")}</span>
                   <button type="button" onClick={onWantAddProduct} style={{ background: "none", border: "none", color: "#c0392b", fontWeight: 700, fontSize: 12, cursor: "pointer", textDecoration: "underline" }}>
-                    Ajouter →
+                    {t("add_arrow")}
                   </button>
                 </div>
               )}
               {r.doseUnit ? (
                 <div style={styles.fieldGrid}>
                   <div>
-                    <label style={styles.fieldLabel}>Quantité appliquée</label>
+                    <label style={styles.fieldLabel}>{t("quantity_applied")}</label>
                     <input
                       type="number"
                       style={styles.input}
@@ -3829,7 +3827,7 @@ function ValidateApplicationModal({ measure, recs, existingApplication, onClose,
                     />
                   </div>
                   <div>
-                    <label style={styles.fieldLabel}>Unité</label>
+                    <label style={styles.fieldLabel}>{t("unit")}</label>
                     <div style={styles.unitTag}>{displayUnit}</div>
                   </div>
                 </div>
@@ -3842,11 +3840,11 @@ function ValidateApplicationModal({ measure, recs, existingApplication, onClose,
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 16 }}>
         <button style={styles.primaryBtn} onClick={handleSave}>
-          Valider
+          {t("validate_btn")}
         </button>
         <button style={{ ...styles.primaryBtn, background: "#f0f6fb", color: "#0a6ebd", border: "1px solid #d0e4f5" }}
           onClick={() => setStep("select")}>
-          ← Retour
+          {t("back_btn")}
         </button>
       </div>
     </ModalShell>
