@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "0.37";
+const APP_VERSION = "0.39";
 
 const TRANSLATIONS = {
   fr: {
@@ -119,24 +119,24 @@ const TRANSLATIONS = {
     add_arrow: "Ajouter →",
     // Settings
     settings_title: "Réglages",
-    my_pools: "Mes bassins",
-    pool_name: "Nom du bassin",
-    location: "Localisation",
+    my_pools: t("my_pools"),
+    pool_name: t("pool_name"),
+    location: t("location"),
     volume: "Volume (m³)",
-    treatment_type: "Type de traitement",
-    filtration_type: "Type de filtration",
-    manage_stock_label: "Gestion du stock",
-    manage_stock_desc: "Suit la consommation des produits et l'affiche dans le rapport.",
+    treatment_type: t("treatment_type"),
+    filtration_type: t("filtration_type"),
+    manage_stock_label: t("manage_stock_label"),
+    manage_stock_desc: t("manage_stock_desc"),
     manage_stock_locked: "Disponible en version illimitée",
-    api_key_label: "Clé API Anthropic ou URL du proxy Cloudflare Worker",
+    api_key_label: t("api_key_label"),
     provider_label: "Provider",
-    api_key_placeholder: "sk-ant-... ou https://mon-proxy.workers.dev",
+    api_key_placeholder: t("api_key_placeholder"),
     api_key_desc: "Ta clé est stockée localement. Pour Anthropic, saisis une clé sk-ant-... ou l'URL de ton proxy Cloudflare Worker (recommandé).",
     premium_section: "VERSION",
     premium_label: "Version illimitée",
-    premium_test: "Interrupteur de test — pas de vrai paiement ici",
+    premium_test: t("premium_test"),
     premium_desc: "En version gratuite : 1 mesure par jour (tous bassins confondus), plusieurs bassins avec photo d'identification. En illimité : mesures sans limite, photos sur mesures et produits.",
-    delete_measures: "Supprimer toutes les mesures de ce bassin",
+    delete_measures: t("delete_measures"),
     sensitive_zone: "ZONE SENSIBLE",
     add_pool: "Ajouter un bassin",
     delete_pool: "Supprimer ce bassin",
@@ -185,6 +185,34 @@ const TRANSLATIONS = {
     free_version: "Gratuit",
     unlimited_version: "Illimité",
   },
+    active_pool: t("active_pool"),
+    pool_volume: t("pool_volume"),
+    treatment_params: "Paramètres :",
+    treatment_desc: "Le traitement détermine quels paramètres sont mesurés et les cibles recommandées. Le volume est utilisé pour calculer les doses de produits.",
+    subscription: t("subscription"),
+    unlimited_active: t("unlimited_active"),
+    free_mode: t("free_mode"),
+    api_section: t("api_section"),
+    ai_locked_settings: t("ai_locked_settings"),
+    api_key_openai: t("api_key_openai"),
+    hide: t("hide"),
+    show: t("show"),
+
+    treatment_chlore: "Chlore",
+    treatment_chlore_desc: "Chlore stabilisé ou non, usage courant",
+    treatment_sel: "Sel (électrolyseur)",
+    treatment_sel_desc: "Électrolyseur au sel, le chlore est produit en continu",
+    treatment_brome: "Brome",
+    treatment_brome_desc: "Traitement au brome, courant pour spas et piscines intérieures",
+    treatment_o2: "Oxygène actif / PHMB",
+    treatment_o2_desc: "Sans chlore ni brome, adapté aux peaux sensibles",
+    treatment_autre: "Autre (UV, ozone…)",
+    treatment_autre_desc: "Système alternatif ou combiné, paramètres de base",
+    filtration_sable: "Sable",
+    filtration_cartouche: "Cartouche",
+    filtration_diatomees: "Diatomées",
+    filtration_aucune: "Sans filtration (naturelle)",
+
   en: {
     tab_pool: "Pool",
     tab_history: "History",
@@ -344,6 +372,34 @@ const TRANSLATIONS = {
     free_version: "Free",
     unlimited_version: "Unlimited",
   },
+    active_pool: "Active pool",
+    pool_volume: "Pool volume (m³)",
+    treatment_params: "Parameters:",
+    treatment_desc: "The treatment determines which parameters are measured and the recommended targets. Volume is used to calculate product doses.",
+    subscription: "Subscription",
+    unlimited_active: "Unlimited mode active",
+    free_mode: "Free version",
+    api_section: "API Key (AI analysis)",
+    ai_locked_settings: "AI analysis reserved for unlimited version",
+    api_key_openai: "OpenAI API Key",
+    hide: "Hide",
+    show: "Show",
+
+    treatment_chlore: "Chlorine",
+    treatment_chlore_desc: "Stabilised or unstabilised chlorine, common use",
+    treatment_sel: "Salt (electrolyser)",
+    treatment_sel_desc: "Salt electrolyser, chlorine produced continuously",
+    treatment_brome: "Bromine",
+    treatment_brome_desc: "Bromine treatment, common for spas and indoor pools",
+    treatment_o2: "Active oxygen / PHMB",
+    treatment_o2_desc: "Chlorine and bromine free, suitable for sensitive skin",
+    treatment_autre: "Other (UV, ozone…)",
+    treatment_autre_desc: "Alternative or combined system, basic parameters",
+    filtration_sable: "Sand",
+    filtration_cartouche: "Cartridge",
+    filtration_diatomees: "Diatomaceous earth",
+    filtration_aucune: "No filtration (natural)",
+
   de: {
     tab_pool: "Becken",
     tab_history: "Verlauf",
@@ -503,6 +559,34 @@ const TRANSLATIONS = {
     free_version: "Kostenlos",
     unlimited_version: "Unbegrenzt",
   },
+    active_pool: "Aktives Becken",
+    pool_volume: "Beckenvolumen (m³)",
+    treatment_params: "Parameter:",
+    treatment_desc: "Die Behandlung bestimmt, welche Parameter gemessen werden und die empfohlenen Ziele. Das Volumen wird zur Berechnung der Produktdosen verwendet.",
+    subscription: "Abonnement",
+    unlimited_active: "Unbegrenzter Modus aktiv",
+    free_mode: "Kostenlose Version",
+    api_section: "API-Schlüssel (KI-Analyse)",
+    ai_locked_settings: "KI-Analyse nur in unbegrenzter Version",
+    api_key_openai: "OpenAI API-Schlüssel",
+    hide: "Verbergen",
+    show: "Anzeigen",
+
+    treatment_chlore: "Chlor",
+    treatment_chlore_desc: "Stabilisiertes oder nicht stabilisiertes Chlor, allgemeine Verwendung",
+    treatment_sel: "Salz (Elektrolyseur)",
+    treatment_sel_desc: "Salzelektrolyseur, Chlor wird kontinuierlich produziert",
+    treatment_brome: "Brom",
+    treatment_brome_desc: "Brombehandlung, üblich für Spas und Hallenbäder",
+    treatment_o2: "Aktivsauerstoff / PHMB",
+    treatment_o2_desc: "Ohne Chlor und Brom, geeignet für empfindliche Haut",
+    treatment_autre: "Sonstiges (UV, Ozon…)",
+    treatment_autre_desc: "Alternatives oder kombiniertes System, Grundparameter",
+    filtration_sable: "Sand",
+    filtration_cartouche: "Kartusche",
+    filtration_diatomees: "Diatomeenerde",
+    filtration_aucune: "Ohne Filtration (natürlich)",
+
   it: {
     tab_pool: "Vasca",
     tab_history: "Storico",
@@ -662,6 +746,34 @@ const TRANSLATIONS = {
     free_version: "Gratuito",
     unlimited_version: "Illimitato",
   },
+    active_pool: "Vasca attiva",
+    pool_volume: "Volume vasca (m³)",
+    treatment_params: "Parametri:",
+    treatment_desc: "Il trattamento determina quali parametri vengono misurati e gli obiettivi raccomandati. Il volume viene usato per calcolare le dosi di prodotto.",
+    subscription: "Abbonamento",
+    unlimited_active: "Modalità illimitata attiva",
+    free_mode: "Versione gratuita",
+    api_section: "Chiave API (analisi IA)",
+    ai_locked_settings: "Analisi IA riservata alla versione illimitata",
+    api_key_openai: "Chiave API OpenAI",
+    hide: "Nascondi",
+    show: "Mostra",
+
+    treatment_chlore: "Cloro",
+    treatment_chlore_desc: "Cloro stabilizzato o non, uso comune",
+    treatment_sel: "Sale (elettrolizzatore)",
+    treatment_sel_desc: "Elettrolizzatore a sale, il cloro è prodotto in continuo",
+    treatment_brome: "Bromo",
+    treatment_brome_desc: "Trattamento al bromo, comune per spa e piscine coperte",
+    treatment_o2: "Ossigeno attivo / PHMB",
+    treatment_o2_desc: "Senza cloro né bromo, adatto a pelli sensibili",
+    treatment_autre: "Altro (UV, ozono…)",
+    treatment_autre_desc: "Sistema alternativo o combinato, parametri base",
+    filtration_sable: "Sabbia",
+    filtration_cartouche: "Cartuccia",
+    filtration_diatomees: "Diatomee",
+    filtration_aucune: "Senza filtrazione (naturale)",
+
   es: {
     tab_pool: "Piscina",
     tab_history: "Historial",
@@ -821,6 +933,34 @@ const TRANSLATIONS = {
     free_version: "Gratuito",
     unlimited_version: "Ilimitado",
   },
+    active_pool: "Piscina activa",
+    pool_volume: "Volumen piscina (m³)",
+    treatment_params: "Parámetros:",
+    treatment_desc: "El tratamiento determina qué parámetros se miden y los objetivos recomendados. El volumen se usa para calcular las dosis de producto.",
+    subscription: "Suscripción",
+    unlimited_active: "Modo ilimitado activo",
+    free_mode: "Versión gratuita",
+    api_section: "Clave API (análisis IA)",
+    ai_locked_settings: "Análisis IA reservado para versión ilimitada",
+    api_key_openai: "Clave API OpenAI",
+    hide: "Ocultar",
+    show: "Mostrar",
+
+    treatment_chlore: "Cloro",
+    treatment_chlore_desc: "Cloro estabilizado o no, uso común",
+    treatment_sel: "Sal (electrolizador)",
+    treatment_sel_desc: "Electrolizador de sal, cloro producido continuamente",
+    treatment_brome: "Bromo",
+    treatment_brome_desc: "Tratamiento con bromo, común para spas y piscinas interiores",
+    treatment_o2: "Oxígeno activo / PHMB",
+    treatment_o2_desc: "Sin cloro ni bromo, adecuado para pieles sensibles",
+    treatment_autre: "Otro (UV, ozono…)",
+    treatment_autre_desc: "Sistema alternativo o combinado, parámetros básicos",
+    filtration_sable: "Arena",
+    filtration_cartouche: "Cartucho",
+    filtration_diatomees: "Tierra de diatomeas",
+    filtration_aucune: "Sin filtración (natural)",
+
   pt: {
     tab_pool: "Piscina",
     tab_history: "Histórico",
@@ -980,6 +1120,34 @@ const TRANSLATIONS = {
     free_version: "Gratuito",
     unlimited_version: "Ilimitado",
   },
+    active_pool: "Piscina ativa",
+    pool_volume: "Volume piscina (m³)",
+    treatment_params: "Parâmetros:",
+    treatment_desc: "O tratamento determina quais parâmetros são medidos e os alvos recomendados. O volume é usado para calcular as doses de produto.",
+    subscription: "Assinatura",
+    unlimited_active: "Modo ilimitado ativo",
+    free_mode: "Versão gratuita",
+    api_section: "Chave API (análise IA)",
+    ai_locked_settings: "Análise IA reservada para versão ilimitada",
+    api_key_openai: "Chave API OpenAI",
+    hide: "Ocultar",
+    show: "Mostrar",
+
+    treatment_chlore: "Cloro",
+    treatment_chlore_desc: "Cloro estabilizado ou não, uso comum",
+    treatment_sel: "Sal (eletrólise)",
+    treatment_sel_desc: "Eletrólise de sal, cloro produzido continuamente",
+    treatment_brome: "Bromo",
+    treatment_brome_desc: "Tratamento com bromo, comum para spas e piscinas internas",
+    treatment_o2: "Oxigênio ativo / PHMB",
+    treatment_o2_desc: "Sem cloro nem bromo, adequado para peles sensíveis",
+    treatment_autre: "Outro (UV, ozônio…)",
+    treatment_autre_desc: "Sistema alternativo ou combinado, parâmetros básicos",
+    filtration_sable: "Areia",
+    filtration_cartouche: "Cartucho",
+    filtration_diatomees: "Terra de diatomáceas",
+    filtration_aucune: "Sem filtração (natural)",
+
 };
 
 function useT(lang) {
@@ -1020,60 +1188,52 @@ const TARGETS = {
 
 // Types de traitement — définissent quels paramètres sont pertinents
 // et si les cibles standard s'appliquent ou sont ajustées.
-const TREATMENT_TYPES = [
-  {
-    value: "chlore",
-    label: "Chlore",
-    description: "Chlore stabilisé ou non, usage courant",
-    params: ["pH", "fCl", "tCl", "tac", "cya", "temp"],
-    targets: {}, // utilise les cibles standard de TARGETS
-  },
-  {
-    value: "sel",
-    label: "Sel (électrolyseur)",
-    description: "Électrolyseur au sel, le chlore est produit en continu",
-    params: ["pH", "fCl", "tCl", "tac", "sel", "temp"],
-    targets: {
-      pH:  { min: 7.2, max: 7.6 },   // tolérance légèrement plus large
-      fCl: { min: 0.5, max: 2 },      // électrolyseur maintient en continu, doses plus faibles
-      sel: { min: 3000, max: 5000 },
-    },
-  },
-  {
-    value: "brome",
-    label: "Brome",
-    description: "Traitement au brome, courant pour spas et piscines intérieures",
-    params: ["pH", "brome", "tac", "temp"],
-    targets: {
-      pH:    { min: 7.2, max: 7.6 },
-      brome: { min: 2, max: 4 },
-    },
-  },
-  {
-    value: "o2",
-    label: "Oxygène actif / PHMB",
-    description: "Sans chlore ni brome, adapté aux peaux sensibles",
-    params: ["pH", "o2", "tac", "temp"],
-    targets: {
-      pH: { min: 6.8, max: 7.4 },    // plage pH différente pour O2 actif
-      o2: { min: 10, max: 30 },
-    },
-  },
-  {
-    value: "autre",
-    label: "Autre (UV, ozone…)",
-    description: "Système alternatif ou combiné, paramètres de base",
-    params: ["pH", "fCl", "tac", "temp"],
-    targets: {},
-  },
+// Structure de base sans labels (les labels sont traduits dynamiquement)
+const TREATMENT_TYPES_BASE = [
+  { value: "chlore",  labelKey: "treatment_chlore",  descKey: "treatment_chlore_desc",  params: ["pH", "fCl", "tCl", "tac", "cya", "temp"], targets: {} },
+  { value: "sel",     labelKey: "treatment_sel",     descKey: "treatment_sel_desc",     params: ["pH", "fCl", "tCl", "tac", "sel", "temp"], targets: { pH: { min: 7.2, max: 7.6 }, fCl: { min: 0.5, max: 2 }, sel: { min: 3000, max: 5000 } } },
+  { value: "brome",   labelKey: "treatment_brome",   descKey: "treatment_brome_desc",   params: ["pH", "brome", "tac", "temp"], targets: { pH: { min: 7.2, max: 7.6 }, brome: { min: 2, max: 4 } } },
+  { value: "o2",      labelKey: "treatment_o2",      descKey: "treatment_o2_desc",      params: ["pH", "o2", "tac", "temp"], targets: { pH: { min: 6.8, max: 7.4 }, o2: { min: 10, max: 30 } } },
+  { value: "autre",   labelKey: "treatment_autre",   descKey: "treatment_autre_desc",   params: ["pH", "fCl", "tac", "temp"], targets: {} },
 ];
 
-const FILTRATION_TYPES = [
-  { value: "sable",     label: "Sable" },
-  { value: "cartouche", label: "Cartouche" },
-  { value: "diatomees", label: "Diatomées" },
-  { value: "aucune",    label: "Sans filtration (naturelle)" },
+const FILTRATION_TYPES_BASE = [
+  { value: "sable",     labelKey: "filtration_sable" },
+  { value: "cartouche", labelKey: "filtration_cartouche" },
+  { value: "diatomees", labelKey: "filtration_diatomees" },
+  { value: "aucune",    labelKey: "filtration_aucune" },
 ];
+
+// Compatibilité : TREATMENT_TYPES avec labels français par défaut
+const TREATMENT_TYPES = TREATMENT_TYPES_BASE.map((tt) => ({
+  ...tt,
+  label: (TRANSLATIONS.fr[tt.labelKey] || tt.value),
+  description: (TRANSLATIONS.fr[tt.descKey] || ""),
+}));
+
+const FILTRATION_TYPES = FILTRATION_TYPES_BASE.map((ft) => ({
+  ...ft,
+  label: (TRANSLATIONS.fr[ft.labelKey] || ft.value),
+}));
+
+// Retourne TREATMENT_TYPES avec labels traduits
+function getTreatmentTypes(lang) {
+  const dict = TRANSLATIONS[lang] || TRANSLATIONS.fr;
+  return TREATMENT_TYPES_BASE.map((tt) => ({
+    ...tt,
+    label: dict[tt.labelKey] || TRANSLATIONS.fr[tt.labelKey] || tt.value,
+    description: dict[tt.descKey] || TRANSLATIONS.fr[tt.descKey] || "",
+  }));
+}
+
+// Retourne FILTRATION_TYPES avec labels traduits
+function getFiltrationTypes(lang) {
+  const dict = TRANSLATIONS[lang] || TRANSLATIONS.fr;
+  return FILTRATION_TYPES_BASE.map((ft) => ({
+    ...ft,
+    label: dict[ft.labelKey] || TRANSLATIONS.fr[ft.labelKey] || ft.value,
+  }));
+}
 
 // Retourne les cibles effectives pour le traitement donné
 // (fusionne les cibles par défaut avec les surcharges du traitement)
@@ -1965,6 +2125,7 @@ function PoolApp() {
 // ---------- Header ----------
 function Header({ poolName, location, poolPhoto, isPremium, pools, activePoolId, onSwitchPool, onAddPool, lang }) {
   const t = useT(lang);
+  const treatmentTypes = getTreatmentTypes(lang);
   const [showSwitcher, setShowSwitcher] = useState(false);
 
   return (
@@ -2024,7 +2185,7 @@ function Header({ poolName, location, poolPhoto, isPremium, pools, activePoolId,
                 )}
                 <div style={{ flex: 1, textAlign: "left" }}>
                   <div style={{ fontWeight: 700, fontSize: 13.5, color: "#0d2b4e" }}>{p.name}</div>
-                  <div style={{ fontSize: 11.5, color: "#6a7d90" }}>{p.location} · {p.volume} m³ · {TREATMENT_TYPES.find((t) => t.value === p.treatmentType)?.label || "Chlore"}</div>
+                  <div style={{ fontSize: 11.5, color: "#6a7d90" }}>{p.location} · {p.volume} m³ · {treatmentTypes.find((tt) => tt.value === p.treatmentType)?.label || "Chlore"}</div>
                 </div>
                 {p.id === activePoolId && <CheckCircle2 size={16} color="#1a8fd1" />}
               </button>
@@ -3785,6 +3946,8 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
   const t = useT(lang);
   const [showLangPicker, setShowLangPicker] = useState(false);
   const [pendingLang, setPendingLang] = useState(lang);
+  const treatmentTypes = getTreatmentTypes(lang);
+  const filtrationTypes = getFiltrationTypes(lang);
   const activePool = pools.find((p) => p.id === activePoolId) || pools[0];
   const [showApiKey, setShowApiKey] = useState(false);
 
@@ -3877,9 +4040,7 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
       </div>
 
       <p style={styles.helpText}>
-        En version gratuite : 1 mesure par jour (tous bassins confondus), plusieurs bassins
-        avec photo d'identification. En illimité : mesures sans limite, photos sur mesures
-        et produits.
+{t("premium_desc")}
       </p>
 
       <div style={styles.sectionRow}>
@@ -3906,7 +4067,7 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
               )}
               <div style={{ flex: 1, textAlign: "left" }}>
                 <div style={{ fontWeight: 700, fontSize: 13.5, color: "#0d2b4e" }}>{p.name}</div>
-                <div style={{ fontSize: 11.5, color: "#6a7d90" }}>{p.location} · {p.volume} m³ · {TREATMENT_TYPES.find((t) => t.value === p.treatmentType)?.label || "Chlore"}</div>
+                <div style={{ fontSize: 11.5, color: "#6a7d90" }}>{p.location} · {p.volume} m³ · {treatmentTypes.find((tt) => tt.value === p.treatmentType)?.label || t("treatment_chlore")}</div>
               </div>
               {p.id === activePoolId && <CheckCircle2 size={16} color="#1a8fd1" />}
             </button>
@@ -3947,7 +4108,7 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
 
       <label style={styles.fieldLabel}>Type de traitement</label>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {TREATMENT_TYPES.map((tt) => (
+        {treatmentTypes.map((tt) => (
           <button
             key={tt.value}
             type="button"
@@ -3965,7 +4126,7 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
             </div>
             <div style={styles.treatmentOptionDesc}>{tt.description}</div>
             <div style={styles.treatmentOptionParams}>
-              Paramètres : {tt.params.join(", ")}
+              {t("treatment_params")} {tt.params.join(", ")}
             </div>
           </button>
         ))}
@@ -3973,7 +4134,7 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
 
       <label style={{ ...styles.fieldLabel, marginTop: 14 }}>Type de filtration</label>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        {FILTRATION_TYPES.map((ft) => (
+        {filtrationTypes.map((ft) => (
           <button
             key={ft.value}
             type="button"
@@ -3989,8 +4150,7 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
       </div>
 
       <p style={styles.helpText}>
-        Le traitement détermine quels paramètres sont mesurés et les cibles recommandées.
-        Le volume est utilisé pour calculer les doses de produits.
+{t("treatment_desc")}
       </p>
 
       {isPremium && (
@@ -4068,13 +4228,13 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
             </button>
           </div>
           <p style={styles.helpTextSmall}>
-            Ta clé est stockée localement. Pour Anthropic, saisis une clé sk-ant-... ou l'URL de ton proxy Cloudflare Worker (recommandé).
+{t("api_key_desc")}
           </p>
         </>
       )}
 
       <div style={styles.sectionRow}>
-        <span style={styles.sectionLabel}>Zone sensible</span>
+        <span style={styles.sectionLabel}>{t("sensitive_zone")}</span>
       </div>
       <button style={styles.dangerLinkBtn} onClick={onDeleteAllMeasures}>
         <Trash2 size={14} /> Supprimer toutes les mesures de ce bassin
