@@ -2329,23 +2329,23 @@ Réponds directement en français, sans titre ni introduction.`;
 function ParamCard({ param, value, effectiveTargets, lang }) {
   const t = useT(lang || "fr");
   const allTargets = effectiveTargets || TARGETS;
-  const t = allTargets[param] || TARGETS[param];
-  if (!t) return null;
+  const paramTarget = allTargets[param] || TARGETS[param];
+  if (!paramTarget) return null;
   const status = statusFor(param, value, allTargets);
   const color = statusColor(status);
   return (
     <div style={{ ...styles.paramCard, borderColor: color + "33" }}>
       <div style={styles.paramTop}>
-        <span style={styles.paramLabel}>{t.label}</span>
+        <span style={styles.paramLabel}>{paramTarget.label}</span>
         <span style={{ ...styles.paramDot, background: color }} />
       </div>
       <div style={styles.paramValue}>
         {value}
-        <span style={styles.paramUnit}>{t.unit}</span>
+        <span style={styles.paramUnit}>{paramTarget.unit}</span>
       </div>
-      <div style={{ ...styles.paramStatus, color }}>{statusLabel(status)}</div>
+      <div style={{ ...styles.paramStatus, color }}>{statusLabel(status, lang)}</div>
       <div style={styles.paramRange}>
-        cible {t.min}–{t.max} {t.unit}
+        {t("target")} {paramTarget.min}–{paramTarget.max} {paramTarget.unit}
       </div>
     </div>
   );
