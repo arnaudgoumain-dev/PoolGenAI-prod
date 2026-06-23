@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "0.36";
+const APP_VERSION = "0.37";
 
 const TRANSLATIONS = {
   fr: {
@@ -3783,6 +3783,8 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
 // ---------- Réglages ----------
 function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, onDeleteAllMeasures: onDeleteAllMeasuresRaw, poolMeasureCount, onGenerateReport, onWantPremiumForReport, onWantPremium, isPremium, setIsPremium, apiKey, setApiKey, apiProvider, setApiProvider, lang, setLang }) {
   const t = useT(lang);
+  const [showLangPicker, setShowLangPicker] = useState(false);
+  const [pendingLang, setPendingLang] = useState(lang);
   const activePool = pools.find((p) => p.id === activePoolId) || pools[0];
   const [showApiKey, setShowApiKey] = useState(false);
 
@@ -3799,22 +3801,51 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
       <div style={styles.sectionRow}>
         <span style={styles.sectionLabel}>{t("language_label")}</span>
       </div>
-      <div style={styles.segmentedControl}>
-        {LANGUAGE_OPTIONS.map((opt) => (
-          <button
-            key={opt.value}
-            type="button"
-            onClick={() => setLang(opt.value)}
-            style={{
-              ...styles.segmentedBtn,
-              ...(lang === opt.value ? styles.segmentedBtnActive : {}),
-              fontSize: 12,
-            }}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
+      <button
+        type="button"
+        style={styles.langPickerBtn}
+        onClick={() => { setPendingLang(lang); setShowLangPicker(true); }}
+      >
+        <span>{LANGUAGE_OPTIONS.find((o) => o.value === lang)?.label || "Français"}</span>
+        <ChevronDown size={16} />
+      </button>
+
+      {showLangPicker && (
+        <div style={styles.langPickerOverlay} onClick={() => setShowLangPicker(false)}>
+          <div style={styles.langPickerSheet} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.langPickerTitle}>{t("language_label")}</div>
+            <div style={styles.langPickerList}>
+              {LANGUAGE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  style={{
+                    ...styles.langPickerItem,
+                    background: pendingLang === opt.value ? "#e8f4fd" : "transparent",
+                    color: pendingLang === opt.value ? "#0a6ebd" : "#0d2b4e",
+                    fontWeight: pendingLang === opt.value ? 700 : 500,
+                  }}
+                  onClick={() => setPendingLang(opt.value)}
+                >
+                  <span>{opt.label}</span>
+                  {pendingLang === opt.value && (
+                    <CheckCircle2 size={18} color="#0a6ebd" />
+                  )}
+                </button>
+              ))}
+            </div>
+            <button
+              style={styles.primaryBtn}
+              onClick={() => {
+                setLang(pendingLang);
+                setShowLangPicker(false);
+              }}
+            >
+              {t("validate_btn")}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div style={styles.sectionRow}>
         <span style={styles.sectionLabel}>Abonnement</span>
@@ -4989,6 +5020,64 @@ const styles = {
     fontSize: 13,
     fontWeight: 600,
     cursor: "pointer",
+  },
+  langPickerBtn: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+    padding: "12px 14px",
+    borderRadius: 12,
+    border: "1.5px solid #d0e4f5",
+    background: "#f0f6fb",
+    color: "#0d2b4e",
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: "pointer",
+    boxSizing: "border-box",
+  },
+  langPickerOverlay: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(10,30,60,0.45)",
+    display: "flex",
+    alignItems: "flex-end",
+    justifyContent: "center",
+    zIndex: 200,
+  },
+  langPickerSheet: {
+    background: "#ffffff",
+    borderRadius: "20px 20px 0 0",
+    padding: "20px 18px 32px",
+    width: "100%",
+    maxWidth: 480,
+    boxShadow: "0 -4px 24px rgba(10,30,60,0.12)",
+  },
+  langPickerTitle: {
+    fontSize: 16,
+    fontWeight: 700,
+    color: "#0d2b4e",
+    marginBottom: 14,
+    textAlign: "center",
+  },
+  langPickerList: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 2,
+    marginBottom: 16,
+  },
+  langPickerItem: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+    padding: "13px 14px",
+    borderRadius: 10,
+    border: "none",
+    fontSize: 15,
+    cursor: "pointer",
+    textAlign: "left",
+    transition: "background 0.1s",
   },
   versionTag: {
     textAlign: "center",
