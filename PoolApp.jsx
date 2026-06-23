@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "0.35.1"; // cache-bust
+const APP_VERSION = "0.36";
 
 const TRANSLATIONS = {
   fr: {
@@ -3796,6 +3796,26 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
 
   return (
     <div>
+      <div style={styles.sectionRow}>
+        <span style={styles.sectionLabel}>{t("language_label")}</span>
+      </div>
+      <div style={styles.segmentedControl}>
+        {LANGUAGE_OPTIONS.map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => setLang(opt.value)}
+            style={{
+              ...styles.segmentedBtn,
+              ...(lang === opt.value ? styles.segmentedBtnActive : {}),
+              fontSize: 12,
+            }}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
       <div style={styles.sectionRow}>
         <span style={styles.sectionLabel}>Abonnement</span>
       </div>
