@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "0.42";
+const APP_VERSION = "0.44";
 
 const TRANSLATIONS = {
   fr: {
@@ -184,6 +184,27 @@ const TRANSLATIONS = {
     error_analyze: "Analyse impossible",
     verify_connection: "Vérifie ta connexion et les photos.",
     free_version: "Gratuit",
+    param_ph: "pH",
+    param_fcl: "Chlore libre (mg/L)",
+    axis_legend_u: "ᴜ échelle unités (pH, chlore) — gauche",
+    axis_legend_d: "ᴅ échelle dizaines (TAC, CYA, température) — droite",
+    paywall_perk1: "Mesures illimitées (au lieu d'1 par jour)",
+    paywall_perk2: "Photo de chaque mesure (preuve, archive visuelle)",
+    paywall_perk3: "Photo de chaque produit (étiquette, dosage)",
+    paywall_perk4: "Historique illimité",
+    paywall_perk5: "Multi-bassins",
+    paywall_test_note: "Ceci est une version de test. Aucun paiement réel n'est effectué.",
+    report_print_btn: "Imprimer / Enregistrer en PDF",
+    pool_photo: "Photo du bassin",
+    remove: "Retirer",
+    create_pool: "Créer le bassin",
+    param_tcl: "Chlore total (mg/L)",
+    param_tac: "TAC (mg/L)",
+    param_cya: "Stabilisant CYA (mg/L)",
+    param_temp: "Température de l'eau (°C)",
+    param_sel: "Salinité / sel (mg/L)",
+    param_brome: "Brome (mg/L)",
+    param_o2: "Oxygène actif (mg/L)",
     unlimited_version: "Illimité",
     active_pool: "Bassin actif",
     pool_volume: "Volume du bassin (m³)",
@@ -370,6 +391,27 @@ const TRANSLATIONS = {
     error_analyze: "Analysis failed",
     verify_connection: "Check your connection and photos.",
     free_version: "Free",
+    param_ph: "pH",
+    param_fcl: "Free chlorine (mg/L)",
+    axis_legend_u: "ᴜ unit scale (pH, chlorine) — left",
+    axis_legend_d: "ᴅ tens scale (TAC, CYA, temperature) — right",
+    paywall_perk1: "Unlimited readings (instead of 1 per day)",
+    paywall_perk2: "Photo of each reading (proof, visual archive)",
+    paywall_perk3: "Photo of each product (label, dosage)",
+    paywall_perk4: "Unlimited history",
+    paywall_perk5: "Multi-pool",
+    paywall_test_note: "This is a test version. No real payment is made.",
+    report_print_btn: "Print / Save as PDF",
+    pool_photo: "Pool photo",
+    remove: "Remove",
+    create_pool: "Create pool",
+    param_tcl: "Total chlorine (mg/L)",
+    param_tac: "Alkalinity (mg/L)",
+    param_cya: "CYA stabiliser (mg/L)",
+    param_temp: "Water temperature (°C)",
+    param_sel: "Salinity / salt (mg/L)",
+    param_brome: "Bromine (mg/L)",
+    param_o2: "Active oxygen (mg/L)",
     unlimited_version: "Unlimited",
     active_pool: "Active pool",
     pool_volume: "Pool volume (m³)",
@@ -556,6 +598,27 @@ const TRANSLATIONS = {
     error_analyze: "Analyse fehlgeschlagen",
     verify_connection: "Verbindung und Fotos prüfen.",
     free_version: "Kostenlos",
+    param_ph: "pH",
+    param_fcl: "Freies Chlor (mg/L)",
+    axis_legend_u: "ᴜ Einheitsskala (pH, Chlor) — links",
+    axis_legend_d: "ᴅ Zehnerskala (TAC, CYA, Temperatur) — rechts",
+    paywall_perk1: "Unbegrenzte Messungen (statt 1 pro Tag)",
+    paywall_perk2: "Foto jeder Messung (Nachweis, visuelles Archiv)",
+    paywall_perk3: "Foto jedes Produkts (Etikett, Dosierung)",
+    paywall_perk4: "Unbegrenzte Historie",
+    paywall_perk5: "Mehrere Becken",
+    paywall_test_note: "Dies ist eine Testversion. Es wird keine echte Zahlung vorgenommen.",
+    report_print_btn: "Drucken / Als PDF speichern",
+    pool_photo: "Beckenfoto",
+    remove: "Entfernen",
+    create_pool: "Becken erstellen",
+    param_tcl: "Gesamtchlor (mg/L)",
+    param_tac: "Karbonathärte (mg/L)",
+    param_cya: "Stabilisator CYA (mg/L)",
+    param_temp: "Wassertemperatur (°C)",
+    param_sel: "Salzgehalt (mg/L)",
+    param_brome: "Brom (mg/L)",
+    param_o2: "Aktivsauerstoff (mg/L)",
     unlimited_version: "Unbegrenzt",
     active_pool: "Aktives Becken",
     pool_volume: "Beckenvolumen (m³)",
@@ -742,6 +805,27 @@ const TRANSLATIONS = {
     error_analyze: "Analisi impossibile",
     verify_connection: "Controlla la connessione e le foto.",
     free_version: "Gratuito",
+    param_ph: "pH",
+    param_fcl: "Cloro libero (mg/L)",
+    axis_legend_u: "ᴜ scala unità (pH, cloro) — sinistra",
+    axis_legend_d: "ᴅ scala decine (TAC, CYA, temperatura) — destra",
+    paywall_perk1: "Misurazioni illimitate (invece di 1 al giorno)",
+    paywall_perk2: "Foto di ogni misurazione (prova, archivio visivo)",
+    paywall_perk3: "Foto di ogni prodotto (etichetta, dosaggio)",
+    paywall_perk4: "Storico illimitato",
+    paywall_perk5: "Multi-vasca",
+    paywall_test_note: "Questa è una versione di test. Nessun pagamento reale viene effettuato.",
+    report_print_btn: "Stampa / Salva come PDF",
+    pool_photo: "Foto vasca",
+    remove: "Rimuovi",
+    create_pool: "Crea vasca",
+    param_tcl: "Cloro totale (mg/L)",
+    param_tac: "TAC (mg/L)",
+    param_cya: "Stabilizzante CYA (mg/L)",
+    param_temp: "Temperatura acqua (°C)",
+    param_sel: "Salinità / sale (mg/L)",
+    param_brome: "Bromo (mg/L)",
+    param_o2: "Ossigeno attivo (mg/L)",
     unlimited_version: "Illimitato",
     active_pool: "Vasca attiva",
     pool_volume: "Volume vasca (m³)",
@@ -928,6 +1012,27 @@ const TRANSLATIONS = {
     error_analyze: "Análisis imposible",
     verify_connection: "Comprueba tu conexión y las fotos.",
     free_version: "Gratuito",
+    param_ph: "pH",
+    param_fcl: "Cloro libre (mg/L)",
+    axis_legend_u: "ᴜ escala unidades (pH, cloro) — izquierda",
+    axis_legend_d: "ᴅ escala decenas (TAC, CYA, temperatura) — derecha",
+    paywall_perk1: "Mediciones ilimitadas (en lugar de 1 por día)",
+    paywall_perk2: "Foto de cada medición (prueba, archivo visual)",
+    paywall_perk3: "Foto de cada producto (etiqueta, dosaje)",
+    paywall_perk4: "Historial ilimitado",
+    paywall_perk5: "Multi-piscina",
+    paywall_test_note: "Esta es una versión de prueba. No se realiza ningún pago real.",
+    report_print_btn: "Imprimir / Guardar como PDF",
+    pool_photo: "Foto piscina",
+    remove: "Quitar",
+    create_pool: "Crear piscina",
+    param_tcl: "Cloro total (mg/L)",
+    param_tac: "TAC (mg/L)",
+    param_cya: "Estabilizador CYA (mg/L)",
+    param_temp: "Temperatura del agua (°C)",
+    param_sel: "Salinidad / sal (mg/L)",
+    param_brome: "Bromo (mg/L)",
+    param_o2: "Oxígeno activo (mg/L)",
     unlimited_version: "Ilimitado",
     active_pool: "Piscina activa",
     pool_volume: "Volumen piscina (m³)",
@@ -1114,6 +1219,27 @@ const TRANSLATIONS = {
     error_analyze: "Análise impossível",
     verify_connection: "Verifique sua conexão e as fotos.",
     free_version: "Gratuito",
+    param_ph: "pH",
+    param_fcl: "Cloro livre (mg/L)",
+    axis_legend_u: "ᴜ escala unidades (pH, cloro) — esquerda",
+    axis_legend_d: "ᴅ escala dezenas (TAC, CYA, temperatura) — direita",
+    paywall_perk1: "Medições ilimitadas (em vez de 1 por dia)",
+    paywall_perk2: "Foto de cada medição (prova, arquivo visual)",
+    paywall_perk3: "Foto de cada produto (rótulo, dosagem)",
+    paywall_perk4: "Histórico ilimitado",
+    paywall_perk5: "Multi-piscina",
+    paywall_test_note: "Esta é uma versão de teste. Nenhum pagamento real é efetuado.",
+    report_print_btn: "Imprimir / Salvar como PDF",
+    pool_photo: "Foto piscina",
+    remove: "Remover",
+    create_pool: "Criar piscina",
+    param_tcl: "Cloro total (mg/L)",
+    param_tac: "TAC (mg/L)",
+    param_cya: "Estabilizador CYA (mg/L)",
+    param_temp: "Temperatura da água (°C)",
+    param_sel: "Salinidade / sal (mg/L)",
+    param_brome: "Bromo (mg/L)",
+    param_o2: "Oxigênio ativo (mg/L)",
     unlimited_version: "Ilimitado",
     active_pool: "Piscina ativa",
     pool_volume: "Volume piscina (m³)",
@@ -2852,11 +2978,11 @@ function HistoryView({ measures, onDelete, onEdit, onAdd, onValidateApplication,
 
   const chartParams = [
     { key: "pH", color: "#1a8fd1", label: "pH", axis: "left" },
-    { key: "fCl", color: "#2b7fd9", label: "Chlore libre", axis: "left" },
-    { key: "tCl", color: "#8a6fd1", label: "Chlore total", axis: "left" },
-    { key: "tac", color: "#d98c2b", label: "TAC", axis: "right" },
-    { key: "cya", color: "#c4502f", label: "CYA", axis: "right" },
-    { key: "temp", color: "#e0578a", label: "Température", axis: "right" },
+    { key: "fCl", color: "#2b7fd9", label: t("param_fcl").replace(" (mg/L)", ""), axis: "left" },
+    { key: "tCl", color: "#8a6fd1", label: t("param_tcl").replace(" (mg/L)", ""), axis: "left" },
+    { key: "tac", color: "#d98c2b", label: t("tac_col"), axis: "right" },
+    { key: "cya", color: "#c4502f", label: t("cya_col"), axis: "right" },
+    { key: "temp", color: "#e0578a", label: t("temp_col"), axis: "right" },
   ];
 
   const allKeys = chartParams.map((cp) => cp.key);
@@ -2923,8 +3049,8 @@ function HistoryView({ measures, onDelete, onEdit, onAdd, onValidateApplication,
       </div>
 
       <p style={styles.axisLegend}>
-        <span style={styles.axisLegendItem}><b>ᴜ</b> échelle unités (pH, chlore) — gauche</span>
-        <span style={styles.axisLegendItem}><b>ᴅ</b> échelle dizaines (TAC, CYA, température) — droite</span>
+        <span style={styles.axisLegendItem}>{t("axis_legend_u")}</span>
+        <span style={styles.axisLegendItem}>{t("axis_legend_d")}</span>
       </p>
 
       <label style={styles.checkboxRow}>
@@ -3181,10 +3307,10 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
       if (merged.tac !== undefined) setTac(String(merged.tac));
       if (merged.cya !== undefined) setCya(String(merged.cya));
       setAnalyzeNote(
-        `${photos.length} photo(s) analysée(s) — ${notes.join(" / ") || "vérifie les valeurs avant d'enregistrer."}`
+        `${photos.length} photo(s) — ${notes.join(" / ") || t("verify_connection")}`
       );
     } catch (err) {
-      setAnalyzeError("Analyse impossible : " + (err?.message || "erreur inconnue") + ". Vérifie ta connexion et les photos.");
+      setAnalyzeError(t("error_analyze") + " : " + (err?.message || t("verify_connection")));
     } finally {
       setAnalyzing(false);
     }
@@ -3212,23 +3338,23 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
 
   // Tous les champs possibles, filtrés selon le traitement du bassin
   const ALL_FIELDS = [
-    { key: "pH",   label: "pH",                        value: pH,    set: setPH,    step: "0.01", placeholder: "7.40" },
-    { key: "fCl",  label: "Chlore libre (mg/L)",       value: fCl,   set: setFCl,   step: "0.01", placeholder: "1.20" },
-    { key: "tCl",  label: "Chlore total (mg/L)",       value: tCl,   set: setTCl,   step: "0.01", placeholder: "1.30" },
-    { key: "tac",  label: "TAC (mg/L)",                value: tac,   set: setTac,   step: "1",    placeholder: "100" },
-    { key: "cya",  label: "Stabilisant CYA (mg/L)",   value: cya,   set: setCya,   step: "1",    placeholder: "40" },
-    { key: "temp", label: "Température de l'eau (°C)", value: temp,  set: setTemp,  step: "0.1",  placeholder: "27" },
-    { key: "sel",  label: "Salinité / sel (mg/L)",     value: sel,   set: setSel,   step: "10",   placeholder: "4000" },
-    { key: "brome",label: "Brome (mg/L)",              value: brome, set: setBrome, step: "0.1",  placeholder: "3.0" },
-    { key: "o2",   label: "Oxygène actif (mg/L)",      value: o2,    set: setO2,    step: "0.5",  placeholder: "20" },
+    { key: "pH",   label: t("param_ph"),    value: pH,    set: setPH,    step: "0.01", placeholder: "7.40" },
+    { key: "fCl",  label: t("param_fcl"),   value: fCl,   set: setFCl,   step: "0.01", placeholder: "1.20" },
+    { key: "tCl",  label: t("param_tcl"),   value: tCl,   set: setTCl,   step: "0.01", placeholder: "1.30" },
+    { key: "tac",  label: t("param_tac"),   value: tac,   set: setTac,   step: "1",    placeholder: "100" },
+    { key: "cya",  label: t("param_cya"),   value: cya,   set: setCya,   step: "1",    placeholder: "40" },
+    { key: "temp", label: t("param_temp"),  value: temp,  set: setTemp,  step: "0.1",  placeholder: "27" },
+    { key: "sel",  label: t("param_sel"),   value: sel,   set: setSel,   step: "10",   placeholder: "4000" },
+    { key: "brome",label: t("param_brome"), value: brome, set: setBrome, step: "0.1",  placeholder: "3.0" },
+    { key: "o2",   label: t("param_o2"),    value: o2,    set: setO2,    step: "0.5",  placeholder: "20" },
   ];
   const fields = activeParamKeys
     ? ALL_FIELDS.filter((f) => activeParamKeys.includes(f.key))
     : ALL_FIELDS.filter((f) => ["pH","fCl","tCl","tac","cya","temp"].includes(f.key));
 
   return (
-    <ModalShell onClose={onClose} title={isEditing ? "Modifier la mesure" : "Nouvelle mesure"}>
-      <label style={styles.fieldLabel}>Date et heure</label>
+    <ModalShell onClose={onClose} title={isEditing ? t("edit_measure_title") : t("new_measure_title")}>
+      <label style={styles.fieldLabel}>{t("date_time")}</label>
       <input
         type="datetime-local"
         value={date}
@@ -3239,13 +3365,11 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
       {isPremium ? (
         <div style={styles.photoHintBox}>
           <Camera size={15} style={{ flexShrink: 0, marginTop: 1 }} />
-          <span>
-            Prends en photo l'écran de ton photomètre avec les valeurs lisibles, ou place ta bandelette imbibée à côté de la légende du tube et photographie les deux ensemble.
-          </span>
+          <span>{t("photo_hint")}</span>
         </div>
       ) : null}
 
-      <label style={styles.fieldLabel}>Photos de la mesure</label>
+      <label style={styles.fieldLabel}>{t("photos_label")}</label>
       {isPremium ? (
         <div>
           {/* Grille de miniatures */}
@@ -3300,15 +3424,15 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
                 </button>
               ) : (
                 <div style={styles.confirmAnalyzeBox}>
-                  <span>Tu as terminé d'ajouter des photos ?</span>
+                  <span>{t("photos_done")}</span>
                   <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                     <button style={styles.confirmYesBtn} onClick={handleAnalyze} disabled={analyzing}>
                       {analyzing
-                        ? <><Loader2 size={13} className="spin" /> Analyse…</>
-                        : "Oui, analyser"}
+                        ? <><Loader2 size={13} className="spin" /> {t("analyzing")}</>
+                        : t("yes_analyze")}
                     </button>
                     <button style={styles.confirmNoBtn} onClick={() => setConfirmAnalyze(false)}>
-                      Ajouter d'autres
+                      {t("add_more")}
                     </button>
                   </div>
                 </div>
@@ -3322,10 +3446,9 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
       ) : (
         <button style={styles.photoLockedBtn} onClick={onWantPremium}>
           <Lock size={16} />
-          <span>Photo + analyse IA réservées à la version illimitée</span>
+          <span>{t("analyze_locked")}</span>
         </button>
       )}
-
 
       <div style={styles.fieldGrid}>
         {fields.map((f) => (
@@ -3344,11 +3467,11 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
         ))}
       </div>
 
-      <label style={styles.fieldLabel}>Note (optionnel)</label>
+      <label style={styles.fieldLabel}>{t("note_optional")}</label>
       <textarea
         value={note}
         onChange={(e) => setNote(e.target.value)}
-        placeholder="Eau trouble, fort ensoleillement, baignade prévue..."
+        placeholder={t("note_placeholder")}
         style={{ ...styles.input, minHeight: 64, resize: "vertical" }}
       />
 
@@ -4285,14 +4408,14 @@ function ToggleSwitch({ checked, onChange }) {
 function PaywallModal({ onClose, onActivate, lang }) {
   const t = useT(lang || "fr");
   const perks = [
-    "Mesures illimitées (au lieu d'1 par jour)",
-    "Photo de chaque mesure (preuve, archive visuelle)",
-    "Photo de chaque produit (étiquette, dosage)",
-    "Historique illimité",
-    "Multi-bassins",
+    t("paywall_perk1"),
+    t("paywall_perk2"),
+    t("paywall_perk3"),
+    t("paywall_perk4"),
+    t("paywall_perk5"),
   ];
   return (
-    <ModalShell onClose={onClose} title="Passer en illimité">
+    <ModalShell onClose={onClose} title={t("paywall_title")}>
       <div style={styles.paywallHero}>
         <Crown size={30} color="#a8721a" />
         <div style={styles.paywallPrice}>2,99 € / mois</div>
@@ -4307,17 +4430,18 @@ function PaywallModal({ onClose, onActivate, lang }) {
         ))}
       </div>
       <button style={styles.primaryBtn} onClick={onActivate}>
-        Activer (test — sans paiement)
+        {t("paywall_btn")}
       </button>
       <p style={{ ...styles.helpText, textAlign: "center" }}>
-        Ceci est une version de test. Aucun paiement réel n'est effectué.
+        {t("paywall_test_note")}
       </p>
     </ModalShell>
   );
 }
 
 // ---------- Ajout d'un bassin ----------
-function AddPoolModal({ onClose, onSave }) {
+function AddPoolModal({ onClose, onSave, lang }) {
+  const t = useT(lang || "fr");
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
   const [volume, setVolume] = useState(50);
@@ -4346,14 +4470,14 @@ function AddPoolModal({ onClose, onSave }) {
   }
 
   return (
-    <ModalShell onClose={onClose} title="Nouveau bassin">
-      <label style={styles.fieldLabel}>Photo du bassin</label>
+    <ModalShell onClose={onClose} title={t("add_pool_title")}>
+      <label style={styles.fieldLabel}>{t("pool_photo")}</label>
       <div>
         {photo ? (
           <div style={styles.photoPreviewWrap}>
-            <img src={photo} alt="Aperçu" style={styles.photoPreview} />
+            <img src={photo} alt="" style={styles.photoPreview} />
             <button style={styles.photoRemoveBtn} onClick={() => setPhoto(null)}>
-              <X size={14} /> Retirer
+              <X size={14} /> {t("remove")}
             </button>
           </div>
         ) : (
@@ -4364,7 +4488,7 @@ function AddPoolModal({ onClose, onSave }) {
               onClick={() => fileInputRef.current?.click()}
             >
               <Camera size={17} />
-              {photoBusy ? "..." : "Appareil photo"}
+              {photoBusy ? "..." : t("camera_btn")}
             </button>
             <button
               type="button"
@@ -4372,44 +4496,31 @@ function AddPoolModal({ onClose, onSave }) {
               onClick={() => galleryInputRef.current?.click()}
             >
               <ImageOff size={17} />
-              {photoBusy ? "..." : "Bibliothèque"}
+              {photoBusy ? "..." : t("gallery_btn")}
             </button>
           </div>
         )}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={handlePhotoChange}
-          style={styles.hiddenFileInput}
-        />
-        <input
-          ref={galleryInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handlePhotoChange}
-          style={styles.hiddenFileInput}
-        />
+        <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoChange} style={styles.hiddenFileInput} />
+        <input ref={galleryInputRef} type="file" accept="image/*" onChange={handlePhotoChange} style={styles.hiddenFileInput} />
       </div>
 
-      <label style={styles.fieldLabel}>Nom du bassin</label>
+      <label style={styles.fieldLabel}>{t("pool_name")}</label>
       <input
         style={styles.input}
         value={name}
         onChange={(e) => setName(e.target.value)}
-        placeholder="ex: Piscine, Spa, Bassin de la maison de famille"
+        placeholder={t("pool_name_placeholder")}
       />
 
-      <label style={styles.fieldLabel}>Localisation</label>
+      <label style={styles.fieldLabel}>{t("location")}</label>
       <input
         style={styles.input}
         value={location}
         onChange={(e) => setLocation(e.target.value)}
-        placeholder="ex: Valbonne (06)"
+        placeholder={t("pool_location_placeholder")}
       />
 
-      <label style={styles.fieldLabel}>Volume (m³)</label>
+      <label style={styles.fieldLabel}>{t("volume")}</label>
       <input
         type="number"
         style={styles.input}
@@ -4418,7 +4529,7 @@ function AddPoolModal({ onClose, onSave }) {
       />
 
       <button style={styles.primaryBtn} onClick={handleSave}>
-        Créer le bassin
+        {t("create_pool")}
       </button>
     </ModalShell>
   );
@@ -4451,11 +4562,11 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
 
   const chartParams = [
     { key: "pH", color: "#1a8fd1", label: "pH", axis: "left" },
-    { key: "fCl", color: "#2b7fd9", label: "Chlore libre", axis: "left" },
-    { key: "tCl", color: "#8a6fd1", label: "Chlore total", axis: "left" },
-    { key: "tac", color: "#d98c2b", label: "TAC", axis: "right" },
-    { key: "cya", color: "#c4502f", label: "CYA", axis: "right" },
-    { key: "temp", color: "#e0578a", label: "Température", axis: "right" },
+    { key: "fCl", color: "#2b7fd9", label: t("param_fcl").replace(" (mg/L)", ""), axis: "left" },
+    { key: "tCl", color: "#8a6fd1", label: t("param_tcl").replace(" (mg/L)", ""), axis: "left" },
+    { key: "tac", color: "#d98c2b", label: t("tac_col"), axis: "right" },
+    { key: "cya", color: "#c4502f", label: t("cya_col"), axis: "right" },
+    { key: "temp", color: "#e0578a", label: t("temp_col"), axis: "right" },
   ];
 
   // Pour chaque mesure : recalcule le plan de traitement qui avait été
@@ -4471,7 +4582,8 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
     });
   }, [sortedMeasures, pool, products, applications]);
 
-  const generatedAt = new Date().toLocaleString("fr-FR", {
+  const localeMap = { fr: "fr-FR", en: "en-GB", de: "de-DE", it: "it-IT", es: "es-ES", pt: "pt-PT" };
+  const generatedAt = new Date().toLocaleString(localeMap[lang] || "fr-FR", {
     dateStyle: "long",
     timeStyle: "short",
   });
@@ -4480,7 +4592,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
     <div style={styles.reportOverlay} className="report-print-root">
       <div style={styles.reportToolbar} className="no-print">
         <button style={styles.reportCloseBtn} onClick={onClose}>
-          <X size={18} /> Fermer
+          <X size={18} /> {t("close")}
         </button>
         <label style={styles.reportToolbarCheckbox}>
           <input
@@ -4488,10 +4600,10 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
             checked={showValues}
             onChange={(e) => setShowValues(e.target.checked)}
           />
-          <span>Afficher les valeurs</span>
+          <span>{t("show_values")}</span>
         </label>
         <button style={styles.reportPrintBtn} onClick={() => window.print()}>
-          <Download size={16} /> Imprimer / Enregistrer en PDF
+          <Download size={16} /> {t("report_print_btn")}
         </button>
       </div>
 
@@ -4501,14 +4613,14 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
             <Droplets size={20} color="#e8f4fd" />
           </div>
           <div>
-            <div style={styles.reportTitle}>Rapport de suivi — {pool?.name}</div>
+            <div style={styles.reportTitle}>{t("report_title")} — {pool?.name}</div>
             <div style={styles.reportSubtitle}>
-              {pool?.location} · {pool?.volume} m³ · généré le {generatedAt}
+              {pool?.location} · {pool?.volume} m³ · {t("generated_on")} {generatedAt}
             </div>
           </div>
         </div>
 
-        <div style={styles.reportSectionTitle}>Évolution des paramètres</div>
+        <div style={styles.reportSectionTitle}>{t("params_evolution")}</div>
         {chartData.length > 0 ? (
           <div style={styles.reportChartWrap}>
             <LineChart
@@ -4555,12 +4667,12 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
             </LineChart>
           </div>
         ) : (
-          <p style={styles.helpTextSmall}>Aucune mesure à afficher.</p>
+          <p style={styles.helpTextSmall}>{t("no_measures_report")}</p>
         )}
 
-        <div style={styles.reportSectionTitle}>Historique des mesures et consommations</div>
+        <div style={styles.reportSectionTitle}>{t("detailed_history")}</div>
         {rows.length === 0 ? (
-          <p style={styles.helpTextSmall}>Aucune mesure enregistrée pour ce bassin.</p>
+          <p style={styles.helpTextSmall}>{t("no_measures_report")}</p>
         ) : (
           <table style={{ ...styles.reportTable, fontSize: 11 }}>
             <thead>
