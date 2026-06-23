@@ -184,7 +184,6 @@ const TRANSLATIONS = {
     verify_connection: "Vérifie ta connexion et les photos.",
     free_version: "Gratuit",
     unlimited_version: "Illimité",
-  },
     active_pool: "Bassin actif",
     pool_volume: "Volume du bassin (m³)",
     treatment_params: "Paramètres :",
@@ -197,7 +196,6 @@ const TRANSLATIONS = {
     api_key_openai: "Clé API OpenAI",
     hide: "Masquer",
     show: "Afficher",
-
     treatment_chlore: "Chlore",
     treatment_chlore_desc: "Chlore stabilisé ou non, usage courant",
     treatment_sel: "Sel (électrolyseur)",
@@ -212,7 +210,7 @@ const TRANSLATIONS = {
     filtration_cartouche: "Cartouche",
     filtration_diatomees: "Diatomées",
     filtration_aucune: "Sans filtration (naturelle)",
-
+  },
   en: {
     tab_pool: "Pool",
     tab_history: "History",
@@ -371,7 +369,6 @@ const TRANSLATIONS = {
     verify_connection: "Check your connection and photos.",
     free_version: "Free",
     unlimited_version: "Unlimited",
-  },
     active_pool: "Active pool",
     pool_volume: "Pool volume (m³)",
     treatment_params: "Parameters:",
@@ -384,7 +381,6 @@ const TRANSLATIONS = {
     api_key_openai: "OpenAI API Key",
     hide: "Hide",
     show: "Show",
-
     treatment_chlore: "Chlorine",
     treatment_chlore_desc: "Stabilised or unstabilised chlorine, common use",
     treatment_sel: "Salt (electrolyser)",
@@ -399,7 +395,7 @@ const TRANSLATIONS = {
     filtration_cartouche: "Cartridge",
     filtration_diatomees: "Diatomaceous earth",
     filtration_aucune: "No filtration (natural)",
-
+  },
   de: {
     tab_pool: "Becken",
     tab_history: "Verlauf",
@@ -558,7 +554,6 @@ const TRANSLATIONS = {
     verify_connection: "Verbindung und Fotos prüfen.",
     free_version: "Kostenlos",
     unlimited_version: "Unbegrenzt",
-  },
     active_pool: "Aktives Becken",
     pool_volume: "Beckenvolumen (m³)",
     treatment_params: "Parameter:",
@@ -571,7 +566,6 @@ const TRANSLATIONS = {
     api_key_openai: "OpenAI API-Schlüssel",
     hide: "Verbergen",
     show: "Anzeigen",
-
     treatment_chlore: "Chlor",
     treatment_chlore_desc: "Stabilisiertes oder nicht stabilisiertes Chlor, allgemeine Verwendung",
     treatment_sel: "Salz (Elektrolyseur)",
@@ -586,7 +580,7 @@ const TRANSLATIONS = {
     filtration_cartouche: "Kartusche",
     filtration_diatomees: "Diatomeenerde",
     filtration_aucune: "Ohne Filtration (natürlich)",
-
+  },
   it: {
     tab_pool: "Vasca",
     tab_history: "Storico",
@@ -745,7 +739,6 @@ const TRANSLATIONS = {
     verify_connection: "Controlla la connessione e le foto.",
     free_version: "Gratuito",
     unlimited_version: "Illimitato",
-  },
     active_pool: "Vasca attiva",
     pool_volume: "Volume vasca (m³)",
     treatment_params: "Parametri:",
@@ -758,7 +751,6 @@ const TRANSLATIONS = {
     api_key_openai: "Chiave API OpenAI",
     hide: "Nascondi",
     show: "Mostra",
-
     treatment_chlore: "Cloro",
     treatment_chlore_desc: "Cloro stabilizzato o non, uso comune",
     treatment_sel: "Sale (elettrolizzatore)",
@@ -773,7 +765,7 @@ const TRANSLATIONS = {
     filtration_cartouche: "Cartuccia",
     filtration_diatomees: "Diatomee",
     filtration_aucune: "Senza filtrazione (naturale)",
-
+  },
   es: {
     tab_pool: "Piscina",
     tab_history: "Historial",
@@ -932,7 +924,6 @@ const TRANSLATIONS = {
     verify_connection: "Comprueba tu conexión y las fotos.",
     free_version: "Gratuito",
     unlimited_version: "Ilimitado",
-  },
     active_pool: "Piscina activa",
     pool_volume: "Volumen piscina (m³)",
     treatment_params: "Parámetros:",
@@ -945,7 +936,6 @@ const TRANSLATIONS = {
     api_key_openai: "Clave API OpenAI",
     hide: "Ocultar",
     show: "Mostrar",
-
     treatment_chlore: "Cloro",
     treatment_chlore_desc: "Cloro estabilizado o no, uso común",
     treatment_sel: "Sal (electrolizador)",
@@ -960,7 +950,7 @@ const TRANSLATIONS = {
     filtration_cartouche: "Cartucho",
     filtration_diatomees: "Tierra de diatomeas",
     filtration_aucune: "Sin filtración (natural)",
-
+  },
   pt: {
     tab_pool: "Piscina",
     tab_history: "Histórico",
@@ -1119,7 +1109,6 @@ const TRANSLATIONS = {
     verify_connection: "Verifique sua conexão e as fotos.",
     free_version: "Gratuito",
     unlimited_version: "Ilimitado",
-  },
     active_pool: "Piscina ativa",
     pool_volume: "Volume piscina (m³)",
     treatment_params: "Parâmetros:",
@@ -1132,7 +1121,6 @@ const TRANSLATIONS = {
     api_key_openai: "Chave API OpenAI",
     hide: "Ocultar",
     show: "Mostrar",
-
     treatment_chlore: "Cloro",
     treatment_chlore_desc: "Cloro estabilizado ou não, uso comum",
     treatment_sel: "Sal (eletrólise)",
@@ -1147,7 +1135,7 @@ const TRANSLATIONS = {
     filtration_cartouche: "Cartucho",
     filtration_diatomees: "Terra de diatomáceas",
     filtration_aucune: "Sem filtração (natural)",
-
+  },
 };
 
 function useT(lang) {
@@ -1388,10 +1376,10 @@ function statusColor(status) {
   return "#6a7d90";
 }
 
-function statusLabel(status) {
-  if (status === "ok") return "Dans la cible";
-  if (status === "low") return "Trop bas";
-  if (status === "high") return "Trop haut";
+function statusLabel(status, t) {
+  if (status === "ok") return t ? t("in_range") : "Dans la cible";
+  if (status === "low") return t ? t("too_low") : "Trop bas";
+  if (status === "high") return t ? t("too_high") : "Trop haut";
   return "—";
 }
 
@@ -1691,8 +1679,10 @@ function PoolApp() {
       try {
         const pr = await window.storage.get(STORAGE_KEYS.premium);
         if (pr?.value) setIsPremium(JSON.parse(pr.value) === true);
-      const savedLang = await window.storage.get("app_lang");
-      if (savedLang?.value) setLang(JSON.parse(savedLang.value));
+      } catch (e) {}
+      try {
+        const savedLang = await window.storage.get("app_lang");
+        if (savedLang?.value) setLang(JSON.parse(savedLang.value));
       } catch (e) {}
       try {
         const ap = await window.storage.get(STORAGE_KEYS.applications);
@@ -2090,7 +2080,7 @@ function PoolApp() {
       )}
 
       {showAddPool && (
-        <AddPoolModal onClose={() => setShowAddPool(false)} onSave={addPool} />
+        <AddPoolModal onClose={() => setShowAddPool(false)} onSave={addPool} lang={lang} />
       )}
 
       {validatingMeasure && isPremium && (
@@ -2116,6 +2106,7 @@ function PoolApp() {
           products={poolProducts}
           onClose={() => setShowReport(false)}
           manageStock={!!activePool?.manageStock}
+          lang={lang}
         />
       )}
     </div>
@@ -2504,7 +2495,7 @@ function ParamCard({ param, value, effectiveTargets, lang }) {
         {value}
         <span style={styles.paramUnit}>{paramTarget.unit}</span>
       </div>
-      <div style={{ ...styles.paramStatus, color }}>{statusLabel(status, lang)}</div>
+      <div style={{ ...styles.paramStatus, color }}>{statusLabel(status, t)}</div>
       <div style={styles.paramRange}>
         {t("target")} {paramTarget.min}–{paramTarget.max} {paramTarget.unit}
       </div>
