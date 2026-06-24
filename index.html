@@ -266,28 +266,81 @@
   })();
 </script>
 
+<!-- Firebase SDK (module) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCZNXi1UPt6B69EVhd8nbTbh3YzM89Yo1s",
+    authDomain: "poolapp-ago.firebaseapp.com",
+    projectId: "poolapp-ago",
+    storageBucket: "poolapp-ago.firebasestorage.app",
+    messagingSenderId: "781764586143",
+    appId: "1:781764586143:web:23bda828e4907607f1d0aa",
+    measurementId: "G-0T8XX2SYTS"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const googleProvider = new GoogleAuthProvider();
+
+  window._fbAuth = auth;
+  window._fbDb = db;
+  window._fbGoogle = googleProvider;
+  window._fbSignInWithPopup = signInWithPopup;
+  window._fbSignIn = signInWithEmailAndPassword;
+  window._fbSignUp = createUserWithEmailAndPassword;
+  window._fbResetPwd = sendPasswordResetEmail;
+  window._fbSignOut = signOut;
+  window._fbDoc = doc;
+  window._fbSetDoc = setDoc;
+  window._fbGetDoc = getDoc;
+  window._fbOnAuth = onAuthStateChanged;
+
+  console.log("Firebase initialisé ✓");
+</script>
+
 <!-- Composant principal + point d'entr&#233;e : on r&#233;cup&#232;re le fichier
      manuellement et on le transforme avec Babel en pr&#233;cisant runtime:
      "classic" (React.createElement), car le runtime "automatic" par d&#233;faut
      injecte un `import` ES qui ne peut pas s'ex&#233;cuter tel quel dans un
      simple script de navigateur. -->
+<!-- Composant principal : on attend que Firebase soit prêt avant de charger l'app -->
 <script>
-  fetch("PoolApp.jsx")
-    .then((res) => {
-      if (!res.ok) throw new Error("Impossible de charger PoolApp.jsx (HTTP " + res.status + ")");
-      return res.text();
-    })
-    .then((source) => {
-      var result = Babel.transform(source, {
-        presets: [["react", { runtime: "classic" }]],
+  function loadPoolApp() {
+    fetch("PoolApp.jsx")
+      .then((res) => {
+        if (!res.ok) throw new Error("Impossible de charger PoolApp.jsx (HTTP " + res.status + ")");
+        return res.text();
+      })
+      .then((source) => {
+        var result = Babel.transform(source, {
+          presets: [["react", { runtime: "classic" }]],
+        });
+        // eslint-disable-next-line no-eval
+        (0, eval)(result.code);
+      })
+      .catch((err) => {
+        window.__bootErrors.push("Erreur de chargement/transformation de PoolApp.jsx :\n" + err.message);
+        window.__showBootError();
       });
-      // eslint-disable-next-line no-eval
-      (0, eval)(result.code);
-    })
-    .catch((err) => {
-      window.__bootErrors.push("Erreur de chargement/transformation de PoolApp.jsx :\n" + err.message);
-      window.__showBootError();
-    });
+  }
+
+  // Attend que Firebase soit initialisé (le module ES est asynchrone)
+  // On poll window._fbAuth toutes les 50ms, timeout à 5s puis on charge quand même
+  var _fbWait = 0;
+  function waitForFirebase() {
+    if (window._fbAuth || _fbWait > 100) {
+      loadPoolApp();
+    } else {
+      _fbWait++;
+      setTimeout(waitForFirebase, 50);
+    }
+  }
+  waitForFirebase();
 </script>
 
 <!-- Service worker d&#233;sactiv&#233; pour l'instant : un SW d&#233;j&#224; install&#233; sur un

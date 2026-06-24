@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "0.52";
+const APP_VERSION = "0.53";
 
 const TRANSLATIONS = {
   fr: {
@@ -190,6 +190,25 @@ const TRANSLATIONS = {
     action_ph_minus: "Baisse le pH",
         photos_section: "Photos des mesures",
     pool_photos_label: "Photos du bassin (optionnel)",
+    pool_photo_locked: "Photos du bassin réservées à la version illimitée",
+    sign_in: "Connexion",
+    create_account: "Créer un compte",
+    reset_password: "Mot de passe oublié",
+    continue_google: "Continuer avec Google",
+    or: "ou",
+    password: "Mot de passe",
+    no_account: "Pas encore de compte ? S'inscrire",
+    already_account: "Déjà un compte ? Se connecter",
+    forgot_password: "Mot de passe oublié ?",
+    back_to_login: "← Retour à la connexion",
+    send_reset: "Envoyer le lien",
+    reset_sent: "Email de réinitialisation envoyé.",
+    skip_login: "Continuer sans compte",
+    wrong_password: "Mot de passe incorrect.",
+    user_not_found: "Aucun compte avec cet email.",
+    email_in_use: "Cet email est déjà utilisé.",
+    weak_password: "Mot de passe trop court (6 caractères min).",
+    firebase_not_configured: "⚠️ Firebase non configuré — fonctionnement hors-ligne uniquement.",
     note_ph_minus: "Vérifier le pH avant chaque ajout. Max 1 kg/100 m³/jour, ou espacer de 2h.",
     note_ph_plus: "Répartir sur tout le bassin, filtration en marche.",
     note_chlore_choc: "À verser le soir, soleil couché. Ne stabilise pas (n'augmente pas le CYA).",
@@ -234,10 +253,13 @@ const TRANSLATIONS = {
     reco_fallback_sel: "Sel de piscine (NaCl pur)",
     stock_empty_badge: "stock épuisé",
     paywall_perk1: "Mesures illimitées (au lieu d'1 par jour)",
-    paywall_perk2: "Photo de chaque mesure (preuve, archive visuelle)",
-    paywall_perk3: "Photo de chaque produit (étiquette, dosage)",
-    paywall_perk4: "Historique illimité",
-    paywall_perk5: "Multi-bassins",
+    paywall_perk2: "Photos photomètre/bandelette avec analyse IA",
+    paywall_perk3: "Photos du bassin attachées à chaque mesure",
+    paywall_perk4: "Photo de chaque produit (étiquette, dosage)",
+
+    paywall_perk5: "Historique illimité + rapport PDF",
+    paywall_perk6: "Gestion du stock de produits",
+    paywall_perk7: "Multi-bassins",
     paywall_test_note: "Ceci est une version de test. Aucun paiement réel n'est effectué.",
     report_print_btn: "Imprimer / Enregistrer en PDF",
     pool_photo: "Photo du bassin",
@@ -442,6 +464,25 @@ const TRANSLATIONS = {
     action_ph_minus: "Lowers pH",
         photos_section: "Reading photos",
     pool_photos_label: "Pool photos (optional)",
+    pool_photo_locked: "Pool photos reserved for unlimited version",
+    sign_in: "Sign in",
+    create_account: "Create account",
+    reset_password: "Forgot password",
+    continue_google: "Continue with Google",
+    or: "or",
+    password: "Password",
+    no_account: "No account? Sign up",
+    already_account: "Already have an account? Sign in",
+    forgot_password: "Forgot password?",
+    back_to_login: "← Back to sign in",
+    send_reset: "Send reset link",
+    reset_sent: "Password reset email sent.",
+    skip_login: "Continue without account",
+    wrong_password: "Wrong password.",
+    user_not_found: "No account with this email.",
+    email_in_use: "This email is already in use.",
+    weak_password: "Password too short (min 6 characters).",
+    firebase_not_configured: "⚠️ Firebase not configured — offline mode only.",
     note_ph_minus: "Check pH before each addition. Max 1 kg/100 m³/day, or space 2h apart.",
     note_ph_plus: "Spread across the pool with filtration running.",
     note_chlore_choc: "Pour in the evening after sunset. Does not stabilise (does not raise CYA).",
@@ -486,10 +527,13 @@ const TRANSLATIONS = {
     reco_fallback_sel: "Pool salt (pure NaCl)",
     stock_empty_badge: "out of stock",
     paywall_perk1: "Unlimited readings (instead of 1 per day)",
-    paywall_perk2: "Photo of each reading (proof, visual archive)",
-    paywall_perk3: "Photo of each product (label, dosage)",
-    paywall_perk4: "Unlimited history",
-    paywall_perk5: "Multi-pool",
+    paywall_perk2: "Photometer/strip photos with AI analysis",
+    paywall_perk3: "Pool photos attached to each reading",
+    paywall_perk4: "Photo of each product (label, dosage)",
+
+    paywall_perk5: "Unlimited history + PDF report",
+    paywall_perk6: "Product stock management",
+    paywall_perk7: "Multi-pool",
     paywall_test_note: "This is a test version. No real payment is made.",
     report_print_btn: "Print / Save as PDF",
     pool_photo: "Pool photo",
@@ -694,6 +738,25 @@ const TRANSLATIONS = {
     action_ph_minus: "pH senken",
         photos_section: "Messfotos",
     pool_photos_label: "Beckenfotos (optional)",
+    pool_photo_locked: "Beckenfotos nur in unbegrenzter Version",
+    sign_in: "Anmelden",
+    create_account: "Konto erstellen",
+    reset_password: "Passwort vergessen",
+    continue_google: "Mit Google fortfahren",
+    or: "oder",
+    password: "Passwort",
+    no_account: "Kein Konto? Registrieren",
+    already_account: "Bereits ein Konto? Anmelden",
+    forgot_password: "Passwort vergessen?",
+    back_to_login: "← Zurück zur Anmeldung",
+    send_reset: "Link senden",
+    reset_sent: "Zurücksetz-E-Mail gesendet.",
+    skip_login: "Ohne Konto fortfahren",
+    wrong_password: "Falsches Passwort.",
+    user_not_found: "Kein Konto mit dieser E-Mail.",
+    email_in_use: "Diese E-Mail wird bereits verwendet.",
+    weak_password: "Passwort zu kurz (mind. 6 Zeichen).",
+    firebase_not_configured: "⚠️ Firebase nicht konfiguriert — nur Offline-Modus.",
     note_ph_minus: "pH vor jeder Zugabe prüfen. Max 1 kg/100 m³/Tag oder 2h Abstand.",
     note_ph_plus: "Im gesamten Becken verteilen, Filtration in Betrieb.",
     note_chlore_choc: "Abends nach Sonnenuntergang zugeben. Stabilisiert nicht (erhöht CYA nicht).",
@@ -738,10 +801,13 @@ const TRANSLATIONS = {
     reco_fallback_sel: "Poolsalz (reines NaCl)",
     stock_empty_badge: "nicht vorrätig",
     paywall_perk1: "Unbegrenzte Messungen (statt 1 pro Tag)",
-    paywall_perk2: "Foto jeder Messung (Nachweis, visuelles Archiv)",
-    paywall_perk3: "Foto jedes Produkts (Etikett, Dosierung)",
-    paywall_perk4: "Unbegrenzte Historie",
-    paywall_perk5: "Mehrere Becken",
+    paywall_perk2: "Fotometer-/Teststreifen-Fotos mit KI-Analyse",
+    paywall_perk3: "Beckenfotos zu jeder Messung",
+    paywall_perk4: "Foto jedes Produkts (Etikett, Dosierung)",
+
+    paywall_perk5: "Unbegrenzte Historie + PDF-Bericht",
+    paywall_perk6: "Produktlagerverwaltung",
+    paywall_perk7: "Mehrere Becken",
     paywall_test_note: "Dies ist eine Testversion. Es wird keine echte Zahlung vorgenommen.",
     report_print_btn: "Drucken / Als PDF speichern",
     pool_photo: "Beckenfoto",
@@ -946,6 +1012,25 @@ const TRANSLATIONS = {
     action_ph_minus: "Abbassa il pH",
         photos_section: "Foto misurazioni",
     pool_photos_label: "Foto vasca (opzionale)",
+    pool_photo_locked: "Foto vasca riservate alla versione illimitata",
+    sign_in: "Accedi",
+    create_account: "Crea account",
+    reset_password: "Password dimenticata",
+    continue_google: "Continua con Google",
+    or: "o",
+    password: "Password",
+    no_account: "Nessun account? Registrati",
+    already_account: "Hai già un account? Accedi",
+    forgot_password: "Password dimenticata?",
+    back_to_login: "← Torna al login",
+    send_reset: "Invia link",
+    reset_sent: "Email di reset inviata.",
+    skip_login: "Continua senza account",
+    wrong_password: "Password errata.",
+    user_not_found: "Nessun account con questa email.",
+    email_in_use: "Questa email è già in uso.",
+    weak_password: "Password troppo corta (min 6 caratteri).",
+    firebase_not_configured: "⚠️ Firebase non configurato — solo modalità offline.",
     note_ph_minus: "Controllare il pH prima di ogni aggiunta. Max 1 kg/100 m³/giorno o distanziare di 2h.",
     note_ph_plus: "Distribuire in tutta la vasca con filtrazione in funzione.",
     note_chlore_choc: "Versare la sera dopo il tramonto. Non stabilizza (non aumenta il CYA).",
@@ -990,10 +1075,13 @@ const TRANSLATIONS = {
     reco_fallback_sel: "Sale da piscina (NaCl puro)",
     stock_empty_badge: "esaurito",
     paywall_perk1: "Misurazioni illimitate (invece di 1 al giorno)",
-    paywall_perk2: "Foto di ogni misurazione (prova, archivio visivo)",
-    paywall_perk3: "Foto di ogni prodotto (etichetta, dosaggio)",
-    paywall_perk4: "Storico illimitato",
-    paywall_perk5: "Multi-vasca",
+    paywall_perk2: "Foto fotometro/strisce con analisi IA",
+    paywall_perk3: "Foto vasca allegate a ogni misurazione",
+    paywall_perk4: "Foto di ogni prodotto (etichetta, dosaggio)",
+
+    paywall_perk5: "Storico illimitato + report PDF",
+    paywall_perk6: "Gestione stock prodotti",
+    paywall_perk7: "Multi-vasca",
     paywall_test_note: "Questa è una versione di test. Nessun pagamento reale viene effettuato.",
     report_print_btn: "Stampa / Salva come PDF",
     pool_photo: "Foto vasca",
@@ -1198,6 +1286,25 @@ const TRANSLATIONS = {
     action_ph_minus: "Baja el pH",
         photos_section: "Fotos de mediciones",
     pool_photos_label: "Fotos de la piscina (opcional)",
+    pool_photo_locked: "Fotos de piscina reservadas para versión ilimitada",
+    sign_in: "Iniciar sesión",
+    create_account: "Crear cuenta",
+    reset_password: "Contraseña olvidada",
+    continue_google: "Continuar con Google",
+    or: "o",
+    password: "Contraseña",
+    no_account: "¿Sin cuenta? Regístrate",
+    already_account: "¿Ya tienes cuenta? Inicia sesión",
+    forgot_password: "¿Olvidaste tu contraseña?",
+    back_to_login: "← Volver al inicio de sesión",
+    send_reset: "Enviar enlace",
+    reset_sent: "Email de restablecimiento enviado.",
+    skip_login: "Continuar sin cuenta",
+    wrong_password: "Contraseña incorrecta.",
+    user_not_found: "No hay cuenta con este email.",
+    email_in_use: "Este email ya está en uso.",
+    weak_password: "Contraseña demasiado corta (mín. 6 caracteres).",
+    firebase_not_configured: "⚠️ Firebase no configurado — solo modo offline.",
     note_ph_minus: "Verificar el pH antes de cada adición. Máx 1 kg/100 m³/día o espaciar 2h.",
     note_ph_plus: "Distribuir por toda la piscina con filtración en marcha.",
     note_chlore_choc: "Verter por la noche después del atardecer. No estabiliza (no aumenta el CYA).",
@@ -1242,10 +1349,13 @@ const TRANSLATIONS = {
     reco_fallback_sel: "Sal de piscina (NaCl puro)",
     stock_empty_badge: "sin stock",
     paywall_perk1: "Mediciones ilimitadas (en lugar de 1 por día)",
-    paywall_perk2: "Foto de cada medición (prueba, archivo visual)",
-    paywall_perk3: "Foto de cada producto (etiqueta, dosaje)",
-    paywall_perk4: "Historial ilimitado",
-    paywall_perk5: "Multi-piscina",
+    paywall_perk2: "Fotos fotómetro/tiras con análisis IA",
+    paywall_perk3: "Fotos de piscina adjuntas a cada medición",
+    paywall_perk4: "Foto de cada producto (etiqueta, dosaje)",
+
+    paywall_perk5: "Historial ilimitado + informe PDF",
+    paywall_perk6: "Gestión de stock de productos",
+    paywall_perk7: "Multi-piscina",
     paywall_test_note: "Esta es una versión de prueba. No se realiza ningún pago real.",
     report_print_btn: "Imprimir / Guardar como PDF",
     pool_photo: "Foto piscina",
@@ -1450,6 +1560,25 @@ const TRANSLATIONS = {
     action_ph_minus: "Baixa o pH",
         photos_section: "Fotos das medições",
     pool_photos_label: "Fotos da piscina (opcional)",
+    pool_photo_locked: "Fotos da piscina reservadas para versão ilimitada",
+    sign_in: "Entrar",
+    create_account: "Criar conta",
+    reset_password: "Senha esquecida",
+    continue_google: "Continuar com Google",
+    or: "ou",
+    password: "Senha",
+    no_account: "Sem conta? Cadastre-se",
+    already_account: "Já tem conta? Entrar",
+    forgot_password: "Esqueceu a senha?",
+    back_to_login: "← Voltar ao login",
+    send_reset: "Enviar link",
+    reset_sent: "Email de redefinição enviado.",
+    skip_login: "Continuar sem conta",
+    wrong_password: "Senha incorreta.",
+    user_not_found: "Nenhuma conta com este email.",
+    email_in_use: "Este email já está em uso.",
+    weak_password: "Senha muito curta (mín. 6 caracteres).",
+    firebase_not_configured: "⚠️ Firebase não configurado — apenas modo offline.",
     note_ph_minus: "Verificar o pH antes de cada adição. Máx 1 kg/100 m³/dia ou espaçar 2h.",
     note_ph_plus: "Distribuir por toda a piscina com filtração em funcionamento.",
     note_chlore_choc: "Adicionar à noite após o pôr do sol. Não estabiliza (não aumenta o CYA).",
@@ -1494,10 +1623,13 @@ const TRANSLATIONS = {
     reco_fallback_sel: "Sal de piscina (NaCl puro)",
     stock_empty_badge: "sem stock",
     paywall_perk1: "Medições ilimitadas (em vez de 1 por dia)",
-    paywall_perk2: "Foto de cada medição (prova, arquivo visual)",
-    paywall_perk3: "Foto de cada produto (rótulo, dosagem)",
-    paywall_perk4: "Histórico ilimitado",
-    paywall_perk5: "Multi-piscina",
+    paywall_perk2: "Fotos de fotómetro/tiras com análise IA",
+    paywall_perk3: "Fotos da piscina anexadas a cada medição",
+    paywall_perk4: "Foto de cada produto (rótulo, dosagem)",
+
+    paywall_perk5: "Histórico ilimitado + relatório PDF",
+    paywall_perk6: "Gestão de stock de produtos",
+    paywall_perk7: "Multi-piscina",
     paywall_test_note: "Esta é uma versão de teste. Nenhum pagamento real é efetuado.",
     report_print_btn: "Imprimir / Salvar como PDF",
     pool_photo: "Foto piscina",
@@ -1993,7 +2125,190 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+// ---------- Firebase Auth ----------
+// INSTRUCTIONS DÉPLOIEMENT: Ajouter dans index.html avant le script principal:
+// <script type="module">
+//   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+//   import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+//   import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+//   const firebaseConfig = { apiKey: "...", authDomain: "...", projectId: "...", ... }; // ← coller ta config Firebase
+//   const app = initializeApp(firebaseConfig);
+//   window._fbAuth = getAuth(app);
+//   window._fbDb = getFirestore(app);
+//   window._fbGoogle = new GoogleAuthProvider();
+//   window._fbSignInWithPopup = signInWithPopup;
+//   window._fbSignIn = signInWithEmailAndPassword;
+//   window._fbSignUp = createUserWithEmailAndPassword;
+//   window._fbResetPwd = sendPasswordResetEmail;
+//   window._fbSignOut = signOut;
+//   window._fbDoc = doc;
+//   window._fbSetDoc = setDoc;
+//   window._fbGetDoc = getDoc;
+//   window._fbOnAuth = onAuthStateChanged;
+// </script>
+
+const FB = {
+  ready: () => !!window._fbAuth,
+  onAuth: (cb) => window._fbOnAuth ? window._fbOnAuth(window._fbAuth, cb) : (() => {}),
+  signInGoogle: () => window._fbSignInWithPopup(window._fbAuth, window._fbGoogle),
+  signIn: (email, pwd) => window._fbSignIn(window._fbAuth, email, pwd),
+  signUp: (email, pwd) => window._fbSignUp(window._fbAuth, email, pwd),
+  resetPwd: (email) => window._fbResetPwd(window._fbAuth, email),
+  signOut: () => window._fbSignOut(window._fbAuth),
+  saveUser: async (uid, data) => {
+    if (!window._fbDb) return;
+    await window._fbSetDoc(window._fbDoc(window._fbDb, "users", uid), data, { merge: true });
+  },
+  getUser: async (uid) => {
+    if (!window._fbDb) return null;
+    const snap = await window._fbGetDoc(window._fbDoc(window._fbDb, "users", uid));
+    return snap.exists() ? snap.data() : null;
+  },
+};
+
+function LoginScreen({ lang, onSkip }) {
+  const t = useT(lang || "fr");
+  const [mode, setMode] = useState("login"); // login | signup | reset
+  const [email, setEmail] = useState("");
+  const [pwd, setPwd] = useState("");
+  const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const firebaseReady = FB.ready();
+
+  async function handleGoogle() {
+    setError(""); setBusy(true);
+    try {
+      await FB.signInGoogle();
+    } catch (e) {
+      setError(e.message);
+    } finally { setBusy(false); }
+  }
+
+  async function handleSubmit() {
+    setError(""); setInfo(""); setBusy(true);
+    try {
+      if (mode === "reset") {
+        await FB.resetPwd(email);
+        setInfo(t("reset_sent"));
+        setMode("login");
+      } else if (mode === "signup") {
+        await FB.signUp(email, pwd);
+      } else {
+        await FB.signIn(email, pwd);
+      }
+    } catch (e) {
+      const msg = e.code === "auth/wrong-password" ? t("wrong_password")
+        : e.code === "auth/user-not-found" ? t("user_not_found")
+        : e.code === "auth/email-already-in-use" ? t("email_in_use")
+        : e.code === "auth/weak-password" ? t("weak_password")
+        : e.message;
+      setError(msg);
+    } finally { setBusy(false); }
+  }
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#eaf4fb", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 }}>
+      <div style={{ width: "100%", maxWidth: 380, background: "#fff", borderRadius: 20, padding: 28, boxShadow: "0 4px 24px #0a6ebd18" }}>
+        {/* Logo */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 24 }}>
+          <div style={{ width: 56, height: 56, borderRadius: 16, background: "#0a6ebd", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
+            <Droplets size={28} color="#fff" />
+          </div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: "#0d2b4e" }}>PoolApp</div>
+          <div style={{ fontSize: 13, color: "#6a7d90", marginTop: 2 }}>
+            {mode === "signup" ? t("create_account") : mode === "reset" ? t("reset_password") : t("sign_in")}
+          </div>
+        </div>
+
+        {!firebaseReady && (
+          <div style={{ background: "#fff8e1", border: "1px solid #ffe082", borderRadius: 10, padding: "10px 14px", fontSize: 12, color: "#7a5a00", marginBottom: 16 }}>
+            {t("firebase_not_configured")}
+          </div>
+        )}
+
+        {/* Google */}
+        {firebaseReady && mode !== "reset" && (
+          <button
+            style={{ width: "100%", padding: "12px 0", borderRadius: 12, border: "1.5px solid #d0e4f5", background: "#f8fafd", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, fontSize: 14, fontWeight: 600, color: "#0d2b4e", cursor: "pointer", marginBottom: 16 }}
+            onClick={handleGoogle}
+            disabled={busy}
+          >
+            <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+            {t("continue_google")}
+          </button>
+        )}
+
+        {firebaseReady && mode !== "reset" && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+            <div style={{ flex: 1, height: 1, background: "#e6ebe9" }} />
+            <span style={{ fontSize: 12, color: "#9aa9a5" }}>{t("or")}</span>
+            <div style={{ flex: 1, height: 1, background: "#e6ebe9" }} />
+          </div>
+        )}
+
+        {/* Email / pwd */}
+        {firebaseReady && (
+          <>
+            <label style={{ fontSize: 12, fontWeight: 600, color: "#4a6480", display: "block", marginBottom: 4 }}>Email</label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+              style={{ width: "100%", padding: "11px 14px", borderRadius: 10, border: "1.5px solid #d0e4f5", fontSize: 14, marginBottom: 10, boxSizing: "border-box" }}
+              placeholder="votre@email.com" />
+
+            {mode !== "reset" && (
+              <>
+                <label style={{ fontSize: 12, fontWeight: 600, color: "#4a6480", display: "block", marginBottom: 4 }}>{t("password")}</label>
+                <input type="password" value={pwd} onChange={e => setPwd(e.target.value)}
+                  style={{ width: "100%", padding: "11px 14px", borderRadius: 10, border: "1.5px solid #d0e4f5", fontSize: 14, marginBottom: 10, boxSizing: "border-box" }}
+                  placeholder="••••••••"
+                  onKeyDown={e => e.key === "Enter" && handleSubmit()} />
+              </>
+            )}
+
+            {error && <div style={{ fontSize: 12, color: "#c0392b", marginBottom: 8 }}>{error}</div>}
+            {info && <div style={{ fontSize: 12, color: "#1a8fd1", marginBottom: 8 }}>{info}</div>}
+
+            <button
+              style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: busy ? "#7ab8e8" : "#0a6ebd", color: "#fff", fontWeight: 700, fontSize: 15, cursor: busy ? "not-allowed" : "pointer", marginBottom: 12 }}
+              onClick={handleSubmit}
+              disabled={busy}
+            >
+              {busy ? "..." : mode === "signup" ? t("create_account") : mode === "reset" ? t("send_reset") : t("sign_in")}
+            </button>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "center" }}>
+              {mode === "login" && (
+                <>
+                  <button onClick={() => { setMode("signup"); setError(""); }} style={{ background: "none", border: "none", color: "#0a6ebd", fontSize: 13, cursor: "pointer" }}>{t("no_account")}</button>
+                  <button onClick={() => { setMode("reset"); setError(""); }} style={{ background: "none", border: "none", color: "#6a7d90", fontSize: 12, cursor: "pointer" }}>{t("forgot_password")}</button>
+                </>
+              )}
+              {mode === "signup" && (
+                <button onClick={() => { setMode("login"); setError(""); }} style={{ background: "none", border: "none", color: "#0a6ebd", fontSize: 13, cursor: "pointer" }}>{t("already_account")}</button>
+              )}
+              {mode === "reset" && (
+                <button onClick={() => { setMode("login"); setError(""); }} style={{ background: "none", border: "none", color: "#6a7d90", fontSize: 12, cursor: "pointer" }}>{t("back_to_login")}</button>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Skip / mode hors-ligne */}
+        <div style={{ marginTop: 20, borderTop: "1px solid #f0f4f8", paddingTop: 16, textAlign: "center" }}>
+          <button onClick={onSkip} style={{ background: "none", border: "none", color: "#9aa9a5", fontSize: 12, cursor: "pointer" }}>
+            {t("skip_login")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PoolApp() {
+  const [authUser, setAuthUser] = useState(undefined); // undefined=loading, null=anonymous, object=logged in
+  const [showLogin, setShowLogin] = useState(false);
+
   const [pools, setPools] = useState([
     { id: "default", name: "Ma piscine", location: "Valbonne (06)", volume: 72, treatmentType: "chlore", filtration: "sable" },
   ]);
@@ -2018,6 +2333,32 @@ function PoolApp() {
   const [apiKey, setApiKey] = useState("");
   const [apiProvider, setApiProvider] = useState("anthropic"); // "anthropic" | "openai"
   const [loaded, setLoaded] = useState(false);
+
+  // --- Firebase Auth ---
+  useEffect(() => {
+    if (!FB.ready()) { setAuthUser(null); return; }
+    const unsub = FB.onAuth(async (user) => {
+      setAuthUser(user || null);
+      if (user) {
+        try {
+          const data = await FB.getUser(user.uid);
+          if (data?.isPremium !== undefined) setIsPremium(data.isPremium);
+        } catch (e) {}
+        FB.saveUser(user.uid, { email: user.email, lastSeen: new Date().toISOString() }).catch(() => {});
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  // Affiche login à la première visite si Firebase configuré et non connecté
+  useEffect(() => {
+    if (!loaded || !FB.ready()) return;
+    if (authUser === null) {
+      window.storage.get("auth_skipped").then(v => {
+        if (!v?.value) setShowLogin(true);
+      }).catch(() => {});
+    }
+  }, [loaded, authUser]);
 
   // --- Chargement initial depuis le stockage persistant ---
   useEffect(() => {
@@ -2343,7 +2684,17 @@ function PoolApp() {
   }
 
   return (
-    <div style={styles.app} className="app">
+    <>
+    {showLogin && (
+      <LoginScreen
+        lang={lang}
+        onSkip={() => {
+          setShowLogin(false);
+          window.storage.set("auth_skipped", "true").catch(() => {});
+        }}
+      />
+    )}
+    <div style={{ ...styles.app, display: showLogin ? "none" : undefined }} className="app">
       <Header
         poolName={activePool?.name}
         location={activePool?.location}
@@ -2529,6 +2880,7 @@ function PoolApp() {
         />
       )}
     </div>
+    </>
   );
 }
 
@@ -3816,7 +4168,7 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
         style={{ ...styles.input, minHeight: 64, resize: "vertical" }}
       />
 
-      {isPremium && (
+      {isPremium ? (
         <div style={{ marginTop: 4 }}>
           <label style={styles.fieldLabel}>{t("pool_photos_label")}</label>
           {poolPhotos.length > 0 && (
@@ -3843,6 +4195,14 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
           </div>
           <input ref={poolFileInputRef} type="file" accept="image/*" capture="environment" multiple onChange={handlePoolPhotoChange} style={styles.hiddenFileInput} />
           <input ref={poolGalleryInputRef} type="file" accept="image/*" multiple onChange={handlePoolPhotoChange} style={styles.hiddenFileInput} />
+        </div>
+      ) : (
+        <div style={{ marginTop: 4 }}>
+          <label style={styles.fieldLabel}>{t("pool_photos_label")}</label>
+          <button style={styles.photoLockedBtn} onClick={onWantPremium}>
+            <Lock size={16} />
+            <span>{t("pool_photo_locked")}</span>
+          </button>
         </div>
       )}
 
@@ -4710,6 +5070,8 @@ function PaywallModal({ onClose, onActivate, lang }) {
     t("paywall_perk3"),
     t("paywall_perk4"),
     t("paywall_perk5"),
+    t("paywall_perk6"),
+    t("paywall_perk7"),
   ];
   return (
     <ModalShell onClose={onClose} title={t("paywall_title")}>
