@@ -5589,7 +5589,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                 tick={{ fontSize: 10, fill: "#2d4a6e" }}
                 width={30}
               />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Legend layout="horizontal" align="center" verticalAlign="bottom" wrapperStyle={{ fontSize: 11 }} />
               {chartParams.map((cp) => (
                 <Line
                   key={cp.key}
