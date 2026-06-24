@@ -270,7 +270,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification, deleteUser, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getFirestore, doc, setDoc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-  import { getAnalytics, logEvent, setUserId } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
+  import { getAnalytics, logEvent, setUserId, setUserProperties } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCZNXi1UPt6B69EVhd8nbTbh3YzM89Yo1s",
@@ -291,17 +291,6 @@
   window._fbAuth = auth;
   window._fbDb = db;
   window._fbGoogle = googleProvider;
-  // Helper analytics : fire-and-forget, silencieux si Analytics non dispo
-  window._fbLog = (eventName, params) => {
-    try { logEvent(analytics, eventName, params || {}); } catch (e) {}
-  };
-  window._fbSetUserId = (uid) => {
-    try { setUserId(analytics, uid); } catch (e) {}
-  };
-
-  window._fbAuth = auth;
-  window._fbDb = db;
-  window._fbGoogle = googleProvider;
   window._fbSignIn = signInWithEmailAndPassword;
   window._fbSignUp = createUserWithEmailAndPassword;
   window._fbResetPwd = sendPasswordResetEmail;
@@ -313,6 +302,16 @@
   window._fbGetDoc = getDoc;
   window._fbDeleteDoc = deleteDoc;
   window._fbOnAuth = onAuthStateChanged;
+  // Analytics helpers
+  window._fbLog = (eventName, params) => {
+    try { logEvent(analytics, eventName, params || {}); } catch (e) {}
+  };
+  window._fbSetUserId = (uid) => {
+    try { setUserId(analytics, uid); } catch (e) {}
+  };
+  window._fbSetUserProperty = (name, value) => {
+    try { setUserProperties(analytics, { [name]: value }); } catch (e) {}
+  };
 
   // Tente popup en premier, fallback redirect si bloqué (iOS Safari, etc.)
   window._fbSignInWithPopup = async (auth, provider) => {

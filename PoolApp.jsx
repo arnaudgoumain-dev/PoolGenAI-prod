@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "0.66";
+const APP_VERSION = "0.67";
 
 const TRANSLATIONS = {
   fr: {
@@ -2640,6 +2640,9 @@ function PoolApp() {
         if (aprov?.value) setApiProvider(JSON.parse(aprov.value));
       } catch (e) {}
       setLoaded(true);
+      // Envoie la version comme propriété utilisateur Analytics
+      try { window._fbSetUserProperty?.("app_version", APP_VERSION); } catch(e) {}
+      track("app_open", { version: APP_VERSION });
     }
     load();
   }, []);
@@ -5545,6 +5548,17 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
             </div>
           </div>
         </div>
+
+        {/* Photo du bassin */}
+        {pool?.photo && (
+          <div style={{ marginBottom: 20 }}>
+            <img
+              src={pool.photo}
+              alt={pool.name}
+              style={{ width: "100%", maxHeight: 220, objectFit: "cover", borderRadius: 12, border: "1px solid #d0e4f5" }}
+            />
+          </div>
+        )}
 
         <div style={styles.reportSectionTitle}>{t("params_evolution")}</div>
         {chartData.length > 0 ? (() => {
