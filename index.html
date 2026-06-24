@@ -385,12 +385,20 @@
      stabilis&#233;e. Ce script d&#233;sinstalle aussi tout SW d&#233;j&#224; pr&#233;sent. -->
 <script>
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.getRegistrations().then((regs) => {
-      regs.forEach((reg) => reg.unregister());
-    });
-    if (window.caches) {
-      caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
-    }
+    navigator.serviceWorker.register("./sw.js").then((reg) => {
+      // Vérifie les mises à jour à chaque chargement
+      reg.update();
+      // Si une nouvelle version est disponible, elle s'active immédiatement
+      reg.addEventListener("updatefound", () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener("statechange", () => {
+          if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+            // Nouvelle version prête — recharge silencieusement
+            window.location.reload();
+          }
+        });
+      });
+    }).catch((err) => console.warn("SW registration failed:", err));
   }
 </script>
 

@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "0.62";
+const APP_VERSION = "0.63";
 
 const TRANSLATIONS = {
   fr: {
@@ -5861,14 +5861,13 @@ const styles = {
     fontFamily:
       "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     background: "#f0f6fb",
-    height: "100vh",
-    height: "100dvh",
     maxWidth: 480,
     margin: "0 auto",
     display: "flex",
     flexDirection: "column",
     color: "#0d2b4e",
-    overflow: "hidden",
+    minHeight: "100vh",
+    minHeight: "100dvh",
   },
   header: {
     display: "flex",
@@ -6015,7 +6014,7 @@ const styles = {
     cursor: "pointer",
     flexShrink: 0,
   },
-  main: { flex: 1, padding: "16px 16px 24px", overflowY: "auto" },
+  main: { flex: 1, padding: "16px 16px 24px" },
   sectionRow: {
     display: "flex",
     alignItems: "center",
@@ -6485,7 +6484,7 @@ const styles = {
     maxWidth: 480,
     width: "100%",
     alignItems: "center",
-    zIndex: 100,
+    zIndex: 10,
     boxShadow: "0 -1px 8px rgba(10,110,189,0.06)",
     flexShrink: 0,
   },
@@ -6517,7 +6516,7 @@ const styles = {
     display: "flex",
     alignItems: "flex-end",
     justifyContent: "center",
-    zIndex: 50,
+    zIndex: 300,
   },
   modalSheet: {
     background: "#ffffff",
