@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "0.60";
+const APP_VERSION = "0.61";
 
 const TRANSLATIONS = {
   fr: {
@@ -2262,6 +2262,8 @@ const FB = {
 function track(event, params) {
   try { window._fbLog && window._fbLog(event, params); } catch (e) {}
 }
+
+function LoginScreen({ lang, onSkip }) {
   const t = useT(lang || "fr");
   const [mode, setMode] = useState("login"); // login | signup | reset | done
   const [email, setEmail] = useState("");
