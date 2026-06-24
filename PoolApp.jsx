@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "0.71";
+const APP_VERSION = "0.72";
 
 const TRANSLATIONS = {
   fr: {
@@ -5564,9 +5564,8 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           return (
           <React.Fragment>
           <div style={styles.reportChartWrap}>
+            <ResponsiveContainer width="100%" height={showValues ? 380 : 340}>
             <LineChart
-              width={760}
-              height={showValues ? 380 : 340}
               data={chartData}
               margin={{ top: showValues ? 24 : 8, right: 16, left: 0, bottom: 0 }}
             >
@@ -5609,6 +5608,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                 />
               ))}
             </LineChart>
+            </ResponsiveContainer>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "8px 16px", marginTop: 8, padding: "0 8px" }}>
             {chartParams.map((cp) => (
@@ -5830,9 +5830,6 @@ const styles = {
     marginBottom: 12,
   },
   reportChartWrap: {
-    display: "flex",
-    justifyContent: "center",
-    overflowX: "auto",
     background: "#fafcfb",
     borderRadius: 12,
     padding: 8,
