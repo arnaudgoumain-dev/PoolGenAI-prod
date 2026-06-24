@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "0.64";
+const APP_VERSION = "0.65";
 
 const TRANSLATIONS = {
   fr: {
@@ -2877,7 +2877,7 @@ function PoolApp() {
   }
 
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
     {showLogin && (
       <LoginScreen
         lang={lang}
@@ -5866,9 +5866,9 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     color: "#0d2b4e",
-    height: "100%",
+    minHeight: "100dvh",
+    flex: 1,
   },
-
   header: {
     display: "flex",
     alignItems: "center",
@@ -6014,7 +6014,7 @@ const styles = {
     cursor: "pointer",
     flexShrink: 0,
   },
-  main: { flex: 1, padding: "16px 16px 24px", overflowY: "auto" },
+  main: { flex: 1, padding: "16px 16px 24px" },
   sectionRow: {
     display: "flex",
     alignItems: "center",
