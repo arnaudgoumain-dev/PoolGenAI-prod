@@ -5562,6 +5562,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           const spanMs = timestamps.length > 1 ? Math.max(...timestamps) - Math.min(...timestamps) : 0;
           const showTime = spanMs < 86400000 * 2;
           return (
+          <React.Fragment>
           <div style={styles.reportChartWrap}>
             <LineChart
               width={760}
@@ -5617,6 +5618,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
               </div>
             ))}
           </div>
+          </React.Fragment>
           );
         })() : (
           <p style={styles.helpTextSmall}>{t("no_measures_report")}</p>
