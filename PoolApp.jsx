@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "0.59";
+const APP_VERSION = "0.60";
 
 const TRANSLATIONS = {
   fr: {
@@ -2258,7 +2258,10 @@ const FB = {
   },
 };
 
-function LoginScreen({ lang, onSkip, onSuccess }) {
+// Helper analytics — fire-and-forget
+function track(event, params) {
+  try { window._fbLog && window._fbLog(event, params); } catch (e) {}
+}
   const t = useT(lang || "fr");
   const [mode, setMode] = useState("login"); // login | signup | reset | done
   const [email, setEmail] = useState("");
@@ -2293,6 +2296,7 @@ function LoginScreen({ lang, onSkip, onSuccess }) {
         if (pwd.length < 6) { setError(t("weak_password")); setBusy(false); return; }
         if (pwd !== pwd2) { setError(t("error_pwd_mismatch")); setBusy(false); return; }
         const cred = await FB.signUp(email, pwd);
+        track("sign_up", { method: "email" });
         // Envoie l'email de vérification
         await FB.sendVerification(cred.user).catch(() => {});
         // Enregistre le profil dans Firestore
@@ -2453,6 +2457,7 @@ function LoginScreen({ lang, onSkip, onSuccess }) {
           <button onClick={onSkip} style={{ background: "none", border: "none", color: "#b0bec5", fontSize: 12, cursor: "pointer" }}>
             {t("skip_login")}
           </button>
+          <div style={{ marginTop: 8, fontSize: 10, color: "#d0d8e0" }}>v{APP_VERSION}</div>
         </div>
       </div>
     </div>
@@ -2478,6 +2483,10 @@ function PoolApp() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [editingMeasure, setEditingMeasure] = useState(null);
   const [showPaywall, setShowPaywall] = useState(false);
+  function openPaywall(source) {
+    track("paywall_shown", { source: source || "unknown" });
+    openPaywall();
+  }
   const [showAddPool, setShowAddPool] = useState(false);
   const [lang, setLang] = useState("fr");
   const [isPremium, setIsPremium] = useState(false);
@@ -2502,6 +2511,8 @@ function PoolApp() {
         setAuthUser(user);
         setShowLogin(false);
         window.storage.set("auth_skipped", "true").catch(() => {});
+        try { window._fbSetUserId && window._fbSetUserId(user.uid); } catch (e) {}
+        track("login", { method: user.providerData?.[0]?.providerId || "unknown" });
         try {
           const data = await FB.getUser(user.uid);
           if (data?.isPremium !== undefined) setIsPremium(data.isPremium);
@@ -2727,10 +2738,11 @@ function PoolApp() {
 
   function addMeasure(entry) {
     if (entry.id) {
-      // Édition d'une mesure existante
       setMeasures((prev) => prev.map((m) => (m.id === entry.id ? { ...m, ...entry } : m)));
+      track("measure_edit");
     } else {
       setMeasures((prev) => [...prev, { id: uid(), poolId: activePoolId, ...entry }]);
+      track("measure_add", { has_photos: !!(entry.photos?.length || entry.photo), has_pool_photos: !!(entry.poolPhotos?.length) });
     }
     setShowAddMeasure(false);
     setEditingMeasure(null);
@@ -2745,6 +2757,7 @@ function PoolApp() {
   }
 
   function saveApplication(measureId, steps, allApplied) {
+    track("treatment_applied", { steps_count: steps.length, all_applied: allApplied });
     // Déduire le stock consommé pour chaque produit utilisé, qu'il soit appliqué partiellement ou totalement
     const stepsWithAmount = steps.filter((s) => s.appliedAmount);
     if (stepsWithAmount.length > 0) {
@@ -2803,7 +2816,7 @@ function PoolApp() {
 
   function handleOpenAddMeasure() {
     if (blockedByLimit) {
-      setShowPaywall(true);
+      openPaywall();
     } else {
       setShowAddMeasure(true);
     }
@@ -2818,7 +2831,7 @@ function PoolApp() {
 
   function handleValidateApplication(m, recsOverride, selectedRecsOverride, adjustMode) {
     if (!isPremium) {
-      setShowPaywall(true);
+      openPaywall();
       return;
     }
     setValidatingMeasure(m);
@@ -2855,7 +2868,7 @@ function PoolApp() {
 
   function handleWantAddPool() {
     if (!isPremium) {
-      setShowPaywall(true);
+      openPaywall();
       return;
     }
     setShowAddPool(true);
@@ -2867,6 +2880,7 @@ function PoolApp() {
       <LoginScreen
         lang={lang}
         onSkip={() => {
+          track("auth_skip");
           setShowLogin(false);
           window.storage.set("auth_skipped", "true").catch(() => {});
         }}
@@ -2892,7 +2906,7 @@ function PoolApp() {
             products={poolProducts}
             manageStock={!!activePool?.manageStock}
             lang={lang}
-            onWantPremium={() => setShowPaywall(true)}
+            onWantPremium={() => openPaywall()}
             onAddMeasure={handleOpenAddMeasure}
             onEditMeasure={handleEditMeasure}
             onValidateApplication={handleValidateApplication}
@@ -2917,7 +2931,7 @@ function PoolApp() {
             isPremium={isPremium}
             poolName={activePool?.name}
             onGenerateReport={() => setShowReport(true)}
-            onWantPremiumForReport={() => setShowPaywall(true)}
+            onWantPremiumForReport={() => openPaywall()}
             lang={lang}
           />
         )}
@@ -2937,7 +2951,7 @@ function PoolApp() {
             isPremium={isPremium}
             poolName={activePool?.name}
             manageStock={!!activePool?.manageStock}
-            onWantPremium={() => setShowPaywall(true)}
+            onWantPremium={() => openPaywall()}
             onWantSettings={() => setTab("settings")}
             lang={lang}
           />
@@ -2981,8 +2995,8 @@ function PoolApp() {
             }}
             poolMeasureCount={poolMeasures.length}
             onGenerateReport={() => setShowReport(true)}
-            onWantPremiumForReport={() => setShowPaywall(true)}
-            onWantPremium={() => setShowPaywall(true)}
+            onWantPremiumForReport={() => openPaywall()}
+            onWantPremium={() => openPaywall()}
             isPremium={isPremium}
             setIsPremium={setIsPremium}
             apiKey={apiKey}
@@ -3009,7 +3023,7 @@ function PoolApp() {
           onWantPremium={() => {
             setShowAddMeasure(false);
             setEditingMeasure(null);
-            setShowPaywall(true);
+            openPaywall();
           }}
           apiKey={apiKey}
           apiProvider={apiProvider}
@@ -3030,7 +3044,7 @@ function PoolApp() {
           onWantPremium={() => {
             setShowAddProduct(false);
             setEditingProduct(null);
-            setShowPaywall(true);
+            openPaywall();
           }}
           applications={poolApplications}
           manageStock={!!activePool?.manageStock}
@@ -3048,6 +3062,7 @@ function PoolApp() {
           lang={lang}
           onClose={() => setShowPaywall(false)}
           onActivate={() => {
+            track("upgrade_activated");
             setIsPremium(true);
             setApiKey("https://poolapp-proxy.arnaud-goumain.workers.dev");
             setShowPaywall(false);
@@ -3191,7 +3206,10 @@ function TabBar({ tab, setTab, lang }) {
         return (
           <button
             key={tb.id}
-            onClick={() => setTab(tb.id)}
+            onClick={() => {
+              setTab(tb.id);
+              track("screen_view", { screen_name: tb.id });
+            }}
             style={{
               ...styles.tabBtn,
               color: active ? "#0a6ebd" : "#6a7d90",

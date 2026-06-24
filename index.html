@@ -271,6 +271,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification, deleteUser, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getFirestore, doc, setDoc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getAnalytics, logEvent, setUserId } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCZNXi1UPt6B69EVhd8nbTbh3YzM89Yo1s",
@@ -285,7 +286,19 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
+  const analytics = getAnalytics(app);
   const googleProvider = new GoogleAuthProvider();
+
+  window._fbAuth = auth;
+  window._fbDb = db;
+  window._fbGoogle = googleProvider;
+  // Helper analytics : fire-and-forget, silencieux si Analytics non dispo
+  window._fbLog = (eventName, params) => {
+    try { logEvent(analytics, eventName, params || {}); } catch (e) {}
+  };
+  window._fbSetUserId = (uid) => {
+    try { setUserId(analytics, uid); } catch (e) {}
+  };
 
   window._fbAuth = auth;
   window._fbDb = db;
