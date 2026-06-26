@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.5.1";
+const APP_VERSION = "1.6.1";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -87,7 +87,7 @@ const TRANSLATIONS = {
     lcen_host: "Hébergement",
     lcen_host_val: "GitHub Inc. / Microsoft Corporation\n88 Colin P Kelly Jr St\nSan Francisco, CA 94107, USA",
     lcen_contact: "Contact",
-    lcen_contact_val: "poolapp.support@gmail.com",
+    lcen_contact_val: "support.poolgenai@gmail.com",
     lcen_cgu_title: "Conditions générales d'utilisation",
     lcen_ai_title: "Intelligence artificielle",
     lcen_ai_val: "Lorsque vous utilisez l'analyse IA, vos données sont transmises directement à Anthropic ou OpenAI via votre clé API personnelle. L'éditeur ne stocke pas vos clés et n'a pas accès aux échanges. Consultez les CGU de votre fournisseur IA avant activation.",
@@ -99,7 +99,7 @@ const TRANSLATIONS = {
     photo_warning_body: "Assurez-vous que la photo ne contient pas :\n• de personnes identifiables\n• d'éléments permettant de localiser votre domicile\n• de données personnelles visibles\n\nNous recommandons de désactiver la géolocalisation dans les paramètres de votre appareil photo.",
     photo_warning_confirm: "J'ai compris, continuer",
     ai_clause_title: "Analyse par intelligence artificielle",
-    ai_clause_body: "Lorsque vous activez l'analyse IA, vos données (mesures et photos) sont transmises directement à Anthropic ou OpenAI via votre clé API personnelle. PoolApp ne stocke pas votre clé et n'a pas accès aux échanges. Consultez les CGU de votre fournisseur d'IA avant utilisation.",
+    ai_clause_body: "Lorsque vous activez l'analyse IA, vos données (mesures et photos) sont transmises directement à Anthropic ou OpenAI via votre clé API personnelle. PoolGenAI ne stocke pas votre clé et n'a pas accès aux échanges. Consultez les CGU de votre fournisseur d'IA avant utilisation.",
     cgu_update_title: "Conditions mises à jour",
     cgu_update_body: "Les conditions d'utilisation ont été mises à jour (v{version}). Merci de les relire et de les accepter pour continuer.",
     cgu_update_accept: "Lire et accepter",
@@ -111,8 +111,8 @@ const TRANSLATIONS = {
     disclaimer_title: "Mentions légales & Conditions d'utilisation",
     disclaimer_cgu: "J'accepte les conditions générales d'utilisation et la politique de confidentialité",
     disclaimer_data: "J'accepte que mes données de traitement (mesures, produits, photos) soient collectées et potentiellement partagées avec des partenaires du secteur piscine/spa à des fins d'amélioration des analyses",
-    disclaimer_required: "L'acceptation des CGU est obligatoire pour utiliser PoolApp",
-    disclaimer_pro: "Les professionnels utilisant PoolApp pour des prestations réalisées pour le compte de tiers sont tenus de faire valider aux propriétaires des bassins traités la collecte de données par l'éditeur.",
+    disclaimer_required: "L'acceptation des CGU est obligatoire pour utiliser PoolGenAI",
+    disclaimer_pro: "Les professionnels utilisant PoolGenAI pour des prestations réalisées pour le compte de tiers sont tenus de faire valider aux propriétaires des bassins traités la collecte de données par l'éditeur.",
     revoke_data_consent: "Révoquer le consentement données",
     revoke_data_confirm: "Ton consentement a été révoqué. Tes données ne seront plus partagées.",
     pool_email: "Email rapport PDF",
@@ -289,7 +289,7 @@ const TRANSLATIONS = {
     error_email_required: "Email invalide.",
     account_created: "Compte créé !",
     verify_email_notice: "Un email de confirmation a été envoyé à ton adresse. Clique sur le lien pour activer ton compte.",
-    account_created_sub: "Bienvenue sur PoolApp. Tu peux maintenant utiliser l'app.",
+    account_created_sub: "Bienvenue sur PoolGenAI. Tu peux maintenant utiliser l'app.",
     start_app: "Démarrer l'app",
     sign_out: "Se déconnecter",
     delete_account: "Supprimer mon compte",
@@ -482,7 +482,7 @@ const TRANSLATIONS = {
     lcen_host: "Hosting",
     lcen_host_val: "GitHub Inc. / Microsoft Corporation\n88 Colin P Kelly Jr St\nSan Francisco, CA 94107, USA",
     lcen_contact: "Contact",
-    lcen_contact_val: "poolapp.support@gmail.com",
+    lcen_contact_val: "support.poolgenai@gmail.com",
     lcen_cgu_title: "Terms of use",
     lcen_ai_title: "Artificial intelligence",
     lcen_ai_val: "When using AI analysis, your data is transmitted directly to Anthropic or OpenAI via your personal API key. The publisher does not store your keys and has no access to exchanges. Consult your AI provider's terms before activating.",
@@ -494,7 +494,7 @@ const TRANSLATIONS = {
     photo_warning_body: "Make sure the photo does not contain:\n• identifiable persons\n• elements that could locate your home\n• visible personal data\n\nWe recommend disabling geotagging in your camera settings.",
     photo_warning_confirm: "I understand, continue",
     ai_clause_title: "AI analysis",
-    ai_clause_body: "When you enable AI analysis, your data (measurements and photos) are sent directly to Anthropic or OpenAI via your personal API key. PoolApp does not store your key and has no access to the exchanges. Please review your AI provider's terms before use.",
+    ai_clause_body: "When you enable AI analysis, your data (measurements and photos) are sent directly to Anthropic or OpenAI via your personal API key. PoolGenAI does not store your key and has no access to the exchanges. Please review your AI provider's terms before use.",
     cgu_update_title: "Terms updated",
     cgu_update_body: "The terms of use have been updated (v{version}). Please read and accept them to continue.",
     cgu_update_accept: "Read and accept",
@@ -506,8 +506,8 @@ const TRANSLATIONS = {
     disclaimer_title: "Legal Notice & Terms of Use",
     disclaimer_cgu: "I accept the terms of use and privacy policy",
     disclaimer_data: "I agree that my treatment data (measurements, products, photos) may be collected and potentially shared with pool/spa industry partners for analysis improvement purposes",
-    disclaimer_required: "Accepting the Terms of Use is required to use PoolApp",
-    disclaimer_pro: "Professionals using PoolApp for services performed on behalf of third parties must obtain the pool owners' consent for data collection by the publisher.",
+    disclaimer_required: "Accepting the Terms of Use is required to use PoolGenAI",
+    disclaimer_pro: "Professionals using PoolGenAI for services performed on behalf of third parties must obtain the pool owners' consent for data collection by the publisher.",
     revoke_data_consent: "Revoke data consent",
     revoke_data_confirm: "Your consent has been revoked. Your data will no longer be shared.",
     pool_email: "PDF report email",
@@ -674,7 +674,7 @@ const TRANSLATIONS = {
     error_email_required: "Invalid email.",
     account_created: "Account created!",
     verify_email_notice: "A confirmation email has been sent to your address. Click the link to activate your account.",
-    account_created_sub: "Welcome to PoolApp. You can now use the app.",
+    account_created_sub: "Welcome to PoolGenAI. You can now use the app.",
     start_app: "Start the app",
     sign_out: "Sign out",
     delete_account: "Delete my account",
@@ -867,7 +867,7 @@ const TRANSLATIONS = {
     lcen_host: "Hosting",
     lcen_host_val: "GitHub Inc. / Microsoft Corporation\n88 Colin P Kelly Jr St\nSan Francisco, CA 94107, USA",
     lcen_contact: "Kontakt",
-    lcen_contact_val: "poolapp.support@gmail.com",
+    lcen_contact_val: "support.poolgenai@gmail.com",
     lcen_cgu_title: "Nutzungsbedingungen",
     lcen_ai_title: "Künstliche Intelligenz",
     lcen_ai_val: "Bei der KI-Analyse werden Ihre Daten direkt über Ihren persönlichen API-Schlüssel an Anthropic oder OpenAI übertragen. Der Herausgeber speichert keine Schlüssel und hat keinen Zugang zu den Austauschen.",
@@ -879,7 +879,7 @@ const TRANSLATIONS = {
     photo_warning_body: "Stellen Sie sicher, dass das Foto nicht enthält:\n• erkennbare Personen\n• Elemente, die Ihren Wohnort identifizieren könnten\n• sichtbare personenbezogene Daten\n\nWir empfehlen, die Geolokalisierung in den Kameraeinstellungen zu deaktivieren.",
     photo_warning_confirm: "Verstanden, weiter",
     ai_clause_title: "KI-Analyse",
-    ai_clause_body: "Wenn Sie die KI-Analyse aktivieren, werden Ihre Daten direkt über Ihren persönlichen API-Schlüssel an Anthropic oder OpenAI übermittelt. PoolApp speichert Ihren Schlüssel nicht.",
+    ai_clause_body: "Wenn Sie die KI-Analyse aktivieren, werden Ihre Daten direkt über Ihren persönlichen API-Schlüssel an Anthropic oder OpenAI übermittelt. PoolGenAI speichert Ihren Schlüssel nicht.",
     cgu_update_title: "AGB aktualisiert",
     cgu_update_body: "Die Nutzungsbedingungen wurden aktualisiert (v{version}). Bitte lesen und akzeptieren Sie sie.",
     cgu_update_accept: "Lesen und akzeptieren",
@@ -892,7 +892,7 @@ const TRANSLATIONS = {
     disclaimer_cgu: "Ich akzeptiere die Nutzungsbedingungen und Datenschutzrichtlinie",
     disclaimer_data: "Ich stimme zu, dass meine Behandlungsdaten (Messungen, Produkte, Fotos) gesammelt und möglicherweise mit Partnern der Pool/Spa-Branche geteilt werden",
     disclaimer_required: "Die Annahme der Nutzungsbedingungen ist erforderlich",
-    disclaimer_pro: "Fachleute, die PoolApp für Dienstleistungen im Auftrag Dritter verwenden, müssen die Zustimmung der Beckeneigentümer zur Datenerhebung einholen.",
+    disclaimer_pro: "Fachleute, die PoolGenAI für Dienstleistungen im Auftrag Dritter verwenden, müssen die Zustimmung der Beckeneigentümer zur Datenerhebung einholen.",
     revoke_data_consent: "Datenzustimmung widerrufen",
     revoke_data_confirm: "Ihre Zustimmung wurde widerrufen.",
     pool_email: "PDF-Bericht E-Mail",
@@ -1058,7 +1058,7 @@ const TRANSLATIONS = {
     error_email_required: "Ungültige E-Mail.",
     account_created: "Konto erstellt!",
     verify_email_notice: "Eine Bestätigungs-E-Mail wurde an deine Adresse gesendet. Klicke auf den Link, um dein Konto zu aktivieren.",
-    account_created_sub: "Willkommen bei PoolApp. Du kannst die App jetzt nutzen.",
+    account_created_sub: "Willkommen bei PoolGenAI. Du kannst die App jetzt nutzen.",
     start_app: "App starten",
     sign_out: "Abmelden",
     delete_account: "Konto löschen",
@@ -1251,7 +1251,7 @@ const TRANSLATIONS = {
     lcen_host: "Hosting",
     lcen_host_val: "GitHub Inc. / Microsoft Corporation\n88 Colin P Kelly Jr St\nSan Francisco, CA 94107, USA",
     lcen_contact: "Contatto",
-    lcen_contact_val: "poolapp.support@gmail.com",
+    lcen_contact_val: "support.poolgenai@gmail.com",
     lcen_cgu_title: "Termini di utilizzo",
     lcen_ai_title: "Intelligenza artificiale",
     lcen_ai_val: "Quando si utilizza l'analisi IA, i dati vengono trasmessi direttamente ad Anthropic o OpenAI tramite la chiave API personale dell'utente. L'editore non memorizza le chiavi e non ha accesso agli scambi.",
@@ -1263,7 +1263,7 @@ const TRANSLATIONS = {
     photo_warning_body: "Assicurati che la foto non contenga:\n• persone identificabili\n• elementi che possano localizzare la tua abitazione\n• dati personali visibili\n\nTi consigliamo di disattivare la geolocalizzazione nelle impostazioni della fotocamera.",
     photo_warning_confirm: "Ho capito, continua",
     ai_clause_title: "Analisi IA",
-    ai_clause_body: "Quando attivi l'analisi IA, i tuoi dati vengono trasmessi direttamente ad Anthropic o OpenAI tramite la tua chiave API personale. PoolApp non memorizza la tua chiave.",
+    ai_clause_body: "Quando attivi l'analisi IA, i tuoi dati vengono trasmessi direttamente ad Anthropic o OpenAI tramite la tua chiave API personale. PoolGenAI non memorizza la tua chiave.",
     cgu_update_title: "Termini aggiornati",
     cgu_update_body: "I termini di utilizzo sono stati aggiornati (v{version}). Per favore leggili e accettali per continuare.",
     cgu_update_accept: "Leggi e accetta",
@@ -1276,7 +1276,7 @@ const TRANSLATIONS = {
     disclaimer_cgu: "Accetto i termini di utilizzo e la politica sulla privacy",
     disclaimer_data: "Acconsento alla raccolta dei miei dati di trattamento e alla possibile condivisione con partner del settore piscine/spa",
     disclaimer_required: "L'accettazione dei termini è obbligatoria",
-    disclaimer_pro: "I professionisti che utilizzano PoolApp per conto di terzi devono ottenere il consenso dei proprietari delle vasche.",
+    disclaimer_pro: "I professionisti che utilizzano PoolGenAI per conto di terzi devono ottenere il consenso dei proprietari delle vasche.",
     revoke_data_consent: "Revoca consenso dati",
     revoke_data_confirm: "Il tuo consenso è stato revocato.",
     pool_email: "Email rapporto PDF",
@@ -1442,7 +1442,7 @@ const TRANSLATIONS = {
     error_email_required: "Email non valida.",
     account_created: "Account creato!",
     verify_email_notice: "Un'email di conferma è stata inviata al tuo indirizzo. Clicca sul link per attivare il tuo account.",
-    account_created_sub: "Benvenuto su PoolApp. Puoi usare l'app ora.",
+    account_created_sub: "Benvenuto su PoolGenAI. Puoi usare l'app ora.",
     start_app: "Avvia l'app",
     sign_out: "Disconnetti",
     delete_account: "Elimina account",
@@ -1635,7 +1635,7 @@ const TRANSLATIONS = {
     lcen_host: "Alojamiento",
     lcen_host_val: "GitHub Inc. / Microsoft Corporation\n88 Colin P Kelly Jr St\nSan Francisco, CA 94107, USA",
     lcen_contact: "Contacto",
-    lcen_contact_val: "poolapp.support@gmail.com",
+    lcen_contact_val: "support.poolgenai@gmail.com",
     lcen_cgu_title: "Condiciones de uso",
     lcen_ai_title: "Inteligencia artificial",
     lcen_ai_val: "Al usar el análisis de IA, sus datos se transmiten directamente a Anthropic u OpenAI a través de su clave API personal. El editor no almacena las claves y no tiene acceso a los intercambios.",
@@ -1647,7 +1647,7 @@ const TRANSLATIONS = {
     photo_warning_body: "Asegúrese de que la foto no contenga:\n• personas identificables\n• elementos que puedan localizar su domicilio\n• datos personales visibles\n\nRecomendamos desactivar la geolocalización en los ajustes de la cámara.",
     photo_warning_confirm: "Entendido, continuar",
     ai_clause_title: "Análisis IA",
-    ai_clause_body: "Al activar el análisis IA, sus datos se transmiten directamente a Anthropic u OpenAI a través de su clave API personal. PoolApp no almacena su clave.",
+    ai_clause_body: "Al activar el análisis IA, sus datos se transmiten directamente a Anthropic u OpenAI a través de su clave API personal. PoolGenAI no almacena su clave.",
     cgu_update_title: "Términos actualizados",
     cgu_update_body: "Los términos de uso han sido actualizados (v{version}). Por favor léalos y acéptelos para continuar.",
     cgu_update_accept: "Leer y aceptar",
@@ -1660,7 +1660,7 @@ const TRANSLATIONS = {
     disclaimer_cgu: "Acepto los términos de uso y la política de privacidad",
     disclaimer_data: "Acepto que mis datos de tratamiento sean recopilados y compartidos con socios del sector piscinas/spa",
     disclaimer_required: "La aceptación de los términos es obligatoria",
-    disclaimer_pro: "Los profesionales que usen PoolApp para servicios a terceros deben obtener el consentimiento de los propietarios de las piscinas.",
+    disclaimer_pro: "Los profesionales que usen PoolGenAI para servicios a terceros deben obtener el consentimiento de los propietarios de las piscinas.",
     revoke_data_consent: "Revocar consentimiento de datos",
     revoke_data_confirm: "Tu consentimiento ha sido revocado.",
     pool_email: "Email informe PDF",
@@ -1826,7 +1826,7 @@ const TRANSLATIONS = {
     error_email_required: "Email inválido.",
     account_created: "¡Cuenta creada!",
     verify_email_notice: "Se ha enviado un email de confirmación a tu dirección. Haz clic en el enlace para activar tu cuenta.",
-    account_created_sub: "Bienvenido a PoolApp. Ya puedes usar la app.",
+    account_created_sub: "Bienvenido a PoolGenAI. Ya puedes usar la app.",
     start_app: "Iniciar la app",
     sign_out: "Cerrar sesión",
     delete_account: "Eliminar mi cuenta",
@@ -2019,7 +2019,7 @@ const TRANSLATIONS = {
     lcen_host: "Hospedagem",
     lcen_host_val: "GitHub Inc. / Microsoft Corporation\n88 Colin P Kelly Jr St\nSan Francisco, CA 94107, USA",
     lcen_contact: "Contato",
-    lcen_contact_val: "poolapp.support@gmail.com",
+    lcen_contact_val: "support.poolgenai@gmail.com",
     lcen_cgu_title: "Termos de uso",
     lcen_ai_title: "Inteligência artificial",
     lcen_ai_val: "Ao usar a análise de IA, seus dados são transmitidos diretamente para Anthropic ou OpenAI através de sua chave API pessoal. O editor não armazena chaves e não tem acesso às trocas.",
@@ -2031,7 +2031,7 @@ const TRANSLATIONS = {
     photo_warning_body: "Certifique-se de que a foto não contenha:\n• pessoas identificáveis\n• elementos que possam localizar sua residência\n• dados pessoais visíveis\n\nRecomendamos desativar a geolocalização nas configurações da câmera.",
     photo_warning_confirm: "Entendi, continuar",
     ai_clause_title: "Análise IA",
-    ai_clause_body: "Ao ativar a análise IA, seus dados são transmitidos diretamente à Anthropic ou OpenAI via sua chave API pessoal. O PoolApp não armazena sua chave.",
+    ai_clause_body: "Ao ativar a análise IA, seus dados são transmitidos diretamente à Anthropic ou OpenAI via sua chave API pessoal. O PoolGenAI não armazena sua chave.",
     cgu_update_title: "Termos atualizados",
     cgu_update_body: "Os termos de uso foram atualizados (v{version}). Por favor leia e aceite-os para continuar.",
     cgu_update_accept: "Ler e aceitar",
@@ -2044,7 +2044,7 @@ const TRANSLATIONS = {
     disclaimer_cgu: "Aceito os termos de uso e a política de privacidade",
     disclaimer_data: "Concordo que meus dados de tratamento sejam coletados e compartilhados com parceiros do setor de piscinas/spa",
     disclaimer_required: "A aceitação dos termos é obrigatória",
-    disclaimer_pro: "Os profissionais que usam o PoolApp para serviços prestados a terceiros devem obter o consentimento dos proprietários das piscinas.",
+    disclaimer_pro: "Os profissionais que usam o PoolGenAI para serviços prestados a terceiros devem obter o consentimento dos proprietários das piscinas.",
     revoke_data_consent: "Revogar consentimento de dados",
     revoke_data_confirm: "Seu consentimento foi revogado.",
     pool_email: "Email relatório PDF",
@@ -2210,7 +2210,7 @@ const TRANSLATIONS = {
     error_email_required: "Email inválido.",
     account_created: "Conta criada!",
     verify_email_notice: "Um email de confirmação foi enviado para o teu endereço. Clica no link para ativar a tua conta.",
-    account_created_sub: "Bem-vindo ao PoolApp. Já podes usar a app.",
+    account_created_sub: "Bem-vindo ao PoolGenAI. Já podes usar a app.",
     start_app: "Iniciar a app",
     sign_out: "Sair",
     delete_account: "Eliminar minha conta",
@@ -2998,13 +2998,13 @@ function LoginScreen({ lang, onSkip, onConsentChange, detectedLang }) {
   if (mode === "disclaimer") {
     const tDisc = t; // t est déjà défini via useT au dessus
     const disclaimerText = {
-      fr: `CONDITIONS GÉNÉRALES D'UTILISATION — POOLAPP CGU v1.1
+      fr: `CONDITIONS GÉNÉRALES D'UTILISATION — POOLGENAI CGU v1.1
 Éditeur : Arnaud Goumain — Particulier
-Contact : [voir Réglages > Mentions légales]
+Contact : support.poolgenai@gmail.com
 Hébergement : GitHub Inc. / Microsoft Corporation, San Francisco, USA
 
 1. NATURE DE L'APPLICATION
-PoolApp est un outil d'aide à la gestion de la chimie de piscine à usage strictement personnel. Les recommandations générées sont automatiques et ne constituent pas un avis professionnel, technique ou sanitaire.
+PoolGenAI est un outil d'aide à la gestion de la chimie de piscine à usage strictement personnel. Les recommandations générées sont automatiques et ne constituent pas un avis professionnel, technique ou sanitaire.
 
 2. LIMITATION DE RESPONSABILITÉ
 Dans les limites autorisées par la loi applicable, la responsabilité de l'éditeur est limitée au montant effectivement versé par l'utilisateur pour l'accès au service au cours des douze derniers mois (soit zéro euro, l'application étant gratuite). L'éditeur ne saurait être tenu responsable des dommages indirects, immatériels, consécutifs ou punitifs, y compris la perte de données, la perte de profits ou tout préjudice résultant de l'application de traitements chimiques basés sur les recommandations de l'application.
@@ -3016,31 +3016,31 @@ L'utilisateur est seul responsable de la vérification des dosages recommandés,
 Les produits de traitement de l'eau peuvent être dangereux. L'utilisateur doit lire les fiches de données de sécurité (FDS) et respecter les précautions d'emploi, de stockage et d'élimination prescrites par les fabricants.
 
 5. INTELLIGENCE ARTIFICIELLE (ANALYSE PAR IA)
-Lorsque l'utilisateur active la fonctionnalité d'analyse par intelligence artificielle, les données saisies (valeurs de mesure et photos) sont transmises directement au fournisseur d'IA dont l'utilisateur a fourni la clé API personnelle (Anthropic ou OpenAI). Cette transmission s'effectue de façon directe entre l'appareil de l'utilisateur et le serveur du fournisseur, sous la seule responsabilité de l'utilisateur. L'éditeur de PoolApp ne stocke pas les clés API et n'a pas accès aux échanges entre l'utilisateur et le fournisseur d'IA. L'utilisateur est invité à consulter les conditions d'utilisation de son fournisseur d'IA avant d'activer cette fonctionnalité.
+Lorsque l'utilisateur active la fonctionnalité d'analyse par intelligence artificielle, les données saisies (valeurs de mesure et photos) sont transmises directement au fournisseur d'IA dont l'utilisateur a fourni la clé API personnelle (Anthropic ou OpenAI). Cette transmission s'effectue de façon directe entre l'appareil de l'utilisateur et le serveur du fournisseur, sous la seule responsabilité de l'utilisateur. L'éditeur de PoolGenAI ne stocke pas les clés API et n'a pas accès aux échanges entre l'utilisateur et le fournisseur d'IA. L'utilisateur est invité à consulter les conditions d'utilisation de son fournisseur d'IA avant d'activer cette fonctionnalité.
 
 6. PHOTOS ET DONNÉES PERSONNELLES
 L'utilisateur s'engage à ne soumettre à l'analyse par intelligence artificielle que des photos du matériel de mesure (photomètre, bandelettes) ou de l'eau du bassin. Sont strictement exclus : toute image permettant d'identifier des personnes, de localiser un domicile (façade, plaque d'immatriculation, rue visible) ou contenant des données personnelles visibles. L'éditeur décline toute responsabilité quant au contenu des photos soumises par l'utilisateur.
 
 7. USAGE RÉSERVÉ
-L'utilisation de PoolApp est réservée aux traitements d'eau de bassins de type piscine ou spa. Tout autre usage est exclu de la présente licence.
+L'utilisation de PoolGenAI est réservée aux traitements d'eau de bassins de type piscine ou spa. Tout autre usage est exclu de la présente licence.
 
 8. PROFESSIONNELS
-Les professionnels utilisant PoolApp pour des prestations réalisées pour le compte de tiers sont tenus d'informer les propriétaires des bassins traités des conditions du présent document et d'obtenir leur accord exprès avant toute collecte de données les concernant.
+Les professionnels utilisant PoolGenAI pour des prestations réalisées pour le compte de tiers sont tenus d'informer les propriétaires des bassins traités des conditions du présent document et d'obtenir leur accord exprès avant toute collecte de données les concernant.
 
 9. DONNÉES PERSONNELLES ET RGPD
-Conformément au RGPD et à la loi Informatique et Libertés, l'utilisateur dispose d'un droit d'accès, de rectification, d'effacement et de portabilité de ses données. Pour exercer ces droits ou déposer une réclamation, l'utilisateur peut contacter l'éditeur via les Réglages > Mentions légales, ou s'adresser à la CNIL : www.cnil.fr
+Conformément au RGPD et à la loi Informatique et Libertés, l'utilisateur dispose d'un droit d'accès, de rectification, d'effacement et de portabilité de ses données. Pour exercer ces droits ou déposer une réclamation, l'utilisateur peut contacter l'éditeur à support.poolgenai@gmail.com ou s'adresser à la CNIL : www.cnil.fr
 
 10. ABSENCE DE GARANTIE
 L'application est fournie "en l'état", sans garantie d'aucune sorte, expresse ou implicite, quant à son exactitude, sa fiabilité ou son adéquation à un usage particulier.
 
 En créant un compte, l'utilisateur reconnaît avoir pris connaissance de l'intégralité du présent document (CGU v1.1) et en accepte les termes.`,
-      en: `TERMS OF USE — POOLAPP CGU v1.1
+      en: `TERMS OF USE — POOLGENAI CGU v1.1
 Publisher: Arnaud Goumain — Private individual
 Contact: [see Settings > Legal notices]
 Hosting: GitHub Inc. / Microsoft Corporation, San Francisco, USA
 
 1. NATURE OF THE APPLICATION
-PoolApp is a personal pool chemistry management tool. Generated recommendations are automatic and do not constitute professional, technical or health advice.
+PoolGenAI is a personal pool chemistry management tool. Generated recommendations are automatic and do not constitute professional, technical or health advice.
 
 2. LIMITATION OF LIABILITY
 To the extent permitted by applicable law, the publisher's liability is limited to the amount actually paid by the user for access to the service in the preceding twelve months (i.e. zero euros, as the application is free). The publisher shall not be liable for indirect, immaterial, consequential or punitive damages, including loss of data, loss of profits, or any damage resulting from the application of chemical treatments based on the application's recommendations.
@@ -3052,16 +3052,16 @@ The user is solely responsible for verifying recommended dosages, following prod
 Water treatment products may be hazardous. The user must read safety data sheets (SDS) and follow the precautions prescribed by manufacturers.
 
 5. ARTIFICIAL INTELLIGENCE (AI ANALYSIS)
-When the user activates the artificial intelligence analysis feature, the data entered (measurement values and photos) are transmitted directly to the AI provider whose personal API key the user has provided (Anthropic or OpenAI). This transmission occurs directly between the user's device and the provider's server, under the user's sole responsibility. The PoolApp publisher does not store API keys and has no access to exchanges between the user and the AI provider. The user is invited to consult their AI provider's terms of use before activating this feature.
+When the user activates the artificial intelligence analysis feature, the data entered (measurement values and photos) are transmitted directly to the AI provider whose personal API key the user has provided (Anthropic or OpenAI). This transmission occurs directly between the user's device and the provider's server, under the user's sole responsibility. The PoolGenAI publisher does not store API keys and has no access to exchanges between the user and the AI provider. The user is invited to consult their AI provider's terms of use before activating this feature.
 
 6. PHOTOS AND PERSONAL DATA
 The user undertakes to submit to AI analysis only photos of measuring equipment (photometer, test strips) or pool water. Strictly excluded are: any image that could identify persons, locate a residence (facade, license plate, visible street) or contain visible personal data. The publisher accepts no liability for the content of photos submitted by the user.
 
 7. PERMITTED USE
-Use of PoolApp is reserved for water treatment of pool or spa type basins. Any other use is excluded from this licence.
+Use of PoolGenAI is reserved for water treatment of pool or spa type basins. Any other use is excluded from this licence.
 
 8. PROFESSIONALS
-Professionals using PoolApp for services performed on behalf of third parties must inform the owners of treated pools of the terms of this document and obtain their express agreement before any collection of data concerning them.
+Professionals using PoolGenAI for services performed on behalf of third parties must inform the owners of treated pools of the terms of this document and obtain their express agreement before any collection of data concerning them.
 
 9. PERSONAL DATA AND GDPR
 In accordance with the GDPR and the French Data Protection Act, users have the right to access, rectify, erase and port their data. To exercise these rights or lodge a complaint, users may contact the publisher via Settings > Legal notices, or contact the CNIL: www.cnil.fr
@@ -3131,7 +3131,7 @@ By creating an account, the user acknowledges having read this document in full 
           <div style={{ width: 56, height: 56, borderRadius: 16, background: "#0a6ebd", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
             <Droplets size={28} color="#fff" />
           </div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: "#0d2b4e" }}>PoolApp</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: "#0d2b4e" }}>PoolGenAI</div>
           <div style={{ fontSize: 13, color: "#6a7d90", marginTop: 2 }}>
             {mode === "signup" ? t("create_account") : mode === "reset" ? t("reset_password") : t("sign_in")}
           </div>
@@ -6815,7 +6815,7 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
         <Trash2 size={14} /> {t("delete_measures")}
       </button>
 
-      <div style={styles.versionTag}>PoolApp v{APP_VERSION}</div>
+      <div style={styles.versionTag}>PoolGenAI v{APP_VERSION}</div>
 
       {showLegalModal && (
         <div style={{ position: "fixed", inset: 0, zIndex: 500, background: "rgba(10,30,60,0.55)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
@@ -7127,7 +7127,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           <button
             style={{ ...styles.reportCloseBtn, background: "#0a6ebd", color: "#fff", border: "none", fontSize: 12, padding: "6px 12px" }}
             onClick={() => {
-              window.open(`mailto:${pool.reportEmail}?subject=${encodeURIComponent("Rapport PoolApp — " + (pool.name || ""))}&body=${encodeURIComponent("Veuillez trouver ci-joint le rapport de suivi de votre piscine généré par PoolApp.")}`);
+              window.open(`mailto:${pool.reportEmail}?subject=${encodeURIComponent("Rapport PoolGenAI — " + (pool.name || ""))}&body=${encodeURIComponent("Veuillez trouver ci-joint le rapport de suivi de votre piscine généré par PoolApp.")}`);
             }}
           >
             ✉ {pool.reportEmail}
