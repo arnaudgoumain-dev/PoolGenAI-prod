@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.4";
+const APP_VERSION = "1.5";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -385,6 +385,14 @@ const TRANSLATIONS = {
     unlimited_active: "Mode illimité actif",
     free_mode: "Version gratuite",
     api_section: "Clé API (analyse IA)",
+    ai_toggle_label: "Activer l'analyse IA",
+    ai_toggle_desc: "Permet d'analyser les photos de mesure par intelligence artificielle.",
+    ai_password_title: "Accès configuration IA",
+    ai_password_prompt: "Saisir le mot de passe pour activer l'analyse IA",
+    ai_password_error: "Mot de passe incorrect",
+    ai_configure_btn: "Configurer la clé API",
+    ai_config_title: "Configuration IA",
+    ai_config_back: "Retour aux réglages",
     ai_locked_settings: "Analyse IA réservée à la version illimitée",
     api_key_openai: "Clé API OpenAI",
     hide: "Masquer",
@@ -762,6 +770,14 @@ const TRANSLATIONS = {
     unlimited_active: "Unlimited mode active",
     free_mode: "Free version",
     api_section: "API Key (AI analysis)",
+    ai_toggle_label: "Enable AI analysis",
+    ai_toggle_desc: "Allows analyzing measurement photos using artificial intelligence.",
+    ai_password_title: "AI configuration access",
+    ai_password_prompt: "Enter password to enable AI analysis",
+    ai_password_error: "Incorrect password",
+    ai_configure_btn: "Configure API key",
+    ai_config_title: "AI Configuration",
+    ai_config_back: "Back to settings",
     ai_locked_settings: "AI analysis reserved for unlimited version",
     api_key_openai: "OpenAI API Key",
     hide: "Hide",
@@ -1138,6 +1154,14 @@ const TRANSLATIONS = {
     unlimited_active: "Unbegrenzter Modus aktiv",
     free_mode: "Kostenlose Version",
     api_section: "API-Schlüssel (KI-Analyse)",
+    ai_toggle_label: "KI-Analyse aktivieren",
+    ai_toggle_desc: "Ermöglicht die Analyse von Messfotos mit künstlicher Intelligenz.",
+    ai_password_title: "KI-Konfigurationszugang",
+    ai_password_prompt: "Passwort eingeben, um KI-Analyse zu aktivieren",
+    ai_password_error: "Falsches Passwort",
+    ai_configure_btn: "API-Schlüssel konfigurieren",
+    ai_config_title: "KI-Konfiguration",
+    ai_config_back: "Zurück zu den Einstellungen",
     ai_locked_settings: "KI-Analyse nur in unbegrenzter Version",
     api_key_openai: "OpenAI API-Schlüssel",
     hide: "Verbergen",
@@ -1514,6 +1538,14 @@ const TRANSLATIONS = {
     unlimited_active: "Modalità illimitata attiva",
     free_mode: "Versione gratuita",
     api_section: "Chiave API (analisi IA)",
+    ai_toggle_label: "Attiva analisi IA",
+    ai_toggle_desc: "Permette di analizzare le foto di misura con intelligenza artificiale.",
+    ai_password_title: "Accesso configurazione IA",
+    ai_password_prompt: "Inserire la password per attivare l'analisi IA",
+    ai_password_error: "Password errata",
+    ai_configure_btn: "Configura chiave API",
+    ai_config_title: "Configurazione IA",
+    ai_config_back: "Torna alle impostazioni",
     ai_locked_settings: "Analisi IA riservata alla versione illimitata",
     api_key_openai: "Chiave API OpenAI",
     hide: "Nascondi",
@@ -1890,6 +1922,14 @@ const TRANSLATIONS = {
     unlimited_active: "Modo ilimitado activo",
     free_mode: "Versión gratuita",
     api_section: "Clave API (análisis IA)",
+    ai_toggle_label: "Activar análisis IA",
+    ai_toggle_desc: "Permite analizar fotos de medición con inteligencia artificial.",
+    ai_password_title: "Acceso configuración IA",
+    ai_password_prompt: "Introducir contraseña para activar el análisis IA",
+    ai_password_error: "Contraseña incorrecta",
+    ai_configure_btn: "Configurar clave API",
+    ai_config_title: "Configuración IA",
+    ai_config_back: "Volver a ajustes",
     ai_locked_settings: "Análisis IA reservado para versión ilimitada",
     api_key_openai: "Clave API OpenAI",
     hide: "Ocultar",
@@ -2266,6 +2306,14 @@ const TRANSLATIONS = {
     unlimited_active: "Modo ilimitado ativo",
     free_mode: "Versão gratuita",
     api_section: "Chave API (análise IA)",
+    ai_toggle_label: "Ativar análise IA",
+    ai_toggle_desc: "Permite analisar fotos de medição com inteligência artificial.",
+    ai_password_title: "Acesso configuração IA",
+    ai_password_prompt: "Digite a senha para ativar a análise IA",
+    ai_password_error: "Senha incorreta",
+    ai_configure_btn: "Configurar chave API",
+    ai_config_title: "Configuração IA",
+    ai_config_back: "Voltar às configurações",
     ai_locked_settings: "Análise IA reservada para versão ilimitada",
     api_key_openai: "Chave API OpenAI",
     hide: "Ocultar",
@@ -2576,6 +2624,7 @@ const STORAGE_KEYS = {
   applications: "pool:applications",
   apiKey: "pool:apiKey",
   apiProvider: "pool:apiProvider",
+  aiEnabled: "pool:aiEnabled",
   activePlan: "pool:activePlan",
   gdprConsent: "pool:gdprConsent",
   dataConsent: "pool:dataConsent",
@@ -3275,6 +3324,7 @@ function PoolApp() {
   const [showReport, setShowReport] = useState(false);
   const [apiKey, setApiKey] = useState("");
   const [apiProvider, setApiProvider] = useState("anthropic"); // "anthropic" | "openai"
+  const [aiEnabled, setAiEnabled] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
   const [authResolved, setAuthResolved] = useState(false);
@@ -3424,6 +3474,8 @@ function PoolApp() {
       try {
         const ak = await window.storage.get(STORAGE_KEYS.apiKey);
         if (ak?.value) setApiKey(JSON.parse(ak.value));
+        const aie = await window.storage.get(STORAGE_KEYS.aiEnabled);
+        if (aie?.value === "true") setAiEnabled(true);
       } catch (e) {}
       try {
         const aprov = await window.storage.get(STORAGE_KEYS.apiProvider);
@@ -3502,6 +3554,11 @@ function PoolApp() {
     if (!loaded) return;
     window.storage.set(STORAGE_KEYS.apiProvider, JSON.stringify(apiProvider)).catch(() => {});
   }, [apiProvider, loaded]);
+
+  useEffect(() => {
+    if (!loaded) return;
+    window.storage.set(STORAGE_KEYS.aiEnabled, String(aiEnabled)).catch(() => {});
+  }, [aiEnabled, loaded]);
 
   const activePool = useMemo(
     () => pools.find((p) => p.id === activePoolId) || pools[0],
@@ -3827,7 +3884,7 @@ function PoolApp() {
             applicationForLatest={latest ? poolApplications.find((a) => a.measureId === latest.id) : null}
             blockedByLimit={blockedByLimit}
             isPremium={isPremium}
-            apiKey={apiKey}
+            apiKey={aiEnabled ? apiKey : ""}
             apiProvider={apiProvider}
             recentMeasures={sortedMeasures}
             effectiveTargets={effectiveTargets}
@@ -3926,6 +3983,8 @@ function PoolApp() {
             setApiKey={setApiKey}
             apiProvider={apiProvider}
             setApiProvider={setApiProvider}
+            aiEnabled={aiEnabled}
+            setAiEnabled={setAiEnabled}
             lang={lang}
             setLang={setLang}
             cguAcceptedDate={cguAcceptedDate}
@@ -3960,7 +4019,7 @@ function PoolApp() {
             setEditingMeasure(null);
             openPaywall();
           }}
-          apiKey={apiKey}
+          apiKey={aiEnabled ? apiKey : ""}
           apiProvider={apiProvider}
           activeParamKeys={activeParamKeys}
           lang={lang}
@@ -6351,7 +6410,12 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
 }
 
 // ---------- Réglages ----------
-function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, onDeleteAllMeasures: onDeleteAllMeasuresRaw, poolMeasureCount, onGenerateReport, onWantPremiumForReport, onWantPremium, isPremium, setIsPremium, apiKey, setApiKey, apiProvider, setApiProvider, lang, setLang, authUser, onSignOut, onSignIn, onDeleteAccount, dataConsent, onRevokeDataConsent, cguAcceptedDate }) {
+function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, onDeleteAllMeasures: onDeleteAllMeasuresRaw, poolMeasureCount, onGenerateReport, onWantPremiumForReport, onWantPremium, isPremium, setIsPremium, apiKey, setApiKey, apiProvider, setApiProvider, aiEnabled, setAiEnabled, lang, setLang, authUser, onSignOut, onSignIn, onDeleteAccount, dataConsent, onRevokeDataConsent, cguAcceptedDate }) {
+  const [showAiConfig, setShowAiConfig] = useState(false);
+  const [aiPasswordInput, setAiPasswordInput] = useState("");
+  const [showAiPasswordModal, setShowAiPasswordModal] = useState(false);
+  const [aiPasswordError, setAiPasswordError] = useState(false);
+  const AI_PASSWORD = "Poolai26";
   const [editingPool, setEditingPool] = useState(null);
   const [showLegalModal, setShowLegalModal] = useState(false);
   const t = useT(lang);
@@ -6630,63 +6694,167 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
         <span style={styles.sectionLabel}>{t("api_section")}</span>
       </div>
 
-      {!isPremium ? (
-        <button style={styles.photoLockedBtn} onClick={onWantPremium}>
-          <Lock size={16} />
-          <span>{t("ai_locked_settings")}</span>
+      {/* Toggle activer l'analyse IA */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#f0f6fb", borderRadius: 12, padding: "12px 14px", marginBottom: 8 }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "#0d2b4e" }}>{t("ai_toggle_label")}</div>
+          <div style={{ fontSize: 11, color: "#6a7d90", marginTop: 2 }}>{t("ai_toggle_desc")}</div>
+        </div>
+        <ToggleSwitch
+          checked={aiEnabled}
+          onChange={(val) => {
+            if (val) {
+              // Activation — demander le mot de passe
+              setAiPasswordInput("");
+              setAiPasswordError(false);
+              setShowAiPasswordModal(true);
+            } else {
+              // Désactivation — pas de mot de passe
+              setAiEnabled(false);
+            }
+          }}
+        />
+      </div>
+
+      {/* Bouton configurer — visible uniquement si IA activée */}
+      {aiEnabled && (
+        <button
+          style={{ width: "100%", padding: "11px 0", borderRadius: 10, border: "1.5px solid #b0d8f0", background: "#eaf4fb", color: "#0a6ebd", fontWeight: 700, fontSize: 13, cursor: "pointer", marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+          onClick={() => setShowAiConfig(true)}
+        >
+          <Settings2 size={15} /> {t("ai_configure_btn")}
+          {apiKey ? <span style={{ fontSize: 11, color: "#1a8fd1", fontWeight: 400 }}>✓ {apiProvider === "openai" ? "OpenAI" : "Anthropic"}</span> : null}
         </button>
-      ) : (
-        <>
-          <label style={styles.fieldLabel}>{t("provider_label")}</label>
-          <div style={styles.segmentedControl}>
-            {[
-              { value: "anthropic", label: "Anthropic (Claude)" },
-              { value: "openai", label: "OpenAI (ChatGPT)" },
-            ].map((opt) => (
+      )}
+
+      {/* Modale mot de passe IA */}
+      {showAiPasswordModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 600, background: "rgba(10,30,60,0.6)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <div style={{ background: "#fff", borderRadius: 20, padding: 24, maxWidth: 380, width: "100%", boxShadow: "0 8px 32px #0a6ebd22" }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: "#0d2b4e", marginBottom: 6 }}>{t("ai_password_title")}</div>
+            <div style={{ fontSize: 13, color: "#4a6480", marginBottom: 14 }}>{t("ai_password_prompt")}</div>
+            <input
+              type="password"
+              value={aiPasswordInput}
+              onChange={e => { setAiPasswordInput(e.target.value); setAiPasswordError(false); }}
+              onKeyDown={e => {
+                if (e.key === "Enter") {
+                  if (aiPasswordInput === AI_PASSWORD) {
+                    setAiEnabled(true);
+                    setShowAiPasswordModal(false);
+                    setAiPasswordInput("");
+                    setTimeout(() => setShowAiConfig(true), 100);
+                  } else {
+                    setAiPasswordError(true);
+                  }
+                }
+              }}
+              style={{ ...styles.input, marginBottom: aiPasswordError ? 6 : 14 }}
+              placeholder="••••••••"
+              autoFocus
+            />
+            {aiPasswordError && (
+              <div style={{ fontSize: 12, color: "#c0392b", marginBottom: 12 }}>{t("ai_password_error")}</div>
+            )}
+            <div style={{ display: "flex", gap: 8 }}>
               <button
-                key={opt.value}
-                type="button"
-                onClick={() => setApiProvider(opt.value)}
-                style={{
-                  ...styles.segmentedBtn,
-                  ...(apiProvider === opt.value ? styles.segmentedBtnActive : {}),
+                style={{ flex: 1, padding: "11px 0", borderRadius: 10, border: "1px solid #d0e4f5", background: "#f5f8fc", color: "#6a7d90", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
+                onClick={() => { setShowAiPasswordModal(false); setAiPasswordInput(""); setAiPasswordError(false); }}
+              >
+                {t("cancel")}
+              </button>
+              <button
+                style={{ flex: 1, padding: "11px 0", borderRadius: 10, border: "none", background: "#0a6ebd", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}
+                onClick={() => {
+                  if (aiPasswordInput === AI_PASSWORD) {
+                    setAiEnabled(true);
+                    setShowAiPasswordModal(false);
+                    setAiPasswordInput("");
+                    setTimeout(() => setShowAiConfig(true), 100);
+                  } else {
+                    setAiPasswordError(true);
+                  }
                 }}
               >
-                {opt.label}
+                {t("validate") || "Valider"}
               </button>
-            ))}
+            </div>
           </div>
+        </div>
+      )}
 
-          <label style={styles.fieldLabel}>
-            {apiProvider === "openai" ? t("api_key_openai") : t("api_key_label")}
-          </label>
-          <div style={styles.apiKeyRow}>
-            <input
-              type={showApiKey ? "text" : "password"}
-              style={{ ...styles.input, flex: 1 }}
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder={t("api_key_placeholder")}
-              autoComplete="off"
-              autoCorrect="off"
-              spellCheck={false}
-            />
+      {/* Page de configuration IA — overlay plein écran */}
+      {showAiConfig && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 500, background: "#f0f6fb", overflowY: "auto" }}>
+          <div style={{ maxWidth: 480, margin: "0 auto", padding: "0 16px 32px" }}>
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "16px 0 20px", borderBottom: "1px solid #d0e4f5", marginBottom: 20 }}>
+              <button
+                onClick={() => setShowAiConfig(false)}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#0a6ebd", display: "flex", alignItems: "center", gap: 6, fontWeight: 700, fontSize: 13, padding: 0 }}
+              >
+                ← {t("ai_config_back")}
+              </button>
+              <span style={{ flex: 1, textAlign: "center", fontSize: 15, fontWeight: 800, color: "#0d2b4e" }}>{t("ai_config_title")}</span>
+              <div style={{ width: 80 }} />
+            </div>
+
+            {/* Provider */}
+            <label style={styles.fieldLabel}>{t("provider_label")}</label>
+            <div style={styles.segmentedControl}>
+              {[
+                { value: "anthropic", label: "Anthropic (Claude)" },
+                { value: "openai", label: "OpenAI (ChatGPT)" },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setApiProvider(opt.value)}
+                  style={{ ...styles.segmentedBtn, ...(apiProvider === opt.value ? styles.segmentedBtnActive : {}) }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Clé API */}
+            <label style={styles.fieldLabel}>
+              {apiProvider === "openai" ? t("api_key_openai") : t("api_key_label")}
+            </label>
+            <div style={styles.apiKeyRow}>
+              <input
+                type={showApiKey ? "text" : "password"}
+                style={{ ...styles.input, flex: 1 }}
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder={t("api_key_placeholder")}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+              />
+              <button
+                type="button"
+                onClick={() => setShowApiKey((v) => !v)}
+                style={styles.eyeBtn}
+                title={showApiKey ? t("hide") : t("show")}
+              >
+                {showApiKey
+                  ? <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                  : <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                }
+              </button>
+            </div>
+            <p style={styles.helpTextSmall}>{t("api_key_desc")}</p>
+
+            {/* Bouton sauvegarder */}
             <button
-              type="button"
-              onClick={() => setShowApiKey((v) => !v)}
-              style={styles.eyeBtn}
-              title={showApiKey ? t("hide") : t("show")}
+              style={{ ...styles.primaryBtn, marginTop: 16 }}
+              onClick={() => setShowAiConfig(false)}
             >
-              {showApiKey
-                ? <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                : <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              }
+              {t("save")}
             </button>
           </div>
-          <p style={styles.helpTextSmall}>
-{t("api_key_desc")}
-          </p>
-        </>
+        </div>
       )}
 
       {/* Mentions légales */}
