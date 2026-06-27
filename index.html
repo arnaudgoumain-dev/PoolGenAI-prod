@@ -152,7 +152,7 @@
       window.__bootErrors.push(
         "Timeout : l'application n'a pas d\u00e9marr\u00e9 apr\u00e8s 8 secondes.\n" +
         "V\u00e9rifie ta connexion internet (les librairies React/Recharts se chargent depuis unpkg.com).\n" +
-        "Si le probl\u00e8me persiste, v\u00e9rifie que les fichiers PoolApp.jsx et lucide-shim.js sont bien" +
+        "Si le probl\u00e8me persiste, v\u00e9rifie que les fichiers PoolGenAI.jsx et lucide-shim.js sont bien" +
         " pr\u00e9sents \u00e0 la racine du d\u00e9p\u00f4t GitHub."
       );
       window.__showBootError();
@@ -163,7 +163,7 @@
 <script>
   // ---------- Polyfill window.storage (IndexedDB) ----------
   // Reproduit l'API { get(key), set(key, value), delete(key), list(prefix) }
-  // utilis&#233;e par PoolApp.jsx, en rempla&#231;ant le stockage propri&#233;taire Claude
+  // utilis&#233;e par PoolGenAI.jsx, en rempla&#231;ant le stockage propri&#233;taire Claude
   // par une vraie persistance locale au navigateur (survit &#224; la fermeture de l'app).
   (function () {
     const DB_NAME = "poolapp-db";
@@ -353,7 +353,7 @@
   function loadPoolApp() {
     fetch("PoolGenAI.jsx")
       .then((res) => {
-        if (!res.ok) throw new Error("Impossible de charger PoolApp.jsx (HTTP " + res.status + ")");
+        if (!res.ok) throw new Error("Impossible de charger PoolGenAI.jsx (HTTP " + res.status + ")");
         return res.text();
       })
       .then((source) => {
@@ -364,7 +364,7 @@
         (0, eval)(result.code);
       })
       .catch((err) => {
-        window.__bootErrors.push("Erreur de chargement/transformation de PoolApp.jsx :\n" + err.message);
+        window.__bootErrors.push("Erreur de chargement/transformation de PoolGenAI.jsx :\n" + err.message);
         window.__showBootError();
       });
   }
