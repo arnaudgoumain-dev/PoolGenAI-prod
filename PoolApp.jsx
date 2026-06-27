@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.7.5";
+const APP_VERSION = "1.7.6";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -5403,18 +5403,32 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
     setAnalyzeError(null);
     setAnalyzeNote(null);
     try {
-      // Analyse chaque photo et fusionne les résultats (dernière valeur non-null gagne)
-      const merged = {};
+      // Analyse chaque photo et consolide les résultats en prenant la valeur la plus fiable par paramètre
+      const allResults = [];
       const notes = [];
       for (const dataUrl of photos) {
         const result = await analyzeStripPhoto({ apiKey, apiProvider, dataUrl });
-        Object.keys(result).forEach((k) => {
-          if (result[k] !== null && result[k] !== undefined && k !== "confidence" && k !== "note") {
-            merged[k] = result[k];
-          }
-        });
+        allResults.push(result);
         if (result.note) notes.push(result.note);
       }
+
+      // Priorité de confiance : haute > moyenne > basse > undefined
+      const confidenceScore = { "haute": 3, "high": 3, "medio": 2, "moyenne": 2, "medium": 2, "bassa": 1, "basse": 1, "low": 1 };
+      const numericKeys = ["pH","fCl","tCl","ccl","tac","cya","hard","phos","copper","iron","temp","brome","o2","sel"];
+      const merged = {};
+
+      numericKeys.forEach(k => {
+        // Collecter toutes les valeurs non-null pour ce paramètre avec leur score de confiance
+        const candidates = allResults
+          .filter(r => r[k] !== null && r[k] !== undefined)
+          .map(r => ({ value: r[k], score: confidenceScore[r.confidence] || 1 }));
+        if (candidates.length === 0) return;
+        // Prendre la valeur avec le meilleur score de confiance
+        // En cas d'égalité, faire la moyenne
+        const maxScore = Math.max(...candidates.map(c => c.score));
+        const best = candidates.filter(c => c.score === maxScore);
+        merged[k] = Math.round((best.reduce((s, c) => s + c.value, 0) / best.length) * 100) / 100;
+      });
       if (merged.pH     !== undefined) setPH(String(merged.pH));
       if (merged.fCl    !== undefined) setFCl(String(merged.fCl));
       if (merged.tCl    !== undefined) setTCl(String(merged.tCl));
