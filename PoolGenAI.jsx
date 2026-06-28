@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.10.0";
+const APP_VERSION = "1.10.1";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -7504,16 +7504,36 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
       const element = document.getElementById("report-printable");
       if (!element) throw new Error("Élément rapport introuvable");
 
-      // html2canvas capture
-      const canvas = await window.html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#ffffff",
-        logging: false,
-      });
+      // html2canvas ne capture pas correctement les éléments dans un overlay
+      // position:fixed — on clone le contenu dans un div temporaire hors overlay
+      const clone = element.cloneNode(true);
+      clone.style.cssText = `
+        position: fixed; left: 0; top: 0;
+        width: ${element.scrollWidth}px;
+        background: #ffffff;
+        z-index: -9999;
+        opacity: 0;
+        pointer-events: none;
+      `;
+      document.body.appendChild(clone);
 
-      const imgData = canvas.toDataURL("image/jpeg", 0.92);
+      let canvas;
+      try {
+        canvas = await window.html2canvas(clone, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: "#ffffff",
+          logging: false,
+          width: element.scrollWidth,
+          height: element.scrollHeight,
+          windowWidth: element.scrollWidth,
+          windowHeight: element.scrollHeight,
+        });
+      } finally {
+        document.body.removeChild(clone);
+      }
+
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
