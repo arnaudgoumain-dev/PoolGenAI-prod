@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.13.2";
+const APP_VERSION = "1.12.2";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -129,13 +129,7 @@ const TRANSLATIONS = {
     diag_analyzing: "Analyse en cours...",
     diag_confidence: "Indice de confiance",
     diag_off_topic: "Cette question ne concerne pas le traitement de l'eau de bassin. Je ne peux répondre qu'aux questions liées à la chimie de l'eau, aux produits de traitement et aux équipements de piscine.",
-        diag_error: "Analyse impossible",
-    legend_title: "Légende des paramètres et valeurs cibles",
-    ccl_fcl_tcl_error: "Erreur : FCL + CCL ne peut pas dépasser TCL. Vérifie les valeurs saisies.",
-    param_ph_long: "Potentiel Hydrogène", param_fcl_long: "Chlore libre", param_tcl_long: "Chlore total",
-    param_ccl_long: "Chlore combiné (chloramines)", param_tac_long: "Titre Alcalimétrique Complet",
-    param_cya_long: "Acide cyanurique (stabilisant)", param_th_long: "Titre Hydrotimétrique (dureté)",
-    param_phos_long: "Phosphates", param_cu_long: "Cuivre", param_fe_long: "Fer", param_temp_long: "Température de l'eau",
+    diag_error: "Analyse impossible",
     // Measure modal
     new_measure_title: "Nouvelle mesure",
     edit_measure_title: "Modifier la mesure",
@@ -258,7 +252,7 @@ const TRANSLATIONS = {
     tac_col: "TAC",
     cya_col: "CYA",
     temp_col: "TEMP.",
-    product_col: "Produit",
+    product_col: "Produit appliqué",
     quantity_col: "Quantité",
     stock_col: "Stock",
     download_pdf: "Télécharger PDF",
@@ -556,13 +550,7 @@ const TRANSLATIONS = {
     diag_analyzing: "Analysing...",
     diag_confidence: "Confidence level",
     diag_off_topic: "This question is not related to pool water treatment. I can only answer questions about water chemistry, treatment products and pool equipment.",
-        diag_error: "Analysis failed",
-    legend_title: "Parameters legend and target values",
-    ccl_fcl_tcl_error: "Error: FCL + CCL cannot exceed TCL. Check the entered values.",
-    param_ph_long: "Hydrogen Potential", param_fcl_long: "Free chlorine", param_tcl_long: "Total chlorine",
-    param_ccl_long: "Combined chlorine (chloramines)", param_tac_long: "Total Alkalinity",
-    param_cya_long: "Cyanuric acid (stabiliser)", param_th_long: "Total Hardness",
-    param_phos_long: "Phosphates", param_cu_long: "Copper", param_fe_long: "Iron", param_temp_long: "Water temperature",
+    diag_error: "Analysis failed",
     new_measure_title: "New reading",
     edit_measure_title: "Edit reading",
     date_time: "Date and time",
@@ -679,7 +667,7 @@ const TRANSLATIONS = {
     tac_col: "ALK",
     cya_col: "CYA",
     temp_col: "TEMP.",
-    product_col: "Product",
+    product_col: "Product applied",
     quantity_col: "Quantity",
     stock_col: "Stock",
     download_pdf: "Download PDF",
@@ -973,13 +961,7 @@ const TRANSLATIONS = {
     diag_analyzing: "Analyse läuft...",
     diag_confidence: "Vertrauensindex",
     diag_off_topic: "Diese Frage betrifft nicht die Wasserbehandlung. Ich beantworte nur Fragen zur Wasserchemie, Behandlungsprodukten und Poolausrüstung.",
-        diag_error: "Analyse fehlgeschlagen",
-    legend_title: "Parameterlegende und Zielwerte",
-    ccl_fcl_tcl_error: "Fehler: FCL + CCL darf TCL nicht überschreiten. Bitte Werte prüfen.",
-    param_ph_long: "Wasserstoffpotenzial", param_fcl_long: "Freies Chlor", param_tcl_long: "Gesamtchlor",
-    param_ccl_long: "Gebundenes Chlor (Chloramine)", param_tac_long: "Gesamtalkalinität",
-    param_cya_long: "Cyanursäure (Stabilisator)", param_th_long: "Gesamthärte",
-    param_phos_long: "Phosphate", param_cu_long: "Kupfer", param_fe_long: "Eisen", param_temp_long: "Wassertemperatur",
+    diag_error: "Analyse fehlgeschlagen",
     new_measure_title: "Neue Messung",
     edit_measure_title: "Messung bearbeiten",
     date_time: "Datum und Uhrzeit",
@@ -1095,7 +1077,7 @@ const TRANSLATIONS = {
     tac_col: "KH",
     cya_col: "CYA",
     temp_col: "TEMP.",
-    product_col: "Produkt",
+    product_col: "Angewendetes Produkt",
     quantity_col: "Menge",
     stock_col: "Lager",
     download_pdf: "PDF herunterladen",
@@ -1392,13 +1374,7 @@ const TRANSLATIONS = {
     diag_analyzing: "Analisi in corso...",
     diag_confidence: "Indice di fiducia",
     diag_off_topic: "Questa domanda non riguarda il trattamento dell'acqua della piscina. Rispondo solo a domande sulla chimica dell'acqua, sui prodotti di trattamento e sulle attrezzature per piscine.",
-        diag_error: "Analisi impossibile",
-    legend_title: "Legenda parametri e valori target",
-    ccl_fcl_tcl_error: "Errore: FCL + CCL non può superare TCL. Verificare i valori inseriti.",
-    param_ph_long: "Potenziale di idrogeno", param_fcl_long: "Cloro libero", param_tcl_long: "Cloro totale",
-    param_ccl_long: "Cloro combinato (cloroammine)", param_tac_long: "Alcalinità totale",
-    param_cya_long: "Acido cianurico (stabilizzante)", param_th_long: "Durezza totale",
-    param_phos_long: "Fosfati", param_cu_long: "Rame", param_fe_long: "Ferro", param_temp_long: "Temperatura acqua",
+    diag_error: "Analisi impossibile",
     new_measure_title: "Nuova misurazione",
     edit_measure_title: "Modifica misurazione",
     date_time: "Data e ora",
@@ -1514,7 +1490,7 @@ const TRANSLATIONS = {
     tac_col: "TAC",
     cya_col: "CYA",
     temp_col: "TEMP.",
-    product_col: "Prodotto",
+    product_col: "Prodotto applicato",
     quantity_col: "Quantità",
     stock_col: "Stock",
     download_pdf: "Scarica PDF",
@@ -1808,13 +1784,7 @@ const TRANSLATIONS = {
     diag_analyzing: "Analizando...",
     diag_confidence: "Índice de confianza",
     diag_off_topic: "Esta pregunta no está relacionada con el tratamiento del agua de piscina. Solo respondo preguntas sobre química del agua, productos de tratamiento y equipos de piscina.",
-        diag_error: "Análisis fallido",
-    legend_title: "Leyenda de parámetros y valores objetivo",
-    ccl_fcl_tcl_error: "Error: FCL + CCL no puede superar TCL. Verifica los valores introducidos.",
-    param_ph_long: "Potencial de hidrógeno", param_fcl_long: "Cloro libre", param_tcl_long: "Cloro total",
-    param_ccl_long: "Cloro combinado (cloraminas)", param_tac_long: "Alcalinidad total",
-    param_cya_long: "Ácido cianúrico (estabilizador)", param_th_long: "Dureza total",
-    param_phos_long: "Fosfatos", param_cu_long: "Cobre", param_fe_long: "Hierro", param_temp_long: "Temperatura del agua",
+    diag_error: "Análisis fallido",
     new_measure_title: "Nueva medición",
     edit_measure_title: "Editar medición",
     date_time: "Fecha y hora",
@@ -1930,7 +1900,7 @@ const TRANSLATIONS = {
     tac_col: "TAC",
     cya_col: "CYA",
     temp_col: "TEMP.",
-    product_col: "Producto",
+    product_col: "Producto aplicado",
     quantity_col: "Cantidad",
     stock_col: "Stock",
     download_pdf: "Descargar PDF",
@@ -2224,13 +2194,7 @@ const TRANSLATIONS = {
     diag_analyzing: "A analisar...",
     diag_confidence: "Índice de confiança",
     diag_off_topic: "Esta pergunta não está relacionada com o tratamento da água da piscina. Só respondo a perguntas sobre química da água, produtos de tratamento e equipamentos de piscina.",
-        diag_error: "Análise impossível",
-    legend_title: "Legenda dos parâmetros e valores alvo",
-    ccl_fcl_tcl_error: "Erro: FCL + CCL não pode ultrapassar TCL. Verifica os valores introduzidos.",
-    param_ph_long: "Potencial de hidrogénio", param_fcl_long: "Cloro livre", param_tcl_long: "Cloro total",
-    param_ccl_long: "Cloro combinado (cloraminas)", param_tac_long: "Alcalinidade total",
-    param_cya_long: "Ácido cianúrico (estabilizador)", param_th_long: "Dureza total",
-    param_phos_long: "Fosfatos", param_cu_long: "Cobre", param_fe_long: "Ferro", param_temp_long: "Temperatura da água",
+    diag_error: "Análise impossível",
     new_measure_title: "Nova medição",
     edit_measure_title: "Editar medição",
     date_time: "Data e hora",
@@ -2346,7 +2310,7 @@ const TRANSLATIONS = {
     tac_col: "TAC",
     cya_col: "CYA",
     temp_col: "TEMP.",
-    product_col: "Produto",
+    product_col: "Produto aplicado",
     quantity_col: "Quantidade",
     stock_col: "Estoque",
     download_pdf: "Baixar PDF",
@@ -5881,13 +5845,7 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
       if (merged.pH     !== undefined) setPH(String(merged.pH));
       if (merged.fCl    !== undefined) setFCl(String(merged.fCl));
       if (merged.tCl    !== undefined) setTCl(String(merged.tCl));
-      // CCL auto-calculé si non fourni par la photo mais fCl et tCl disponibles
-      if (merged.ccl    !== undefined) {
-        setCcl(String(merged.ccl));
-      } else if (merged.fCl !== undefined && merged.tCl !== undefined) {
-        const autoCcl = Math.max(0, Math.round((merged.tCl - merged.fCl) * 100) / 100);
-        setCcl(String(autoCcl));
-      }
+      if (merged.ccl    !== undefined) setCcl(String(merged.ccl));
       if (merged.tac    !== undefined) setTac(String(merged.tac));
       if (merged.cya    !== undefined) setCya(String(merged.cya));
       if (merged.hard   !== undefined) setHard(String(merged.hard));
@@ -5931,28 +5889,7 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
     }
   }
 
-  const [cclError, setCclError] = useState(null);
-
   function handleSave() {
-    // CCL auto-calculé si non saisi et fCl + tCl disponibles
-    const fClNum = fCl !== "" ? parseFloat(fCl) : null;
-    const tClNum = tCl !== "" ? parseFloat(tCl) : null;
-    let cclFinal = ccl;
-    if ((ccl === "" || ccl == null) && fClNum != null && tClNum != null) {
-      cclFinal = String(Math.max(0, Math.round((tClNum - fClNum) * 100) / 100));
-      setCcl(cclFinal);
-    }
-
-    // Validation : FCL + CCL <= TCL (tolérance 0.05)
-    const cclNum = cclFinal !== "" ? parseFloat(cclFinal) : null;
-    if (fClNum != null && cclNum != null && tClNum != null) {
-      if (fClNum + cclNum > tClNum + 0.05) {
-        setCclError(t("ccl_fcl_tcl_error"));
-        return;
-      }
-    }
-    setCclError(null);
-
     onSave({
       ...(isEditing ? { id: measure.id } : {}),
       date: new Date(date).toISOString(),
@@ -5960,7 +5897,7 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
       pH,
       fCl,
       tCl,
-      ccl: cclFinal,
+      ccl,
       tac,
       cya,
       hard,
@@ -6145,30 +6082,21 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
       )}
 
       <div style={styles.fieldGrid}>
-        {fields.map((f) => {
-          const isErrorField = cclError && ["fCl","ccl","tCl"].includes(f.key);
-          return (
-            <div key={f.key}>
-              <label style={{ ...styles.fieldLabel, color: isErrorField ? "#c0392b" : undefined }}>{f.label}</label>
-              <input
-                type="number"
-                step={f.step}
-                inputMode="decimal"
-                placeholder={f.placeholder}
-                value={f.value}
-                onChange={(e) => { f.set(e.target.value); setCclError(null); }}
-                style={{ ...styles.input, borderColor: isErrorField ? "#e74c3c" : undefined, background: isErrorField ? "#fdf5f5" : undefined }}
-              />
-            </div>
-          );
-        })}
+        {fields.map((f) => (
+          <div key={f.key}>
+            <label style={styles.fieldLabel}>{f.label}</label>
+            <input
+              type="number"
+              step={f.step}
+              inputMode="decimal"
+              placeholder={f.placeholder}
+              value={f.value}
+              onChange={(e) => f.set(e.target.value)}
+              style={styles.input}
+            />
+          </div>
+        ))}
       </div>
-
-      {cclError && (
-        <div style={{ marginTop: 8, padding: "8px 12px", background: "#fdf0ef", border: "1px solid #f5c6c2", borderRadius: 8, fontSize: 12, color: "#c0392b", display: "flex", alignItems: "center", gap: 6 }}>
-          <AlertTriangle size={14} /> {cclError}
-        </div>
-      )}
 
       <label style={styles.fieldLabel}>{t("note_optional")}</label>
       <textarea
@@ -7778,28 +7706,17 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
 
     const poolName = pool?.name || "piscine";
     const genAt = new Date().toLocaleString(localeMap[lang] || "fr-FR", { dateStyle: "long", timeStyle: "short" });
-    const hdrH = pool?.photo ? 22 : 16;
 
     // ── En-tête bleu ──
     pdf.setFillColor(10, 74, 138);
-    pdf.roundedRect(mL, y, cW, hdrH, 2, 2, "F");
+    pdf.roundedRect(mL, y, cW, 16, 2, 2, "F");
     pdf.setTextColor(255,255,255);
     pdf.setFontSize(11); pdf.setFont("helvetica","bold");
-    const textMaxW = pool?.photo ? cW - 22 : cW - 4;
-    pdf.text(`${t("report_title")} — ${poolName}`, mL+3, y+7, { maxWidth: textMaxW });
+    pdf.text(`${t("report_title")} — ${poolName}`, mL+3, y+6);
     pdf.setFontSize(7.5); pdf.setFont("helvetica","normal");
-    pdf.text(`${pool?.location||""} · ${pool?.volume||""} m³ · ${t("generated_on")} ${genAt}`, mL+3, y+14, { maxWidth: textMaxW });
-
-    // Photo du bassin dans le bandeau
-    if (pool?.photo) {
-      try {
-        const photoSize = hdrH - 3;
-        pdf.addImage(pool.photo, "JPEG", mL + cW - photoSize - 1, y + 1.5, photoSize, photoSize, undefined, "FAST");
-      } catch(e) { /* photo invalide, on ignore */ }
-    }
-
+    pdf.text(`${pool?.location||""} · ${pool?.volume||""} m³ · ${t("generated_on")} ${genAt}`, mL+3, y+12);
     pdf.setTextColor(0,0,0);
-    y += hdrH + 4;
+    y += 20;
 
     function checkPage(need) {
       if (y + need > pageH - mB) { pdf.addPage(); y = mT; }
@@ -7910,12 +7827,12 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
     const totalRawW = allCols.reduce((s,c)=>s+c.w, 0);
     const sc = cW / totalRawW;
     const cols = allCols.map(c => ({ ...c, w: c.w * sc }));
-    const rowH = 5.5, tblHdrH = 6.5;
+    const rowH = 5.5, hdrH = 6.5;
 
     // Header
-    checkPage(tblHdrH + rowH);
+    checkPage(hdrH + rowH);
     pdf.setFillColor(220,235,250);
-    pdf.rect(mL, y, cW, tblHdrH, "F");
+    pdf.rect(mL, y, cW, hdrH, "F");
     pdf.setFontSize(6); pdf.setFont("helvetica","bold"); pdf.setTextColor(13,43,78);
     let x = mL;
     cols.forEach(c => {
@@ -7923,8 +7840,8 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
       x += c.w;
     });
     pdf.setDrawColor(180,200,220); pdf.setLineWidth(0.2);
-    pdf.line(mL, y+tblHdrH, mL+cW, y+tblHdrH);
-    y += tblHdrH;
+    pdf.line(mL, y+hdrH, mL+cW, y+hdrH);
+    y += hdrH;
 
     // Lignes données
     pdf.setFont("helvetica","normal"); pdf.setFontSize(6);
@@ -7974,44 +7891,6 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
       pdf.line(mL, y+rowH, mL+cW, y+rowH);
       y += rowH;
     });
-
-    // ── Légende des abréviations et cibles ──
-    y += 4;
-    checkPage(32);
-    pdf.setFontSize(7.5); pdf.setFont("helvetica","bold"); pdf.setTextColor(13,43,78);
-    pdf.text(t("legend_title").toUpperCase(), mL, y);
-    pdf.setDrawColor(13,43,78); pdf.setLineWidth(0.2);
-    pdf.line(mL, y+1.2, mL+cW, y+1.2);
-    y += 5;
-
-    const legendItems = [
-      { abbr: "pH",   label: t("param_ph_long"),   target: "7.2 – 7.4",    unit: "" },
-      { abbr: "FCL",  label: t("param_fcl_long"),  target: "1 – 3",         unit: "mg/L" },
-      { abbr: "TCL",  label: t("param_tcl_long"),  target: "1 – 3",         unit: "mg/L" },
-      { abbr: "CCL",  label: t("param_ccl_long"),  target: "0 – 0.5",       unit: "mg/L" },
-      { abbr: "TAC",  label: t("param_tac_long"),  target: "80 – 120",      unit: "mg/L" },
-      { abbr: "CYA",  label: t("param_cya_long"),  target: "30 – 50",       unit: "mg/L" },
-      { abbr: "TH",   label: t("param_th_long"),   target: "200 – 400",     unit: "mg/L" },
-      { abbr: "Phos", label: t("param_phos_long"), target: "0 – 100",       unit: "µg/L" },
-      { abbr: "Cu",   label: t("param_cu_long"),   target: "0 – 0.2",       unit: "mg/L" },
-      { abbr: "Fe",   label: t("param_fe_long"),   target: "0 – 0.1",       unit: "mg/L" },
-      { abbr: "°C",   label: t("param_temp_long"), target: "24 – 30",       unit: "°C" },
-    ];
-
-    // 2 colonnes
-    const colW2 = cW / 2;
-    pdf.setFontSize(6); pdf.setFont("helvetica","normal"); pdf.setTextColor(50,50,50);
-    legendItems.forEach((item, i) => {
-      checkPage(5);
-      const cx = mL + (i % 2 === 0 ? 0 : colW2);
-      if (i % 2 === 0 && i > 0) y += 4.5;
-      pdf.setFont("helvetica","bold"); pdf.setTextColor(10,110,189);
-      pdf.text(item.abbr, cx, y);
-      pdf.setFont("helvetica","normal"); pdf.setTextColor(50,50,50);
-      const detail = ` = ${item.label} · cible : ${item.target}${item.unit ? " " + item.unit : ""}`;
-      pdf.text(detail, cx + pdf.getTextWidth(item.abbr), y, { maxWidth: colW2 - pdf.getTextWidth(item.abbr) - 2 });
-    });
-    y += 6;
 
     // Footer toutes pages
     const pageCount = pdf.internal.getNumberOfPages();
@@ -8261,31 +8140,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           </table>
         )}
 
-        {/* Légende des abréviations et cibles */}
-        <div style={{ marginTop: 16, padding: "10px 14px", background: "#f0f6fb", borderRadius: 10, border: "1px solid #d0e4f5" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#0d2b4e", marginBottom: 6 }}>{t("legend_title")}</div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 16px" }}>
-            {[
-              { abbr: "pH",   label: t("param_ph_long"),   target: "7.2 – 7.4",       unit: "" },
-              { abbr: "FCL",  label: t("param_fcl_long"),  target: "1 – 3",            unit: "mg/L" },
-              { abbr: "TCL",  label: t("param_tcl_long"),  target: "1 – 3",            unit: "mg/L" },
-              { abbr: "CCL",  label: t("param_ccl_long"),  target: "0 – 0.5",          unit: "mg/L" },
-              { abbr: "TAC",  label: t("param_tac_long"),  target: "80 – 120",         unit: "mg/L" },
-              { abbr: "CYA",  label: t("param_cya_long"),  target: "30 – 50",          unit: "mg/L" },
-              { abbr: "TH",   label: t("param_th_long"),   target: "200 – 400",        unit: "mg/L" },
-              { abbr: "Phos", label: t("param_phos_long"), target: "0 – 100",          unit: "µg/L" },
-              { abbr: "Cu",   label: t("param_cu_long"),   target: "0 – 0.2",          unit: "mg/L" },
-              { abbr: "Fe",   label: t("param_fe_long"),   target: "0 – 0.1",          unit: "mg/L" },
-              { abbr: "°C",   label: t("param_temp_long"), target: "24 – 30",          unit: "°C" },
-            ].map(({ abbr, label, target, unit }) => (
-              <div key={abbr} style={{ fontSize: 10, color: "#4a6480", minWidth: 180 }}>
-                <span style={{ fontWeight: 700, color: "#0a6ebd" }}>{abbr}</span>
-                {" = "}{label}
-                <span style={{ color: "#6a7d90" }}> · cible : {target}{unit ? " " + unit : ""}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* Section photos des mesures */}
         {rows.some(({ measure }) => (measure.photos?.length || measure.photo || measure.poolPhotos?.length)) && (
           <div style={{ marginTop: 24 }}>
             <div style={styles.reportSectionTitle}>{t("photos_section")}</div>
@@ -9188,9 +9043,9 @@ const styles = {
   modalBody: { padding: "8px 18px 0" },
   fieldLabel: {
     display: "block",
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 700,
-    color: "#0d2b4e",
+    color: "#5d6e6a",
     margin: "12px 2px 5px",
   },
   fieldGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 },
@@ -9418,7 +9273,7 @@ const styles = {
     border: "1.5px solid #d0e4f5",
     fontSize: 14,
     fontFamily: "inherit",
-    background: "#ffffff",
+    background: "#fafcfb",
     color: "#0d2b4e",
     outline: "none",
   },
