@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.9.0";
+const APP_VERSION = "1.9.2";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -7187,7 +7187,7 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
       {editingPool && (
         <AddPoolModal
           onClose={() => setEditingPool(null)}
-          onSave={(updated) => { onUpdatePool(updated); setEditingPool(null); }}
+          onSave={(updated) => { onUpdatePool(updated.id, updated); setEditingPool(null); }}
           lang={lang}
           existingPool={editingPool}
         />
