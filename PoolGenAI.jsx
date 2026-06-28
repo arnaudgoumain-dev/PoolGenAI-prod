@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.9.8";
+const APP_VERSION = "1.10.0";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -7494,7 +7494,95 @@ function AddPoolModal({ onClose, onSave, lang, existingPool }) {
 function ReportView({ pool, measures, applications, products, onClose, manageStock, lang }) {
   const t = useT(lang);
   const [showValues, setShowValues] = useState(false);
-  const [shareSupported] = useState(() => !!navigator.share);
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [pdfError, setPdfError] = useState(null);
+
+  async function generateAndSharePdf() {
+    setPdfLoading(true);
+    setPdfError(null);
+    try {
+      const element = document.getElementById("report-printable");
+      if (!element) throw new Error("Élément rapport introuvable");
+
+      // html2canvas capture
+      const canvas = await window.html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+      });
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.92);
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const margin = 10;
+      const imgW = pageW - margin * 2;
+      const imgH = (canvas.height * imgW) / canvas.width;
+
+      let y = margin;
+      let remaining = imgH;
+      const usableH = pageH - margin * 2;
+
+      // Découpage en pages si le contenu dépasse une page
+      while (remaining > 0) {
+        const sliceH = Math.min(remaining, usableH);
+        const srcY = (imgH - remaining) * (canvas.height / imgH);
+        const srcH = sliceH * (canvas.height / imgH);
+
+        // Crée un canvas partiel pour cette page
+        const pageCanvas = document.createElement("canvas");
+        pageCanvas.width = canvas.width;
+        pageCanvas.height = srcH;
+        const ctx = pageCanvas.getContext("2d");
+        ctx.drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH);
+        const pageImg = pageCanvas.toDataURL("image/jpeg", 0.92);
+
+        pdf.addImage(pageImg, "JPEG", margin, y, imgW, sliceH);
+        remaining -= sliceH;
+        if (remaining > 0) { pdf.addPage(); y = margin; }
+      }
+
+      const poolName = pool?.name || "piscine";
+      const fileName = `rapport-poolgenai-${poolName.toLowerCase().replace(/\s+/g, "-")}.pdf`;
+      const pdfBlob = pdf.output("blob");
+      const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
+
+      // Partage natif avec fichier
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+        await navigator.share({
+          title: t("report_email_subject").replace("{pool}", poolName),
+          files: [pdfFile],
+        });
+      } else if (navigator.share) {
+        // share sans fichier (fallback)
+        const url = URL.createObjectURL(pdfBlob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = fileName;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+      } else {
+        // Téléchargement direct
+        const url = URL.createObjectURL(pdfBlob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = fileName;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+      }
+    } catch (e) {
+      if (e.name !== "AbortError") {
+        console.error("PDF error", e);
+        setPdfError(e.message || "Erreur génération PDF");
+      }
+    } finally {
+      setPdfLoading(false);
+    }
+  }
 
   // Inject print CSS so the chart goes full width and toolbar is hidden
   useEffect(() => {
@@ -7580,40 +7668,22 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
         <button style={styles.reportPrintBtn} onClick={() => window.print()}>
           <Download size={16} /> {t("report_print_btn")}
         </button>
-        {shareSupported && (
-          <button
-            className="no-print"
-            style={{ ...styles.reportPrintBtn, background: "#0d7a3e" }}
-            onClick={async () => {
-              try {
-                await navigator.share({
-                  title: `Rapport PoolGenAI — ${pool?.name || ""}`,
-                  text: `Rapport de qualité d'eau — ${pool?.name || ""} · ${pool?.location || ""} · ${pool?.volume || ""}m³`,
-                  url: window.location.href,
-                });
-              } catch (e) {
-                if (e.name !== "AbortError") console.warn("share failed", e);
-              }
-            }}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> {t("share_report")}
-          </button>
-        )}
-        {pool?.reportEmail && (
-          <button
-            className="no-print"
-            style={{ ...styles.reportCloseBtn, background: "#0a6ebd", color: "#fff", border: "none", fontSize: 12, padding: "6px 12px" }}
-            onClick={() => {
-              const poolName = pool.name || "Ma piscine";
-              const subject = encodeURIComponent(t("report_email_subject").replace("{pool}", poolName));
-              const body = encodeURIComponent(
-                `${t("report_email_greeting")}\n\n${t("report_email_body").replace("{pool}", poolName)}\n\n${t("report_email_step1")}\n${t("report_email_step2")}\n${t("report_email_step3")}\n\n${t("report_email_sign")}\nPoolGenAI`
-              );
-              window.open(`mailto:${pool.reportEmail}?subject=${subject}&body=${body}`);
-            }}
-          >
-            ✉ {pool.reportEmail}
-          </button>
+        <button
+          className="no-print"
+          style={{ ...styles.reportPrintBtn, background: pdfLoading ? "#6a7d90" : "#0d7a3e", opacity: pdfLoading ? 0.7 : 1 }}
+          onClick={generateAndSharePdf}
+          disabled={pdfLoading}
+        >
+          {pdfLoading
+            ? <Loader2 size={16} className="spin" />
+            : <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          }
+          {pdfLoading ? t("ai_analyzing") : t("share_report")}
+        </button>
+        {pdfError && (
+          <div className="no-print" style={{ fontSize: 11, color: "#c0392b", padding: "4px 8px", background: "#fdf0ef", borderRadius: 6 }}>
+            {pdfError}
+          </div>
         )}
       </div>
 
