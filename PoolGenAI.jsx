@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.10.1";
+const APP_VERSION = "1.10.2";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -7501,97 +7501,156 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
     setPdfLoading(true);
     setPdfError(null);
     try {
-      const element = document.getElementById("report-printable");
-      if (!element) throw new Error("Élément rapport introuvable");
-
-      // html2canvas ne capture pas correctement les éléments dans un overlay
-      // position:fixed — on clone le contenu dans un div temporaire hors overlay
-      const clone = element.cloneNode(true);
-      clone.style.cssText = `
-        position: fixed; left: 0; top: 0;
-        width: ${element.scrollWidth}px;
-        background: #ffffff;
-        z-index: -9999;
-        opacity: 0;
-        pointer-events: none;
-      `;
-      document.body.appendChild(clone);
-
-      let canvas;
-      try {
-        canvas = await window.html2canvas(clone, {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: "#ffffff",
-          logging: false,
-          width: element.scrollWidth,
-          height: element.scrollHeight,
-          windowWidth: element.scrollWidth,
-          windowHeight: element.scrollHeight,
-        });
-      } finally {
-        document.body.removeChild(clone);
-      }
-
+      if (!window.jspdf) throw new Error("jsPDF non chargé");
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
       const pageW = pdf.internal.pageSize.getWidth();
       const pageH = pdf.internal.pageSize.getHeight();
-      const margin = 10;
-      const imgW = pageW - margin * 2;
-      const imgH = (canvas.height * imgW) / canvas.width;
+      const mL = 12, mR = 12, mT = 14, mB = 14;
+      const contentW = pageW - mL - mR;
+      let y = mT;
 
-      let y = margin;
-      let remaining = imgH;
-      const usableH = pageH - margin * 2;
+      const localeMap = { fr: "fr-FR", en: "en-GB", de: "de-DE", it: "it-IT", es: "es-ES", pt: "pt-PT" };
+      const genAt = new Date().toLocaleString(localeMap[lang] || "fr-FR", { dateStyle: "long", timeStyle: "short" });
+      const poolName = pool?.name || "piscine";
 
-      // Découpage en pages si le contenu dépasse une page
-      while (remaining > 0) {
-        const sliceH = Math.min(remaining, usableH);
-        const srcY = (imgH - remaining) * (canvas.height / imgH);
-        const srcH = sliceH * (canvas.height / imgH);
+      // ── En-tête ──
+      pdf.setFillColor(10, 74, 138);
+      pdf.roundedRect(mL, y, contentW, 18, 3, 3, "F");
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(13);
+      pdf.setFont("helvetica", "bold");
+      pdf.text(`${t("report_title")} — ${poolName}`, mL + 4, y + 7);
+      pdf.setFontSize(8);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(`${pool?.location || ""} · ${pool?.volume || ""} m³ · ${t("generated_on")} ${genAt}`, mL + 4, y + 13);
+      pdf.setTextColor(0, 0, 0);
+      y += 24;
 
-        // Crée un canvas partiel pour cette page
-        const pageCanvas = document.createElement("canvas");
-        pageCanvas.width = canvas.width;
-        pageCanvas.height = srcH;
-        const ctx = pageCanvas.getContext("2d");
-        ctx.drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH);
-        const pageImg = pageCanvas.toDataURL("image/jpeg", 0.92);
-
-        pdf.addImage(pageImg, "JPEG", margin, y, imgW, sliceH);
-        remaining -= sliceH;
-        if (remaining > 0) { pdf.addPage(); y = margin; }
+      // ── Section titre ──
+      function sectionTitle(label) {
+        pdf.setFontSize(9);
+        pdf.setFont("helvetica", "bold");
+        pdf.setTextColor(10, 110, 189);
+        pdf.text(label.toUpperCase(), mL, y);
+        pdf.setDrawColor(10, 110, 189);
+        pdf.setLineWidth(0.3);
+        pdf.line(mL, y + 1.5, mL + contentW, y + 1.5);
+        pdf.setTextColor(0, 0, 0);
+        y += 6;
       }
 
-      const poolName = pool?.name || "piscine";
-      const fileName = `rapport-poolgenai-${poolName.toLowerCase().replace(/\s+/g, "-")}.pdf`;
+      function checkPage(needed) {
+        if (y + needed > pageH - mB) { pdf.addPage(); y = mT; }
+      }
+
+      // ── Tableau historique ──
+      sectionTitle(t("detailed_history"));
+
+      const cols = [
+        { key: "date",   label: t("date_col"),      w: 22 },
+        { key: "pH",     label: "pH",                w: 10 },
+        { key: "fCl",    label: t("cl_libre_col"),   w: 14 },
+        { key: "tCl",    label: t("cl_total_col"),   w: 14 },
+        { key: "ccl",    label: "CCL",               w: 12 },
+        { key: "tac",    label: t("tac_col"),        w: 12 },
+        { key: "cya",    label: t("cya_col"),        w: 12 },
+        { key: "temp",   label: t("temp_col"),       w: 12 },
+        { key: "prod",   label: t("product_col"),    w: 34 },
+        { key: "qty",    label: t("applied_col"),    w: 14 },
+      ];
+
+      const totalW = cols.reduce((s, c) => s + c.w, 0);
+      const scale = contentW / totalW;
+      const scaledCols = cols.map(c => ({ ...c, w: c.w * scale }));
+      const rowH = 6;
+      const headerH = 7;
+
+      // Header ligne
+      checkPage(headerH + rowH);
+      pdf.setFillColor(230, 240, 250);
+      pdf.rect(mL, y, contentW, headerH, "F");
+      pdf.setFontSize(6.5);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(13, 43, 78);
+      let x = mL;
+      scaledCols.forEach(col => {
+        pdf.text(col.label, x + 1, y + 4.5, { maxWidth: col.w - 2 });
+        x += col.w;
+      });
+      y += headerH;
+
+      // Lignes données
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(6.5);
+      const sortedM = [...measures].sort((a, b) => new Date(a.date) - new Date(b.date));
+      sortedM.forEach((m, i) => {
+        checkPage(rowH);
+        if (i % 2 === 0) {
+          pdf.setFillColor(248, 250, 253);
+          pdf.rect(mL, y, contentW, rowH, "F");
+        }
+        pdf.setTextColor(30, 30, 30);
+        const app = applications.find(a => a.measureId === m.id);
+        const steps = app?.steps?.filter(s => !s.skipped) || [];
+        const prodText = steps.map(s => s.productName).join(", ") || "—";
+        const qtyText = steps.map(s => formatDose(s.appliedAmount, s.doseUnit || "g")).join(", ") || "—";
+        const d = new Date(m.date);
+        const dateStr = `${d.getDate().toString().padStart(2,"0")}/${(d.getMonth()+1).toString().padStart(2,"0")} ${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`;
+        const vals = {
+          date: dateStr,
+          pH:   m.pH != null && m.pH !== "" ? String(m.pH) : "—",
+          fCl:  m.fCl != null && m.fCl !== "" ? `${m.fCl}` : "—",
+          tCl:  m.tCl != null && m.tCl !== "" ? `${m.tCl}` : "—",
+          ccl:  m.ccl != null && m.ccl !== "" ? `${m.ccl}` : "—",
+          tac:  m.tac != null && m.tac !== "" ? `${m.tac}` : "—",
+          cya:  m.cya != null && m.cya !== "" ? `${m.cya}` : "—",
+          temp: m.temp != null && m.temp !== "" ? `${m.temp}°` : "—",
+          prod: prodText,
+          qty:  qtyText,
+        };
+        x = mL;
+        scaledCols.forEach(col => {
+          pdf.text(String(vals[col.key] ?? "—"), x + 1, y + 4, { maxWidth: col.w - 2 });
+          x += col.w;
+        });
+        // Bordure basse
+        pdf.setDrawColor(220, 228, 238);
+        pdf.setLineWidth(0.1);
+        pdf.line(mL, y + rowH, mL + contentW, y + rowH);
+        y += rowH;
+      });
+
+      y += 6;
+
+      // ── Footer ──
+      const pageCount = pdf.internal.getNumberOfPages();
+      for (let p = 1; p <= pageCount; p++) {
+        pdf.setPage(p);
+        pdf.setFontSize(7);
+        pdf.setTextColor(150, 150, 150);
+        pdf.text(`PoolGenAI v${APP_VERSION} · ${poolName}`, mL, pageH - 6);
+        pdf.text(`${p} / ${pageCount}`, pageW - mR, pageH - 6, { align: "right" });
+      }
+
+      const fileName = `rapport-poolgenai-${poolName.toLowerCase().replace(/[^a-z0-9]/g, "-")}.pdf`;
       const pdfBlob = pdf.output("blob");
       const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
 
-      // Partage natif avec fichier
       if (navigator.share && navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
         await navigator.share({
           title: t("report_email_subject").replace("{pool}", poolName),
           files: [pdfFile],
         });
-      } else if (navigator.share) {
-        // share sans fichier (fallback)
-        const url = URL.createObjectURL(pdfBlob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = fileName;
-        link.click();
-        setTimeout(() => URL.revokeObjectURL(url), 5000);
       } else {
-        // Téléchargement direct
         const url = URL.createObjectURL(pdfBlob);
         const link = document.createElement("a");
         link.href = url;
         link.download = fileName;
+        document.body.appendChild(link);
         link.click();
+        document.body.removeChild(link);
         setTimeout(() => URL.revokeObjectURL(url), 5000);
       }
     } catch (e) {
