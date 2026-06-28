@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.9.6";
+const APP_VERSION = "1.9.7";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -7730,7 +7730,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
               </tr>
             </thead>
             <tbody>
-              {rows.map(({ measure, application }, i) => {
+              {rows.flatMap(({ measure, application }, i) => {
                 const applied = application?.steps || [];
                 const rowCount = Math.max(1, applied.length);
                 return Array.from({ length: rowCount }).map((_, j) => {
