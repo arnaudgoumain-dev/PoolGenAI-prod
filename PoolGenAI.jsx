@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.13.3";
+const APP_VERSION = "1.13.4";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -7926,53 +7926,86 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
     pdf.line(mL, y+tblHdrH, mL+cW, y+tblHdrH);
     y += tblHdrH;
 
-    // Lignes données
+    // Lignes données — une ligne par step (produit), rowspan simulé pour les valeurs mesure
     pdf.setFont("helvetica","normal"); pdf.setFontSize(6);
+
+    // Colonnes paramètres mesure (fixes)
+    const paramCols = cols.filter(c => !["prod","advised","qty","stock"].includes(c.key));
+    const prodCols  = cols.filter(c => ["prod","advised","qty","stock"].includes(c.key));
+    const paramStartX = mL;
+    const prodStartX  = paramCols.reduce((s,c) => s + c.w, mL);
+
     sortedMeasures.forEach((m, i) => {
-      checkPage(rowH);
-      if (i % 2 === 0) { pdf.setFillColor(247,250,254); pdf.rect(mL, y, cW, rowH, "F"); }
-      const app = applications.find(a => a.measureId === m.id);
+      const app   = applications.find(a => a.measureId === m.id);
       const steps = app?.steps?.filter(s => !s.skipped) || [];
-      const prodText = steps.map(s => s.productName).join(", ") || "—";
-      const qtyText  = steps.map(s => formatDose(s.appliedAmount, s.doseUnit||"g")).join(", ") || "—";
+      const rowCount = Math.max(1, steps.length);
+      const blockH = rowH * rowCount;
+
+      checkPage(blockH);
+      if (i % 2 === 0) { pdf.setFillColor(247,250,254); pdf.rect(mL, y, cW, blockH, "F"); }
+
       const d = new Date(m.date);
       const dateStr = `${d.getDate().toString().padStart(2,"0")}/${(d.getMonth()+1).toString().padStart(2,"0")} ${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`;
 
-      const vals = {
-        date:    dateStr,
-        pH:      m.pH     != null && m.pH     !== "" ? String(m.pH)     : "—",
-        fCl:     m.fCl    != null && m.fCl    !== "" ? String(m.fCl)    : "—",
-        tCl:     m.tCl    != null && m.tCl    !== "" ? String(m.tCl)    : "—",
-        ccl:     m.ccl    != null && m.ccl    !== "" ? String(m.ccl)    : "—",
-        tac:     m.tac    != null && m.tac    !== "" ? String(m.tac)    : "—",
-        cya:     m.cya    != null && m.cya    !== "" ? String(m.cya)    : "—",
-        hard:    m.hard   != null && m.hard   !== "" ? String(m.hard)   : "—",
-        phos:    m.phos   != null && m.phos   !== "" ? String(m.phos)   : "—",
-        copper:  m.copper != null && m.copper !== "" ? String(m.copper) : "—",
-        iron:    m.iron   != null && m.iron   !== "" ? String(m.iron)   : "—",
-        temp:    m.temp   != null && m.temp   !== "" ? String(m.temp)   : "—",
-        prod:    prodText,
-        advised: steps.map(s => s.computedDoseAmount != null ? formatDose(s.computedDoseAmount, s.doseUnit||"g") : "—").join(", ") || "—",
-        qty:     qtyText,
-        stock: (() => {
-          if (!manageStock || steps.length === 0) return "—";
-          const firstStep = steps[0];
-          const prod = products.find(p => p.name === firstStep?.productName);
-          if (!prod) return "—";
-          const qty = Math.round((prod.stockPercent ?? 100) / 100 * (prod.containerAmount ?? 1) * 10) / 10;
-          return formatDose(qty, prod.containerUnit || "kg");
-        })(),
+      const paramVals = {
+        date:   dateStr,
+        pH:     m.pH     != null && m.pH     !== "" ? String(m.pH)     : "—",
+        fCl:    m.fCl    != null && m.fCl    !== "" ? String(m.fCl)    : "—",
+        tCl:    m.tCl    != null && m.tCl    !== "" ? String(m.tCl)    : "—",
+        ccl:    m.ccl    != null && m.ccl    !== "" ? String(m.ccl)    : "—",
+        tac:    m.tac    != null && m.tac    !== "" ? String(m.tac)    : "—",
+        cya:    m.cya    != null && m.cya    !== "" ? String(m.cya)    : "—",
+        hard:   m.hard   != null && m.hard   !== "" ? String(m.hard)   : "—",
+        phos:   m.phos   != null && m.phos   !== "" ? String(m.phos)   : "—",
+        copper: m.copper != null && m.copper !== "" ? String(m.copper) : "—",
+        iron:   m.iron   != null && m.iron   !== "" ? String(m.iron)   : "—",
+        temp:   m.temp   != null && m.temp   !== "" ? String(m.temp)   : "—",
       };
 
+      // Paramètres mesure — centrés verticalement dans le bloc
       pdf.setTextColor(30,30,30);
-      x = mL;
-      cols.forEach(c => {
-        pdf.text(String(vals[c.key]??'—'), x+0.8, y+3.8, { maxWidth: c.w-1.5 });
+      const paramTextY = y + blockH / 2;
+      x = paramStartX;
+      paramCols.forEach(c => {
+        pdf.text(String(paramVals[c.key]??'—'), x+0.8, paramTextY, { maxWidth: c.w-1.5 });
         x += c.w;
       });
-      pdf.setDrawColor(225,232,242); pdf.setLineWidth(0.1);
-      pdf.line(mL, y+rowH, mL+cW, y+rowH);
-      y += rowH;
+
+      // Une ligne par step
+      const stepsToRender = steps.length > 0 ? steps : [null];
+      stepsToRender.forEach((step, j) => {
+        const rowY = y + j * rowH;
+        const prod = step ? products.find(p => p.name === step.productName) : null;
+        const stockVal = (() => {
+          if (!manageStock || !prod) return "—";
+          const qty = Math.round((prod.stockPercent ?? 100) / 100 * (prod.containerAmount ?? 1) * 10) / 10;
+          return formatDose(qty, prod.containerUnit || "kg");
+        })();
+
+        const prodVals = {
+          prod:    step ? step.productName : "—",
+          advised: step && step.computedDoseAmount != null ? formatDose(step.computedDoseAmount, step.doseUnit||"g") : "—",
+          qty:     step ? formatDose(step.appliedAmount, step.doseUnit||"g") : "—",
+          stock:   stockVal,
+        };
+
+        x = prodStartX;
+        prodCols.forEach(c => {
+          pdf.text(String(prodVals[c.key]??'—'), x+0.8, rowY+3.8, { maxWidth: c.w-1.5 });
+          x += c.w;
+        });
+
+        // Ligne de séparation entre steps (fine)
+        if (j < stepsToRender.length - 1) {
+          pdf.setDrawColor(210,220,235); pdf.setLineWidth(0.08);
+          pdf.line(prodStartX, rowY+rowH, mL+cW, rowY+rowH);
+        }
+      });
+
+      // Bordure basse du bloc
+      pdf.setDrawColor(200,212,228); pdf.setLineWidth(0.15);
+      pdf.line(mL, y+blockH, mL+cW, y+blockH);
+      y += blockH;
     });
 
     // ── Légende des abréviations et cibles ──
