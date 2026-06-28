@@ -2,7 +2,7 @@
 // Stratégie : network-first pour JSX/HTML (toujours la dernière version),
 // cache-first pour les assets statiques (icônes, librairies CDN).
 
-const CACHE_NAME = "poolgenai-v2";
+const CACHE_NAME = "poolgenai-v3";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
