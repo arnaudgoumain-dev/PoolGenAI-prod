@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.13.0";
+const APP_VERSION = "1.13.1";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -7910,12 +7910,12 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
     const totalRawW = allCols.reduce((s,c)=>s+c.w, 0);
     const sc = cW / totalRawW;
     const cols = allCols.map(c => ({ ...c, w: c.w * sc }));
-    const rowH = 5.5, hdrH = 6.5;
+    const rowH = 5.5, tblHdrH = 6.5;
 
     // Header
-    checkPage(hdrH + rowH);
+    checkPage(tblHdrH + rowH);
     pdf.setFillColor(220,235,250);
-    pdf.rect(mL, y, cW, hdrH, "F");
+    pdf.rect(mL, y, cW, tblHdrH, "F");
     pdf.setFontSize(6); pdf.setFont("helvetica","bold"); pdf.setTextColor(13,43,78);
     let x = mL;
     cols.forEach(c => {
@@ -7923,8 +7923,8 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
       x += c.w;
     });
     pdf.setDrawColor(180,200,220); pdf.setLineWidth(0.2);
-    pdf.line(mL, y+hdrH, mL+cW, y+hdrH);
-    y += hdrH;
+    pdf.line(mL, y+tblHdrH, mL+cW, y+tblHdrH);
+    y += tblHdrH;
 
     // Lignes données
     pdf.setFont("helvetica","normal"); pdf.setFontSize(6);
