@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.11.0";
+const APP_VERSION = "1.11.2";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -240,8 +240,8 @@ const TRANSLATIONS = {
     no_measures_report: "Aucune mesure enregistrée pour ce bassin.",
     date_col: "DATE",
     ph_col: "PH",
-    cl_libre_col: "CL LIBRE",
-    cl_total_col: "CL TOTAL",
+    cl_libre_col: "FCL",
+    cl_total_col: "TCL",
     tac_col: "TAC",
     cya_col: "CYA",
     temp_col: "TEMP.",
@@ -648,8 +648,8 @@ const TRANSLATIONS = {
     no_measures_report: "No readings recorded for this pool.",
     date_col: "DATE",
     ph_col: "PH",
-    cl_libre_col: "FREE CL",
-    cl_total_col: "TOTAL CL",
+    cl_libre_col: "FCL",
+    cl_total_col: "TCL",
     tac_col: "ALK",
     cya_col: "CYA",
     temp_col: "TEMP.",
@@ -1051,8 +1051,8 @@ const TRANSLATIONS = {
     no_measures_report: "Keine Messungen für dieses Becken.",
     date_col: "DATUM",
     ph_col: "PH",
-    cl_libre_col: "FREIES CL",
-    cl_total_col: "GESAMT CL",
+    cl_libre_col: "FCL",
+    cl_total_col: "TCL",
     tac_col: "KH",
     cya_col: "CYA",
     temp_col: "TEMP.",
@@ -1457,8 +1457,8 @@ const TRANSLATIONS = {
     no_measures_report: "Nessuna misurazione registrata per questa vasca.",
     date_col: "DATA",
     ph_col: "PH",
-    cl_libre_col: "CL LIBERO",
-    cl_total_col: "CL TOTALE",
+    cl_libre_col: "FCL",
+    cl_total_col: "TCL",
     tac_col: "TAC",
     cya_col: "CYA",
     temp_col: "TEMP.",
@@ -1860,8 +1860,8 @@ const TRANSLATIONS = {
     no_measures_report: "Sin mediciones registradas para esta piscina.",
     date_col: "FECHA",
     ph_col: "PH",
-    cl_libre_col: "CL LIBRE",
-    cl_total_col: "CL TOTAL",
+    cl_libre_col: "FCL",
+    cl_total_col: "TCL",
     tac_col: "TAC",
     cya_col: "CYA",
     temp_col: "TEMP.",
@@ -2263,8 +2263,8 @@ const TRANSLATIONS = {
     no_measures_report: "Nenhuma medição registrada para esta piscina.",
     date_col: "DATA",
     ph_col: "PH",
-    cl_libre_col: "CL LIVRE",
-    cl_total_col: "CL TOTAL",
+    cl_libre_col: "FCL",
+    cl_total_col: "TCL",
     tac_col: "TAC",
     cya_col: "CYA",
     temp_col: "TEMP.",
@@ -7524,23 +7524,33 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
       sortedMeasures.map((m) => ({
         date: formatDateShort(m.date),
         timestamp: new Date(m.date).getTime(),
-        pH: m.pH !== undefined && m.pH !== "" ? parseFloat(m.pH) : null,
-        fCl: m.fCl !== undefined && m.fCl !== "" ? parseFloat(m.fCl) : null,
-        tCl: m.tCl !== undefined && m.tCl !== "" ? parseFloat(m.tCl) : null,
-        tac: m.tac !== undefined && m.tac !== "" ? parseFloat(m.tac) : null,
-        cya: m.cya !== undefined && m.cya !== "" ? parseFloat(m.cya) : null,
-        temp: m.temp !== undefined && m.temp !== "" ? parseFloat(m.temp) : null,
+        pH:     m.pH     !== undefined && m.pH     !== "" ? parseFloat(m.pH)     : null,
+        fCl:    m.fCl    !== undefined && m.fCl    !== "" ? parseFloat(m.fCl)    : null,
+        tCl:    m.tCl    !== undefined && m.tCl    !== "" ? parseFloat(m.tCl)    : null,
+        ccl:    m.ccl    !== undefined && m.ccl    !== "" ? parseFloat(m.ccl)    : null,
+        tac:    m.tac    !== undefined && m.tac    !== "" ? parseFloat(m.tac)    : null,
+        cya:    m.cya    !== undefined && m.cya    !== "" ? parseFloat(m.cya)    : null,
+        hard:   m.hard   !== undefined && m.hard   !== "" ? parseFloat(m.hard)   : null,
+        phos:   m.phos   !== undefined && m.phos   !== "" ? parseFloat(m.phos)   : null,
+        copper: m.copper !== undefined && m.copper !== "" ? parseFloat(m.copper) : null,
+        iron:   m.iron   !== undefined && m.iron   !== "" ? parseFloat(m.iron)   : null,
+        temp:   m.temp   !== undefined && m.temp   !== "" ? parseFloat(m.temp)   : null,
       })),
     [sortedMeasures]
   );
 
   const chartParams = [
-    { key: "pH",  color: "#1a8fd1", label: "pH",                                      axis: "left"  },
-    { key: "fCl", color: "#2b7fd9", label: t("param_fcl").replace(" (mg/L)", ""),     axis: "left"  },
-    { key: "tCl", color: "#8a6fd1", label: t("param_tcl").replace(" (mg/L)", ""),     axis: "left"  },
-    { key: "tac", color: "#d98c2b", label: t("tac_col"),                              axis: "right" },
-    { key: "cya", color: "#c4502f", label: t("cya_col"),                              axis: "right" },
-    { key: "temp",color: "#e0578a", label: t("temp_col"),                             axis: "right" },
+    { key: "pH",     color: "#1a8fd1", label: "pH",                                          axis: "left"  },
+    { key: "fCl",    color: "#2b7fd9", label: "FCL",                                         axis: "left"  },
+    { key: "tCl",    color: "#8a6fd1", label: "TCL",                                         axis: "left"  },
+    { key: "ccl",    color: "#5b3fa0", label: "CCL",                                         axis: "left"  },
+    { key: "tac",    color: "#d98c2b", label: t("tac_col"),                                  axis: "right" },
+    { key: "cya",    color: "#c4502f", label: t("cya_col"),                                  axis: "right" },
+    { key: "hard",   color: "#2e8b57", label: t("hard_col"),                                 axis: "right" },
+    { key: "phos",   color: "#9b59b6", label: t("phos_col"),                                 axis: "right" },
+    { key: "copper", color: "#b5651d", label: t("copper_col"),                               axis: "right" },
+    { key: "iron",   color: "#c0392b", label: t("iron_col"),                                 axis: "right" },
+    { key: "temp",   color: "#e0578a", label: t("temp_col"),                                 axis: "right" },
   ];
 
   const rows = useMemo(() => {
@@ -7680,20 +7690,21 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
 
     // Toutes les colonnes de paramètres + produit
     const allCols = [
-      { key: "date",   label: t("date_col"),       w: 18 },
-      { key: "pH",     label: "pH",                w: 8  },
-      { key: "fCl",    label: "FCL",               w: 9  },
-      { key: "tCl",    label: "TCL",               w: 9  },
-      { key: "ccl",    label: "CCL",               w: 9  },
-      { key: "tac",    label: "TAC",               w: 9  },
-      { key: "cya",    label: "CYA",               w: 9  },
-      { key: "hard",   label: "TH",                w: 9  },
-      { key: "phos",   label: "Phos",              w: 9  },
-      { key: "copper", label: "Cu",                w: 8  },
-      { key: "iron",   label: "Fe",                w: 8  },
-      { key: "temp",   label: "°C",                w: 8  },
-      { key: "prod",   label: t("product_col"),    w: 28 },
-      { key: "qty",    label: t("applied_col"),    w: 13 },
+      { key: "date",    label: t("date_col"),       w: 18 },
+      { key: "pH",      label: "pH",                w: 8  },
+      { key: "fCl",     label: "FCL",               w: 9  },
+      { key: "tCl",     label: "TCL",               w: 9  },
+      { key: "ccl",     label: "CCL",               w: 9  },
+      { key: "tac",     label: "TAC",               w: 9  },
+      { key: "cya",     label: "CYA",               w: 9  },
+      { key: "hard",    label: "TH",                w: 9  },
+      { key: "phos",    label: "Phos",              w: 9  },
+      { key: "copper",  label: "Cu",                w: 8  },
+      { key: "iron",    label: "Fe",                w: 8  },
+      { key: "temp",    label: "°C",                w: 8  },
+      { key: "prod",    label: t("product_col"),    w: 26 },
+      { key: "advised", label: t("advised_col"),    w: 12 },
+      { key: "qty",     label: t("applied_col"),    w: 12 },
     ];
 
     const totalRawW = allCols.reduce((s,c)=>s+c.w, 0);
@@ -7728,20 +7739,21 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
       const dateStr = `${d.getDate().toString().padStart(2,"0")}/${(d.getMonth()+1).toString().padStart(2,"0")} ${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`;
 
       const vals = {
-        date:   dateStr,
-        pH:     m.pH   != null && m.pH   !== "" ? String(m.pH)   : "—",
-        fCl:    m.fCl  != null && m.fCl  !== "" ? String(m.fCl)  : "—",
-        tCl:    m.tCl  != null && m.tCl  !== "" ? String(m.tCl)  : "—",
-        ccl:    m.ccl  != null && m.ccl  !== "" ? String(m.ccl)  : "—",
-        tac:    m.tac  != null && m.tac  !== "" ? String(m.tac)  : "—",
-        cya:    m.cya  != null && m.cya  !== "" ? String(m.cya)  : "—",
-        hard:   m.hard != null && m.hard !== "" ? String(m.hard) : "—",
-        phos:   m.phos != null && m.phos !== "" ? String(m.phos) : "—",
-        copper: m.copper != null && m.copper !== "" ? String(m.copper) : "—",
-        iron:   m.iron != null && m.iron !== "" ? String(m.iron) : "—",
-        temp:   m.temp != null && m.temp !== "" ? String(m.temp) : "—",
-        prod: prodText,
-        qty:  qtyText,
+        date:    dateStr,
+        pH:      m.pH     != null && m.pH     !== "" ? String(m.pH)     : "—",
+        fCl:     m.fCl    != null && m.fCl    !== "" ? String(m.fCl)    : "—",
+        tCl:     m.tCl    != null && m.tCl    !== "" ? String(m.tCl)    : "—",
+        ccl:     m.ccl    != null && m.ccl    !== "" ? String(m.ccl)    : "—",
+        tac:     m.tac    != null && m.tac    !== "" ? String(m.tac)    : "—",
+        cya:     m.cya    != null && m.cya    !== "" ? String(m.cya)    : "—",
+        hard:    m.hard   != null && m.hard   !== "" ? String(m.hard)   : "—",
+        phos:    m.phos   != null && m.phos   !== "" ? String(m.phos)   : "—",
+        copper:  m.copper != null && m.copper !== "" ? String(m.copper) : "—",
+        iron:    m.iron   != null && m.iron   !== "" ? String(m.iron)   : "—",
+        temp:    m.temp   != null && m.temp   !== "" ? String(m.temp)   : "—",
+        prod:    prodText,
+        advised: steps.map(s => s.computedDoseAmount != null ? formatDose(s.computedDoseAmount, s.doseUnit||"g") : "—").join(", ") || "—",
+        qty:     qtyText,
       };
 
       pdf.setTextColor(30,30,30);
@@ -7916,7 +7928,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
             </ResponsiveContainer>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "8px 16px", marginTop: 8, padding: "0 8px" }}>
-            {chartParams.map((cp) => (
+            {chartParams.filter(cp => chartData.some(d => d[cp.key] != null)).map((cp) => (
               <div key={cp.key} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: "#2d4a6e" }}>
                 <svg width="16" height="4"><line x1="0" y1="2" x2="16" y2="2" stroke={cp.color} strokeWidth="2"/><circle cx="8" cy="2" r="2" fill={cp.color}/></svg>
                 {cp.label}
