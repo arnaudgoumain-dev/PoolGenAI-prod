@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.12.0";
+const APP_VERSION = "1.12.2";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -4809,45 +4809,6 @@ Réponds directement en français, sans titre ni introduction.`;
         </div>
       )}
 
-      <div style={styles.aiSection}>
-        <div style={styles.aiSectionTitle}>
-          <Sparkles size={14} color="#1a8fd1" /> {t("ai_analysis")}
-        </div>
-        {!isPremium ? (
-          <button style={styles.aiLockedBtn} onClick={onWantPremium}>
-            <Lock size={15} />
-            <span>{t("ai_locked")}</span>
-          </button>
-        ) : apiKey ? (
-          <>
-            <button
-              style={{
-                ...styles.aiAnalyzeBtn,
-                ...(aiLoading ? styles.aiAnalyzeBtnLoading : {}),
-              }}
-              onClick={handleAiAnalysis}
-              disabled={aiLoading || !latest}
-            >
-              {aiLoading ? (
-                <><Loader2 size={14} className="spin" /> {t("ai_analyzing")}</>
-              ) : (
-                <><Sparkles size={14} /> {t("ai_analyze_btn")}</>
-              )}
-            </button>
-            {aiComment && (
-              <div style={styles.aiCommentBox}>{aiComment}</div>
-            )}
-            {aiError && (
-              <div style={styles.aiErrorBox}>{aiError}</div>
-            )}
-          </>
-        ) : (
-          <div style={styles.aiKeyMissing}>
-            <Lock size={14} color="#a0a8b0" />
-            <span>{t("ai_api_missing")}</span>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
@@ -7860,6 +7821,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
       { key: "prod",    label: t("product_col"),    w: 26 },
       { key: "advised", label: t("advised_col"),    w: 12 },
       { key: "qty",     label: t("applied_col"),    w: 12 },
+      ...(manageStock ? [{ key: "stock", label: t("stock_col"), w: 12 }] : []),
     ];
 
     const totalRawW = allCols.reduce((s,c)=>s+c.w, 0);
@@ -7909,6 +7871,14 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
         prod:    prodText,
         advised: steps.map(s => s.computedDoseAmount != null ? formatDose(s.computedDoseAmount, s.doseUnit||"g") : "—").join(", ") || "—",
         qty:     qtyText,
+        stock: (() => {
+          if (!manageStock || steps.length === 0) return "—";
+          const firstStep = steps[0];
+          const prod = products.find(p => p.name === firstStep?.productName);
+          if (!prod) return "—";
+          const qty = Math.round((prod.stockPercent ?? 100) / 100 * (prod.containerAmount ?? 1) * 10) / 10;
+          return formatDose(qty, prod.containerUnit || "kg");
+        })(),
       };
 
       pdf.setTextColor(30,30,30);
@@ -8160,7 +8130,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                         {step?.appliedAt ? new Date(step.appliedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}
                       </td>
                       {manageStock && <td style={{ ...styles.reportTdCell, color: prod && (prod.stockPercent ?? 100) <= 20 ? "#c0392b" : "#4a6480", fontWeight: 600 }}>
-                        {prod ? `${prod.stockPercent ?? 100} %` : "—"}
+                        {prod ? formatDose(Math.round((prod.stockPercent ?? 100) / 100 * (prod.containerAmount ?? 1) * 10) / 10, prod.containerUnit || "kg") : "—"}
                       </td>}
                     </tr>
                   );
