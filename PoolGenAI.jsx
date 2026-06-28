@@ -8,7 +8,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.8.2";
+const APP_VERSION = "1.8.3";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -274,9 +274,6 @@ const TRANSLATIONS = {
     ai_timer_hint: "L'analyse peut prendre jusqu'à 30 secondes.",
     ai_reliability: "Fiabilité de l'analyse",
     ai_no_values: "Aucune valeur lisible sur cette photo. Vérifie la qualité et l'orientation de l'image.",
-    ai_timer_hint: "Analysis may take up to 30 seconds.",
-    ai_reliability: "Analysis reliability",
-    ai_no_values: "No readable values on this photo. Check the image quality and orientation.",
     error_analyze: "Analyse impossible",
     verify_connection: "Vérifie ta connexion et les photos.",
     free_version: "Gratuit",
@@ -658,13 +655,13 @@ const TRANSLATIONS = {
     add_pool_title: "New pool",
     edit_pool_title: "Edit pool",
     pool_name_placeholder: "My pool",
-    ai_timer_hint: "Die Analyse kann bis zu 30 Sekunden dauern.",
-    ai_reliability: "Zuverlässigkeit der Analyse",
-    ai_no_values: "Keine lesbaren Werte auf diesem Foto. Überprüfe Qualität und Ausrichtung des Bildes.",
     pool_location_placeholder: "Garden, terrace...",
     pool_volume_placeholder: "72",
     save_pool: "Save",
     loading: "Loading...",
+    ai_timer_hint: "Analysis may take up to 30 seconds.",
+    ai_reliability: "Analysis reliability",
+    ai_no_values: "No readable values on this photo. Check the image quality and orientation.",
     error_analyze: "Analysis failed",
     verify_connection: "Check your connection and photos.",
     free_version: "Free",
@@ -1052,6 +1049,9 @@ const TRANSLATIONS = {
     pool_volume_placeholder: "72",
     save_pool: "Speichern",
     loading: "Laden...",
+    ai_timer_hint: "Die Analyse kann bis zu 30 Sekunden dauern.",
+    ai_reliability: "Zuverlässigkeit der Analyse",
+    ai_no_values: "Keine lesbaren Werte auf diesem Foto. Überprüfe Qualität und Ausrichtung des Bildes.",
     error_analyze: "Analyse fehlgeschlagen",
     verify_connection: "Verbindung und Fotos prüfen.",
     free_version: "Kostenlos",
@@ -4555,10 +4555,13 @@ function ParamCard({ param, value, effectiveTargets, lang }) {
   if (!paramTarget) return null;
   const status = statusFor(param, value, allTargets);
   const color = statusColor(status);
+  // Utiliser la traduction du label si disponible
+  const paramLabelKey = `param_${param.toLowerCase()}`;
+  const paramLabel = t(paramLabelKey) !== paramLabelKey ? t(paramLabelKey).replace(/ \(mg\/L\)| \(°C\)| \(µg\/L\)/, "") : paramTarget.label;
   return (
     <div style={{ ...styles.paramCard, borderColor: color + "33" }}>
       <div style={styles.paramTop}>
-        <span style={styles.paramLabel}>{paramTarget.label}</span>
+        <span style={styles.paramLabel}>{paramLabel}</span>
         <span style={{ ...styles.paramDot, background: color }} />
       </div>
       <div style={styles.paramValue}>
