@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.15.1";
+const APP_VERSION = "1.15.2";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -3235,6 +3235,24 @@ const FB = {
       cb(snap.docs.map(d => d.data()));
     });
   },
+  // ── Config sync (pools, products, activePlan, settings) ──
+  saveConfig: async (uid, config) => {
+    if (!window._fbDb || !window._fbSetDoc) return;
+    const ref = window._fbDoc(window._fbDb, "users", uid, "config", "main");
+    await window._fbSetDoc(ref, { ...config, updatedAt: new Date().toISOString() }, { merge: true });
+  },
+  getConfig: async (uid) => {
+    if (!window._fbDb || !window._fbGetDoc) return null;
+    const snap = await window._fbGetDoc(window._fbDoc(window._fbDb, "users", uid, "config", "main"));
+    return snap.exists() ? snap.data() : null;
+  },
+  onConfig: (uid, cb) => {
+    if (!window._fbDb || !window._fbOnSnapshot) return () => {};
+    const ref = window._fbDoc(window._fbDb, "users", uid, "config", "main");
+    return window._fbOnSnapshot(ref, (snap) => {
+      if (snap.exists()) cb(snap.data());
+    });
+  },
 };
 
 // Helper analytics — fire-and-forget
@@ -3645,11 +3663,18 @@ function PoolApp() {
 
   const [authResolved, setAuthResolved] = useState(false);
 
-  // Lightbox globale — accessible via window._openLightbox(src) depuis n'importe quel composant
+  // ── Lightbox globale ──
   useEffect(() => {
     window._openLightbox = (src) => setLightboxSrc(src);
     return () => { delete window._openLightbox; };
   }, []);
+
+  // Helper pour sauvegarder la config dans Firestore
+  function syncConfig(partial) {
+    if (authUser?.uid && FB.ready()) {
+      FB.saveConfig(authUser.uid, partial).catch(() => {});
+    }
+  }
 
   // ── Synchro Firestore temps réel ──
   // Quand l'utilisateur est connecté, on s'abonne aux collections measures et applications.
@@ -3667,7 +3692,6 @@ function PoolApp() {
     const unsubMeasures = FB.onMeasures(uid, (cloudMeasures) => {
       if (cloudMeasures.length > 0) {
         setMeasures(cloudMeasures);
-        // Sync vers IndexedDB
         window.storage.set("measures", JSON.stringify(cloudMeasures)).catch(() => {});
       }
     });
@@ -3679,10 +3703,41 @@ function PoolApp() {
       }
     });
 
-    firestoreUnsubRef.current = [unsubMeasures, unsubApplications];
+    const unsubConfig = FB.onConfig(uid, (config) => {
+      if (config.pools?.length) {
+        setPools(config.pools);
+        window.storage.set(STORAGE_KEYS.pools, JSON.stringify(config.pools)).catch(() => {});
+      }
+      if (config.products?.length) {
+        setProducts(config.products);
+        window.storage.set(STORAGE_KEYS.products, JSON.stringify(config.products)).catch(() => {});
+      }
+      if (config.activePlan !== undefined) {
+        setActivePlan(config.activePlan);
+        window.storage.set(STORAGE_KEYS.activePlan, JSON.stringify(config.activePlan)).catch(() => {});
+      }
+      if (config.isPremium !== undefined) {
+        setIsPremium(config.isPremium);
+        window.storage.set(STORAGE_KEYS.premium, JSON.stringify(config.isPremium)).catch(() => {});
+      }
+      if (config.lang) {
+        setLang(config.lang);
+        window.storage.set("app_lang", JSON.stringify(config.lang)).catch(() => {});
+      }
+      if (config.aiEnabled !== undefined) {
+        setAiEnabled(config.aiEnabled);
+      }
+      if (config.apiProvider) {
+        setApiProvider(config.apiProvider);
+        window.storage.set(STORAGE_KEYS.apiProvider, JSON.stringify(config.apiProvider)).catch(() => {});
+      }
+    });
+
+    firestoreUnsubRef.current = [unsubMeasures, unsubApplications, unsubConfig];
     return () => {
       unsubMeasures();
       unsubApplications();
+      unsubConfig();
     };
   }, [authUser?.uid]);
 
@@ -3797,8 +3852,7 @@ function PoolApp() {
       // Upload des mesures locales vers Firestore si l'utilisateur est connecté
       if (authUser?.uid && loadedMeasures.length > 0) {
         loadedMeasures.forEach(m => FB.saveMeasure(authUser.uid, m).catch(() => {}));
-      }
-      if (loadedProducts) {
+      }      if (loadedProducts) {
         // Anciens produits sans poolId (avant la saisie par bassin) : rattachés au bassin actif
         loadedProducts = loadedProducts.map((p) =>
           p.poolId ? p : { ...p, poolId: loadedActiveId }
@@ -3848,6 +3902,18 @@ function PoolApp() {
       // Envoie la version comme propriété utilisateur Analytics
       try { window._fbSetUserProperty?.("app_version", APP_VERSION); } catch(e) {}
       track("app_open", { version: APP_VERSION });
+      // Upload config initiale vers Firestore (migration one-shot)
+      if (authUser?.uid) {
+        FB.getConfig(authUser.uid).then(cloudConfig => {
+          // N'upload que si pas encore de config cloud
+          if (!cloudConfig) {
+            FB.saveConfig(authUser.uid, {
+              pools: loadedPools,
+              products: loadedProducts || [],
+            }).catch(() => {});
+          }
+        }).catch(() => {});
+      }
     }
     load();
   }, []);
@@ -4173,7 +4239,43 @@ function PoolApp() {
     setShowWizard(true);
   }
 
-  function addPool(pool) {
+  // ── Synchro config → Firestore à chaque changement ──
+  const syncedRef = useRef(false);
+  useEffect(() => {
+    if (!loaded || !authUser?.uid) return;
+    if (!syncedRef.current) { syncedRef.current = true; return; } // skip initial load
+    syncConfig({ pools });
+  }, [pools]);
+
+  useEffect(() => {
+    if (!loaded || !authUser?.uid) return;
+    syncConfig({ products });
+  }, [products]);
+
+  useEffect(() => {
+    if (!loaded || !authUser?.uid) return;
+    syncConfig({ activePlan });
+  }, [activePlan]);
+
+  useEffect(() => {
+    if (!loaded || !authUser?.uid) return;
+    syncConfig({ isPremium });
+  }, [isPremium]);
+
+  useEffect(() => {
+    if (!loaded || !authUser?.uid) return;
+    syncConfig({ lang });
+  }, [lang]);
+
+  useEffect(() => {
+    if (!loaded || !authUser?.uid) return;
+    syncConfig({ aiEnabled });
+  }, [aiEnabled]);
+
+  useEffect(() => {
+    if (!loaded || !authUser?.uid) return;
+    syncConfig({ apiProvider });
+  }, [apiProvider]);
     const id = uid();
     setPools((prev) => [...prev, { id, ...pool }]);
     setProducts((prev) => {
