@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.14.1";
+const APP_VERSION = "1.14.2";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -5560,6 +5560,30 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
         <History size={40} color="#7ab8e8" strokeWidth={1.5} />
         <p style={styles.emptyTitle}>{t("no_history")}</p>
         <p style={styles.emptyText}>{t("no_history_sub")}</p>
+        {apiKey && (
+          <>
+            <input
+              ref={importFileRef}
+              type="file"
+              accept="application/pdf,image/jpeg,image/png,image/webp"
+              style={{ display: "none" }}
+              onChange={handleImportFile}
+            />
+            <button
+              style={{ ...styles.validateApplyBtn, background: importLoading ? "#6a7d90" : "#0a6ebd", fontSize: 13, padding: "9px 14px", marginTop: 8 }}
+              onClick={() => importFileRef.current?.click()}
+              disabled={importLoading}
+            >
+              {importLoading ? <Loader2 size={15} className="spin" /> : <FileText size={15} />}
+              {importLoading ? t("import_pdf_analyzing") : t("import_pdf_btn")}
+            </button>
+            {importError && (
+              <div style={{ marginTop: 6, fontSize: 12, color: "#c0392b", padding: "6px 10px", background: "#fdf0ef", borderRadius: 8 }}>
+                <AlertTriangle size={12} style={{ marginRight: 4, verticalAlign: "middle" }} />{importError}
+              </div>
+            )}
+          </>
+        )}
       </div>
     );
   }
