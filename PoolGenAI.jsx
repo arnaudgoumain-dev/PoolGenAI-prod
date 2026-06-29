@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.13.5";
+const APP_VERSION = "1.14.0";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -5327,7 +5327,8 @@ function HistoryView({ measures, onDelete, onEdit, onAdd, onValidateApplication,
         if (m.hard != null && m.hard !== "") vals.push(`TH=${m.hard}`);
         if (m.phos != null && m.phos !== "") vals.push(`Phos=${m.phos}`);
         if (m.temp != null && m.temp !== "") vals.push(`T=${m.temp}°C`);
-        return `${d}: ${vals.join(", ")}`;
+        const noteStr = m.note ? ` | Note: "${m.note}"` : "";
+        return `${d}: ${vals.join(", ")}${noteStr}`;
       }).join("\n");
 
       const prompt = `Tu es un expert en traitement de l'eau de piscine de baignade. Tu dois UNIQUEMENT répondre aux questions liées à la chimie de l'eau, aux produits de traitement (chlore, pH, TAC, CYA, phosphates, etc.) et aux équipements de piscine.
@@ -5980,20 +5981,20 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
 
   // Tous les champs possibles, filtrés selon le traitement du bassin
   const ALL_FIELDS = [
-    { key: "pH",   label: t("param_ph"),    value: pH,    set: setPH,    step: "0.01", placeholder: "7.40" },
-    { key: "fCl",  label: t("param_fcl"),   value: fCl,   set: setFCl,   step: "0.01", placeholder: "1.20" },
-    { key: "tCl",  label: t("param_tcl"),   value: tCl,   set: setTCl,   step: "0.01", placeholder: "1.30" },
-    { key: "tac",  label: t("param_tac"),   value: tac,   set: setTac,   step: "1",    placeholder: "100" },
-    { key: "cya",  label: t("param_cya"),   value: cya,   set: setCya,   step: "1",    placeholder: "40" },
-    { key: "temp", label: t("param_temp"),  value: temp,  set: setTemp,  step: "0.1",  placeholder: "27" },
-    { key: "sel",  label: t("param_sel"),   value: sel,   set: setSel,   step: "10",   placeholder: "4000" },
-    { key: "brome",label: t("param_brome"), value: brome, set: setBrome, step: "0.1",  placeholder: "3.0" },
-    { key: "o2",   label: t("param_o2"),    value: o2,    set: setO2,    step: "0.5",  placeholder: "20" },
-    { key: "ccl",   label: t("param_ccl"),   value: ccl,   set: setCcl,   step: "0.01", placeholder: "0.00" },
-    { key: "hard",  label: t("param_hard"),  value: hard,  set: setHard,  step: "1",    placeholder: "250" },
-    { key: "phos",  label: t("param_phos"),  value: phos,  set: setPhos,  step: "1",    placeholder: "100" },
-    { key: "copper",label: t("param_copper"),value: copper,set: setCopper,step: "0.01", placeholder: "0.10" },
-    { key: "iron",  label: t("param_iron"),  value: iron,  set: setIron,  step: "0.01", placeholder: "0.00" },
+    { key: "pH",    abbr: "pH",   label: `pH - ${t("param_ph")}`,           value: pH,     set: setPH,     step: "0.01", placeholder: "7.40" },
+    { key: "fCl",  abbr: "FCL",  label: `FCL - ${t("param_fcl_long")}`,    value: fCl,    set: setFCl,    step: "0.01", placeholder: "1.20" },
+    { key: "tCl",  abbr: "TCL",  label: `TCL - ${t("param_tcl_long")}`,    value: tCl,    set: setTCl,    step: "0.01", placeholder: "1.30" },
+    { key: "ccl",  abbr: "CCL",  label: `CCL - ${t("param_ccl_long")}`,    value: ccl,    set: setCcl,    step: "0.01", placeholder: "0.00" },
+    { key: "tac",  abbr: "TAC",  label: `TAC - ${t("param_tac_long")}`,    value: tac,    set: setTac,    step: "1",    placeholder: "100" },
+    { key: "cya",  abbr: "CYA",  label: `CYA - ${t("param_cya_long")}`,    value: cya,    set: setCya,    step: "1",    placeholder: "40" },
+    { key: "temp", abbr: "°C",   label: `°C - ${t("param_temp_long")}`,    value: temp,   set: setTemp,   step: "0.1",  placeholder: "27" },
+    { key: "hard", abbr: "TH",   label: `TH - ${t("param_th_long")}`,      value: hard,   set: setHard,   step: "1",    placeholder: "250" },
+    { key: "phos", abbr: "Phos", label: `Phos - ${t("param_phos_long")}`,  value: phos,   set: setPhos,   step: "1",    placeholder: "100" },
+    { key: "copper",abbr: "Cu",  label: `Cu - ${t("param_cu_long")}`,      value: copper, set: setCopper, step: "0.01", placeholder: "0.10" },
+    { key: "iron", abbr: "Fe",   label: `Fe - ${t("param_fe_long")}`,      value: iron,   set: setIron,   step: "0.01", placeholder: "0.00" },
+    { key: "sel",  abbr: "Sel",  label: `Sel - ${t("param_sel")}`,         value: sel,    set: setSel,    step: "10",   placeholder: "4000" },
+    { key: "brome",abbr: "Br",   label: `Br - ${t("param_brome")}`,        value: brome,  set: setBrome,  step: "0.1",  placeholder: "3.0" },
+    { key: "o2",   abbr: "O2",   label: `O2 - ${t("param_o2")}`,           value: o2,     set: setO2,     step: "0.5",  placeholder: "20" },
   ];
   const fields = activeParamKeys
     ? ALL_FIELDS.filter((f) => activeParamKeys.includes(f.key))
@@ -8017,6 +8018,19 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
       pdf.setDrawColor(200,212,228); pdf.setLineWidth(0.15);
       pdf.line(mL, y+blockH, mL+cW, y+blockH);
       y += blockH;
+
+      // Ligne note si présente
+      if (m.note) {
+        checkPage(rowH + 1);
+        pdf.setFillColor(240, 246, 251);
+        pdf.rect(prodStartX, y, cW - (prodStartX - mL), rowH, "F");
+        pdf.setFontSize(5.5); pdf.setFont("helvetica","italic"); pdf.setTextColor(74,100,128);
+        pdf.text(`📝 ${m.note}`, prodStartX + 1, y + 3.8, { maxWidth: cW - (prodStartX - mL) - 2 });
+        pdf.setFont("helvetica","normal"); pdf.setTextColor(30,30,30);
+        pdf.setDrawColor(200,212,228); pdf.setLineWidth(0.1);
+        pdf.line(mL, y+rowH, mL+cW, y+rowH);
+        y += rowH;
+      }
     });
 
     // ── Légende des abréviations et cibles ──
@@ -8260,10 +8274,13 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
             <tbody>
               {rows.flatMap(({ measure, recs, application }, i) => {
                 const applied = application?.steps?.filter(s => !s.skipped) || [];
-                // Si plan appliqué → utiliser les steps ; sinon → utiliser les recs calculées
                 const useSteps = applied.length > 0;
                 const rowCount = useSteps ? Math.max(1, applied.length) : Math.max(1, recs.length);
-                return Array.from({ length: rowCount }).map((_, j) => {
+                const hasNote = !!measure.note;
+                const totalRowSpan = rowCount + (hasNote ? 1 : 0);
+                const prodColSpan = manageStock ? 5 : 4;
+
+                const measureRows = Array.from({ length: rowCount }).map((_, j) => {
                   const step = useSteps ? (applied[j] || null) : null;
                   const rec  = !useSteps ? (recs[j] || null) : null;
                   const prod = step ? products.find((p) => p.name === step.productName) : null;
@@ -8271,37 +8288,33 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                     <tr key={`${i}-${j}`} style={{ background: i % 2 === 0 ? "#f8fafd" : "#ffffff" }}>
                       {j === 0 && (
                         <>
-                          <td style={{ ...styles.reportTdCell, fontWeight: 600, color: "#0d2b4e" }} rowSpan={rowCount}>{formatDate(measure.date)}</td>
-                          <td style={styles.reportTdCell} rowSpan={rowCount}>{measure.pH ?? "—"}</td>
-                          <td style={styles.reportTdCell} rowSpan={rowCount}>{measure.fCl != null && measure.fCl !== "" ? `${measure.fCl} mg/L` : "—"}</td>
-                          <td style={styles.reportTdCell} rowSpan={rowCount}>{measure.tCl != null && measure.tCl !== "" ? `${measure.tCl} mg/L` : "—"}</td>
-                          <td style={styles.reportTdCell} rowSpan={rowCount}>{measure.ccl != null && measure.ccl !== "" ? `${measure.ccl} mg/L` : "—"}</td>
-                          <td style={styles.reportTdCell} rowSpan={rowCount}>{measure.tac != null && measure.tac !== "" ? `${measure.tac} mg/L` : "—"}</td>
-                          <td style={styles.reportTdCell} rowSpan={rowCount}>{measure.cya != null && measure.cya !== "" ? `${measure.cya} mg/L` : "—"}</td>
-                          <td style={styles.reportTdCell} rowSpan={rowCount}>{measure.hard != null && measure.hard !== "" ? `${measure.hard} mg/L` : "—"}</td>
-                          <td style={styles.reportTdCell} rowSpan={rowCount}>{measure.phos != null && measure.phos !== "" ? `${measure.phos} µg/L` : "—"}</td>
-                          <td style={styles.reportTdCell} rowSpan={rowCount}>{measure.copper != null && measure.copper !== "" ? `${measure.copper} mg/L` : "—"}</td>
-                          <td style={styles.reportTdCell} rowSpan={rowCount}>{measure.iron != null && measure.iron !== "" ? `${measure.iron} mg/L` : "—"}</td>
-                          <td style={styles.reportTdCell} rowSpan={rowCount}>{measure.temp != null && measure.temp !== "" ? `${measure.temp} °C` : "—"}</td>
+                          <td style={{ ...styles.reportTdCell, fontWeight: 600, color: "#0d2b4e" }} rowSpan={totalRowSpan}>{formatDate(measure.date)}</td>
+                          <td style={styles.reportTdCell} rowSpan={totalRowSpan}>{measure.pH ?? "—"}</td>
+                          <td style={styles.reportTdCell} rowSpan={totalRowSpan}>{measure.fCl != null && measure.fCl !== "" ? `${measure.fCl}` : "—"}</td>
+                          <td style={styles.reportTdCell} rowSpan={totalRowSpan}>{measure.tCl != null && measure.tCl !== "" ? `${measure.tCl}` : "—"}</td>
+                          <td style={styles.reportTdCell} rowSpan={totalRowSpan}>{measure.ccl != null && measure.ccl !== "" ? `${measure.ccl}` : "—"}</td>
+                          <td style={styles.reportTdCell} rowSpan={totalRowSpan}>{measure.tac != null && measure.tac !== "" ? `${measure.tac}` : "—"}</td>
+                          <td style={styles.reportTdCell} rowSpan={totalRowSpan}>{measure.cya != null && measure.cya !== "" ? `${measure.cya}` : "—"}</td>
+                          <td style={styles.reportTdCell} rowSpan={totalRowSpan}>{measure.hard != null && measure.hard !== "" ? `${measure.hard}` : "—"}</td>
+                          <td style={styles.reportTdCell} rowSpan={totalRowSpan}>{measure.phos != null && measure.phos !== "" ? `${measure.phos}` : "—"}</td>
+                          <td style={styles.reportTdCell} rowSpan={totalRowSpan}>{measure.copper != null && measure.copper !== "" ? `${measure.copper}` : "—"}</td>
+                          <td style={styles.reportTdCell} rowSpan={totalRowSpan}>{measure.iron != null && measure.iron !== "" ? `${measure.iron}` : "—"}</td>
+                          <td style={styles.reportTdCell} rowSpan={totalRowSpan}>{measure.temp != null && measure.temp !== "" ? `${measure.temp}` : "—"}</td>
                         </>
                       )}
-                      {/* Produit */}
                       <td style={styles.reportTdCell}>
                         {step ? (step.skipped ? <span style={{ color: "#9ab0c4" }}>⊘ {step.productName}</span> : step.productName)
                           : rec ? <span style={{ color: "#6a7d90", fontStyle: "italic" }}>{rec.productName}</span>
                           : "—"}
                       </td>
-                      {/* Conseillé */}
                       <td style={{ ...styles.reportTdCell, color: "#4a6480" }}>
                         {step && !step.skipped ? formatDose(step.computedDoseAmount ?? step.appliedAmount, step.doseUnit || "g")
                           : rec ? formatDose(rec.computedDoseAmount, rec.doseUnit || "g")
                           : "—"}
                       </td>
-                      {/* Appliqué */}
                       <td style={{ ...styles.reportTdCell, fontWeight: 700, color: step?.skipped ? "#9ab0c4" : "#0a6ebd" }}>
                         {step && !step.skipped ? formatDose(step.appliedAmount, step.doseUnit || "g") : "—"}
                       </td>
-                      {/* Horaire */}
                       <td style={{ ...styles.reportTdCell, color: "#4a6480" }}>
                         {step?.appliedAt ? new Date(step.appliedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}
                       </td>
@@ -8311,6 +8324,17 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                     </tr>
                   );
                 });
+
+                // Ligne note fusionnée
+                const noteRow = hasNote ? (
+                  <tr key={`${i}-note`} style={{ background: i % 2 === 0 ? "#f0f6fb" : "#f8fafd" }}>
+                    <td colSpan={prodColSpan} style={{ ...styles.reportTdCell, fontStyle: "italic", color: "#4a6480", fontSize: 11, paddingLeft: 10 }}>
+                      📝 {measure.note}
+                    </td>
+                  </tr>
+                ) : null;
+
+                return noteRow ? [...measureRows, noteRow] : measureRows;
               })}
             </tbody>
           </table>
