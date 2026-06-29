@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.14.4";
+const APP_VERSION = "1.14.5";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -5434,10 +5434,32 @@ Réponds UNIQUEMENT en JSON valide, sans texte avant ni après :
       if (!hasValues) throw new Error(t("import_pdf_no_values"));
 
       // Pré-remplir la mesure
+      // Si la date retournée par l'IA n'a pas d'info timezone (pas de Z ni +HH:MM),
+      // on l'interprète comme heure locale en ajoutant un offset fictif pour éviter
+      // la conversion UTC → local qui décale l'heure
+      let parsedDate = new Date().toISOString();
+      if (parsed.date) {
+        const raw = parsed.date.trim();
+        // Si pas de timezone indicator → interpréter comme local
+        const hasTimezone = /Z$|[+-]\d{2}:\d{2}$/.test(raw);
+        if (!hasTimezone) {
+          // Créer la date en local via les composants individuels
+          const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/);
+          if (match) {
+            const [,y,mo,d,h,mi,s] = match;
+            parsedDate = new Date(+y, +mo-1, +d, +h, +mi, +(s||0)).toISOString();
+          } else {
+            parsedDate = new Date(raw).toISOString();
+          }
+        } else {
+          parsedDate = new Date(raw).toISOString();
+        }
+      }
+
       const prefilled = {
         __prefilled: true,
         importedFromPdf: true,
-        date: parsed.date ? new Date(parsed.date).toISOString() : new Date().toISOString(),
+        date: parsedDate,
         pH:     parsed.pH     != null ? String(parsed.pH)     : "",
         fCl:    parsed.fCl    != null ? String(parsed.fCl)    : "",
         tCl:    parsed.tCl    != null ? String(parsed.tCl)    : "",
