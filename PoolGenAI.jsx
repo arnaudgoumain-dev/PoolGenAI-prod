@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.14.2";
+const APP_VERSION = "1.14.4";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -135,6 +135,7 @@ const TRANSLATIONS = {
     import_pdf_analyzing: "Lecture du fichier par l'IA...",
     import_pdf_error: "Impossible de lire ce fichier",
     import_pdf_no_values: "Aucune valeur trouvée dans ce fichier",
+    import_pdf_needs_ai: "Import PDF disponible avec l'analyse IA (Réglages → Activer l'analyse IA)",
     legend_title: "Légende des paramètres et valeurs cibles",
     ccl_fcl_tcl_error: "Erreur : FCL + CCL ne peut pas dépasser TCL. Vérifie les valeurs saisies.",
     param_ph_long: "Potentiel Hydrogène", param_fcl_long: "Chlore libre", param_tcl_long: "Chlore total",
@@ -567,6 +568,7 @@ const TRANSLATIONS = {
     import_pdf_analyzing: "AI is reading the file...",
     import_pdf_error: "Unable to read this file",
     import_pdf_no_values: "No values found in this file",
+    import_pdf_needs_ai: "PDF import available with AI analysis (Settings → Enable AI analysis)",
     legend_title: "Parameters legend and target values",
     ccl_fcl_tcl_error: "Error: FCL + CCL cannot exceed TCL. Check the entered values.",
     param_ph_long: "Hydrogen Potential", param_fcl_long: "Free chlorine", param_tcl_long: "Total chlorine",
@@ -989,6 +991,7 @@ const TRANSLATIONS = {
     import_pdf_analyzing: "KI liest die Datei...",
     import_pdf_error: "Diese Datei kann nicht gelesen werden",
     import_pdf_no_values: "Keine Werte in dieser Datei gefunden",
+    import_pdf_needs_ai: "PDF-Import verfügbar mit KI-Analyse (Einstellungen → KI-Analyse aktivieren)",
     legend_title: "Parameterlegende und Zielwerte",
     ccl_fcl_tcl_error: "Fehler: FCL + CCL darf TCL nicht überschreiten. Bitte Werte prüfen.",
     param_ph_long: "Wasserstoffpotenzial", param_fcl_long: "Freies Chlor", param_tcl_long: "Gesamtchlor",
@@ -1413,6 +1416,7 @@ const TRANSLATIONS = {
     import_pdf_analyzing: "L'IA sta leggendo il file...",
     import_pdf_error: "Impossibile leggere questo file",
     import_pdf_no_values: "Nessun valore trovato in questo file",
+    import_pdf_needs_ai: "Importazione PDF disponibile con analisi IA (Impostazioni → Attiva analisi IA)",
     legend_title: "Legenda parametri e valori target",
     ccl_fcl_tcl_error: "Errore: FCL + CCL non può superare TCL. Verificare i valori inseriti.",
     param_ph_long: "Potenziale di idrogeno", param_fcl_long: "Cloro libero", param_tcl_long: "Cloro totale",
@@ -1834,6 +1838,7 @@ const TRANSLATIONS = {
     import_pdf_analyzing: "La IA está leyendo el archivo...",
     import_pdf_error: "No se puede leer este archivo",
     import_pdf_no_values: "No se encontraron valores en este archivo",
+    import_pdf_needs_ai: "Importación PDF disponible con análisis IA (Ajustes → Activar análisis IA)",
     legend_title: "Leyenda de parámetros y valores objetivo",
     ccl_fcl_tcl_error: "Error: FCL + CCL no puede superar TCL. Verifica los valores introducidos.",
     param_ph_long: "Potencial de hidrógeno", param_fcl_long: "Cloro libre", param_tcl_long: "Cloro total",
@@ -2255,6 +2260,7 @@ const TRANSLATIONS = {
     import_pdf_analyzing: "A IA está a ler o ficheiro...",
     import_pdf_error: "Impossível ler este ficheiro",
     import_pdf_no_values: "Nenhum valor encontrado neste ficheiro",
+    import_pdf_needs_ai: "Importação PDF disponível com análise IA (Definições → Ativar análise IA)",
     legend_title: "Legenda dos parâmetros e valores alvo",
     ccl_fcl_tcl_error: "Erro: FCL + CCL não pode ultrapassar TCL. Verifica os valores introduzidos.",
     param_ph_long: "Potencial de hidrogénio", param_fcl_long: "Cloro livre", param_tcl_long: "Cloro total",
@@ -4863,13 +4869,15 @@ Réponds directement en français, sans titre ni introduction.`;
             }
             return (
               <div>
-                <button
-                  style={styles.validateApplyBtn}
-                  onClick={() => onValidateApplication(latest, recs)}
-                >
-                  <CheckCircle2 size={16} /> {t("wizard_start")}
-                  {!isPremium && <Lock size={14} style={{ marginLeft: 4 }} />}
-                </button>
+                {!latest?.importedFromPdf && (
+                  <button
+                    style={styles.validateApplyBtn}
+                    onClick={() => onValidateApplication(latest, recs)}
+                  >
+                    <CheckCircle2 size={16} /> {t("wizard_start")}
+                    {!isPremium && <Lock size={14} style={{ marginLeft: 4 }} />}
+                  </button>
+                )}
                 <p style={{ ...styles.helpTextSmall, marginTop: 6, textAlign: "center" }}>
                   {t("follow_order")}
                 </p>
@@ -5365,7 +5373,12 @@ function HistoryView({ measures, onDelete, onEdit, onAdd, onAddPrefilled, onVali
       const mediaType = isPdf ? "application/pdf" : (file.type || "image/jpeg");
 
       const prompt = `Tu es un expert en chimie de l'eau de piscine. Analyse ce document (rapport de mesures, relevé de labo, photo de photomètre ou de bandelette).
-Extrait toutes les valeurs de paramètres de qualité d'eau présentes, ainsi qu'une date si visible, et une note textuelle si présente (commentaire, observation).
+Extrait toutes les valeurs de paramètres de qualité d'eau présentes, ainsi que la date ET l'heure exactes si visibles, et une note textuelle si présente (commentaire, observation).
+
+IMPORTANT pour la date/heure :
+- Si tu vois une date ET une heure (ex: "28/06/2026 16:48" ou "28 juin 2026 à 16:48"), inclus les deux dans "date" au format ISO 8601 complet (ex: "2026-06-28T16:48:00")
+- Si tu vois seulement une date sans heure, mets l'heure à 00:00:00
+- Si aucune date visible, retourne null
 
 Réponds UNIQUEMENT en JSON valide, sans texte avant ni après :
 {
@@ -5382,7 +5395,7 @@ Réponds UNIQUEMENT en JSON valide, sans texte avant ni après :
   "temp": <number|null>,
   "sel": <number|null>,
   "brome": <number|null>,
-  "date": "<ISO date string or null>",
+  "date": "<ISO 8601 datetime string or null>",
   "note": "<texte de note ou null>"
 }`;
 
@@ -5423,6 +5436,7 @@ Réponds UNIQUEMENT en JSON valide, sans texte avant ni après :
       // Pré-remplir la mesure
       const prefilled = {
         __prefilled: true,
+        importedFromPdf: true,
         date: parsed.date ? new Date(parsed.date).toISOString() : new Date().toISOString(),
         pH:     parsed.pH     != null ? String(parsed.pH)     : "",
         fCl:    parsed.fCl    != null ? String(parsed.fCl)    : "",
@@ -5560,15 +5574,15 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
         <History size={40} color="#7ab8e8" strokeWidth={1.5} />
         <p style={styles.emptyTitle}>{t("no_history")}</p>
         <p style={styles.emptyText}>{t("no_history_sub")}</p>
-        {apiKey && (
+        <input
+          ref={importFileRef}
+          type="file"
+          accept="application/pdf,image/jpeg,image/png,image/webp"
+          style={{ display: "none" }}
+          onChange={handleImportFile}
+        />
+        {apiKey ? (
           <>
-            <input
-              ref={importFileRef}
-              type="file"
-              accept="application/pdf,image/jpeg,image/png,image/webp"
-              style={{ display: "none" }}
-              onChange={handleImportFile}
-            />
             <button
               style={{ ...styles.validateApplyBtn, background: importLoading ? "#6a7d90" : "#0a6ebd", fontSize: 13, padding: "9px 14px", marginTop: 8 }}
               onClick={() => importFileRef.current?.click()}
@@ -5583,6 +5597,11 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
               </div>
             )}
           </>
+        ) : (
+          <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#6a7d90", padding: "8px 12px", background: "#f0f6fb", borderRadius: 10, border: "1px solid #d0e4f5" }}>
+            <Lock size={13} color="#6a7d90" />
+            <span>{t("import_pdf_needs_ai")}</span>
+          </div>
         )}
       </div>
     );
@@ -5708,30 +5727,37 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
       </div>
 
       {/* Bouton import PDF */}
-      {apiKey && (
-        <div style={{ marginBottom: 8 }}>
-          <input
-            ref={importFileRef}
-            type="file"
-            accept="application/pdf,image/jpeg,image/png,image/webp"
-            style={{ display: "none" }}
-            onChange={handleImportFile}
-          />
-          <button
-            style={{ ...styles.validateApplyBtn, background: importLoading ? "#6a7d90" : "#0a6ebd", fontSize: 13, padding: "9px 14px" }}
-            onClick={() => importFileRef.current?.click()}
-            disabled={importLoading}
-          >
-            {importLoading ? <Loader2 size={15} className="spin" /> : <FileText size={15} />}
-            {importLoading ? t("import_pdf_analyzing") : t("import_pdf_btn")}
-          </button>
-          {importError && (
-            <div style={{ marginTop: 6, fontSize: 12, color: "#c0392b", padding: "6px 10px", background: "#fdf0ef", borderRadius: 8 }}>
-              <AlertTriangle size={12} style={{ marginRight: 4, verticalAlign: "middle" }} />{importError}
-            </div>
-          )}
-        </div>
-      )}
+      <div style={{ marginBottom: 8 }}>
+        <input
+          ref={importFileRef}
+          type="file"
+          accept="application/pdf,image/jpeg,image/png,image/webp"
+          style={{ display: "none" }}
+          onChange={handleImportFile}
+        />
+        {apiKey ? (
+          <>
+            <button
+              style={{ ...styles.validateApplyBtn, background: importLoading ? "#6a7d90" : "#0a6ebd", fontSize: 13, padding: "9px 14px" }}
+              onClick={() => importFileRef.current?.click()}
+              disabled={importLoading}
+            >
+              {importLoading ? <Loader2 size={15} className="spin" /> : <FileText size={15} />}
+              {importLoading ? t("import_pdf_analyzing") : t("import_pdf_btn")}
+            </button>
+            {importError && (
+              <div style={{ marginTop: 6, fontSize: 12, color: "#c0392b", padding: "6px 10px", background: "#fdf0ef", borderRadius: 8 }}>
+                <AlertTriangle size={12} style={{ marginRight: 4, verticalAlign: "middle" }} />{importError}
+              </div>
+            )}
+          </>
+        ) : (
+          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#6a7d90", padding: "8px 12px", background: "#f0f6fb", borderRadius: 10, border: "1px solid #d0e4f5" }}>
+            <Lock size={13} color="#6a7d90" />
+            <span>{t("import_pdf_needs_ai")}</span>
+          </div>
+        )}
+      </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {measures.map((m) => (
@@ -5931,10 +5957,12 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, applicat
               </div>
             </div>
           ) : (
-            <button style={styles.validateApplyBtnSmall} onClick={onValidateApplication}>
-              <CheckCircle2 size={14} /> {t("wizard_start")}
-              {!isPremium && <Lock size={12} style={{ marginLeft: 2 }} />}
-            </button>
+            !measure.importedFromPdf && (
+              <button style={styles.validateApplyBtnSmall} onClick={onValidateApplication}>
+                <CheckCircle2 size={14} /> {t("wizard_start")}
+                {!isPremium && <Lock size={12} style={{ marginLeft: 2 }} />}
+              </button>
+            )
           )}
 
           <div style={{ display: "flex", gap: 8 }}>
@@ -6145,6 +6173,7 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
 
     onSave({
       ...(isEditing ? { id: measure.id } : {}),
+      ...(isPrefilled && measure?.importedFromPdf ? { importedFromPdf: true } : {}),
       date: new Date(date).toISOString(),
       method,
       pH,
