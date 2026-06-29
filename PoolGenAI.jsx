@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.16.2";
+const APP_VERSION = "1.16.3";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -8543,21 +8543,21 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
 
     // Toutes les colonnes de paramètres + produit
     const allCols = [
-      { key: "date",    label: t("date_col"),       w: 18 },
-      { key: "pH",      label: "pH",                w: 8  },
-      { key: "fCl",     label: "FCL",               w: 9  },
-      { key: "tCl",     label: "TCL",               w: 9  },
-      { key: "ccl",     label: "CCL",               w: 9  },
-      { key: "tac",     label: "TAC",               w: 9  },
-      { key: "cya",     label: "CYA",               w: 9  },
-      { key: "hard",    label: "TH",                w: 9  },
-      { key: "phos",    label: "Phos",              w: 9  },
-      { key: "copper",  label: "Cu",                w: 8  },
-      { key: "iron",    label: "Fe",                w: 8  },
-      { key: "temp",    label: "°C",                w: 8  },
-      { key: "prod",    label: t("product_col"),    w: 26 },
-      { key: "advised", label: t("advised_col"),    w: 12 },
-      { key: "qty",     label: t("applied_col"),    w: 12 },
+      { key: "date",    label: t("date_col"),       w: 16 },
+      { key: "pH",      label: "pH",                w: 7  },
+      { key: "fCl",     label: "FCL",               w: 8  },
+      { key: "tCl",     label: "TCL",               w: 8  },
+      { key: "ccl",     label: "CCL",               w: 8  },
+      { key: "tac",     label: "TAC",               w: 8  },
+      { key: "cya",     label: "CYA",               w: 8  },
+      { key: "hard",    label: "TH",                w: 7  },
+      { key: "phos",    label: "Phos",              w: 7  },
+      { key: "copper",  label: "Cu",                w: 7  },
+      { key: "iron",    label: "Fe",                w: 7  },
+      { key: "temp",    label: "°C",                w: 7  },
+      { key: "prod",    label: t("product_col"),    w: 40 },
+      { key: "advised", label: t("advised_col"),    w: 13 },
+      { key: "qty",     label: t("applied_col"),    w: 13 },
       ...(manageStock ? [{ key: "stock", label: t("stock_col"), w: 12 }] : []),
     ];
 
