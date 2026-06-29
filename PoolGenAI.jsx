@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.14.5";
+const APP_VERSION = "1.15.0";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -3180,6 +3180,55 @@ const FB = {
     const snap = await window._fbGetDoc(window._fbDoc(window._fbDb, "users", uid));
     return snap.exists() ? snap.data() : null;
   },
+  // ── Measures sync ──
+  measuresCol: (uid) => window._fbCollection(window._fbDb, "users", uid, "measures"),
+  saveMeasure: async (uid, measure) => {
+    if (!window._fbDb || !window._fbSetDoc) return;
+    const ref = window._fbDoc(window._fbDb, "users", uid, "measures", measure.id);
+    await window._fbSetDoc(ref, measure);
+  },
+  deleteMeasure: async (uid, measureId) => {
+    if (!window._fbDb || !window._fbDeleteDoc) return;
+    const ref = window._fbDoc(window._fbDb, "users", uid, "measures", measureId);
+    await window._fbDeleteDoc(ref);
+  },
+  getMeasures: async (uid) => {
+    if (!window._fbDb || !window._fbGetDocs) return [];
+    const col = window._fbCollection(window._fbDb, "users", uid, "measures");
+    const snap = await window._fbGetDocs(col);
+    return snap.docs.map(d => d.data());
+  },
+  onMeasures: (uid, cb) => {
+    if (!window._fbDb || !window._fbOnSnapshot) return () => {};
+    const col = window._fbCollection(window._fbDb, "users", uid, "measures");
+    return window._fbOnSnapshot(col, (snap) => {
+      cb(snap.docs.map(d => d.data()));
+    });
+  },
+  // ── Applications sync ──
+  saveApplication: async (uid, application) => {
+    if (!window._fbDb || !window._fbSetDoc) return;
+    const ref = window._fbDoc(window._fbDb, "users", uid, "applications", application.measureId);
+    await window._fbSetDoc(ref, application);
+  },
+  deleteApplication: async (uid, measureId) => {
+    if (!window._fbDb || !window._fbDeleteDoc) return;
+    const ref = window._fbDoc(window._fbDb, "users", uid, "applications", measureId);
+    await window._fbDeleteDoc(ref);
+  },
+  getApplications: async (uid) => {
+    if (!window._fbDb || !window._fbGetDocs) return [];
+    const col = window._fbCollection(window._fbDb, "users", uid, "applications");
+    const snap = await window._fbGetDocs(col);
+    return snap.docs.map(d => d.data());
+  },
+  onApplications: (uid, cb) => {
+    if (!window._fbDb || !window._fbOnSnapshot) return () => {};
+    const col = window._fbCollection(window._fbDb, "users", uid, "applications");
+    return window._fbOnSnapshot(col, (snap) => {
+      cb(snap.docs.map(d => d.data()));
+    });
+  },
 };
 
 // Helper analytics — fire-and-forget
@@ -3596,6 +3645,41 @@ function PoolApp() {
     return () => { delete window._openLightbox; };
   }, []);
 
+  // ── Synchro Firestore temps réel ──
+  // Quand l'utilisateur est connecté, on s'abonne aux collections measures et applications.
+  // Les données cloud écrasent les données locales (last-write-wins).
+  const firestoreUnsubRef = useRef(null);
+  useEffect(() => {
+    if (!authUser?.uid || !FB.ready() || !window._fbOnSnapshot) return;
+    const uid = authUser.uid;
+
+    // Nettoyage abonnements précédents
+    if (firestoreUnsubRef.current) {
+      firestoreUnsubRef.current.forEach(fn => fn());
+    }
+
+    const unsubMeasures = FB.onMeasures(uid, (cloudMeasures) => {
+      if (cloudMeasures.length > 0) {
+        setMeasures(cloudMeasures);
+        // Sync vers IndexedDB
+        window.storage.set("measures", JSON.stringify(cloudMeasures)).catch(() => {});
+      }
+    });
+
+    const unsubApplications = FB.onApplications(uid, (cloudApps) => {
+      if (cloudApps.length > 0) {
+        setApplications(cloudApps);
+        window.storage.set("applications", JSON.stringify(cloudApps)).catch(() => {});
+      }
+    });
+
+    firestoreUnsubRef.current = [unsubMeasures, unsubApplications];
+    return () => {
+      unsubMeasures();
+      unsubApplications();
+    };
+  }, [authUser?.uid]);
+
   // --- Firebase Auth ---
   useEffect(() => {
     if (!FB.ready()) { setAuthUser(null); setAuthResolved(true); return; }
@@ -3704,6 +3788,10 @@ function PoolApp() {
       setActivePoolId(loadedActiveId);
 
       setMeasures(loadedMeasures);
+      // Upload des mesures locales vers Firestore si l'utilisateur est connecté
+      if (authUser?.uid && loadedMeasures.length > 0) {
+        loadedMeasures.forEach(m => FB.saveMeasure(authUser.uid, m).catch(() => {}));
+      }
       if (loadedProducts) {
         // Anciens produits sans poolId (avant la saisie par bassin) : rattachés au bassin actif
         loadedProducts = loadedProducts.map((p) =>
@@ -3885,10 +3973,16 @@ function PoolApp() {
 
   function addMeasure(entry) {
     if (entry.id) {
-      setMeasures((prev) => prev.map((m) => (m.id === entry.id ? { ...m, ...entry } : m)));
+      setMeasures((prev) => {
+        const updated = prev.map((m) => (m.id === entry.id ? { ...m, ...entry } : m));
+        if (authUser?.uid) updated.forEach(m => { if (m.id === entry.id) FB.saveMeasure(authUser.uid, m).catch(() => {}); });
+        return updated;
+      });
       track("measure_edit");
     } else {
-      setMeasures((prev) => [...prev, { id: uid(), poolId: activePoolId, ...entry }]);
+      const newMeasure = { id: uid(), poolId: activePoolId, ...entry };
+      setMeasures((prev) => [...prev, newMeasure]);
+      if (authUser?.uid) FB.saveMeasure(authUser.uid, newMeasure).catch(() => {});
       track("measure_add", { has_photos: !!(entry.photos?.length || entry.photo), has_pool_photos: !!(entry.poolPhotos?.length) });
     }
     setShowAddMeasure(false);
@@ -3897,6 +3991,7 @@ function PoolApp() {
 
   function deleteMeasure(id) {
     setMeasures((prev) => prev.filter((m) => m.id !== id));
+    if (authUser?.uid) FB.deleteMeasure(authUser.uid, id).catch(() => {});
   }
 
   function deleteAllMeasuresForActivePool() {
@@ -3921,17 +4016,16 @@ function PoolApp() {
     }
     setApplications((prev) => {
       const withoutThisMeasure = prev.filter((a) => a.measureId !== measureId);
-      return [
-        ...withoutThisMeasure,
-        {
-          id: uid(),
-          poolId: activePoolId,
-          measureId,
-          appliedAt: new Date().toISOString(),
-          allApplied: !!allApplied,
-          steps, // chaque step a son propre appliedAt et skipped
-        },
-      ];
+      const newApp = {
+        id: uid(),
+        poolId: activePoolId,
+        measureId,
+        appliedAt: new Date().toISOString(),
+        allApplied: !!allApplied,
+        steps,
+      };
+      if (authUser?.uid) FB.saveApplication(authUser.uid, newApp).catch(() => {});
+      return [...withoutThisMeasure, newApp];
     });
     setValidatingMeasure(null);
   }

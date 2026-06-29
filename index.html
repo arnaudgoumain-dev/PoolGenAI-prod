@@ -272,7 +272,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification, deleteUser, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, getDocs, addDoc, onSnapshot, writeBatch, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getAnalytics, logEvent, setUserId, setUserProperties } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
 
   const firebaseConfig = {
@@ -304,6 +304,13 @@
   window._fbSetDoc = setDoc;
   window._fbGetDoc = getDoc;
   window._fbDeleteDoc = deleteDoc;
+  window._fbCollection = collection;
+  window._fbGetDocs = getDocs;
+  window._fbAddDoc = addDoc;
+  window._fbOnSnapshot = onSnapshot;
+  window._fbWriteBatch = writeBatch;
+  window._fbQuery = query;
+  window._fbOrderBy = orderBy;
   window._fbOnAuth = onAuthStateChanged;
   // Analytics helpers
   window._fbLog = (eventName, params) => {
