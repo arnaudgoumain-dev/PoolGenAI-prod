@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.15.5";
+const APP_VERSION = "1.15.6";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -223,6 +223,7 @@ const TRANSLATIONS = {
     wizard_start: "Démarrer le plan",
     plan_in_progress: "Plan de traitement en cours",
     wizard_apply_time: "Heure d'application",
+    wizard_edit_prev: "Modifier l'étape précédente",
     wizard_resume: "Reprendre le plan",
     wizard_completed: "Plan de traitement terminé ✓",
     wizard_partial: "Plan en cours",
@@ -654,6 +655,7 @@ const TRANSLATIONS = {
     wizard_start: "Start plan",
     plan_in_progress: "Treatment plan in progress",
     wizard_apply_time: "Application time",
+    wizard_edit_prev: "Edit previous step",
     wizard_resume: "Resume plan",
     wizard_completed: "Treatment plan completed ✓",
     wizard_partial: "Plan in progress",
@@ -1078,6 +1080,7 @@ const TRANSLATIONS = {
     wizard_start: "Plan starten",
     plan_in_progress: "Behandlungsplan läuft",
     wizard_apply_time: "Anwendungszeitpunkt",
+    wizard_edit_prev: "Vorherigen Schritt bearbeiten",
     wizard_resume: "Plan fortsetzen",
     wizard_completed: "Behandlungsplan abgeschlossen ✓",
     wizard_partial: "Plan läuft",
@@ -1505,6 +1508,7 @@ const TRANSLATIONS = {
     wizard_start: "Avvia piano",
     plan_in_progress: "Piano di trattamento in corso",
     wizard_apply_time: "Orario di applicazione",
+    wizard_edit_prev: "Modifica fase precedente",
     wizard_resume: "Riprendi piano",
     wizard_completed: "Piano di trattamento completato ✓",
     wizard_partial: "Piano in corso",
@@ -1929,6 +1933,7 @@ const TRANSLATIONS = {
     wizard_start: "Iniciar plan",
     plan_in_progress: "Plan de tratamiento en curso",
     wizard_apply_time: "Hora de aplicación",
+    wizard_edit_prev: "Editar paso anterior",
     wizard_resume: "Reanudar plan",
     wizard_completed: "Plan de tratamiento completado ✓",
     wizard_partial: "Plan en curso",
@@ -2353,6 +2358,7 @@ const TRANSLATIONS = {
     wizard_start: "Iniciar plano",
     plan_in_progress: "Plano de tratamento em curso",
     wizard_apply_time: "Hora de aplicação",
+    wizard_edit_prev: "Editar etapa anterior",
     wizard_resume: "Retomar plano",
     wizard_completed: "Plano de tratamento concluído ✓",
     wizard_partial: "Plano em andamento",
@@ -4164,8 +4170,14 @@ function PoolApp() {
     }
   }
 
-  // Passe une étape
-  function skipWizardStep(stepIdx) {
+  // Modifie un step déjà appliqué (quantité + heure)
+  function editWizardStep(stepIdx, amount, appliedAt) {
+    if (!activePlan) return;
+    const newSteps = activePlan.steps.map((s, i) =>
+      i === stepIdx ? { ...s, appliedAmount: amount, appliedAt } : s
+    );
+    setActivePlan({ ...activePlan, steps: newSteps });
+  }
     if (!activePlan) return;
     const newSteps = activePlan.steps.map((s, i) =>
       i === stepIdx ? { ...s, skipped: true, appliedAt: new Date().toISOString() } : s
@@ -4627,6 +4639,7 @@ function PoolApp() {
           lang={lang}
           onApplyStep={(idx, amount, appliedAt) => { applyWizardStep(idx, amount, appliedAt); }}
           onSkipStep={(idx) => { skipWizardStep(idx); }}
+          onEditPrevStep={editWizardStep}
           onClose={() => { setShowWizard(false); }}
           onCancel={() => { cancelPlan(); setShowWizard(false); }}
           onWantAddProduct={() => { setShowWizard(false); setTab("products"); }}
@@ -6753,11 +6766,14 @@ function PlanStatusCard({ plan, onResume, lang }) {
 }
 
 // ---------- TreatmentWizard : wizard pas-à-pas ----------
-function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSkipStep, onClose, onCancel, onWantAddProduct }) {
+function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSkipStep, onClose, onCancel, onWantAddProduct, onEditPrevStep }) {
   const t = useT(lang);
   const [now, setNow] = React.useState(Date.now());
   const [editAmount, setEditAmount] = React.useState(null);
   const [editTime, setEditTime] = React.useState("");
+  const [editingPrev, setEditingPrev] = React.useState(false);
+  const [prevAmount, setPrevAmount] = React.useState("");
+  const [prevTime, setPrevTime] = React.useState("");
 
   useEffect(() => {
     const iv = setInterval(() => setNow(Date.now()), 1000);
@@ -6972,7 +6988,84 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
           >
             {t("wizard_skip")}
           </button>
+
+          {/* Modifier l'étape précédente */}
+          {currentIdx > 0 && plan.steps[currentIdx - 1]?.appliedAt && !editingPrev && (
+            <button
+              style={{ background: "none", border: "1px solid #d0e4f5", borderRadius: 8, color: "#4a6480", fontSize: 12, cursor: "pointer", padding: "7px 12px", display: "flex", alignItems: "center", gap: 5 }}
+              onClick={() => {
+                const prev = plan.steps[currentIdx - 1];
+                const prevUnit = prev.doseUnit || "g";
+                const { value, displayUnit: du } = toDisplayUnit(prev.appliedAmount, prevUnit);
+                setPrevAmount(String(value ?? ""));
+                const d = new Date(prev.appliedAt);
+                setPrevTime(`${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`);
+                setEditingPrev(true);
+              }}
+            >
+              ← {t("wizard_edit_prev")}
+            </button>
+          )}
         </div>
+
+        {/* Panneau édition étape précédente */}
+        {editingPrev && (() => {
+          const prev = plan.steps[currentIdx - 1];
+          const prevUnit = prev.doseUnit || "g";
+          const { displayUnit: du } = toDisplayUnit(prev.appliedAmount, prevUnit);
+          return (
+            <div style={{ marginTop: 14, padding: "12px 14px", background: "#f0f6fb", borderRadius: 12, border: "1px solid #d0e4f5" }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#0d2b4e", marginBottom: 10 }}>
+                ← {prev.productName || prev.title}
+              </div>
+              <label style={{ fontSize: 11, fontWeight: 600, color: "#4a6480", display: "block", marginBottom: 4 }}>{t("quantity_applied")}</label>
+              <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10 }}>
+                <input
+                  type="number"
+                  value={prevAmount}
+                  onChange={(e) => setPrevAmount(e.target.value)}
+                  style={{ flex: 1, fontSize: 18, fontWeight: 700, color: "#0d2b4e", border: "1.5px solid #d0e4f5", borderRadius: 8, padding: "8px 10px", textAlign: "center", outline: "none" }}
+                  step="0.01"
+                />
+                <span style={{ fontSize: 14, fontWeight: 700, color: "#4a6480" }}>{du}</span>
+              </div>
+              <label style={{ fontSize: 11, fontWeight: 600, color: "#4a6480", display: "block", marginBottom: 4 }}>{t("wizard_apply_time")}</label>
+              <input
+                type="time"
+                value={prevTime}
+                onChange={(e) => setPrevTime(e.target.value)}
+                style={{ width: "100%", boxSizing: "border-box", fontSize: 16, fontWeight: 700, color: "#0a6ebd", border: "1.5px solid #d0e4f5", borderRadius: 8, padding: "8px 10px", outline: "none", marginBottom: 10 }}
+              />
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: "none", background: "#0a6ebd", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}
+                  onClick={() => {
+                    const baseU = prev.doseUnit || "g";
+                    const { displayUnit: du2 } = toDisplayUnit(prev.appliedAmount, baseU);
+                    const newAmount = toBaseUnit(prevAmount, du2, baseU);
+                    let newAppliedAt = prev.appliedAt;
+                    if (prevTime) {
+                      const [h, m] = prevTime.split(":").map(Number);
+                      const d = new Date(prev.appliedAt || new Date());
+                      d.setHours(h, m, 0, 0);
+                      newAppliedAt = d.toISOString();
+                    }
+                    onEditPrevStep(currentIdx - 1, newAmount, newAppliedAt);
+                    setEditingPrev(false);
+                  }}
+                >
+                  {t("save")}
+                </button>
+                <button
+                  style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: "1px solid #d0e4f5", background: "#fff", color: "#4a6480", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
+                  onClick={() => setEditingPrev(false)}
+                >
+                  {t("cancel")}
+                </button>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Aperçu des étapes suivantes */}
         {plan.steps.slice(currentIdx + 1).some((s) => !s.skipped && !s.appliedAt) && (
