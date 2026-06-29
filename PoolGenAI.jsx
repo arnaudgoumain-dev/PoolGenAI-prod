@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.15.8";
+const APP_VERSION = "1.15.9";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -4145,6 +4145,16 @@ function PoolApp() {
     setActivePlan({ measureId, steps, currentStepIdx: 0 });
   }
 
+  // Helper : construit finalSteps depuis un tableau de steps
+  function buildFinalSteps(steps) {
+    return steps.map(s => ({
+      action: s.action, title: s.title, productName: s.productName,
+      computedDoseAmount: s.computedDoseAmount,
+      appliedAmount: s.appliedAmount, doseUnit: s.doseUnit,
+      appliedAt: s.appliedAt, skipped: s.skipped, scheduledAt: s.scheduledAt,
+    }));
+  }
+
   // Valide une étape du wizard — version sans appel de setter dans setter
   function applyWizardStep(stepIdx, amount, appliedAt) {
     if (!activePlan) return;
@@ -4166,15 +4176,11 @@ function PoolApp() {
     let nextIdx = stepIdx + 1;
     while (nextIdx < recalcSteps.length && (recalcSteps[nextIdx].appliedAt || recalcSteps[nextIdx].skipped)) nextIdx++;
     const allDone = nextIdx >= recalcSteps.length;
-    const finalSteps = recalcSteps.map(s => ({
-      action: s.action, title: s.title, productName: s.productName,
-      computedDoseAmount: s.computedDoseAmount,
-      appliedAmount: s.appliedAmount, doseUnit: s.doseUnit,
-      appliedAt: s.appliedAt, skipped: s.skipped, scheduledAt: s.scheduledAt,
-    }));
+    const finalSteps = buildFinalSteps(recalcSteps);
+    // Sauvegarde intermédiaire dans l'historique à chaque étape
+    const applied = finalSteps.filter(s => !s.skipped && s.appliedAt);
+    saveApplication(activePlan.measureId, finalSteps, allDone && applied.length === finalSteps.length);
     if (allDone) {
-      const applied = finalSteps.filter(s => !s.skipped && s.appliedAt);
-      saveApplication(activePlan.measureId, finalSteps, applied.length === finalSteps.length);
       setActivePlan(null);
       setShowWizard(false);
     } else {
@@ -4188,6 +4194,10 @@ function PoolApp() {
     const newSteps = activePlan.steps.map((s, i) =>
       i === stepIdx ? { ...s, appliedAmount: amount, appliedAt } : s
     );
+    const finalSteps = buildFinalSteps(newSteps);
+    const allDone = newSteps.every(s => s.appliedAt || s.skipped);
+    const applied = finalSteps.filter(s => !s.skipped && s.appliedAt);
+    saveApplication(activePlan.measureId, finalSteps, allDone && applied.length === finalSteps.length);
     setActivePlan({ ...activePlan, steps: newSteps });
   }
 
@@ -4199,14 +4209,11 @@ function PoolApp() {
     );
     let nextIdx = stepIdx + 1;
     while (nextIdx < newSteps.length && (newSteps[nextIdx].appliedAt || newSteps[nextIdx].skipped)) nextIdx++;
-    const finalSteps = newSteps.map(s => ({
-      action: s.action, title: s.title, productName: s.productName,
-      computedDoseAmount: s.computedDoseAmount,
-      appliedAmount: s.appliedAmount, doseUnit: s.doseUnit,
-      appliedAt: s.appliedAt, skipped: s.skipped, scheduledAt: s.scheduledAt,
-    }));
-    if (nextIdx >= newSteps.length) {
-      saveApplication(activePlan.measureId, finalSteps, false);
+    const allDone = nextIdx >= newSteps.length;
+    const finalSteps = buildFinalSteps(newSteps);
+    // Sauvegarde intermédiaire
+    saveApplication(activePlan.measureId, finalSteps, false);
+    if (allDone) {
       setActivePlan(null);
       setShowWizard(false);
     } else {
