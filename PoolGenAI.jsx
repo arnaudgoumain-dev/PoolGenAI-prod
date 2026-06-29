@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.16.1";
+const APP_VERSION = "1.16.2";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -4096,19 +4096,22 @@ function PoolApp() {
 
   function saveApplication(measureId, steps, allApplied) {
     track("treatment_applied", { steps_count: steps.length, all_applied: allApplied });
-    const stepsWithAmount = steps.filter((s) => s.appliedAmount && !s.skipped);
-    if (stepsWithAmount.length > 0) {
-      setProducts((prev) => prev.map((prod) => {
-        const step = stepsWithAmount.find((s) => s.productName === prod.name);
-        if (!step || !prod.containerAmount) return prod;
-        const cUnit = prod.containerUnit || "kg";
-        let appliedInContainerUnit = step.appliedAmount;
-        if (cUnit === "kg" && step.doseUnit === "g") appliedInContainerUnit = step.appliedAmount / 1000;
-        if (cUnit === "L" && step.doseUnit === "mL") appliedInContainerUnit = step.appliedAmount / 1000;
-        const consumed = (appliedInContainerUnit / prod.containerAmount) * 100;
-        const newStock = Math.max(0, (prod.stockPercent ?? 100) - consumed);
-        return { ...prod, stockPercent: Math.round(newStock * 10) / 10 };
-      }));
+    // Stock décrémenté uniquement quand le plan est entièrement terminé
+    if (allApplied) {
+      const stepsWithAmount = steps.filter((s) => s.appliedAmount && !s.skipped);
+      if (stepsWithAmount.length > 0) {
+        setProducts((prev) => prev.map((prod) => {
+          const step = stepsWithAmount.find((s) => s.productName === prod.name);
+          if (!step || !prod.containerAmount) return prod;
+          const cUnit = prod.containerUnit || "kg";
+          let appliedInContainerUnit = step.appliedAmount;
+          if (cUnit === "kg" && step.doseUnit === "g") appliedInContainerUnit = step.appliedAmount / 1000;
+          if (cUnit === "L" && step.doseUnit === "mL") appliedInContainerUnit = step.appliedAmount / 1000;
+          const consumed = (appliedInContainerUnit / prod.containerAmount) * 100;
+          const newStock = Math.max(0, (prod.stockPercent ?? 100) - consumed);
+          return { ...prod, stockPercent: Math.round(newStock * 10) / 10 };
+        }));
+      }
     }
     setApplications((prev) => {
       const withoutThisMeasure = prev.filter((a) => a.measureId !== measureId);
