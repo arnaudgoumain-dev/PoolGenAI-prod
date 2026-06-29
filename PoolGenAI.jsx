@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.16.0";
+const APP_VERSION = "1.16.1";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -4149,7 +4149,8 @@ function PoolApp() {
   // Pour les steps non encore confirmés (pas d'appliedAt), on ne garde que computedDoseAmount
   function buildFinalSteps(steps) {
     return steps.map(s => ({
-      action: s.action, title: s.title, productName: s.productName,
+      action: s.action, title: s.title,
+      productName: s.appliedProductName || s.productName,
       computedDoseAmount: s.computedDoseAmount,
       appliedAmount: (s.appliedAt && !s.skipped) ? s.appliedAmount : null,
       doseUnit: s.doseUnit,
@@ -4158,12 +4159,18 @@ function PoolApp() {
   }
 
   // Valide une étape du wizard — version sans appel de setter dans setter
-  function applyWizardStep(stepIdx, amount, appliedAt) {
+  function applyWizardStep(stepIdx, amount, appliedAt, productName) {
     if (!activePlan) return;
     const now = appliedAt || new Date().toISOString();
     const newSteps = activePlan.steps.map((s, i) => {
       if (i !== stepIdx) return s;
-      return { ...s, appliedAt: now, appliedAmount: amount, skipped: false };
+      return {
+        ...s,
+        appliedAt: now,
+        appliedAmount: amount,
+        skipped: false,
+        ...(productName && productName !== s.productName ? { appliedProductName: productName } : {}),
+      };
     });
     // Recalculer les scheduledAt des étapes suivantes
     let lastApplied = new Date(now);
@@ -4661,7 +4668,7 @@ function PoolApp() {
           products={poolProducts}
           manageStock={!!activePool?.manageStock}
           lang={lang}
-          onApplyStep={(idx, amount, appliedAt) => { applyWizardStep(idx, amount, appliedAt); }}
+          onApplyStep={(idx, amount, appliedAt, productName) => { applyWizardStep(idx, amount, appliedAt, productName); }}
           onSkipStep={(idx) => { skipWizardStep(idx); }}
           onEditPrevStep={editWizardStep}
           onClose={() => { setShowWizard(false); }}
@@ -6798,6 +6805,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   const [editingPrev, setEditingPrev] = React.useState(false);
   const [prevAmount, setPrevAmount] = React.useState("");
   const [prevTime, setPrevTime] = React.useState("");
+  const [selectedProduct, setSelectedProduct] = React.useState(null);
 
   useEffect(() => {
     const iv = setInterval(() => setNow(Date.now()), 1000);
@@ -6815,6 +6823,8 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
         // Heure par défaut = maintenant en format HH:MM
         const d = new Date();
         setEditTime(`${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`);
+        setSelectedProduct(step.productName);
+        setEditingPrev(false);
       }
     }
   }, [plan?.currentStepIdx]);
@@ -6867,8 +6877,13 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   const stockEmpty = manageStock && prod && (prod.stockPercent ?? 100) <= 0;
 
   function handleApply() {
-    const amount = toBaseUnit(editAmount, displayUnit, baseUnit);
-    // Construire l'heure d'application depuis editTime (HH:MM) + date du jour
+    // Utiliser l'unité du produit sélectionné si différent du produit conseillé
+    const actualProd = selectedProduct && selectedProduct !== step.productName
+      ? products?.find(p => p.name === selectedProduct)
+      : null;
+    const actualBaseUnit = actualProd?.doseUnit || baseUnit;
+    const { displayUnit: actualDisplayUnit } = toDisplayUnit(null, actualBaseUnit);
+    const amount = toBaseUnit(editAmount, actualProd ? actualDisplayUnit : displayUnit, actualBaseUnit);
     let appliedAt = new Date().toISOString();
     if (editTime) {
       const [h, m] = editTime.split(":").map(Number);
@@ -6876,7 +6891,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
       d.setHours(h, m, 0, 0);
       appliedAt = d.toISOString();
     }
-    onApplyStep(currentIdx, amount, appliedAt);
+    onApplyStep(currentIdx, amount, appliedAt, selectedProduct);
   }
 
   return (
@@ -6962,6 +6977,36 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
             <button type="button" onClick={onWantAddProduct} style={{ background: "none", border: "none", color: "#c0392b", fontWeight: 700, fontSize: 12, cursor: "pointer", textDecoration: "underline" }}>
               {t("add_arrow")}
             </button>
+          </div>
+        )}
+
+        {/* Sélecteur de produit alternatif (si gestion stock activée) */}
+        {manageStock && products && products.length > 0 && (
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: "#4a6480", display: "block", marginBottom: 6 }}>
+              {t("product_col")}
+            </label>
+            <select
+              value={selectedProduct || step.productName}
+              onChange={(e) => {
+                const newProd = e.target.value;
+                setSelectedProduct(newProd);
+                if (newProd !== step.productName) {
+                  setEditAmount("");
+                } else {
+                  const amount = step.computedDoseAmount ?? step.appliedAmount;
+                  const { value } = toDisplayUnit(amount, step.doseUnit || "g");
+                  setEditAmount(value != null && value !== "" ? String(value) : "");
+                }
+              }}
+              style={{ width: "100%", boxSizing: "border-box", fontSize: 14, fontWeight: 600, color: "#0d2b4e", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 12px", outline: "none", background: "#fff" }}
+            >
+              {products.map(p => (
+                <option key={p.id || p.name} value={p.name}>
+                  {p.name}{p.name === step.productName ? " ✓" : ""}
+                </option>
+              ))}
+            </select>
           </div>
         )}
 
