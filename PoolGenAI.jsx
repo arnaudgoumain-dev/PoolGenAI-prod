@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.19.0";
+const APP_VERSION = "1.20.0";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -150,6 +150,11 @@ const TRANSLATIONS = {
     import_pdf_needs_ai: "Import PDF disponible avec l'analyse IA (Réglages → Activer l'analyse IA)",
     import_diag_added_one: "1 diagnostic IA importé depuis ce document.",
     import_diag_added_many: "{n} diagnostics IA importés depuis ce document.",
+    suspended_title: "Compte suspendu",
+    suspended_desc: "Ton compte a été suspendu et l'accès à l'application n'est plus disponible.",
+    suspended_erase_btn: "Effacer mes données",
+    suspended_erasing: "Effacement en cours...",
+    suspended_erase_confirm: "Cette action supprime définitivement toutes tes données (mesures, produits, historique, diagnostics). Continuer ?",
     legend_title: "Légende des paramètres et valeurs cibles",
     ccl_fcl_tcl_error: "Erreur : FCL + CCL ne peut pas dépasser TCL. Vérifie les valeurs saisies.",
     param_ph_long: "Potentiel Hydrogène", param_fcl_long: "Chlore libre", param_tcl_long: "Chlore total",
@@ -602,6 +607,11 @@ const TRANSLATIONS = {
     import_pdf_needs_ai: "PDF import available with AI analysis (Settings → Enable AI analysis)",
     import_diag_added_one: "1 AI diagnostic imported from this document.",
     import_diag_added_many: "{n} AI diagnostics imported from this document.",
+    suspended_title: "Account suspended",
+    suspended_desc: "Your account has been suspended and access to the app is no longer available.",
+    suspended_erase_btn: "Erase my data",
+    suspended_erasing: "Erasing...",
+    suspended_erase_confirm: "This permanently deletes all your data (readings, products, history, diagnostics). Continue?",
     legend_title: "Parameters legend and target values",
     ccl_fcl_tcl_error: "Error: FCL + CCL cannot exceed TCL. Check the entered values.",
     param_ph_long: "Hydrogen Potential", param_fcl_long: "Free chlorine", param_tcl_long: "Total chlorine",
@@ -1044,6 +1054,11 @@ const TRANSLATIONS = {
     import_pdf_needs_ai: "PDF-Import verfügbar mit KI-Analyse (Einstellungen → KI-Analyse aktivieren)",
     import_diag_added_one: "1 KI-Diagnose aus diesem Dokument importiert.",
     import_diag_added_many: "{n} KI-Diagnosen aus diesem Dokument importiert.",
+    suspended_title: "Konto gesperrt",
+    suspended_desc: "Dein Konto wurde gesperrt und der Zugriff auf die App ist nicht mehr möglich.",
+    suspended_erase_btn: "Meine Daten löschen",
+    suspended_erasing: "Wird gelöscht...",
+    suspended_erase_confirm: "Dies löscht dauerhaft alle deine Daten (Messungen, Produkte, Verlauf, Diagnosen). Fortfahren?",
     legend_title: "Parameterlegende und Zielwerte",
     ccl_fcl_tcl_error: "Fehler: FCL + CCL darf TCL nicht überschreiten. Bitte Werte prüfen.",
     param_ph_long: "Wasserstoffpotenzial", param_fcl_long: "Freies Chlor", param_tcl_long: "Gesamtchlor",
@@ -1488,6 +1503,11 @@ const TRANSLATIONS = {
     import_pdf_needs_ai: "Importazione PDF disponibile con analisi IA (Impostazioni → Attiva analisi IA)",
     import_diag_added_one: "1 diagnosi IA importata da questo documento.",
     import_diag_added_many: "{n} diagnosi IA importate da questo documento.",
+    suspended_title: "Account sospeso",
+    suspended_desc: "Il tuo account è stato sospeso e l'accesso all'app non è più disponibile.",
+    suspended_erase_btn: "Cancella i miei dati",
+    suspended_erasing: "Cancellazione in corso...",
+    suspended_erase_confirm: "Questa azione elimina definitivamente tutti i tuoi dati (misurazioni, prodotti, storico, diagnosi). Continuare?",
     legend_title: "Legenda parametri e valori target",
     ccl_fcl_tcl_error: "Errore: FCL + CCL non può superare TCL. Verificare i valori inseriti.",
     param_ph_long: "Potenziale di idrogeno", param_fcl_long: "Cloro libero", param_tcl_long: "Cloro totale",
@@ -1929,6 +1949,11 @@ const TRANSLATIONS = {
     import_pdf_needs_ai: "Importación PDF disponible con análisis IA (Ajustes → Activar análisis IA)",
     import_diag_added_one: "1 diagnóstico IA importado desde este documento.",
     import_diag_added_many: "{n} diagnósticos IA importados desde este documento.",
+    suspended_title: "Cuenta suspendida",
+    suspended_desc: "Tu cuenta ha sido suspendida y el acceso a la aplicación ya no está disponible.",
+    suspended_erase_btn: "Borrar mis datos",
+    suspended_erasing: "Borrando...",
+    suspended_erase_confirm: "Esto elimina permanentemente todos tus datos (mediciones, productos, historial, diagnósticos). ¿Continuar?",
     legend_title: "Leyenda de parámetros y valores objetivo",
     ccl_fcl_tcl_error: "Error: FCL + CCL no puede superar TCL. Verifica los valores introducidos.",
     param_ph_long: "Potencial de hidrógeno", param_fcl_long: "Cloro libre", param_tcl_long: "Cloro total",
@@ -2370,6 +2395,11 @@ const TRANSLATIONS = {
     import_pdf_needs_ai: "Importação PDF disponível com análise IA (Definições → Ativar análise IA)",
     import_diag_added_one: "1 diagnóstico IA importado deste documento.",
     import_diag_added_many: "{n} diagnósticos IA importados deste documento.",
+    suspended_title: "Conta suspensa",
+    suspended_desc: "A tua conta foi suspensa e o acesso à aplicação já não está disponível.",
+    suspended_erase_btn: "Apagar os meus dados",
+    suspended_erasing: "A apagar...",
+    suspended_erase_confirm: "Esta ação apaga permanentemente todos os teus dados (medições, produtos, histórico, diagnósticos). Continuar?",
     legend_title: "Legenda dos parâmetros e valores alvo",
     ccl_fcl_tcl_error: "Erro: FCL + CCL não pode ultrapassar TCL. Verifica os valores introduzidos.",
     param_ph_long: "Potencial de hidrogénio", param_fcl_long: "Cloro livre", param_tcl_long: "Cloro total",
@@ -3401,6 +3431,15 @@ const FB = {
     const snap = await window._fbGetDocs(col);
     return snap.docs.map(d => d.data());
   },
+  // ── Statut de suspension (géré uniquement par l'admin, jamais écrit par le client) ──
+  onSuspended: (uid, cb) => {
+    if (!window._fbDb || !window._fbOnSnapshot) return () => {};
+    const ref = window._fbDoc(window._fbDb, "suspended", uid);
+    return window._fbOnSnapshot(ref, (snap) => {
+      const data = snap.exists() ? snap.data() : null;
+      cb(!!data?.suspended, data?.reason || "");
+    }, () => cb(false, ""));
+  },
   // ── Config sync (pools, products, activePlan, settings) ──
   saveConfig: async (uid, config) => {
     if (!window._fbDb || !window._fbSetDoc) return;
@@ -3827,6 +3866,9 @@ function PoolApp() {
   const [aiEnabled, setAiEnabled] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [forceUpdate, setForceUpdate] = useState(false);
+  const [suspended, setSuspended] = useState(false);
+  const [suspendReason, setSuspendReason] = useState("");
+  const [erasingData, setErasingData] = useState(false);
   const t = useT(lang);
 
   const [authResolved, setAuthResolved] = useState(false);
@@ -3878,8 +3920,62 @@ function PoolApp() {
         await Promise.all(keys.map((k) => caches.delete(k)));
       }
     } catch (e) {}
-    window.location.reload();
+    // Navigation vers une URL anti-cache (bypass du cache HTTP natif du navigateur,
+    // en plus du nettoyage du Service Worker ci-dessus)
+    const base = window.location.origin + window.location.pathname;
+    window.location.href = `${base}?_r=${Date.now()}`;
   }
+
+  // ── Statut de suspension du compte — écoute temps réel ──
+  useEffect(() => {
+    if (!authUser?.uid) { setSuspended(false); setSuspendReason(""); return; }
+    const unsub = FB.onSuspended(authUser.uid, (isSuspended, reason) => {
+      setSuspended(isSuspended);
+      setSuspendReason(reason || "");
+    });
+    return () => unsub();
+  }, [authUser?.uid]);
+
+  // Efface toutes les données Firestore du compte (users doc + mesures + applications +
+  // diagnostics + config) — utilisée par le flux "compte suspendu" et par la suppression
+  // de compte classique, qui ne supprimait jusqu'ici que le document racine.
+  async function eraseAllUserData(uid) {
+    if (!uid || !window._fbDb) return;
+    const [ms, apps, diags] = await Promise.all([
+      FB.getMeasures(uid).catch(() => []),
+      FB.getApplications(uid).catch(() => []),
+      FB.getDiagnostics(uid).catch(() => []),
+    ]);
+    await Promise.all([
+      ...ms.map((m) => FB.deleteMeasure(uid, m.id).catch(() => {})),
+      ...apps.map((a) => FB.deleteApplication(uid, a.measureId).catch(() => {})),
+      ...diags.map((d) => FB.deleteDiagnostic(uid, d.id).catch(() => {})),
+    ]);
+    if (window._fbDoc && window._fbDeleteDoc) {
+      await window._fbDeleteDoc(window._fbDoc(window._fbDb, "users", uid, "config", "main")).catch(() => {});
+      await window._fbDeleteDoc(window._fbDoc(window._fbDb, "users", uid)).catch(() => {});
+    }
+  }
+
+  async function handleEraseSuspendedData() {
+    if (!authUser?.uid) return;
+    const ok = window.confirm(t("suspended_erase_confirm"));
+    if (!ok) return;
+    setErasingData(true);
+    try {
+      await eraseAllUserData(authUser.uid);
+      window.storage.set("auth_skipped", "").catch(() => {});
+      try { await FB.signOut?.(); } catch (e) {}
+      setAuthUser(null);
+      setSuspended(false);
+      setShowLogin(true);
+    } catch (e) {
+      alert(e.message || t("import_pdf_error"));
+    } finally {
+      setErasingData(false);
+    }
+  }
+
 
   // Helper pour sauvegarder la config dans Firestore
   function syncConfig(partial) {
@@ -4571,6 +4667,28 @@ function PoolApp() {
         </div>
       </div>
     )}
+    {suspended && (
+      <div style={{ position: "fixed", inset: 0, zIndex: 3100, background: "rgba(60,20,20,0.94)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+        <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px #00000033" }}>
+          <div style={{ fontSize: 34, marginBottom: 10 }}>⛔</div>
+          <div style={{ fontSize: 17, fontWeight: 800, color: "#0d2b4e", marginBottom: 8 }}>{t("suspended_title")}</div>
+          <div style={{ fontSize: 13.5, color: "#4a6480", marginBottom: suspendReason ? 8 : 20, lineHeight: 1.5 }}>{t("suspended_desc")}</div>
+          {suspendReason && (
+            <div style={{ fontSize: 12.5, color: "#6a7d90", marginBottom: 20, fontStyle: "italic", background: "#f5f7fa", borderRadius: 8, padding: "8px 10px" }}>
+              {suspendReason}
+            </div>
+          )}
+          <button
+            onClick={handleEraseSuspendedData}
+            disabled={erasingData}
+            style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "1.5px solid #c0392b", background: "#fff", color: "#c0392b", fontWeight: 700, fontSize: 14.5, cursor: erasingData ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+          >
+            {erasingData ? <Loader2 size={16} className="spin" /> : null}
+            {erasingData ? t("suspended_erasing") : t("suspended_erase_btn")}
+          </button>
+        </div>
+      </div>
+    )}
     {showLogin && (
       <div style={{ position: "fixed", inset: 0, zIndex: 1000, overflowY: "auto" }}>
         <LoginScreen
@@ -4696,10 +4814,12 @@ function PoolApp() {
                     return;
                   }
                 }
-                await FB.deleteAccount();
-                if (uid && window._fbDb && window._fbDoc && window._fbDeleteDoc) {
-                  await window._fbDeleteDoc(window._fbDoc(window._fbDb, "users", uid)).catch(() => {});
+                // Supprimer toutes les données Firestore AVANT de supprimer le compte Auth
+                // (une fois le compte Auth supprimé, le token n'est plus valide pour écrire)
+                if (uid) {
+                  await eraseAllUserData(uid).catch(() => {});
                 }
+                await FB.deleteAccount();
                 window.storage.set("auth_skipped", "").catch(() => {});
                 setAuthUser(null);
                 setShowLogin(true);
