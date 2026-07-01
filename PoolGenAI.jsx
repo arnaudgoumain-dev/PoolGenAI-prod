@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.17.0";
+const APP_VERSION = "1.17.1";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -3023,6 +3023,17 @@ function parseDataUrl(dataUrl) {
 
 // ---------- Helpers IA (Anthropic + OpenAI) ----------
 
+async function getFirebaseAuthHeader() {
+  try {
+    const user = window._fbAuth?.currentUser;
+    if (!user) return {};
+    const token = await user.getIdToken();
+    return { "Authorization": `Bearer ${token}` };
+  } catch (e) {
+    return {};
+  }
+}
+
 async function callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl, uid: callerUid }) {
   const parsed = parseDataUrl(imageDataUrl);
   if (!parsed) throw new Error("Image invalide");
@@ -3060,7 +3071,7 @@ async function callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl, uid:
       ? apiKey.replace(/\/+$/, "") + "/v1/messages"
       : "https://api.anthropic.com/v1/messages";
     const authHeaders = apiKey.startsWith("http")
-      ? {}
+      ? await getFirebaseAuthHeader()
       : { "x-api-key": apiKey, "anthropic-dangerous-direct-browser-access": "true" };
     const uidHeaders = (apiKey.startsWith("http") && callerUid) ? { "x-uid": callerUid } : {};
 
@@ -3121,7 +3132,7 @@ async function callAIText({ apiKey, apiProvider, prompt, uid: callerUid }) {
       ? apiKey.replace(/\/+$/, "").replace(/\/v1\/messages$/, "") + "/v1/messages"
       : "https://api.anthropic.com/v1/messages";
     const authHeaders = isProxy
-      ? {}
+      ? await getFirebaseAuthHeader()
       : { "x-api-key": apiKey, "anthropic-dangerous-direct-browser-access": "true" };
     const uidHeaders = (isProxy && callerUid) ? { "x-uid": callerUid } : {};
 
