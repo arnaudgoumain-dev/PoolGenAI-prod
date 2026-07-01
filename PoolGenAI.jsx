@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.17.1";
+const APP_VERSION = "1.18.0";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -137,6 +137,9 @@ const TRANSLATIONS = {
     diag_history_empty: "Aucun diagnostic enregistré pour le moment.",
     diag_history_locked: "Historique des diagnostics IA réservé à la version illimitée",
     diag_history_confirm_delete: "Supprimer ce diagnostic ?",
+    update_required_title: "Nouvelle version disponible",
+    update_required_desc: "Une nouvelle version de PoolGenAI a été déployée. Mets à jour l'application pour continuer.",
+    update_required_btn: "Mettre à jour maintenant",
     diag_off_topic: "Cette question ne concerne pas le traitement de l'eau de bassin. Je ne peux répondre qu'aux questions liées à la chimie de l'eau, aux produits de traitement et aux équipements de piscine.",
             diag_error: "Analyse impossible",
     import_pdf_btn: "Importer un rapport PDF",
@@ -584,6 +587,9 @@ const TRANSLATIONS = {
     diag_history_empty: "No diagnostic saved yet.",
     diag_history_locked: "AI diagnostics history reserved for the unlimited version",
     diag_history_confirm_delete: "Delete this diagnostic?",
+    update_required_title: "New version available",
+    update_required_desc: "A new version of PoolGenAI has been released. Update the app to continue.",
+    update_required_btn: "Update now",
     diag_off_topic: "This question is not related to pool water treatment. I can only answer questions about water chemistry, treatment products and pool equipment.",
             diag_error: "Analysis failed",
     import_pdf_btn: "Import PDF report",
@@ -1021,6 +1027,9 @@ const TRANSLATIONS = {
     diag_history_empty: "Noch keine Diagnose gespeichert.",
     diag_history_locked: "KI-Diagnoseverlauf nur in der unbegrenzten Version",
     diag_history_confirm_delete: "Diese Diagnose löschen?",
+    update_required_title: "Neue Version verfügbar",
+    update_required_desc: "Eine neue Version von PoolGenAI wurde veröffentlicht. Aktualisiere die App, um fortzufahren.",
+    update_required_btn: "Jetzt aktualisieren",
     diag_off_topic: "Diese Frage betrifft nicht die Wasserbehandlung. Ich beantworte nur Fragen zur Wasserchemie, Behandlungsprodukten und Poolausrüstung.",
             diag_error: "Analyse fehlgeschlagen",
     import_pdf_btn: "PDF-Bericht importieren",
@@ -1460,6 +1469,9 @@ const TRANSLATIONS = {
     diag_history_empty: "Nessuna diagnosi salvata per ora.",
     diag_history_locked: "Storico diagnosi IA riservato alla versione illimitata",
     diag_history_confirm_delete: "Eliminare questa diagnosi?",
+    update_required_title: "Nuova versione disponibile",
+    update_required_desc: "È stata rilasciata una nuova versione di PoolGenAI. Aggiorna l'app per continuare.",
+    update_required_btn: "Aggiorna ora",
     diag_off_topic: "Questa domanda non riguarda il trattamento dell'acqua della piscina. Rispondo solo a domande sulla chimica dell'acqua, sui prodotti di trattamento e sulle attrezzature per piscine.",
             diag_error: "Analisi impossibile",
     import_pdf_btn: "Importa rapporto PDF",
@@ -1896,6 +1908,9 @@ const TRANSLATIONS = {
     diag_history_empty: "Aún no hay diagnósticos guardados.",
     diag_history_locked: "Historial de diagnósticos IA reservado para la versión ilimitada",
     diag_history_confirm_delete: "¿Eliminar este diagnóstico?",
+    update_required_title: "Nueva versión disponible",
+    update_required_desc: "Se ha publicado una nueva versión de PoolGenAI. Actualiza la aplicación para continuar.",
+    update_required_btn: "Actualizar ahora",
     diag_off_topic: "Esta pregunta no está relacionada con el tratamiento del agua de piscina. Solo respondo preguntas sobre química del agua, productos de tratamiento y equipos de piscina.",
             diag_error: "Análisis fallido",
     import_pdf_btn: "Importar informe PDF",
@@ -2332,6 +2347,9 @@ const TRANSLATIONS = {
     diag_history_empty: "Nenhum diagnóstico salvo ainda.",
     diag_history_locked: "Histórico de diagnósticos IA reservado para a versão ilimitada",
     diag_history_confirm_delete: "Excluir este diagnóstico?",
+    update_required_title: "Nova versão disponível",
+    update_required_desc: "Uma nova versão do PoolGenAI foi lançada. Atualize o aplicativo para continuar.",
+    update_required_btn: "Atualizar agora",
     diag_off_topic: "Esta pergunta não está relacionada com o tratamento da água da piscina. Só respondo a perguntas sobre química da água, produtos de tratamento e equipamentos de piscina.",
             diag_error: "Análise impossível",
     import_pdf_btn: "Importar relatório PDF",
@@ -3767,6 +3785,8 @@ function PoolApp() {
   const [apiProvider, setApiProvider] = useState("anthropic"); // "anthropic" | "openai"
   const [aiEnabled, setAiEnabled] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [forceUpdate, setForceUpdate] = useState(false);
+  const t = useT(lang);
 
   const [authResolved, setAuthResolved] = useState(false);
 
@@ -3775,6 +3795,50 @@ function PoolApp() {
     window._openLightbox = (src) => setLightboxSrc(src);
     return () => { delete window._openLightbox; };
   }, []);
+
+  // ── Vérification de version — force la mise à jour si une nouvelle version est déployée ──
+  useEffect(() => {
+    let cancelled = false;
+    async function checkVersion() {
+      try {
+        const res = await fetch(`version.json?t=${Date.now()}`, { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled && data?.version && data.version !== APP_VERSION) {
+          setForceUpdate(true);
+        }
+      } catch (e) {
+        // Erreur réseau : on ignore silencieusement, nouvelle tentative au prochain cycle
+      }
+    }
+    checkVersion();
+    const interval = setInterval(checkVersion, 5 * 60 * 1000);
+    function onVisible() {
+      if (document.visibilityState === "visible") checkVersion();
+    }
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("online", checkVersion);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("online", checkVersion);
+    };
+  }, []);
+
+  async function forceReloadApp() {
+    try {
+      if ("serviceWorker" in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (const reg of regs) await reg.unregister();
+      }
+      if (window.caches) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      }
+    } catch (e) {}
+    window.location.reload();
+  }
 
   // Helper pour sauvegarder la config dans Firestore
   function syncConfig(partial) {
@@ -4451,6 +4515,21 @@ function PoolApp() {
 
   return (
     <>
+    {forceUpdate && (
+      <div style={{ position: "fixed", inset: 0, zIndex: 3000, background: "rgba(10,30,60,0.94)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+        <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px #0a6ebd33" }}>
+          <div style={{ fontSize: 34, marginBottom: 10 }}>🔄</div>
+          <div style={{ fontSize: 17, fontWeight: 800, color: "#0d2b4e", marginBottom: 8 }}>{t("update_required_title")}</div>
+          <div style={{ fontSize: 13.5, color: "#4a6480", marginBottom: 20, lineHeight: 1.5 }}>{t("update_required_desc")}</div>
+          <button
+            onClick={forceReloadApp}
+            style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "#0a6ebd", color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: "pointer" }}
+          >
+            {t("update_required_btn")}
+          </button>
+        </div>
+      </div>
+    )}
     {showLogin && (
       <div style={{ position: "fixed", inset: 0, zIndex: 1000, overflowY: "auto" }}>
         <LoginScreen
@@ -7840,10 +7919,6 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
 // ---------- Réglages ----------
 function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, onDeleteAllMeasures: onDeleteAllMeasuresRaw, poolMeasureCount, onGenerateReport, onWantPremiumForReport, onWantPremium, isPremium, setIsPremium, apiKey, setApiKey, apiProvider, setApiProvider, aiEnabled, setAiEnabled, lang, setLang, authUser, onSignOut, onSignIn, onDeleteAccount, dataConsent, onRevokeDataConsent, cguAcceptedDate }) {
   const [showAiConfig, setShowAiConfig] = useState(false);
-  const [aiPasswordInput, setAiPasswordInput] = useState("");
-  const [showAiPasswordModal, setShowAiPasswordModal] = useState(false);
-  const [aiPasswordError, setAiPasswordError] = useState(false);
-  const AI_PASSWORD = "Poolai26";
   const [editingPool, setEditingPool] = useState(null);
   const [showLegalModal, setShowLegalModal] = useState(false);
   const t = useT(lang);
@@ -7852,7 +7927,6 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
   const treatmentTypes = getTreatmentTypes(lang);
   const filtrationTypes = getFiltrationTypes(lang);
   const activePool = pools.find((p) => p.id === activePoolId) || pools[0];
-  const [showAiPwd, setShowAiPwd] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
 
   function onDeleteAllMeasures() {
@@ -8056,17 +8130,7 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
         </div>
         <ToggleSwitch
           checked={aiEnabled}
-          onChange={(val) => {
-            if (val) {
-              // Activation — demander le mot de passe
-              setAiPasswordInput("");
-              setAiPasswordError(false);
-              setShowAiPasswordModal(true);
-            } else {
-              // Désactivation — pas de mot de passe
-              setAiEnabled(false);
-            }
-          }}
+          onChange={(val) => setAiEnabled(val)}
         />
       </div>
 
@@ -8079,73 +8143,6 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
           <Settings2 size={15} /> {t("ai_configure_btn")}
           {apiKey ? <span style={{ fontSize: 11, color: "#1a8fd1", fontWeight: 400 }}>✓ {apiProvider === "openai" ? "OpenAI" : "Anthropic"}</span> : null}
         </button>
-      )}
-
-      {/* Modale mot de passe IA */}
-      {showAiPasswordModal && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 600, background: "rgba(10,30,60,0.6)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-          <div style={{ background: "#fff", borderRadius: 20, padding: 24, maxWidth: 380, width: "100%", boxShadow: "0 8px 32px #0a6ebd22" }}>
-            <div style={{ fontSize: 16, fontWeight: 800, color: "#0d2b4e", marginBottom: 6 }}>{t("ai_password_title")}</div>
-            <div style={{ fontSize: 13, color: "#4a6480", marginBottom: 14 }}>{t("ai_password_prompt")}</div>
-            <div style={{ position: "relative", marginBottom: aiPasswordError ? 6 : 14 }}>
-              <input
-                type={showAiPwd ? "text" : "password"}
-                value={aiPasswordInput}
-                onChange={e => { setAiPasswordInput(e.target.value); setAiPasswordError(false); }}
-                onKeyDown={e => {
-                  if (e.key === "Enter") {
-                    if (aiPasswordInput === AI_PASSWORD) {
-                      setShowAiPasswordModal(false);
-                      setAiPasswordInput("");
-                      setShowAiPwd(false);
-                      setAiEnabled(true);
-                      setShowAiConfig(true);
-                    } else {
-                      setAiPasswordError(true);
-                    }
-                  }
-                }}
-                style={{ ...styles.input, marginBottom: 0, paddingRight: 40 }}
-                placeholder="••••••••"
-                autoFocus
-              />
-              <button
-                type="button"
-                onClick={() => setShowAiPwd(v => !v)}
-                style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#6a7d90", display: "flex", alignItems: "center", padding: 2 }}
-              >
-                {showAiPwd ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </div>
-            {aiPasswordError && (
-              <div style={{ fontSize: 12, color: "#c0392b", marginBottom: 12 }}>{t("ai_password_error")}</div>
-            )}
-            <div style={{ display: "flex", gap: 8 }}>
-              <button
-                style={{ flex: 1, padding: "11px 0", borderRadius: 10, border: "1px solid #d0e4f5", background: "#f5f8fc", color: "#6a7d90", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
-                onClick={() => { setShowAiPasswordModal(false); setAiPasswordInput(""); setAiPasswordError(false); }}
-              >
-                {t("cancel")}
-              </button>
-              <button
-                style={{ flex: 1, padding: "11px 0", borderRadius: 10, border: "none", background: "#0a6ebd", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}
-                onClick={() => {
-                  if (aiPasswordInput === AI_PASSWORD) {
-                    setShowAiPasswordModal(false);
-                    setAiPasswordInput("");
-                    setShowAiPwd(false);
-                    setAiEnabled(true);
-                    setShowAiConfig(true);
-                  } else {
-                    setAiPasswordError(true);
-                  }
-                }}
-              >
-                {t("validate") || "Valider"}
-              </button>
-            </div>
-          </div>
-        </div>
       )}
 
       {/* Page de configuration IA — overlay plein écran */}
