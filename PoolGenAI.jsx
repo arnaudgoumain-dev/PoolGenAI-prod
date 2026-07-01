@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.16.3";
+const APP_VERSION = "1.17.0";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -128,6 +128,15 @@ const TRANSLATIONS = {
     diag_submit: "Analyser avec l'IA",
     diag_analyzing: "Analyse en cours...",
     diag_confidence: "Indice de confiance",
+    diag_history_title: "Historique diagnostics IA",
+    diag_history_date: "Date",
+    diag_history_note: "Note",
+    diag_history_response: "Réponse IA",
+    diag_history_confidence: "Confiance",
+    diag_history_delete: "Supprimer",
+    diag_history_empty: "Aucun diagnostic enregistré pour le moment.",
+    diag_history_locked: "Historique des diagnostics IA réservé à la version illimitée",
+    diag_history_confirm_delete: "Supprimer ce diagnostic ?",
     diag_off_topic: "Cette question ne concerne pas le traitement de l'eau de bassin. Je ne peux répondre qu'aux questions liées à la chimie de l'eau, aux produits de traitement et aux équipements de piscine.",
             diag_error: "Analyse impossible",
     import_pdf_btn: "Importer un rapport PDF",
@@ -566,6 +575,15 @@ const TRANSLATIONS = {
     diag_submit: "Analyse with AI",
     diag_analyzing: "Analysing...",
     diag_confidence: "Confidence level",
+    diag_history_title: "AI diagnostics history",
+    diag_history_date: "Date",
+    diag_history_note: "Note",
+    diag_history_response: "AI response",
+    diag_history_confidence: "Confidence",
+    diag_history_delete: "Delete",
+    diag_history_empty: "No diagnostic saved yet.",
+    diag_history_locked: "AI diagnostics history reserved for the unlimited version",
+    diag_history_confirm_delete: "Delete this diagnostic?",
     diag_off_topic: "This question is not related to pool water treatment. I can only answer questions about water chemistry, treatment products and pool equipment.",
             diag_error: "Analysis failed",
     import_pdf_btn: "Import PDF report",
@@ -994,6 +1012,15 @@ const TRANSLATIONS = {
     diag_submit: "Mit KI analysieren",
     diag_analyzing: "Analyse läuft...",
     diag_confidence: "Vertrauensindex",
+    diag_history_title: "KI-Diagnoseverlauf",
+    diag_history_date: "Datum",
+    diag_history_note: "Notiz",
+    diag_history_response: "KI-Antwort",
+    diag_history_confidence: "Vertrauen",
+    diag_history_delete: "Löschen",
+    diag_history_empty: "Noch keine Diagnose gespeichert.",
+    diag_history_locked: "KI-Diagnoseverlauf nur in der unbegrenzten Version",
+    diag_history_confirm_delete: "Diese Diagnose löschen?",
     diag_off_topic: "Diese Frage betrifft nicht die Wasserbehandlung. Ich beantworte nur Fragen zur Wasserchemie, Behandlungsprodukten und Poolausrüstung.",
             diag_error: "Analyse fehlgeschlagen",
     import_pdf_btn: "PDF-Bericht importieren",
@@ -1424,6 +1451,15 @@ const TRANSLATIONS = {
     diag_submit: "Analizza con l'IA",
     diag_analyzing: "Analisi in corso...",
     diag_confidence: "Indice di fiducia",
+    diag_history_title: "Storico diagnosi IA",
+    diag_history_date: "Data",
+    diag_history_note: "Nota",
+    diag_history_response: "Risposta IA",
+    diag_history_confidence: "Fiducia",
+    diag_history_delete: "Elimina",
+    diag_history_empty: "Nessuna diagnosi salvata per ora.",
+    diag_history_locked: "Storico diagnosi IA riservato alla versione illimitata",
+    diag_history_confirm_delete: "Eliminare questa diagnosi?",
     diag_off_topic: "Questa domanda non riguarda il trattamento dell'acqua della piscina. Rispondo solo a domande sulla chimica dell'acqua, sui prodotti di trattamento e sulle attrezzature per piscine.",
             diag_error: "Analisi impossibile",
     import_pdf_btn: "Importa rapporto PDF",
@@ -1851,6 +1887,15 @@ const TRANSLATIONS = {
     diag_submit: "Analizar con IA",
     diag_analyzing: "Analizando...",
     diag_confidence: "Índice de confianza",
+    diag_history_title: "Historial de diagnósticos IA",
+    diag_history_date: "Fecha",
+    diag_history_note: "Nota",
+    diag_history_response: "Respuesta IA",
+    diag_history_confidence: "Confianza",
+    diag_history_delete: "Eliminar",
+    diag_history_empty: "Aún no hay diagnósticos guardados.",
+    diag_history_locked: "Historial de diagnósticos IA reservado para la versión ilimitada",
+    diag_history_confirm_delete: "¿Eliminar este diagnóstico?",
     diag_off_topic: "Esta pregunta no está relacionada con el tratamiento del agua de piscina. Solo respondo preguntas sobre química del agua, productos de tratamiento y equipos de piscina.",
             diag_error: "Análisis fallido",
     import_pdf_btn: "Importar informe PDF",
@@ -2278,6 +2323,15 @@ const TRANSLATIONS = {
     diag_submit: "Analisar com IA",
     diag_analyzing: "A analisar...",
     diag_confidence: "Índice de confiança",
+    diag_history_title: "Histórico de diagnósticos IA",
+    diag_history_date: "Data",
+    diag_history_note: "Nota",
+    diag_history_response: "Resposta IA",
+    diag_history_confidence: "Confiança",
+    diag_history_delete: "Excluir",
+    diag_history_empty: "Nenhum diagnóstico salvo ainda.",
+    diag_history_locked: "Histórico de diagnósticos IA reservado para a versão ilimitada",
+    diag_history_confirm_delete: "Excluir este diagnóstico?",
     diag_off_topic: "Esta pergunta não está relacionada com o tratamento da água da piscina. Só respondo a perguntas sobre química da água, produtos de tratamento e equipamentos de piscina.",
             diag_error: "Análise impossível",
     import_pdf_btn: "Importar relatório PDF",
@@ -3255,6 +3309,24 @@ const FB = {
   onApplications: (uid, cb) => {
     if (!window._fbDb || !window._fbOnSnapshot) return () => {};
     const col = window._fbCollection(window._fbDb, "users", uid, "applications");
+    return window._fbOnSnapshot(col, (snap) => {
+      cb(snap.docs.map(d => d.data()));
+    });
+  },
+  // ── Diagnostics IA sync ──
+  saveDiagnostic: async (uid, diagnostic) => {
+    if (!window._fbDb || !window._fbSetDoc) return;
+    const ref = window._fbDoc(window._fbDb, "users", uid, "diagnostics", diagnostic.id);
+    await window._fbSetDoc(ref, diagnostic);
+  },
+  deleteDiagnostic: async (uid, diagnosticId) => {
+    if (!window._fbDb || !window._fbDeleteDoc) return;
+    const ref = window._fbDoc(window._fbDb, "users", uid, "diagnostics", diagnosticId);
+    await window._fbDeleteDoc(ref);
+  },
+  onDiagnostics: (uid, cb) => {
+    if (!window._fbDb || !window._fbOnSnapshot) return () => {};
+    const col = window._fbCollection(window._fbDb, "users", uid, "diagnostics");
     return window._fbOnSnapshot(col, (snap) => {
       cb(snap.docs.map(d => d.data()));
     });
@@ -5614,9 +5686,23 @@ function HistoryView({ measures, onDelete, onEdit, onAdd, onAddPrefilled, onVali
   const [diagResult, setDiagResult] = useState(null);
   const [diagLoading, setDiagLoading] = useState(false);
   const [diagError, setDiagError] = useState(null);
+  const [diagHistory, setDiagHistory] = useState([]);
   const [importLoading, setImportLoading] = useState(false);
   const [importError, setImportError] = useState(null);
   const importFileRef = useRef(null);
+
+  useEffect(() => {
+    if (!authUid || !isPremium) { setDiagHistory([]); return; }
+    const unsub = FB.onDiagnostics(authUid, (list) => {
+      setDiagHistory([...list].sort((a, b) => new Date(b.date) - new Date(a.date)));
+    });
+    return () => unsub();
+  }, [authUid, isPremium]);
+
+  function deleteDiagEntry(id) {
+    setDiagHistory((prev) => prev.filter((d) => d.id !== id));
+    if (authUid) FB.deleteDiagnostic(authUid, id).catch(() => {});
+  }
 
   async function handleImportFile(e) {
     const file = e.target.files?.[0];
@@ -5795,6 +5881,17 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
         setDiagError(t("diag_off_topic"));
       } else {
         setDiagResult(parsed);
+        if (authUid) {
+          const entry = {
+            id: uid(),
+            date: new Date().toISOString(),
+            note: diagText.trim(),
+            suggestion: parsed.suggestion,
+            confidence: parsed.confidence,
+            confidence_reason: parsed.confidence_reason || "",
+          };
+          FB.saveDiagnostic(authUid, entry).catch(() => {});
+        }
       }
     } catch (e) {
       console.error("Diag error", e);
@@ -6119,6 +6216,64 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
                   {diagResult.confidence_reason}
                 </div>
               )}
+            </div>
+          )}
+
+          <div style={{ ...styles.sectionRow, marginTop: 20 }}>
+            <span style={styles.sectionLabel}>{t("diag_history_title")}</span>
+          </div>
+          {!isPremium ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#6a7d90", padding: "8px 12px", background: "#f0f6fb", borderRadius: 10, border: "1px solid #d0e4f5" }}>
+              <Lock size={13} color="#6a7d90" />
+              <span>{t("diag_history_locked")}</span>
+            </div>
+          ) : diagHistory.length === 0 ? (
+            <p style={styles.helpTextSmall}>{t("diag_history_empty")}</p>
+          ) : (
+            <div style={{ overflowX: "auto" }}>
+              <table style={styles.diagHistTable}>
+                <thead>
+                  <tr>
+                    <th style={{ ...styles.diagHistTh, width: 62 }}>{t("diag_history_date")}</th>
+                    <th style={styles.diagHistTh}>{t("diag_history_note")}</th>
+                    <th style={styles.diagHistTh}>{t("diag_history_response")}</th>
+                    <th style={{ ...styles.diagHistTh, width: 54 }}>{t("diag_history_confidence")}</th>
+                    <th style={{ ...styles.diagHistTh, width: 30 }}></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {diagHistory.map((d) => (
+                    <tr key={d.id}>
+                      <td style={styles.diagHistTd}>{formatDateShort(d.date)}</td>
+                      <td style={styles.diagHistTd}>{d.note}</td>
+                      <td style={styles.diagHistTd}>
+                        {d.suggestion}
+                        {d.confidence_reason && (
+                          <div style={{ fontSize: 10.5, color: "#6a7d90", marginTop: 4, fontStyle: "italic" }}>
+                            {d.confidence_reason}
+                          </div>
+                        )}
+                      </td>
+                      <td style={styles.diagHistTd}>
+                        <span style={{ fontSize: 13, letterSpacing: 1, whiteSpace: "nowrap" }}>
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <span key={i} style={{ color: i < d.confidence ? "#f59e0b" : "#d1d5db" }}>★</span>
+                          ))}
+                        </span>
+                      </td>
+                      <td style={styles.diagHistTd}>
+                        <button
+                          onClick={() => { if (window.confirm(t("diag_history_confirm_delete"))) deleteDiagEntry(d.id); }}
+                          style={{ background: "none", border: "none", padding: 4, cursor: "pointer" }}
+                          aria-label={t("diag_history_delete")}
+                        >
+                          <Trash2 size={14} color="#c0392b" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
@@ -9178,6 +9333,24 @@ const styles = {
   reportRow: { marginBottom: 18 },
   reportRowDate: { fontSize: 14, fontWeight: 700, color: "#0d2b4e", marginBottom: 8 },
   reportTable: { width: "100%", borderCollapse: "collapse", marginBottom: 10 },
+  diagHistTable: { width: "100%", borderCollapse: "collapse", marginTop: 10, tableLayout: "fixed" },
+  diagHistTh: {
+    padding: "6px 6px",
+    textAlign: "left",
+    fontSize: 10,
+    fontWeight: 700,
+    color: "#6a7d90",
+    textTransform: "uppercase",
+    borderBottom: "2px solid #e2d9f3",
+  },
+  diagHistTd: {
+    padding: "8px 6px",
+    fontSize: 12,
+    color: "#2d1b69",
+    borderBottom: "1px solid #f0eaf8",
+    verticalAlign: "top",
+    wordBreak: "break-word",
+  },
   reportThCell: {
     padding: "6px 8px",
     textAlign: "left",
