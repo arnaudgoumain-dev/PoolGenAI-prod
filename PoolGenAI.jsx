@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.24.0";
+const APP_VERSION = "1.25.1";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -422,6 +422,7 @@ const TRANSLATIONS = {
     reco_cl_excess_text: "Laisser le chlore se dégrader naturellement au soleil, ne pas se baigner en attendant.",
     reco_cl_shock_text: "ce soir (choc renforcé)",
     reco_note_tac: "Un TAC bas rend le pH instable.",
+    reco_note_ph_before_tac: "pH corrigé avant le TAC : à ce pH le chlore serait peu efficace, et le TAC n'est pas assez bas pour être urgent.",
     reco_note_combined: "Chlore combiné = chloramines, signe d'une désinfection insuffisante. Verser le soir, filtration en continu.",
     reco_note_sel: "Utiliser du sel spécial piscine (NaCl pur ≥ 99%). Dissoudre avant l'ajout ou verser directement près du skimmer, filtration en marche 24h.",
     reco_note_o2: "Ne pas mélanger avec le chlore. Filtration en marche pendant 4h.",
@@ -893,6 +894,7 @@ const TRANSLATIONS = {
     reco_cl_excess_text: "Let chlorine degrade naturally in sunlight, avoid swimming in the meantime.",
     reco_cl_shock_text: "tonight (shock treatment)",
     reco_note_tac: "Low TAC makes pH unstable.",
+    reco_note_ph_before_tac: "pH corrected before TAC: chlorine would be inefficient at this pH, and TAC isn't low enough to be urgent.",
     reco_note_combined: "Combined chlorine = chloramines, sign of insufficient disinfection. Add in the evening, keep filtration running.",
     reco_note_sel: "Use pool-grade salt (pure NaCl ≥ 99%). Dissolve before adding or pour directly near the skimmer, run filtration for 24h.",
     reco_note_o2: "Do not mix with chlorine. Run filtration for 4h.",
@@ -1366,6 +1368,7 @@ const TRANSLATIONS = {
     reco_cl_excess_text: "Chlor natürlich in der Sonne abbauen lassen, zwischenzeitlich nicht schwimmen.",
     reco_cl_shock_text: "heute Abend (Schockbehandlung)",
     reco_note_tac: "Niedriger KH macht den pH instabil.",
+    reco_note_ph_before_tac: "pH vor KH korrigiert: Chlor wäre bei diesem pH-Wert wenig wirksam, und der KH ist nicht niedrig genug, um dringend zu sein.",
     reco_note_combined: "Gebundenes Chlor = Chloramine, Zeichen unzureichender Desinfektion. Abends zugeben, Filtration durchlaufen lassen.",
     reco_note_sel: "Poolsalz (reines NaCl ≥ 99%) verwenden. Vor dem Zugeben auflösen oder direkt beim Skimmer zugeben, 24h filtrieren.",
     reco_note_o2: "Nicht mit Chlor mischen. 4h filtrieren.",
@@ -1836,6 +1839,7 @@ const TRANSLATIONS = {
     reco_cl_excess_text: "Lasciare che il cloro si degradi naturalmente al sole, evitare di nuotare nel frattempo.",
     reco_cl_shock_text: "stasera (trattamento shock)",
     reco_note_tac: "Un TAC basso rende il pH instabile.",
+    reco_note_ph_before_tac: "pH corretto prima del TAC: a questo pH il cloro sarebbe poco efficace, e il TAC non è abbastanza basso da essere urgente.",
     reco_note_combined: "Cloro combinato = cloramine, segno di disinfezione insufficiente. Aggiungere la sera, filtrazione in continuo.",
     reco_note_sel: "Usare sale da piscina (NaCl puro ≥ 99%). Sciogliere prima dell'aggiunta o versare vicino allo skimmer, filtrazione 24h.",
     reco_note_o2: "Non mescolare con il cloro. Filtrazione per 4h.",
@@ -2306,6 +2310,7 @@ const TRANSLATIONS = {
     reco_cl_excess_text: "Dejar que el cloro se degrade naturalmente al sol, evitar bañarse mientras tanto.",
     reco_cl_shock_text: "esta noche (tratamiento de choque)",
     reco_note_tac: "Un TAC bajo hace el pH inestable.",
+    reco_note_ph_before_tac: "pH corregido antes que el TAC: a este pH el cloro sería poco eficaz, y el TAC no está lo bastante bajo para ser urgente.",
     reco_note_combined: "Cloro combinado = cloraminas, señal de desinfección insuficiente. Añadir por la noche, filtración continua.",
     reco_note_sel: "Usar sal de piscina (NaCl puro ≥ 99%). Disolver antes de añadir o verter cerca del skimmer, filtración 24h.",
     reco_note_o2: "No mezclar con cloro. Filtración durante 4h.",
@@ -2773,6 +2778,7 @@ const TRANSLATIONS = {
     reco_cl_excess_text: "Deixar o cloro degradar naturalmente ao sol, evitar nadar enquanto isso.",
     reco_cl_shock_text: "esta noite (tratamento de choque)",
     reco_note_tac: "Um TAC baixo torna o pH instável.",
+    reco_note_ph_before_tac: "pH corrigido antes do TAC: a este pH o cloro seria pouco eficaz, e o TAC não está baixo o suficiente para ser urgente.",
     reco_note_combined: "Cloro combinado = cloraminas, sinal de desinfecção insuficiente. Adicionar à noite, filtração contínua.",
     reco_note_sel: "Usar sal de piscina (NaCl puro ≥ 99%). Dissolver antes de adicionar ou verter perto do skimmer, filtração 24h.",
     reco_note_o2: "Não misturar com cloro. Filtração por 4h.",
@@ -3125,6 +3131,7 @@ const DEFAULT_WAIT_HOURS = {
   "sequestrant": 12,
 };
 
+// Ordre de base (utilisé quand aucune règle contextuelle ne s'applique)
 const ACTION_PRIORITY = {
   "tac+": 1,
   "hard+": 1,
@@ -3138,6 +3145,33 @@ const ACTION_PRIORITY = {
   "sequestrant": 5,
   "sel": 5,
 };
+
+// Ajuste l'ordre selon le contexte réel de l'eau. Deux interactions chimiques
+// changent l'ordre optimal par rapport à l'ordre fixe ci-dessus :
+// 1. Le bicarbonate de sodium (TAC+) remonte légèrement le pH. Si on doit BAISSER
+//    le pH (ph-) et que le TAC n'est pas critique (>= 60 mg/L, encore un minimum de
+//    pouvoir tampon), corriger le pH avant le TAC évite de devoir en remettre une
+//    couche. Si le TAC est critique (< 60), le pH restera instable de toute façon
+//    tant qu'il n'est pas corrigé — donc TAC d'abord malgré la légère remontée.
+// 2. Un chlore combiné élevé (> 0.5 mg/L, signe de chloramines/contamination) est
+//    traité comme une urgence sanitaire : mieux vaut désinfecter tout de suite
+//    (même à un pH pas encore optimal) que d'attendre la fin de la séquence TAC/pH.
+function computeStepPriority(step, ctx) {
+  const base = ACTION_PRIORITY[step.action] ?? 9;
+  const { tac, phVal, phTargetMax, combined } = ctx || {};
+  const tacCritical = tac != null && !Number.isNaN(tac) && tac < 60;
+  const needsPhMinus = phVal != null && phTargetMax != null && phVal > phTargetMax;
+  const contaminationUrgent = combined != null && combined > 0.5;
+
+  if (contaminationUrgent && (step.action === "chlore" || step.action === "brome" || step.action === "o2")) {
+    return 0;
+  }
+  if (needsPhMinus && !tacCritical) {
+    if (step.action === "ph-") return 1;
+    if (step.action === "tac+") return 2;
+  }
+  return base;
+}
 
 const STORAGE_KEYS = {
   measures: "pool:measures",
@@ -4356,9 +4390,13 @@ function PoolApp() {
   // Quand l'utilisateur est connecté, on s'abonne aux collections measures et applications.
   // Les données cloud écrasent les données locales (last-write-wins).
   const firestoreUnsubRef = useRef(null);
+  const cloudConfigReceivedRef = useRef(false);
+  const [cloudConfigReceived, setCloudConfigReceived] = useState(false);
   useEffect(() => {
     if (!authUser?.uid || !FB.ready() || !window._fbOnSnapshot) return;
     const uid = authUser.uid;
+    cloudConfigReceivedRef.current = false;
+    setCloudConfigReceived(false);
 
     // Nettoyage abonnements précédents
     if (firestoreUnsubRef.current) {
@@ -4380,6 +4418,8 @@ function PoolApp() {
     });
 
     const unsubConfig = FB.onConfig(uid, (config) => {
+      cloudConfigReceivedRef.current = true;
+      setCloudConfigReceived(true);
       if (config.pools?.length) {
         setPools(config.pools);
         window.storage.set(STORAGE_KEYS.pools, JSON.stringify(config.pools)).catch(() => {});
@@ -5024,12 +5064,18 @@ function PoolApp() {
   useEffect(() => {
     if (!loaded || !authUser?.uid) return;
     if (!syncedRef.current) { syncedRef.current = true; return; } // skip initial load
+    // Garde-fou : ne jamais pousser un tableau de bassins vide tant qu'on n'a pas
+    // reçu au moins une fois la vraie config Firestore. Sans ça, un cache local
+    // vidé (ex: nettoyage de cache navigateur) peut écraser silencieusement les
+    // bassins existants sur le cloud avant même que la synchro temps réel arrive.
+    if (pools.length === 0 && !cloudConfigReceivedRef.current) return;
     syncConfig({ pools });
   }, [pools]);
 
   useEffect(() => {
     if (!loaded || !authUser?.uid) return;
     if (!FB.ready()) return;
+    if (products.length === 0 && !cloudConfigReceivedRef.current) return;
     FB.saveConfig(authUser.uid, { products }).catch((e) => {
       alert(t("product_sync_error") + (e?.message ? " (" + e.message + ")" : ""));
     });
@@ -5180,7 +5226,7 @@ function PoolApp() {
         </div>
       </div>
     )}
-    {loaded && authUser && !suspended && !forceUpdate && !needsEmailVerification && pools.length === 0 && (
+    {loaded && authUser && !suspended && !forceUpdate && !needsEmailVerification && pools.length === 0 && cloudConfigReceived && (
       <AddPoolModal forced onSave={addPool} lang={lang} />
     )}
     {showLogin && (
@@ -6440,7 +6486,20 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
     });
   }
 
-  steps.sort((a, b) => (ACTION_PRIORITY[a.action] ?? 9) - (ACTION_PRIORITY[b.action] ?? 9));
+  const stepPriorityCtx = {
+    tac: Number.isNaN(tac) ? null : tac,
+    phVal: Number.isNaN(phVal) ? null : phVal,
+    phTargetMax: targetsLower.ph ? targetsLower.ph.max : null,
+    combined,
+  };
+  const tacNotCritical = stepPriorityCtx.tac == null || stepPriorityCtx.tac >= 60;
+  const phTooHigh = stepPriorityCtx.phVal != null && stepPriorityCtx.phTargetMax != null && stepPriorityCtx.phVal > stepPriorityCtx.phTargetMax;
+  if (phTooHigh && tacNotCritical) {
+    const phStep = steps.find((s) => s.action === "ph-");
+    if (phStep) phStep.note = _("reco_note_ph_before_tac");
+  }
+
+  steps.sort((a, b) => computeStepPriority(a, stepPriorityCtx) - computeStepPriority(b, stepPriorityCtx));
   let cumulativeHours = 0;
   return steps.map((step, i) => {
     const startsAfter = cumulativeHours;
