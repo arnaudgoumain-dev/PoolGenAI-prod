@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.27.3";
+const APP_VERSION = "1.27.4";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -179,6 +179,7 @@ const TRANSLATIONS = {
     analyze_locked: "Photo + analyse IA réservées à la version illimitée",
     product_ai_hint: "Active l'analyse IA dans les Réglages pour remplir ces champs automatiquement à partir de la photo.",
     product_sync_error: "Échec de la synchronisation des produits — la photo est peut-être trop volumineuse, réessaie avec une photo plus légère.",
+    config_sync_error: "Échec de la synchronisation — vérifie ta connexion. ({detail})",
     repair_orphaned_title: "{count} entrée(s) orpheline(s) détectée(s)",
     repair_orphaned_desc: "Des mesures, applications ou produits ne sont rattachés à aucun bassin existant (souvent après un bug de synchro). Elles seront rattachées à ton bassin actif.",
     repair_orphaned_btn: "Réparer maintenant",
@@ -676,6 +677,7 @@ const TRANSLATIONS = {
     analyze_locked: "Photo + AI analysis reserved for unlimited version",
     product_ai_hint: "Enable AI analysis in Settings to auto-fill these fields from the photo.",
     product_sync_error: "Product sync failed — the photo may be too large, try again with a lighter photo.",
+    config_sync_error: "Sync failed — check your connection. ({detail})",
     repair_orphaned_title: "{count} orphaned entrie(s) detected",
     repair_orphaned_desc: "Some measures, treatments or products aren't linked to any existing pool (often after a sync bug). They'll be reattached to your active pool.",
     repair_orphaned_btn: "Repair now",
@@ -1164,6 +1166,7 @@ const TRANSLATIONS = {
     analyze_locked: "Foto + KI-Analyse nur in unbegrenzter Version",
     product_ai_hint: "Aktiviere die KI-Analyse in den Einstellungen, um diese Felder automatisch aus dem Foto auszufüllen.",
     product_sync_error: "Produktsynchronisierung fehlgeschlagen — das Foto ist evtl. zu groß, versuche es mit einem leichteren Foto erneut.",
+    config_sync_error: "Synchronisierung fehlgeschlagen — prüfe deine Verbindung. ({detail})",
     repair_orphaned_title: "{count} verwaiste Eintrag/Einträge gefunden",
     repair_orphaned_desc: "Einige Messungen, Behandlungen oder Produkte sind keinem bestehenden Becken zugeordnet (oft nach einem Synchronisierungsfehler). Sie werden deinem aktiven Becken zugeordnet.",
     repair_orphaned_btn: "Jetzt reparieren",
@@ -1654,6 +1657,7 @@ const TRANSLATIONS = {
     analyze_locked: "Foto + analisi IA riservate alla versione illimitata",
     product_ai_hint: "Attiva l'analisi IA nelle Impostazioni per compilare automaticamente questi campi dalla foto.",
     product_sync_error: "Sincronizzazione prodotti fallita — la foto è forse troppo pesante, riprova con una foto più leggera.",
+    config_sync_error: "Sincronizzazione fallita — controlla la connessione. ({detail})",
     repair_orphaned_title: "{count} voce/i orfana/e rilevata/e",
     repair_orphaned_desc: "Alcune misure, trattamenti o prodotti non sono collegati a nessuna piscina esistente (spesso dopo un bug di sincronizzazione). Verranno ricollegati alla tua piscina attiva.",
     repair_orphaned_btn: "Ripara ora",
@@ -2141,6 +2145,7 @@ const TRANSLATIONS = {
     analyze_locked: "Foto + análisis IA reservados para versión ilimitada",
     product_ai_hint: "Activa el análisis IA en Ajustes para rellenar estos campos automáticamente a partir de la foto.",
     product_sync_error: "Error al sincronizar productos — la foto quizá es demasiado pesada, prueba con una foto más ligera.",
+    config_sync_error: "Fallo de sincronización — comprueba tu conexión. ({detail})",
     repair_orphaned_title: "{count} entrada(s) huérfana(s) detectada(s)",
     repair_orphaned_desc: "Algunas mediciones, tratamientos o productos no están vinculados a ninguna piscina existente (a menudo tras un error de sincronización). Se vincularán a tu piscina activa.",
     repair_orphaned_btn: "Reparar ahora",
@@ -2628,6 +2633,7 @@ const TRANSLATIONS = {
     analyze_locked: "Foto + análise IA reservadas para versão ilimitada",
     product_ai_hint: "Ative a análise IA nas Definições para preencher estes campos automaticamente a partir da foto.",
     product_sync_error: "Falha na sincronização dos produtos — a foto pode ser demasiado grande, tenta com uma foto mais leve.",
+    config_sync_error: "Falha na sincronização — verifica a tua ligação. ({detail})",
     repair_orphaned_title: "{count} entrada(s) órfã(s) detetada(s)",
     repair_orphaned_desc: "Algumas medições, tratamentos ou produtos não estão associados a nenhuma piscina existente (geralmente após um erro de sincronização). Serão associados à tua piscina ativa.",
     repair_orphaned_btn: "Reparar agora",
@@ -3711,12 +3717,21 @@ class ErrorBoundary extends React.Component {
 //   window._fbOnAuth = onAuthStateChanged;
 // </script>
 
-// Comparaison de contenu simple (JSON) — utilisée pour éviter de remplacer un state
+// Comparaison de contenu (JSON) — utilisée pour éviter de remplacer un state
 // par une donnée cloud identique (voir commentaire dans le useEffect de synchro
 // Firestore plus bas, fix v1.27.2 de la boucle d'écritures ping-pong entre appareils).
+// Fix v1.27.4 : tri des clés avant stringify, car deux objets au contenu identique
+// mais à l'ordre de clés différent (ex: écho Firestore vs état local) étaient
+// jugés à tort "différents", ce qui suffisait à relancer la boucle d'écriture.
+function stableStringify(obj) {
+  if (obj === null || typeof obj !== "object") return JSON.stringify(obj);
+  if (Array.isArray(obj)) return "[" + obj.map(stableStringify).join(",") + "]";
+  const keys = Object.keys(obj).sort();
+  return "{" + keys.map((k) => JSON.stringify(k) + ":" + stableStringify(obj[k])).join(",") + "}";
+}
 function deepEqual(a, b) {
   try {
-    return JSON.stringify(a) === JSON.stringify(b);
+    return stableStringify(a) === stableStringify(b);
   } catch (e) {
     return false;
   }
@@ -4535,11 +4550,32 @@ function PoolApp() {
   }
 
 
-  // Helper pour sauvegarder la config dans Firestore
-  function syncConfig(partial) {
-    if (authUser?.uid && FB.ready()) {
-      FB.saveConfig(authUser.uid, partial).catch(() => {});
-    }
+  // Helper pour sauvegarder la config dans Firestore, avec debounce.
+  // Fix v1.27.4 : plusieurs useEffect indépendants (pools, activePlan, isPremium,
+  // lang, aiEnabled, apiProvider) appellent syncConfig séparément. Quand deux
+  // appareils sont ouverts en même temps, chaque écho Firestore reçu par l'un
+  // peut redéclencher une réécriture quasi immédiate — l'ancien fix deepEqual
+  // (v1.27.2) réduisait mais n'éliminait pas ces rafales. Le debounce regroupe
+  // les changements survenant dans une fenêtre de 800ms en un seul appel réseau,
+  // et absorbe le ping-pong au lieu de le laisser consommer le quota Firestore.
+  // L'erreur est désormais remontée (alert) au lieu d'être avalée en silence.
+  const syncDebounceRef = useRef(null);
+  const syncPendingRef = useRef({});
+  function syncConfig(partial, errorKey) {
+    if (!authUser?.uid || !FB.ready()) return;
+    syncPendingRef.current = { ...syncPendingRef.current, ...partial };
+    if (syncDebounceRef.current) clearTimeout(syncDebounceRef.current);
+    syncDebounceRef.current = setTimeout(() => {
+      const toSend = syncPendingRef.current;
+      syncPendingRef.current = {};
+      syncDebounceRef.current = null;
+      FB.saveConfig(authUser.uid, toSend).catch((e) => {
+        const msg = errorKey
+          ? t(errorKey) + (e?.message ? " (" + e.message + ")" : "")
+          : t("config_sync_error").replace("{detail}", e?.message || "?");
+        alert(msg);
+      });
+    }, 800);
   }
 
   // ── Synchro Firestore temps réel ──
@@ -5284,9 +5320,7 @@ function PoolApp() {
     if (!loaded || !authUser?.uid) return;
     if (!FB.ready()) return;
     if (products.length === 0 && !cloudConfigReceivedRef.current) return;
-    FB.saveConfig(authUser.uid, { products }).catch((e) => {
-      alert(t("product_sync_error") + (e?.message ? " (" + e.message + ")" : ""));
-    });
+    syncConfig({ products }, "product_sync_error");
   }, [products]);
 
   useEffect(() => {
