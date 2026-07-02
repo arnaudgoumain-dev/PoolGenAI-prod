@@ -5,11 +5,11 @@ const {
 const {
   Plus, Trash2, Droplets, X, ChevronRight, ChevronDown, Settings2, AlertTriangle, CheckCircle2,
   History, Beaker, Camera, Lock, Crown, ImageOff, Sparkles, Loader2, Clock, FileText, Download,
-  Eye, EyeOff, Share2
+  Eye, EyeOff, Share2, MapPin, LocateFixed
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.21.4";
+const APP_VERSION = "1.22.0";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -313,6 +313,11 @@ const TRANSLATIONS = {
     edit_pool_title: "Modifier le bassin",
     pool_name_placeholder: "Ma piscine",
     pool_location_placeholder: "Jardin, terrasse...",
+    location_use_gps: "Me géolocaliser",
+    location_searching: "Recherche...",
+    location_search_error: "Recherche indisponible, réessaie",
+    location_no_results: "Aucune ville trouvée",
+    location_gps_error: "Géolocalisation indisponible",
     pool_volume_placeholder: "72",
     save_pool: "Enregistrer",
     // Misc
@@ -778,6 +783,11 @@ const TRANSLATIONS = {
     edit_pool_title: "Edit pool",
     pool_name_placeholder: "My pool",
     pool_location_placeholder: "Garden, terrace...",
+    location_use_gps: "Use my location",
+    location_searching: "Searching...",
+    location_search_error: "Search unavailable, try again",
+    location_no_results: "No city found",
+    location_gps_error: "Location unavailable",
     pool_volume_placeholder: "72",
     save_pool: "Save",
     loading: "Loading...",
@@ -1244,6 +1254,11 @@ const TRANSLATIONS = {
     edit_pool_title: "Becken bearbeiten",
     pool_name_placeholder: "Mein Pool",
     pool_location_placeholder: "Garten, Terrasse...",
+    location_use_gps: "Standort verwenden",
+    location_searching: "Suche...",
+    location_search_error: "Suche nicht verfügbar, erneut versuchen",
+    location_no_results: "Keine Stadt gefunden",
+    location_gps_error: "Standort nicht verfügbar",
     pool_volume_placeholder: "72",
     save_pool: "Speichern",
     loading: "Laden...",
@@ -1710,6 +1725,11 @@ const TRANSLATIONS = {
     edit_pool_title: "Modifica vasca",
     pool_name_placeholder: "La mia piscina",
     pool_location_placeholder: "Giardino, terrazza...",
+    location_use_gps: "Usa la mia posizione",
+    location_searching: "Ricerca...",
+    location_search_error: "Ricerca non disponibile, riprova",
+    location_no_results: "Nessuna città trovata",
+    location_gps_error: "Posizione non disponibile",
     pool_volume_placeholder: "72",
     save_pool: "Salva",
     loading: "Caricamento...",
@@ -2173,6 +2193,11 @@ const TRANSLATIONS = {
     edit_pool_title: "Editar piscina",
     pool_name_placeholder: "Mi piscina",
     pool_location_placeholder: "Jardín, terraza...",
+    location_use_gps: "Usar mi ubicación",
+    location_searching: "Buscando...",
+    location_search_error: "Búsqueda no disponible, inténtalo de nuevo",
+    location_no_results: "No se encontró ninguna ciudad",
+    location_gps_error: "Ubicación no disponible",
     pool_volume_placeholder: "72",
     save_pool: "Guardar",
     loading: "Cargando...",
@@ -2633,6 +2658,11 @@ const TRANSLATIONS = {
     edit_pool_title: "Editar piscina",
     pool_name_placeholder: "Minha piscina",
     pool_location_placeholder: "Jardim, terraço...",
+    location_use_gps: "Usar minha localização",
+    location_searching: "Buscando...",
+    location_search_error: "Busca indisponível, tente novamente",
+    location_no_results: "Nenhuma cidade encontrada",
+    location_gps_error: "Localização indisponível",
     pool_volume_placeholder: "72",
     save_pool: "Salvar",
     loading: "Carregando...",
@@ -3205,6 +3235,51 @@ function parseDataUrl(dataUrl) {
   const match = /^data:(image\/[a-zA-Z]+);base64,(.*)$/.exec(dataUrl);
   if (!match) return null;
   return { mediaType: match[1], data: match[2] };
+}
+
+// ---------- Helpers géocodage (Nominatim / OpenStreetMap) ----------
+// Formate une adresse Nominatim en "Ville (dép)" pour la France, "Ville, Pays" à l'international
+function formatNominatimAddress(addr) {
+  if (!addr) return null;
+  const city = addr.city || addr.town || addr.village || addr.municipality || addr.hamlet;
+  if (!city) return null;
+  const country = addr.country || "";
+  const countryCode = (addr.country_code || "").toLowerCase();
+  if (countryCode === "fr") {
+    let dept = null;
+    const iso6 = addr["ISO3166-2-lvl6"];
+    if (iso6 && iso6.includes("-")) dept = iso6.split("-")[1];
+    if (!dept && addr.postcode) dept = addr.postcode.slice(0, 2);
+    return dept ? `${city} (${dept})` : city;
+  }
+  return country ? `${city}, ${country}` : city;
+}
+
+// Recherche de villes via Nominatim. Retourne une liste de { label, lat, lon }
+async function nominatimSearch(query, lang) {
+  if (!query || query.trim().length < 3) return [];
+  const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=6&accept-language=${encodeURIComponent(lang || "fr")}&featureType=city&q=${encodeURIComponent(query.trim())}`;
+  const res = await fetch(url, { headers: { "Accept": "application/json" } });
+  if (!res.ok) throw new Error("nominatim_search_failed");
+  const data = await res.json();
+  const seen = new Set();
+  const out = [];
+  for (const item of data) {
+    const label = formatNominatimAddress(item.address);
+    if (!label || seen.has(label)) continue;
+    seen.add(label);
+    out.push({ label, lat: item.lat, lon: item.lon });
+  }
+  return out;
+}
+
+// Reverse geocoding (coordonnées GPS -> "Ville (dép)" / "Ville, Pays")
+async function nominatimReverse(lat, lon, lang) {
+  const url = `https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&accept-language=${encodeURIComponent(lang || "fr")}&lat=${lat}&lon=${lon}`;
+  const res = await fetch(url, { headers: { "Accept": "application/json" } });
+  if (!res.ok) throw new Error("nominatim_reverse_failed");
+  const data = await res.json();
+  return formatNominatimAddress(data.address);
 }
 
 // ---------- Helpers IA (Anthropic + OpenAI) ----------
@@ -8891,6 +8966,162 @@ function PaywallModal({ onClose, onActivate, lang }) {
   );
 }
 
+// ---------- Autocomplétion localisation (Nominatim + GPS) ----------
+function LocationAutocomplete({ value, onChange, lang, placeholder }) {
+  const t = useT(lang || "fr");
+  const [query, setQuery] = useState(value || "");
+  const [results, setResults] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState(false);
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [gpsError, setGpsError] = useState(false);
+  const debounceRef = useRef(null);
+  const wrapRef = useRef(null);
+
+  useEffect(() => { setQuery(value || ""); }, [value]);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!query || query.trim().length < 3 || query === value) {
+      setResults([]);
+      setSearching(false);
+      return;
+    }
+    setSearchError(false);
+    debounceRef.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const r = await nominatimSearch(query, lang);
+        setResults(r);
+      } catch (e) {
+        setSearchError(true);
+        setResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 450);
+    return () => clearTimeout(debounceRef.current);
+  }, [query]);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  function handleSelect(item) {
+    onChange(item.label);
+    setQuery(item.label);
+    setResults([]);
+    setOpen(false);
+  }
+
+  function handleInputChange(e) {
+    const v = e.target.value;
+    setQuery(v);
+    setOpen(true);
+    if (v !== value) onChange("");
+  }
+
+  function handleGeoloc() {
+    if (!navigator.geolocation) { setGpsError(true); return; }
+    setGpsLoading(true);
+    setGpsError(false);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const label = await nominatimReverse(pos.coords.latitude, pos.coords.longitude, lang);
+          if (label) {
+            onChange(label);
+            setQuery(label);
+            setResults([]);
+            setOpen(false);
+          } else {
+            setGpsError(true);
+          }
+        } catch (e) {
+          setGpsError(true);
+        } finally {
+          setGpsLoading(false);
+        }
+      },
+      () => { setGpsError(true); setGpsLoading(false); },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+    );
+  }
+
+  const showDropdown = open && query.trim().length >= 3 && query !== value;
+
+  return (
+    <div ref={wrapRef} style={{ position: "relative" }}>
+      <div style={{ display: "flex", gap: 8 }}>
+        <input
+          style={{ ...styles.input, flex: 1 }}
+          value={query}
+          onChange={handleInputChange}
+          onFocus={() => setOpen(true)}
+          placeholder={placeholder}
+          autoComplete="off"
+        />
+        <button
+          type="button"
+          onClick={handleGeoloc}
+          disabled={gpsLoading}
+          title={t("location_use_gps")}
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "center",
+            width: 44, borderRadius: 11, border: "1.5px solid #d0e4f5",
+            background: "#fafcfb", color: "#0a6ebd", cursor: gpsLoading ? "default" : "pointer",
+            flexShrink: 0,
+          }}
+        >
+          {gpsLoading ? <Loader2 size={17} className="spin" /> : <LocateFixed size={17} />}
+        </button>
+      </div>
+      {showDropdown && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 4px)", left: 0, right: 52,
+          background: "#fff", border: "1.5px solid #d0e4f5", borderRadius: 11,
+          boxShadow: "0 6px 18px rgba(10,50,90,0.14)", zIndex: 50, overflow: "hidden",
+        }}>
+          {searching && (
+            <div style={{ padding: "10px 12px", fontSize: 12.5, color: "#6a7d90", display: "flex", alignItems: "center", gap: 6 }}>
+              <Loader2 size={13} className="spin" /> {t("location_searching")}
+            </div>
+          )}
+          {!searching && searchError && (
+            <div style={{ padding: "10px 12px", fontSize: 12.5, color: "#b23b3b" }}>{t("location_search_error")}</div>
+          )}
+          {!searching && !searchError && results.length === 0 && (
+            <div style={{ padding: "10px 12px", fontSize: 12.5, color: "#6a7d90" }}>{t("location_no_results")}</div>
+          )}
+          {!searching && results.map((r, i) => (
+            <div
+              key={i}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => handleSelect(r)}
+              style={{
+                padding: "10px 12px", fontSize: 13.5, color: "#0d2b4e", cursor: "pointer",
+                borderTop: i > 0 ? "1px solid #eef3f6" : "none",
+                display: "flex", alignItems: "center", gap: 7,
+              }}
+            >
+              <MapPin size={13} color="#0a6ebd" />
+              {r.label}
+            </div>
+          ))}
+        </div>
+      )}
+      {gpsError && (
+        <div style={{ fontSize: 11.5, color: "#b23b3b", marginTop: 4 }}>{t("location_gps_error")}</div>
+      )}
+    </div>
+  );
+}
+
 // ---------- Ajout d'un bassin ----------
 function AddPoolModal({ onClose, onSave, lang, existingPool, forced }) {
   const t = useT(lang || "fr");
@@ -8980,7 +9211,7 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced }) {
 
       {/* Localisation */}
       <label style={styles.fieldLabel}>{t("location")}</label>
-      <input style={styles.input} value={location} onChange={e => setLocation(e.target.value)} placeholder={t("pool_location_placeholder")} />
+      <LocationAutocomplete value={location} onChange={setLocation} lang={lang || "fr"} placeholder={t("pool_location_placeholder")} />
 
       {/* Volume */}
       <label style={styles.fieldLabel}>{t("volume")}</label>

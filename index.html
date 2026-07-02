@@ -393,25 +393,14 @@
   waitForFirebase();
 </script>
 
-<!-- Service worker d&#233;sactiv&#233; pour l'instant : un SW d&#233;j&#224; install&#233; sur un
-     appareil peut servir une version p&#233;rim&#233;e de l'app ind&#233;finiment, ce qui
-     est trop pi&#233;geux en phase de test. On le r&#233;activera une fois l'app
-     stabilis&#233;e. Ce script d&#233;sinstalle aussi tout SW d&#233;j&#224; pr&#233;sent. -->
+<!-- Service worker actif (cache offline uniquement). La détection de nouvelle
+     version et le reload sont gérés exclusivement par le mécanisme version.json
+     (écran bloquant non fermable, voir PoolGenAI.jsx). Le SW ne déclenche plus
+     aucun reload de son côté pour éviter tout conflit entre les deux mécanismes. -->
 <script>
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("./sw.js").then((reg) => {
-      // Vérifie les mises à jour à chaque chargement
       reg.update();
-      // Si une nouvelle version est disponible, elle s'active immédiatement
-      reg.addEventListener("updatefound", () => {
-        const newWorker = reg.installing;
-        newWorker.addEventListener("statechange", () => {
-          if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-            // Nouvelle version prête — recharge silencieusement
-            window.location.reload();
-          }
-        });
-      });
     }).catch((err) => console.warn("SW registration failed:", err));
   }
 </script>
