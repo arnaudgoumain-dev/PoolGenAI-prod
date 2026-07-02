@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.22.1";
+const APP_VERSION = "1.23.0";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -177,6 +177,7 @@ const TRANSLATIONS = {
     analyze_btn: "Analyser",
     analyzing: "Analyse en cours...",
     analyze_locked: "Photo + analyse IA réservées à la version illimitée",
+    product_ai_hint: "Active l'analyse IA dans les Réglages pour remplir ces champs automatiquement à partir de la photo.",
     note_optional: "Note (optionnel)",
     note_placeholder: "Eau trouble, fort ensoleillement, baignade prévue...",
     save_measure: "Enregistrer la mesure",
@@ -655,6 +656,7 @@ const TRANSLATIONS = {
     analyze_btn: "Analyze",
     analyzing: "Analyzing...",
     analyze_locked: "Photo + AI analysis reserved for unlimited version",
+    product_ai_hint: "Enable AI analysis in Settings to auto-fill these fields from the photo.",
     note_optional: "Note (optional)",
     note_placeholder: "Cloudy water, strong sun, swimming planned...",
     save_measure: "Save reading",
@@ -1124,6 +1126,7 @@ const TRANSLATIONS = {
     analyze_btn: "Analysieren",
     analyzing: "Analysiere...",
     analyze_locked: "Foto + KI-Analyse nur in unbegrenzter Version",
+    product_ai_hint: "Aktiviere die KI-Analyse in den Einstellungen, um diese Felder automatisch aus dem Foto auszufüllen.",
     note_optional: "Notiz (optional)",
     note_placeholder: "Trübes Wasser, starke Sonne, Schwimmen geplant...",
     save_measure: "Messung speichern",
@@ -1595,6 +1598,7 @@ const TRANSLATIONS = {
     analyze_btn: "Analizza",
     analyzing: "Analisi in corso...",
     analyze_locked: "Foto + analisi IA riservate alla versione illimitata",
+    product_ai_hint: "Attiva l'analisi IA nelle Impostazioni per compilare automaticamente questi campi dalla foto.",
     note_optional: "Nota (opzionale)",
     note_placeholder: "Acqua torbida, sole forte, nuoto previsto...",
     save_measure: "Salva misurazione",
@@ -2063,6 +2067,7 @@ const TRANSLATIONS = {
     analyze_btn: "Analizar",
     analyzing: "Analizando...",
     analyze_locked: "Foto + análisis IA reservados para versión ilimitada",
+    product_ai_hint: "Activa el análisis IA en Ajustes para rellenar estos campos automáticamente a partir de la foto.",
     note_optional: "Nota (opcional)",
     note_placeholder: "Agua turbia, sol fuerte, natación prevista...",
     save_measure: "Guardar medición",
@@ -2531,6 +2536,7 @@ const TRANSLATIONS = {
     analyze_btn: "Analisar",
     analyzing: "Analisando...",
     analyze_locked: "Foto + análise IA reservadas para versão ilimitada",
+    product_ai_hint: "Ative a análise IA nas Definições para preencher estes campos automaticamente a partir da foto.",
     note_optional: "Nota (opcional)",
     note_placeholder: "Água turva, sol forte, natação prevista...",
     save_measure: "Salvar medição",
@@ -3465,6 +3471,31 @@ Règles strictes :
   return JSON.parse(match[0]);
 }
 
+async function analyzeProductPhoto({ apiKey, apiProvider, dataUrl, uid: callerUid }) {
+  const prompt = `Tu es un expert en chimie de l'eau de piscine. Analyse cette photo d'étiquette ou d'emballage d'un produit de traitement piscine (chlore, pH, sel, algicide, floculant, etc.).
+
+Identifie sur l'étiquette :
+- Le nom commercial du produit
+- Son action principale (une seule valeur parmi : "ph-", "ph+", "chlore", "chlore-stabilise", "tac+", "brome", "o2", "sel", "hard+", "phos-", "sequestrant")
+  - "chlore" = chlore choc/non stabilisé, "chlore-stabilise" = galets/pastilles au chlore stabilisé (contient de l'acide cyanurique/CYA)
+- La dose conseillée par le fabricant et son unité (g, kg, ml ou L)
+- L'effet annoncé sur le paramètre concerné pour un volume d'eau donné (ex : "20g augmente le pH de 0,1 pour 10m³") si l'information est visible
+- Le délai d'attente avant baignade recommandé en heures, si indiqué
+
+Réponds UNIQUEMENT en JSON valide, sans texte avant ou après, sans markdown :
+{"name": "nom du produit ou null", "action": "une des valeurs listées ci-dessus ou null", "doseAmount": nombre ou null, "doseUnit": "g" ou "kg" ou "ml" ou "L" ou null, "effectAmount": nombre ou null, "effectPer": nombre de m³ ou null, "waitHours": nombre ou null, "confidence": "haute" ou "moyenne" ou "basse", "note": "une phrase en français sur ce qui a été lu ou non sur l'étiquette"}
+
+Règles strictes :
+- null pour toute information absente ou illisible sur l'étiquette, ne devine jamais une valeur non présente
+- Les nombres sont des nombres, jamais des chaînes
+- JSON pur, rien d'autre`;
+
+  const text = await callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl: dataUrl, uid: callerUid });
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error("Réponse IA non parseable : " + text.slice(0, 200));
+  return JSON.parse(match[0]);
+}
+
 // ---------- Composant principal ----------
 
 class ErrorBoundary extends React.Component {
@@ -3515,6 +3546,7 @@ const FB = {
   onAuth: (cb) => window._fbOnAuth ? window._fbOnAuth(window._fbAuth, cb) : (() => {}),
   signInGoogle: () => window._fbSignInWithPopup(window._fbAuth, window._fbGoogle),
   reauthGoogle: () => window._fbReauthGoogle ? window._fbReauthGoogle() : Promise.reject(new Error("not available")),
+  reauthEmail: (password) => window._fbReauthEmail ? window._fbReauthEmail(password) : Promise.reject(new Error("not available")),
   signIn: (email, pwd) => window._fbSignIn(window._fbAuth, email, pwd),
   signUp: (email, pwd) => window._fbSignUp(window._fbAuth, email, pwd),
   resetPwd: (email) => window._fbResetPwd(window._fbAuth, email),
@@ -3926,7 +3958,7 @@ By creating an account, the user acknowledges having read this document in full 
         {/* Formulaire email */}
         {firebaseReady && (
           <>
-            <label style={{ fontSize: 12, fontWeight: 600, color: "#4a6480", display: "block", marginBottom: 4 }}>Email</label>
+            <FieldLabel required style={{ fontSize: 12, fontWeight: 600, color: "#4a6480", display: "block", marginBottom: 4 }}>Email</FieldLabel>
             <input
               type="email" value={email} onChange={e => setEmail(e.target.value)}
               style={{ width: "100%", padding: "11px 14px", borderRadius: 10, border: "1.5px solid #d0e4f5", fontSize: 14, marginBottom: 10, boxSizing: "border-box" }}
@@ -3936,7 +3968,7 @@ By creating an account, the user acknowledges having read this document in full 
 
             {mode !== "reset" && (
               <>
-                <label style={{ fontSize: 12, fontWeight: 600, color: "#4a6480", display: "block", marginBottom: 4 }}>{t("password")}</label>
+                <FieldLabel required style={{ fontSize: 12, fontWeight: 600, color: "#4a6480", display: "block", marginBottom: 4 }}>{t("password")}</FieldLabel>
                 <input
                   type="password" value={pwd} onChange={e => setPwd(e.target.value)}
                   style={{ width: "100%", padding: "11px 14px", borderRadius: 10, border: "1.5px solid #d0e4f5", fontSize: 14, marginBottom: 10, boxSizing: "border-box" }}
@@ -3949,7 +3981,7 @@ By creating an account, the user acknowledges having read this document in full 
             {/* Confirmation mot de passe à l'inscription */}
             {mode === "signup" && (
               <>
-                <label style={{ fontSize: 12, fontWeight: 600, color: "#4a6480", display: "block", marginBottom: 4 }}>{t("confirm_password")}</label>
+                <FieldLabel required style={{ fontSize: 12, fontWeight: 600, color: "#4a6480", display: "block", marginBottom: 4 }}>{t("confirm_password")}</FieldLabel>
                 <input
                   type="password" value={pwd2} onChange={e => setPwd2(e.target.value)}
                   style={{ width: "100%", padding: "11px 14px", borderRadius: 10, border: pwd2 && pwd !== pwd2 ? "1.5px solid #c0392b" : "1.5px solid #d0e4f5", fontSize: 14, marginBottom: 10, boxSizing: "border-box" }}
@@ -4052,6 +4084,9 @@ By creating an account, the user acknowledges having read this document in full 
 function PoolApp() {
   const [authUser, setAuthUser] = useState(undefined); // undefined=loading, null=anonymous, object=logged in
   const [showLogin, setShowLogin] = useState(false);
+  const [showDeleteReauth, setShowDeleteReauth] = useState(false);
+  const [deleteReauthError, setDeleteReauthError] = useState(null);
+  const [deleteReauthBusy, setDeleteReauthBusy] = useState(false);
   const [emailVerifiedNow, setEmailVerifiedNow] = useState(null); // null = se fier à authUser.emailVerified
   const [verifyChecking, setVerifyChecking] = useState(false);
   const [verifyCheckFailed, setVerifyCheckFailed] = useState(false);
@@ -4233,6 +4268,20 @@ function PoolApp() {
     setDataConsent(false);
     setAcceptedCguVersion(null);
     setCguAcceptedDate(null);
+  }
+
+  async function performDeleteAccount() {
+    const uid = authUser?.uid;
+    // Supprimer toutes les données Firestore AVANT de supprimer le compte Auth
+    // (une fois le compte Auth supprimé, le token n'est plus valide pour écrire)
+    if (uid) {
+      await eraseAllUserData(uid).catch(() => {});
+    }
+    await FB.deleteAccount();
+    await resetLocalAppState();
+    window.storage.set("auth_skipped", "").catch(() => {});
+    setAuthUser(null);
+    setShowLogin(true);
   }
 
   async function handleEraseSuspendedData() {
@@ -5133,7 +5182,7 @@ function PoolApp() {
             applicationForLatest={latest ? poolApplications.find((a) => a.measureId === latest.id) : null}
             blockedByLimit={blockedByLimit}
             isPremium={isPremium}
-            apiKey={aiEnabled ? apiKey : ""}
+            apiKey={aiEnabled && isPremium ? apiKey : ""}
             apiProvider={apiProvider}
             recentMeasures={sortedMeasures}
             effectiveTargets={effectiveTargets}
@@ -5160,7 +5209,7 @@ function PoolApp() {
             onGenerateReport={() => setShowReport(true)}
             onWantPremiumForReport={() => openPaywall()}
             lang={lang}
-            apiKey={aiEnabled ? apiKey : ""}
+            apiKey={aiEnabled && isPremium ? apiKey : ""}
             apiProvider={apiProvider}
             authUid={authUser?.uid}
             pool={activePool}
@@ -5207,34 +5256,24 @@ function PoolApp() {
             }}
             onSignIn={() => setShowLogin(true)}
             onDeleteAccount={async () => {
-              try {
-                const uid = authUser?.uid;
-                const isGoogle = authUser?.providerData?.some(p => p.providerId === "google.com");
-                if (isGoogle) {
+              const isGoogle = authUser?.providerData?.some(p => p.providerId === "google.com");
+              if (isGoogle) {
+                try {
                   try {
                     await FB.reauthGoogle();
-                  } catch(reauthErr) {
+                  } catch (reauthErr) {
                     if (reauthErr.code !== "auth/cancelled-popup-request") throw reauthErr;
                     return;
                   }
-                }
-                // Supprimer toutes les données Firestore AVANT de supprimer le compte Auth
-                // (une fois le compte Auth supprimé, le token n'est plus valide pour écrire)
-                if (uid) {
-                  await eraseAllUserData(uid).catch(() => {});
-                }
-                await FB.deleteAccount();
-                await resetLocalAppState();
-                window.storage.set("auth_skipped", "").catch(() => {});
-                setAuthUser(null);
-                setShowLogin(true);
-              } catch (e) {
-                if (e.code === "auth/requires-recent-login") {
-                  alert("Reconnecte-toi d'abord pour pouvoir supprimer ton compte.");
-                } else {
+                  await performDeleteAccount();
+                } catch (e) {
                   alert(e.message);
                 }
+                return;
               }
+              // Compte email/mot de passe : demande le mot de passe avant de tenter la suppression
+              setDeleteReauthError(null);
+              setShowDeleteReauth(true);
             }}
             poolMeasureCount={poolMeasures.length}
             onGenerateReport={() => setShowReport(true)}
@@ -5282,7 +5321,7 @@ function PoolApp() {
             setEditingMeasure(null);
             openPaywall();
           }}
-          apiKey={aiEnabled ? apiKey : ""}
+          apiKey={aiEnabled && isPremium ? apiKey : ""}
           apiProvider={apiProvider}
           activeParamKeys={activeParamKeys}
           lang={lang}
@@ -5307,6 +5346,10 @@ function PoolApp() {
           applications={poolApplications}
           manageStock={!!activePool?.manageStock}
           lang={lang}
+          aiEnabled={aiEnabled}
+          apiKey={aiEnabled && isPremium ? apiKey : ""}
+          apiProvider={apiProvider}
+          authUid={authUser?.uid}
           onWantManageStock={() => {
             setShowAddProduct(false);
             setEditingProduct(null);
@@ -5330,6 +5373,32 @@ function PoolApp() {
 
       {showAddPool && (
         <AddPoolModal onClose={() => setShowAddPool(false)} onSave={addPool} lang={lang} />
+      )}
+
+      {showDeleteReauth && (
+        <DeleteReauthModal
+          lang={lang}
+          busy={deleteReauthBusy}
+          error={deleteReauthError}
+          onClose={() => { setShowDeleteReauth(false); setDeleteReauthError(null); }}
+          onConfirm={async (password) => {
+            setDeleteReauthBusy(true);
+            setDeleteReauthError(null);
+            try {
+              await FB.reauthEmail(password);
+              await performDeleteAccount();
+              setShowDeleteReauth(false);
+            } catch (e) {
+              if (e.code === "auth/wrong-password" || e.code === "auth/invalid-credential") {
+                setDeleteReauthError(t("wrong_password"));
+              } else {
+                setDeleteReauthError(e.message);
+              }
+            } finally {
+              setDeleteReauthBusy(false);
+            }
+          }}
+        />
       )}
 
 
@@ -8288,7 +8357,7 @@ function ProductsView({ products, onEdit, onAddNew, onDelete, onResetAll, isPrem
   );
 }
 
-function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, applications, manageStock, onWantManageStock, lang }) {
+function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, applications, manageStock, onWantManageStock, lang, aiEnabled, apiKey, apiProvider, authUid }) {
   const t = useT(lang || "fr");
   const [name, setName] = useState(product?.name || "");
   const [action, setAction] = useState(product?.action || "ph-");
@@ -8303,6 +8372,9 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
   const [containerAmount, setContainerAmount] = useState(product?.containerAmount ?? 1);
   const [containerUnit, setContainerUnit] = useState(product?.containerUnit ?? "kg");
   const [photoBusy, setPhotoBusy] = useState(false);
+  const [aiAnalyzing, setAiAnalyzing] = useState(false);
+  const [aiError, setAiError] = useState(null);
+  const [aiNote, setAiNote] = useState(null);
   const fileInputRef = useRef(null);
   const galleryInputRef = useRef(null);
 
@@ -8310,6 +8382,8 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
     const file = e.target.files?.[0];
     if (!file) return;
     setPhotoBusy(true);
+    setAiError(null);
+    setAiNote(null);
     try {
       const dataUrl = await fileToDataUrl(file);
       setPhoto(dataUrl);
@@ -8317,6 +8391,28 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
       // silencieux
     } finally {
       setPhotoBusy(false);
+    }
+  }
+
+  async function handleAnalyzePhoto() {
+    if (!photo || !apiKey) return;
+    setAiAnalyzing(true);
+    setAiError(null);
+    setAiNote(null);
+    try {
+      const result = await analyzeProductPhoto({ apiKey, apiProvider, dataUrl: photo, uid: authUid });
+      if (result.name) setName(result.name);
+      if (result.action) setAction(result.action);
+      if (result.doseAmount != null) setDoseAmount(result.doseAmount);
+      if (result.doseUnit) setDoseUnit(result.doseUnit);
+      if (result.effectAmount != null) setEffectAmount(result.effectAmount);
+      if (result.effectPer != null) setEffectPer(result.effectPer);
+      if (result.waitHours != null) setWaitHours(result.waitHours);
+      if (result.note) setAiNote(result.note);
+    } catch (err) {
+      setAiError(t("error_analyze"));
+    } finally {
+      setAiAnalyzing(false);
     }
   }
 
@@ -8375,6 +8471,25 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
           )}
           <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoChange} style={styles.hiddenFileInput} />
           <input ref={galleryInputRef} type="file" accept="image/*" onChange={handlePhotoChange} style={styles.hiddenFileInput} />
+
+          {photo && aiEnabled && apiKey && (
+            <button
+              type="button"
+              style={{ width: "100%", padding: "10px 0", borderRadius: 10, border: "1.5px solid #b0d8f0", background: "#eaf4fb", color: "#0a6ebd", fontWeight: 700, fontSize: 13, cursor: "pointer", marginTop: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+              onClick={handleAnalyzePhoto}
+              disabled={aiAnalyzing}
+            >
+              <Sparkles size={15} className={aiAnalyzing ? "spin" : undefined} />
+              {aiAnalyzing ? t("ai_analyzing") : t("ai_analyze_btn")}
+            </button>
+          )}
+          {photo && !aiEnabled && (
+            <div style={{ fontSize: 11.5, color: "#6a7d90", marginTop: 8, lineHeight: 1.5 }}>
+              {t("product_ai_hint")}
+            </div>
+          )}
+          {aiNote && <div style={{ ...styles.analyzeNoteOk, marginTop: 8 }}>{aiNote}</div>}
+          {aiError && <div style={{ ...styles.analyzeNoteError, marginTop: 8 }}>{aiError}</div>}
         </div>
       ) : (
         <button style={styles.photoLockedBtn} onClick={onWantPremium}>
@@ -8383,7 +8498,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
         </button>
       )}
 
-      <label style={styles.fieldLabel}>{t("product_name")}</label>
+      <FieldLabel required>{t("product_name")}</FieldLabel>
       <input
         style={styles.input}
         value={name}
@@ -8714,20 +8829,33 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
         <span style={styles.sectionLabel}>{t("api_section")}</span>
       </div>
 
-      {/* Toggle activer l'analyse IA */}
+      {/* Toggle activer l'analyse IA — réservé premium */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#f0f6fb", borderRadius: 12, padding: "12px 14px", marginBottom: 8 }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: "#0d2b4e" }}>{t("ai_toggle_label")}</div>
-          <div style={{ fontSize: 11, color: "#6a7d90", marginTop: 2 }}>{t("ai_toggle_desc")}</div>
+          <div style={{ fontSize: 11, color: "#6a7d90", marginTop: 2 }}>
+            {isPremium ? t("ai_toggle_desc") : t("analyze_locked")}
+          </div>
         </div>
-        <ToggleSwitch
-          checked={aiEnabled}
-          onChange={(val) => setAiEnabled(val)}
-        />
+        {isPremium ? (
+          <ToggleSwitch
+            checked={aiEnabled}
+            onChange={(val) => setAiEnabled(val)}
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={onWantPremium}
+            style={{ background: "none", border: "none", cursor: "pointer", color: "#8a9bb0", display: "flex", alignItems: "center", padding: 4 }}
+            title={t("analyze_locked")}
+          >
+            <Lock size={18} />
+          </button>
+        )}
       </div>
 
-      {/* Bouton configurer — visible uniquement si IA activée */}
-      {aiEnabled && (
+      {/* Bouton configurer — visible uniquement si IA activée (premium uniquement) */}
+      {isPremium && aiEnabled && (
         <button
           style={{ width: "100%", padding: "11px 0", borderRadius: 10, border: "1.5px solid #b0d8f0", background: "#eaf4fb", color: "#0a6ebd", fontWeight: 700, fontSize: 13, cursor: "pointer", marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
           onClick={() => setShowAiConfig(true)}
@@ -8930,6 +9058,45 @@ function ToggleSwitch({ checked, onChange }) {
 }
 
 // ---------- Paywall ----------
+function DeleteReauthModal({ onClose, onConfirm, busy, error, lang }) {
+  const t = useT(lang || "fr");
+  const [password, setPassword] = useState("");
+  return (
+    <ModalShell onClose={onClose} title={t("delete_account")}>
+      <p style={{ fontSize: 13, color: "#4a6480", lineHeight: 1.5, marginTop: 0 }}>
+        {t("reauth_required")}
+      </p>
+      <FieldLabel required>{t("password")}</FieldLabel>
+      <input
+        type="password"
+        style={styles.input}
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        placeholder="••••••••"
+        autoFocus
+        onKeyDown={(e) => e.key === "Enter" && password && !busy && onConfirm(password)}
+      />
+      {error && (
+        <div style={{ marginTop: 8, fontSize: 12.5, color: "#c0392b" }}>{error}</div>
+      )}
+      <button
+        style={{ ...styles.primaryBtn, background: "#c0392b", marginTop: 14 }}
+        disabled={!password || busy}
+        onClick={() => onConfirm(password)}
+      >
+        {busy ? "..." : t("delete_account")}
+      </button>
+      <button
+        type="button"
+        style={{ width: "100%", padding: "11px 0", background: "none", border: "none", color: "#6a7d90", fontSize: 13, cursor: "pointer", marginTop: 8 }}
+        onClick={onClose}
+      >
+        {t("cancel")}
+      </button>
+    </ModalShell>
+  );
+}
+
 function PaywallModal({ onClose, onActivate, lang }) {
   const t = useT(lang || "fr");
   const perks = [
@@ -9206,8 +9373,18 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced }) {
       </div>
 
       {/* Nom */}
-      <label style={styles.fieldLabel}>{t("pool_name")}</label>
-      <input style={styles.input} value={name} onChange={e => setName(e.target.value)} placeholder={t("pool_name_placeholder")} />
+      <FieldLabel required>{t("pool_name")}</FieldLabel>
+      <input
+        style={styles.input}
+        value={name}
+        onChange={e => setName(e.target.value)}
+        placeholder={t("pool_name_placeholder")}
+        name="poolgenai-pool-name"
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck={false}
+      />
 
       {/* Localisation */}
       <label style={styles.fieldLabel}>{t("location")}</label>
@@ -10056,6 +10233,16 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
         )}
       </div>
     </div>
+  );
+}
+
+// ---------- Label de champ avec astérisque rouge si obligatoire ----------
+function FieldLabel({ children, required, style }) {
+  return (
+    <label style={style || styles.fieldLabel}>
+      {children}
+      {required && <span style={{ color: "#c0392b" }}> *</span>}
+    </label>
   );
 }
 

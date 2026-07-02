@@ -271,7 +271,7 @@
 <!-- Firebase SDK (module) -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification, deleteUser, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getAuth, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, EmailAuthProvider, reauthenticateWithCredential, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification, deleteUser, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, getDocs, addDoc, onSnapshot, writeBatch, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getAnalytics, logEvent, setUserId, setUserProperties } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
 
@@ -328,6 +328,14 @@
   window._fbReauthGoogle = async () => {
     const { reauthenticateWithPopup } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
     return reauthenticateWithPopup(auth, googleProvider);
+  };
+
+  // Ré-authentification email/mot de passe (compte requires-recent-login)
+  window._fbReauthEmail = async (password) => {
+    const user = auth.currentUser;
+    if (!user || !user.email) throw new Error("Aucun utilisateur connecté.");
+    const credential = EmailAuthProvider.credential(user.email, password);
+    return reauthenticateWithCredential(user, credential);
   };
 
   window._fbSignInWithPopup = async (auth, provider) => {
