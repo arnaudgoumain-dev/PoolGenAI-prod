@@ -1,8 +1,8 @@
-// PoolGenAI Service Worker — v4
+// PoolGenAI Service Worker — v5
 // Stratégie : network-first (sans cache HTTP) pour JSX/HTML (toujours la dernière version),
 // réseau pur pour version.json (détection de mise à jour, jamais mis en cache),
 // cache-first pour les assets statiques (icônes, librairies CDN).
-const CACHE_NAME = "poolgenai-v4";
+const CACHE_NAME = "poolgenai-v5";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
