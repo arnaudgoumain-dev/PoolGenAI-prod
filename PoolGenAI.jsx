@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.23.0";
+const APP_VERSION = "1.23.1";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -8410,7 +8410,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
       if (result.waitHours != null) setWaitHours(result.waitHours);
       if (result.note) setAiNote(result.note);
     } catch (err) {
-      setAiError(t("error_analyze"));
+      setAiError(t("error_analyze") + " : " + (err?.message || t("verify_connection")));
     } finally {
       setAiAnalyzing(false);
     }
