@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.21.2";
+const APP_VERSION = "1.21.3";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -372,6 +372,8 @@ const TRANSLATIONS = {
     wrong_password: "Mot de passe incorrect.",
     user_not_found: "Aucun compte avec cet email. Si tu penses que c'est une erreur, contacte support.poolgenai@gmail.com",
     account_disabled: "Ce compte a été désactivé. Contacte support.poolgenai@gmail.com pour plus d'informations.",
+    login_failed_unified: "Email ou mot de passe incorrect.",
+    create_account_hint: "Pas encore de compte ? Créer un compte",
     email_in_use: "Cet email est déjà utilisé.",
     weak_password: "Mot de passe trop court (6 caractères min).",
     firebase_not_configured: "⚠️ Firebase non configuré — fonctionnement hors-ligne uniquement.",
@@ -834,6 +836,8 @@ const TRANSLATIONS = {
     wrong_password: "Wrong password.",
     user_not_found: "No account with this email. If you think this is a mistake, contact support.poolgenai@gmail.com",
     account_disabled: "This account has been disabled. Contact support.poolgenai@gmail.com for more information.",
+    login_failed_unified: "Incorrect email or password.",
+    create_account_hint: "No account yet? Create one",
     email_in_use: "This email is already in use.",
     weak_password: "Password too short (min 6 characters).",
     firebase_not_configured: "⚠️ Firebase not configured — offline mode only.",
@@ -1298,6 +1302,8 @@ const TRANSLATIONS = {
     wrong_password: "Falsches Passwort.",
     user_not_found: "Kein Konto mit dieser E-Mail. Falls das ein Irrtum ist, kontaktiere support.poolgenai@gmail.com",
     account_disabled: "Dieses Konto wurde gesperrt. Kontaktiere support.poolgenai@gmail.com für weitere Informationen.",
+    login_failed_unified: "E-Mail oder Passwort falsch.",
+    create_account_hint: "Noch kein Konto? Konto erstellen",
     email_in_use: "Diese E-Mail wird bereits verwendet.",
     weak_password: "Passwort zu kurz (mind. 6 Zeichen).",
     firebase_not_configured: "⚠️ Firebase nicht konfiguriert — nur Offline-Modus.",
@@ -1759,6 +1765,8 @@ const TRANSLATIONS = {
     wrong_password: "Password errata.",
     user_not_found: "Nessun account con questa email. Se pensi sia un errore, contatta support.poolgenai@gmail.com",
     account_disabled: "Questo account è stato disattivato. Contatta support.poolgenai@gmail.com per maggiori informazioni.",
+    login_failed_unified: "Email o password errati.",
+    create_account_hint: "Non hai un account? Creane uno",
     email_in_use: "Questa email è già in uso.",
     weak_password: "Password troppo corta (min 6 caratteri).",
     firebase_not_configured: "⚠️ Firebase non configurato — solo modalità offline.",
@@ -2220,6 +2228,8 @@ const TRANSLATIONS = {
     wrong_password: "Contraseña incorrecta.",
     user_not_found: "No hay cuenta con este email. Si crees que es un error, contacta con support.poolgenai@gmail.com",
     account_disabled: "Esta cuenta ha sido desactivada. Contacta con support.poolgenai@gmail.com para más información.",
+    login_failed_unified: "Email o contraseña incorrectos.",
+    create_account_hint: "¿Aún no tienes cuenta? Crear una cuenta",
     email_in_use: "Este email ya está en uso.",
     weak_password: "Contraseña demasiado corta (mín. 6 caracteres).",
     firebase_not_configured: "⚠️ Firebase no configurado — solo modo offline.",
@@ -2678,6 +2688,8 @@ const TRANSLATIONS = {
     wrong_password: "Senha incorreta.",
     user_not_found: "Nenhuma conta com este email. Se achas que é um erro, contacta support.poolgenai@gmail.com",
     account_disabled: "Esta conta foi desativada. Contacta support.poolgenai@gmail.com para mais informações.",
+    login_failed_unified: "Email ou palavra-passe incorretos.",
+    create_account_hint: "Ainda não tens conta? Criar conta",
     email_in_use: "Este email já está em uso.",
     weak_password: "Senha muito curta (mín. 6 caracteres).",
     firebase_not_configured: "⚠️ Firebase não configurado — apenas modo offline.",
@@ -3565,6 +3577,7 @@ function LoginScreen({ lang, onSkip, onConsentChange, detectedLang }) {
   const [info, setInfo] = useState("");
   const [busy, setBusy] = useState(false);
   const [verifyEmailFailed, setVerifyEmailFailed] = useState(false);
+  const [showCreateAccountHint, setShowCreateAccountHint] = useState(false);
   const [resendBusy, setResendBusy] = useState(false);
   const [resendDone, setResendDone] = useState(false);
   const [cguAccepted, setCguAccepted] = useState(false);
@@ -3584,7 +3597,7 @@ function LoginScreen({ lang, onSkip, onConsentChange, detectedLang }) {
   }
 
   async function handleSubmit() {
-    setError(""); setInfo(""); setBusy(true);
+    setError(""); setInfo(""); setBusy(true); setShowCreateAccountHint(false);
     try {
       if (mode === "reset") {
         await FB.resetPwd(email);
@@ -3626,13 +3639,17 @@ function LoginScreen({ lang, onSkip, onConsentChange, detectedLang }) {
         // onAuthStateChanged se déclenchera automatiquement
       }
     } catch (e) {
-      const msg = e.code === "auth/wrong-password" || e.code === "auth/invalid-credential" ? t("wrong_password")
+      const isLoginCredentialError = mode === "login" &&
+        (e.code === "auth/wrong-password" || e.code === "auth/invalid-credential" || e.code === "auth/user-not-found");
+      const msg = isLoginCredentialError ? t("login_failed_unified")
+        : e.code === "auth/wrong-password" || e.code === "auth/invalid-credential" ? t("wrong_password")
         : e.code === "auth/user-not-found" ? t("user_not_found")
         : e.code === "auth/user-disabled" ? t("account_disabled")
         : e.code === "auth/email-already-in-use" ? t("email_in_use")
         : e.code === "auth/weak-password" ? t("weak_password")
         : e.code === "auth/invalid-email" ? t("error_email_required")
         : e.message;
+      setShowCreateAccountHint(isLoginCredentialError);
       setError(msg);
     } finally { setBusy(false); }
   }
@@ -3906,7 +3923,20 @@ By creating an account, the user acknowledges having read this document in full 
               </div>
             )}
 
-            {error && <div style={{ fontSize: 12, color: "#c0392b", marginBottom: 8, padding: "8px 10px", background: "#fdf0ef", borderRadius: 8 }}>{error}</div>}
+            {error && (
+              <div style={{ marginBottom: 8 }}>
+                <div style={{ fontSize: 12, color: "#c0392b", padding: "8px 10px", background: "#fdf0ef", borderRadius: 8 }}>{error}</div>
+                {showCreateAccountHint && (
+                  <button
+                    type="button"
+                    onClick={() => { setMode("signup"); setError(""); setShowCreateAccountHint(false); }}
+                    style={{ marginTop: 6, background: "none", border: "none", color: "#0a6ebd", fontSize: 12.5, fontWeight: 600, cursor: "pointer", padding: 0, textDecoration: "underline" }}
+                  >
+                    {t("create_account_hint")}
+                  </button>
+                )}
+              </div>
+            )}
             {info && <div style={{ fontSize: 12, color: "#1a8fd1", marginBottom: 8, padding: "8px 10px", background: "#e8f4fd", borderRadius: 8 }}>{info}</div>}
 
             <button
