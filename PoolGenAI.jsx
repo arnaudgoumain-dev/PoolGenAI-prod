@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.29.5";
+const APP_VERSION = "1.29.6";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -457,6 +457,7 @@ const TRANSLATIONS = {
     reco_cl_excess_text: "Laisser le chlore se dégrader naturellement au soleil, ne pas se baigner en attendant.",
     reco_cl_shock_text: "ce soir (choc renforcé)",
     reco_note_tac: "Un TAC bas rend le pH instable.",
+    reco_no_product_note: "Aucun produit configuré pour cette action. Ajoute-en un dans l'onglet Produits.",
     reco_note_ph_before_tac: "pH corrigé avant le TAC : à ce pH le chlore serait peu efficace, et le TAC n'est pas assez bas pour être urgent.",
     reco_note_combined: "Chlore combiné = chloramines, signe d'une désinfection insuffisante. Verser le soir, filtration en continu.",
     reco_note_sel: "Utiliser du sel spécial piscine (NaCl pur ≥ 99%). Dissoudre avant l'ajout ou verser directement près du skimmer, filtration en marche 24h.",
@@ -964,6 +965,7 @@ const TRANSLATIONS = {
     reco_cl_excess_text: "Let chlorine degrade naturally in sunlight, avoid swimming in the meantime.",
     reco_cl_shock_text: "tonight (shock treatment)",
     reco_note_tac: "Low TAC makes pH unstable.",
+    reco_no_product_note: "No product configured for this action. Add one in the Products tab.",
     reco_note_ph_before_tac: "pH corrected before TAC: chlorine would be inefficient at this pH, and TAC isn't low enough to be urgent.",
     reco_note_combined: "Combined chlorine = chloramines, sign of insufficient disinfection. Add in the evening, keep filtration running.",
     reco_note_sel: "Use pool-grade salt (pure NaCl ≥ 99%). Dissolve before adding or pour directly near the skimmer, run filtration for 24h.",
@@ -1473,6 +1475,7 @@ const TRANSLATIONS = {
     reco_cl_excess_text: "Chlor natürlich in der Sonne abbauen lassen, zwischenzeitlich nicht schwimmen.",
     reco_cl_shock_text: "heute Abend (Schockbehandlung)",
     reco_note_tac: "Niedriger KH macht den pH instabil.",
+    reco_no_product_note: "Kein Produkt für diese Aktion konfiguriert. Füge eines im Tab Produkte hinzu.",
     reco_note_ph_before_tac: "pH vor KH korrigiert: Chlor wäre bei diesem pH-Wert wenig wirksam, und der KH ist nicht niedrig genug, um dringend zu sein.",
     reco_note_combined: "Gebundenes Chlor = Chloramine, Zeichen unzureichender Desinfektion. Abends zugeben, Filtration durchlaufen lassen.",
     reco_note_sel: "Poolsalz (reines NaCl ≥ 99%) verwenden. Vor dem Zugeben auflösen oder direkt beim Skimmer zugeben, 24h filtrieren.",
@@ -1979,6 +1982,7 @@ const TRANSLATIONS = {
     reco_cl_excess_text: "Lasciare che il cloro si degradi naturalmente al sole, evitare di nuotare nel frattempo.",
     reco_cl_shock_text: "stasera (trattamento shock)",
     reco_note_tac: "Un TAC basso rende il pH instabile.",
+    reco_no_product_note: "Nessun prodotto configurato per questa azione. Aggiungine uno nella scheda Prodotti.",
     reco_note_ph_before_tac: "pH corretto prima del TAC: a questo pH il cloro sarebbe poco efficace, e il TAC non è abbastanza basso da essere urgente.",
     reco_note_combined: "Cloro combinato = cloramine, segno di disinfezione insufficiente. Aggiungere la sera, filtrazione in continuo.",
     reco_note_sel: "Usare sale da piscina (NaCl puro ≥ 99%). Sciogliere prima dell'aggiunta o versare vicino allo skimmer, filtrazione 24h.",
@@ -2485,6 +2489,7 @@ const TRANSLATIONS = {
     reco_cl_excess_text: "Dejar que el cloro se degrade naturalmente al sol, evitar bañarse mientras tanto.",
     reco_cl_shock_text: "esta noche (tratamiento de choque)",
     reco_note_tac: "Un TAC bajo hace el pH inestable.",
+    reco_no_product_note: "No hay ningún producto configurado para esta acción. Añade uno en la pestaña Productos.",
     reco_note_ph_before_tac: "pH corregido antes que el TAC: a este pH el cloro sería poco eficaz, y el TAC no está lo bastante bajo para ser urgente.",
     reco_note_combined: "Cloro combinado = cloraminas, señal de desinfección insuficiente. Añadir por la noche, filtración continua.",
     reco_note_sel: "Usar sal de piscina (NaCl puro ≥ 99%). Disolver antes de añadir o verter cerca del skimmer, filtración 24h.",
@@ -2988,6 +2993,7 @@ const TRANSLATIONS = {
     reco_cl_excess_text: "Deixar o cloro degradar naturalmente ao sol, evitar nadar enquanto isso.",
     reco_cl_shock_text: "esta noite (tratamento de choque)",
     reco_note_tac: "Um TAC baixo torna o pH instável.",
+    reco_no_product_note: "Nenhum produto configurado para esta ação. Adiciona um no separador Produtos.",
     reco_note_ph_before_tac: "pH corrigido antes do TAC: a este pH o cloro seria pouco eficaz, e o TAC não está baixo o suficiente para ser urgente.",
     reco_note_combined: "Cloro combinado = cloraminas, sinal de desinfecção insuficiente. Adicionar à noite, filtração contínua.",
     reco_note_sel: "Usar sal de piscina (NaCl puro ≥ 99%). Dissolver antes de adicionar ou verter perto do skimmer, filtração 24h.",
@@ -5554,9 +5560,12 @@ function PoolApp() {
     setShowAddMeasure(true);
   }
 
+  // v1.29.6 — Le démarrage du plan exige maintenant isPremium ET manageStock
+  // activé (pas seulement isPremium). Un utilisateur premium qui n'a pas activé
+  // la gestion de stock retombe aussi sur le paywall.
   function handleValidateApplication(m, recsOverride, selectedRecsOverride, adjustMode) {
-    if (!isPremium) {
-      openPaywall();
+    if (!isPremium || !activePool?.manageStock) {
+      openPaywall("start_plan");
       return;
     }
     // Si plan déjà en cours pour cette mesure, reprendre
@@ -6619,11 +6628,14 @@ Réponds directement en français, sans titre ni introduction.`;
               <div>
                 {!latest?.importedFromPdf && (
                   <button
-                    style={styles.validateApplyBtn}
+                    style={{
+                      ...styles.validateApplyBtn,
+                      ...(!manageStock ? { background: "#c3d6e6", color: "#f0f5fa", cursor: "pointer" } : {}),
+                    }}
                     onClick={() => onValidateApplication(latest, recs)}
                   >
                     <CheckCircle2 size={16} /> {t("wizard_start")}
-                    {!isPremium && <Lock size={14} style={{ marginLeft: 4 }} />}
+                    {!manageStock && <Lock size={14} style={{ marginLeft: 4 }} />}
                   </button>
                 )}
                 <p style={{ ...styles.helpTextSmall, marginTop: 6, textAlign: "center" }}>
@@ -6776,8 +6788,14 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
   const has = (key) => paramKeysLower.includes(key.toLowerCase());
 
   // Traduit la note d'un produit : utilise noteKey si c'est un produit par défaut, sinon la note brute
+  // v1.29.6 — Fix : quand aucun produit n'est trouvé pour l'action recommandée,
+  // fallbackKey pointait vers une note spécifique à un AUTRE contexte (ex.
+  // "reco_note_tac" utilisée aussi pour ph+/ph-), affichant un message hors
+  // sujet ("Un TAC bas rend le pH instable." pour une recommandation pH+).
+  // fallbackKey ne doit s'appliquer que si le produit existe mais n'a pas de
+  // note ; si le produit est introuvable, le message est toujours générique.
   const prodNote = (prod, fallbackKey) =>
-    prod ? (prod.noteKey ? _(prod.noteKey) : prod.note) || _(fallbackKey) : _(fallbackKey);
+    prod ? (prod.noteKey ? _(prod.noteKey) : prod.note) || _(fallbackKey) : _("reco_no_product_note");
   // Traduit le nom d'un produit : utilise nameKey si disponible, sinon le nom brut
   const prodName = (prod, fallbackKey) =>
     prod ? (prod.nameKey ? _(prod.nameKey) : prod.name) || _(fallbackKey) : _(fallbackKey);
@@ -7601,6 +7619,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
             onValidateApplication={() => onValidateApplication(m)}
             application={applications.find((a) => a.measureId === m.id)}
             isPremium={isPremium}
+            manageStock={!!pool?.manageStock}
             lang={lang}
             activePlan={activePlan}
           />
@@ -7732,7 +7751,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
   );
 }
 
-function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, application, isPremium, lang, activePlan }) {
+function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, application, isPremium, manageStock, lang, activePlan }) {
   const t = useT(lang || "fr");
   const [open, setOpen] = useState(false);
   const params = ["pH", "fCl", "tCl", "tac", "cya", "temp"].filter(
@@ -7855,9 +7874,15 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, applicat
                   {t("plan_in_progress")}
                 </div>
               ) : (
-                <button style={styles.validateApplyBtnSmall} onClick={onValidateApplication}>
+                <button
+                  style={{
+                    ...styles.validateApplyBtnSmall,
+                    ...(!manageStock ? { background: "#c3d6e6", color: "#f0f5fa" } : {}),
+                  }}
+                  onClick={onValidateApplication}
+                >
                   <CheckCircle2 size={14} /> {t("wizard_start")}
-                  {!isPremium && <Lock size={12} style={{ marginLeft: 2 }} />}
+                  {!manageStock && <Lock size={12} style={{ marginLeft: 2 }} />}
                 </button>
               )
             )
