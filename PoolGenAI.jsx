@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.29.9";
+const APP_VERSION = "1.29.10";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -50,6 +50,8 @@ const TRANSLATIONS = {
     // History
     evolution: "Évolution",
     show_values: "Afficher les valeurs sur le graphique",
+    show_all_params: "Afficher les paramètres",
+    hide_all_params: "Masquer les paramètres",
     journal: "Journal",
     no_history: "Pas encore d'historique",
     no_history_sub: "Tes mesures apparaîtront ici au fil du temps.",
@@ -569,6 +571,8 @@ const TRANSLATIONS = {
     target: "target",
     evolution: "Evolution",
     show_values: "Show values on chart",
+    show_all_params: "Show parameters",
+    hide_all_params: "Hide parameters",
     journal: "Log",
     no_history: "No history yet",
     no_history_sub: "Your readings will appear here over time.",
@@ -1078,6 +1082,8 @@ const TRANSLATIONS = {
     target: "Ziel",
     evolution: "Verlauf",
     show_values: "Werte im Diagramm anzeigen",
+    show_all_params: "Parameter anzeigen",
+    hide_all_params: "Parameter ausblenden",
     journal: "Protokoll",
     no_history: "Noch kein Verlauf",
     no_history_sub: "Deine Messungen werden hier im Laufe der Zeit angezeigt.",
@@ -1589,6 +1595,8 @@ const TRANSLATIONS = {
     target: "obiettivo",
     evolution: "Evoluzione",
     show_values: "Mostra valori sul grafico",
+    show_all_params: "Mostra parametri",
+    hide_all_params: "Nascondi parametri",
     journal: "Registro",
     no_history: "Ancora nessuno storico",
     no_history_sub: "Le tue misurazioni appariranno qui nel tempo.",
@@ -2097,6 +2105,8 @@ const TRANSLATIONS = {
     target: "objetivo",
     evolution: "Evolución",
     show_values: "Mostrar valores en el gráfico",
+    show_all_params: "Mostrar parámetros",
+    hide_all_params: "Ocultar parámetros",
     journal: "Registro",
     no_history: "Sin historial aún",
     no_history_sub: "Tus mediciones aparecerán aquí con el tiempo.",
@@ -2605,6 +2615,8 @@ const TRANSLATIONS = {
     target: "alvo",
     evolution: "Evolução",
     show_values: "Mostrar valores no gráfico",
+    show_all_params: "Mostrar parâmetros",
+    hide_all_params: "Ocultar parâmetros",
     journal: "Registro",
     no_history: "Ainda sem histórico",
     no_history_sub: "Suas medições aparecerão aqui ao longo do tempo.",
@@ -7530,7 +7542,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
             color: allActive ? "#ffffff" : "#2d4a6e",
           }}
         >
-          {allActive ? t("show_values") : t("show_values")}
+          {allActive ? t("hide_all_params") : t("show_all_params")}
         </button>
         {chartParams.map((cp) => (
           <button
