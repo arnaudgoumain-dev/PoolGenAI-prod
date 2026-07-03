@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.29.3";
+const APP_VERSION = "1.29.4";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -187,7 +187,7 @@ const TRANSLATIONS = {
     delete_pool_confirm: "Désactiver ce bassin ? Il ne sera plus visible dans l'application, mais son historique est conservé.",
     account_deleted_title: "Compte supprimé",
     account_deleted_desc: "Ce compte a été supprimé et l'accès à l'application n'est plus disponible.",
-    account_deleted_request_btn: "Demander la récupération ou la suppression de mes données",
+    account_deleted_request_btn: "Ne pas recommencer avec cette adresse, et demander la récupération ou la suppression de mes données",
     reactivate_btn: "Recommencer avec cette adresse",
     reactivate_confirm: "Repartir de zéro avec cette adresse ? Tes bassins actuels seront masqués (jamais affichés, mais pas supprimés). Tu devras créer un nouveau bassin.",
     reset_password_hint: "Réinitialiser mon mot de passe",
@@ -702,7 +702,7 @@ const TRANSLATIONS = {
     delete_pool_confirm: "Disable this pool? It will no longer appear in the app, but its history is kept.",
     account_deleted_title: "Account deleted",
     account_deleted_desc: "This account has been deleted and access to the app is no longer available.",
-    account_deleted_request_btn: "Request data recovery or deletion",
+    account_deleted_request_btn: "Don't start fresh with this address, and request data recovery or deletion",
     reactivate_btn: "Start fresh with this address",
     reactivate_confirm: "Start fresh with this address? Your current pools will be hidden (never shown again, but not deleted). You'll need to create a new pool.",
     reset_password_hint: "Reset my password",
@@ -1208,7 +1208,7 @@ const TRANSLATIONS = {
     delete_pool_confirm: "Dieses Becken deaktivieren? Es wird in der App nicht mehr angezeigt, der Verlauf bleibt jedoch erhalten.",
     account_deleted_title: "Konto gelöscht",
     account_deleted_desc: "Dieses Konto wurde gelöscht und der Zugriff auf die App ist nicht mehr möglich.",
-    account_deleted_request_btn: "Datenwiederherstellung oder -löschung beantragen",
+    account_deleted_request_btn: "Nicht mit dieser Adresse neu beginnen, sondern Datenwiederherstellung oder -löschung beantragen",
     reactivate_btn: "Mit dieser Adresse neu beginnen",
     reactivate_confirm: "Mit dieser Adresse neu beginnen? Deine aktuellen Becken werden ausgeblendet (nie wieder angezeigt, aber nicht gelöscht). Du musst ein neues Becken anlegen.",
     reset_password_hint: "Passwort zurücksetzen",
@@ -1716,7 +1716,7 @@ const TRANSLATIONS = {
     delete_pool_confirm: "Disattivare questa piscina? Non sarà più visibile nell'app, ma lo storico viene conservato.",
     account_deleted_title: "Account eliminato",
     account_deleted_desc: "Questo account è stato eliminato e l'accesso all'app non è più disponibile.",
-    account_deleted_request_btn: "Richiedi il recupero o l'eliminazione dei miei dati",
+    account_deleted_request_btn: "Non ricominciare con questo indirizzo, e richiedi il recupero o l'eliminazione dei miei dati",
     reactivate_btn: "Ricomincia con questo indirizzo",
     reactivate_confirm: "Ricominciare da zero con questo indirizzo? Le tue piscine attuali saranno nascoste (mai più mostrate, ma non eliminate). Dovrai creare una nuova piscina.",
     reset_password_hint: "Reimposta la mia password",
@@ -2221,7 +2221,7 @@ const TRANSLATIONS = {
     delete_pool_confirm: "¿Desactivar esta piscina? Ya no aparecerá en la aplicación, pero su historial se conserva.",
     account_deleted_title: "Cuenta eliminada",
     account_deleted_desc: "Esta cuenta ha sido eliminada y el acceso a la aplicación ya no está disponible.",
-    account_deleted_request_btn: "Solicitar la recuperación o eliminación de mis datos",
+    account_deleted_request_btn: "No empezar de nuevo con esta dirección, y solicitar la recuperación o eliminación de mis datos",
     reactivate_btn: "Empezar de nuevo con esta dirección",
     reactivate_confirm: "¿Empezar de cero con esta dirección? Tus piscinas actuales se ocultarán (no se mostrarán más, pero no se eliminarán). Tendrás que crear una piscina nueva.",
     reset_password_hint: "Restablecer mi contraseña",
@@ -2726,7 +2726,7 @@ const TRANSLATIONS = {
     delete_pool_confirm: "Desativar esta piscina? Deixará de aparecer na aplicação, mas o histórico é mantido.",
     account_deleted_title: "Conta eliminada",
     account_deleted_desc: "Esta conta foi eliminada e o acesso à aplicação já não está disponível.",
-    account_deleted_request_btn: "Pedir a recuperação ou eliminação dos meus dados",
+    account_deleted_request_btn: "Não recomeçar com este endereço, e pedir a recuperação ou eliminação dos meus dados",
     reactivate_btn: "Recomeçar com este endereço",
     reactivate_confirm: "Recomeçar do zero com este endereço? As tuas piscinas atuais ficarão ocultas (nunca mais mostradas, mas não eliminadas). Terás de criar uma nova piscina.",
     reset_password_hint: "Repor a minha palavra-passe",
@@ -9509,7 +9509,7 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
       </div>
       {authUser ? (
         <div style={{ background: "#f0f6fb", borderRadius: 12, padding: "14px", marginBottom: 14 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
             <div>
               <div style={{ fontSize: 13, fontWeight: 700, color: "#0d2b4e" }}>{authUser.displayName || authUser.email}</div>
               {authUser.displayName && <div style={{ fontSize: 11.5, color: "#6a7d90", marginTop: 2 }}>{authUser.email}</div>}
@@ -9521,16 +9521,6 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
               {t("sign_out")}
             </button>
           </div>
-          <button
-            style={{ width: "100%", padding: "9px 0", borderRadius: 10, border: "1.5px solid #f5c6c2", background: "#fdf0ef", color: "#c0392b", fontWeight: 600, fontSize: 12, cursor: "pointer" }}
-            onClick={() => {
-              if (window.confirm(t("delete_account_confirm"))) {
-                onDeleteAccount();
-              }
-            }}
-          >
-            🗑 {t("delete_account")}
-          </button>
         </div>
       ) : (
         <div style={{ background: "#f0f6fb", borderRadius: 12, padding: "12px 14px", marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
@@ -9781,6 +9771,21 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
       <button style={styles.dangerLinkBtn} onClick={onDeleteAllMeasures}>
         <Trash2 size={14} /> {t("delete_measures")}
       </button>
+
+      {/* Suppression de compte — déplacée ici (v1.29.4), loin de "Se déconnecter"
+          dans le bloc Mon compte, pour limiter le risque de clic accidentel. */}
+      {authUser && (
+        <button
+          style={{ ...styles.dangerLinkBtn, marginTop: 8 }}
+          onClick={() => {
+            if (window.confirm(t("delete_account_confirm"))) {
+              onDeleteAccount();
+            }
+          }}
+        >
+          <Trash2 size={14} /> {t("delete_account")}
+        </button>
+      )}
 
 
       {showLegalModal && (
