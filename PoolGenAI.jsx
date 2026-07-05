@@ -9,8 +9,8 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.33.0";
-const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
+const APP_VERSION = "1.34.0";
+const CGU_VERSION = "1.2"; // v1.2 : clause 11 - amélioration collective des analyses photo (Lot B, calibration)
 
 const TRANSLATIONS = {
   fr: {
@@ -99,6 +99,8 @@ const TRANSLATIONS = {
     lcen_photos_val: "Ne soumettez que des photos de matériel de mesure ou d'eau du bassin. Sont exclus : personnes identifiables, éléments de localisation du domicile, données personnelles visibles.",
     lcen_gdpr: "Données personnelles",
     lcen_gdpr_val: "Conformément au RGPD et à la loi Informatique et Libertés, vous disposez d'un droit d'accès, de rectification, d'effacement et de portabilité de vos données. Pour exercer ces droits, contactez-nous à l'adresse ci-dessus. Vous pouvez également déposer une réclamation auprès de la CNIL : www.cnil.fr",
+    lcen_calibration_title: "Amélioration collective des analyses",
+    lcen_calibration_val: "Lorsqu'une mesure comporte à la fois une photo de photomètre et une photo de bandelette pour un même paramètre, PoolGenAI peut extraire une donnée de calibration anonyme (couleur mesurée, valeur de référence, type de bandelette identifié) et la partager avec l'ensemble des utilisateurs de l'application, dans le seul but d'améliorer la précision de l'interprétation des bandelettes pour tous. Ces données de calibration ne contiennent ni photo, ni identifiant de compte, ni aucune information permettant de remonter à l'utilisateur d'origine. L'utilisateur peut désactiver cette contribution à tout moment dans les réglages de l'application ; ce refus n'affecte pas l'utilisation normale de PoolGenAI.",
     photo_warning_title: "Attention avant de photographier",
     photo_warning_body: "Assurez-vous que la photo ne contient pas :\n• de personnes identifiables\n• d'éléments permettant de localiser votre domicile\n• de données personnelles visibles\n\nNous recommandons de désactiver la géolocalisation dans les paramètres de votre appareil photo.",
     photo_warning_confirm: "J'ai compris, continuer",
@@ -626,6 +628,8 @@ const TRANSLATIONS = {
     lcen_photos_val: "Only submit photos of measuring equipment or pool water. Excluded: identifiable persons, home location elements, visible personal data.",
     lcen_gdpr: "Personal data",
     lcen_gdpr_val: "Under GDPR and applicable data protection law, you have the right to access, rectify, erase and port your data. To exercise these rights, contact us at the address above. You may also file a complaint with your national data protection authority.",
+    lcen_calibration_title: "Collective improvement of photo analysis",
+    lcen_calibration_val: "When a measurement includes both a photometer photo and a test strip photo for the same parameter, PoolGenAI may extract an anonymous calibration data point (measured colour, reference value, identified test strip type) and share it with all users of the application, solely to improve the accuracy of test strip interpretation for everyone. This calibration data contains no photo, no account identifier, and no information that could identify the original user. Users can disable this contribution at any time in the application settings; declining does not affect normal use of PoolGenAI.",
     photo_warning_title: "Warning before taking photos",
     photo_warning_body: "Make sure the photo does not contain:\n• identifiable persons\n• elements that could locate your home\n• visible personal data\n\nWe recommend disabling geotagging in your camera settings.",
     photo_warning_confirm: "I understand, continue",
@@ -1143,6 +1147,8 @@ const TRANSLATIONS = {
     lcen_photos_val: "Senden Sie nur Fotos von Messgeräten oder Poolwasser. Ausgeschlossen: identifizierbare Personen, Standortelemente, sichtbare persönliche Daten.",
     lcen_gdpr: "Personenbezogene Daten",
     lcen_gdpr_val: "Gemäß DSGVO haben Sie das Recht auf Zugang, Berichtigung, Löschung und Übertragbarkeit Ihrer Daten. Wenden Sie sich an uns unter der oben genannten Adresse oder reichen Sie eine Beschwerde bei Ihrer Datenschutzbehörde ein.",
+    lcen_calibration_title: "Kollektive Verbesserung der Fotoanalyse",
+    lcen_calibration_val: "Wenn eine Messung sowohl ein Photometerfoto als auch ein Teststreifenfoto für denselben Parameter enthält, kann PoolGenAI einen anonymen Kalibrierungsdatenpunkt (gemessene Farbe, Referenzwert, erkannter Teststreifentyp) extrahieren und ihn mit allen Nutzern der Anwendung teilen, einzig um die Genauigkeit der Teststreifen-Interpretation für alle zu verbessern. Diese Kalibrierungsdaten enthalten weder Fotos noch Kontokennungen noch Informationen, die Rückschlüsse auf den ursprünglichen Nutzer zulassen. Nutzer können diesen Beitrag jederzeit in den Anwendungseinstellungen deaktivieren; eine Ablehnung beeinträchtigt die normale Nutzung von PoolGenAI nicht.",
     photo_warning_title: "Warnung vor dem Fotografieren",
     photo_warning_body: "Stellen Sie sicher, dass das Foto nicht enthält:\n• erkennbare Personen\n• Elemente, die Ihren Wohnort identifizieren könnten\n• sichtbare personenbezogene Daten\n\nWir empfehlen, die Geolokalisierung in den Kameraeinstellungen zu deaktivieren.",
     photo_warning_confirm: "Verstanden, weiter",
@@ -1662,6 +1668,8 @@ const TRANSLATIONS = {
     lcen_photos_val: "Inviare solo foto di apparecchiature di misurazione o acqua della piscina. Esclusi: persone identificabili, elementi di localizzazione, dati personali visibili.",
     lcen_gdpr: "Dati personali",
     lcen_gdpr_val: "Ai sensi del RGPD, hai il diritto di accedere, rettificare, cancellare e trasferire i tuoi dati. Contattaci all'indirizzo sopra o presenta un reclamo all'autorità di protezione dei dati.",
+    lcen_calibration_title: "Miglioramento collettivo delle analisi foto",
+    lcen_calibration_val: "Quando una misurazione include sia una foto del fotometro sia una foto della striscia reattiva per lo stesso parametro, PoolGenAI può estrarre un dato di calibrazione anonimo (colore misurato, valore di riferimento, tipo di striscia identificato) e condividerlo con tutti gli utenti dell'applicazione, al solo scopo di migliorare la precisione dell'interpretazione delle strisce reattive per tutti. Questi dati di calibrazione non contengono foto, identificativi dell'account né alcuna informazione che permetta di risalire all'utente originario. L'utente può disattivare questo contributo in qualsiasi momento nelle impostazioni dell'applicazione; il rifiuto non influisce sull'uso normale di PoolGenAI.",
     photo_warning_title: "Attenzione prima di fotografare",
     photo_warning_body: "Assicurati che la foto non contenga:\n• persone identificabili\n• elementi che possano localizzare la tua abitazione\n• dati personali visibili\n\nTi consigliamo di disattivare la geolocalizzazione nelle impostazioni della fotocamera.",
     photo_warning_confirm: "Ho capito, continua",
@@ -2178,6 +2186,8 @@ const TRANSLATIONS = {
     lcen_photos_val: "Solo envíe fotos de equipos de medición o agua de la piscina. Excluidos: personas identificables, elementos de localización, datos personales visibles.",
     lcen_gdpr: "Datos personales",
     lcen_gdpr_val: "De acuerdo con el RGPD, tiene derecho a acceder, rectificar, suprimir y portar sus datos. Contáctenos en la dirección anterior o presente una reclamación ante la autoridad de protección de datos.",
+    lcen_calibration_title: "Mejora colectiva de los análisis de fotos",
+    lcen_calibration_val: "Cuando una medición incluye tanto una foto del fotómetro como una foto de la tira reactiva para el mismo parámetro, PoolGenAI puede extraer un dato de calibración anónimo (color medido, valor de referencia, tipo de tira identificado) y compartirlo con todos los usuarios de la aplicación, únicamente con el fin de mejorar la precisión de la interpretación de las tiras reactivas para todos. Estos datos de calibración no contienen fotos, identificadores de cuenta ni ninguna información que permita identificar al usuario de origen. El usuario puede desactivar esta contribución en cualquier momento en los ajustes de la aplicación; esta negativa no afecta al uso normal de PoolGenAI.",
     photo_warning_title: "Atención antes de fotografiar",
     photo_warning_body: "Asegúrese de que la foto no contenga:\n• personas identificables\n• elementos que puedan localizar su domicilio\n• datos personales visibles\n\nRecomendamos desactivar la geolocalización en los ajustes de la cámara.",
     photo_warning_confirm: "Entendido, continuar",
@@ -2694,6 +2704,8 @@ const TRANSLATIONS = {
     lcen_photos_val: "Envie apenas fotos de equipamentos de medição ou água da piscina. Excluídos: pessoas identificáveis, elementos de localização, dados pessoais visíveis.",
     lcen_gdpr: "Dados pessoais",
     lcen_gdpr_val: "De acordo com o RGPD, você tem o direito de acessar, retificar, apagar e portar seus dados. Entre em contato conosco no endereço acima ou apresente uma reclamação à autoridade de proteção de dados.",
+    lcen_calibration_title: "Melhoria coletiva das análises de fotos",
+    lcen_calibration_val: "Quando uma medição inclui tanto uma foto do fotômetro quanto uma foto da tira de teste para o mesmo parâmetro, o PoolGenAI pode extrair um dado de calibração anônimo (cor medida, valor de referência, tipo de tira identificado) e compartilhá-lo com todos os usuários do aplicativo, com o único objetivo de melhorar a precisão da interpretação das tiras de teste para todos. Esses dados de calibração não contêm fotos, identificadores de conta nem qualquer informação que permita identificar o usuário de origem. O usuário pode desativar essa contribuição a qualquer momento nas configurações do aplicativo; essa recusa não afeta o uso normal do PoolGenAI.",
     photo_warning_title: "Atenção antes de fotografar",
     photo_warning_body: "Certifique-se de que a foto não contenha:\n• pessoas identificáveis\n• elementos que possam localizar sua residência\n• dados pessoais visíveis\n\nRecomendamos desativar a geolocalização nas configurações da câmera.",
     photo_warning_confirm: "Entendi, continuar",
@@ -10166,6 +10178,7 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
                   { title: t("lcen_ai_title"), body: t("lcen_ai_val") },
                   { title: t("lcen_photos_title"), body: t("lcen_photos_val") },
                   { title: t("lcen_gdpr"), body: t("lcen_gdpr_val") },
+                  { title: t("lcen_calibration_title"), body: t("lcen_calibration_val") },
                 ].map((s, i) => (
                   <div key={i} style={{ marginBottom: 10 }}>
                     <div style={{ fontWeight: 700, color: "#0d2b4e", marginBottom: 2 }}>{i+1}. {s.title}</div>
