@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.36.0";
+const APP_VERSION = "1.37.0";
 const CGU_VERSION = "1.2"; // v1.2 : clause 11 - amélioration collective des analyses photo (Lot B, calibration)
 
 const TRANSLATIONS = {
@@ -3688,6 +3688,89 @@ function sampleColorAt(dataUrl, xNorm, yNorm, boxSize = 8) {
   });
 }
 
+// v1.37.0 — Lot B (qualité calibration) : comme sampleColorAt, mais calcule en
+// plus des métriques de qualité (netteté, exposition) sur une fenêtre plus
+// large que la fenêtre de couleur. Une seule image chargée pour les deux
+// calculs. La fenêtre de qualité doit être plus grande que celle de couleur
+// (8px) car la variance de Laplace a besoin de plus de pixels pour être
+// stable — sinon les effets de bord du noyau dominent le résultat.
+// Calculée sur l'image déjà compressée (celle envoyée à l'IA), pas la photo
+// d'origine : c'est la qualité de la donnée réellement utilisée pour la
+// mesure de couleur qui compte, pas la netteté théorique du capteur photo.
+function sampleColorAndQuality(dataUrl, xNorm, yNorm, colorBoxSize = 8, qualityBoxSize = 24) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        const cx = Math.round(xNorm * img.naturalWidth);
+        const cy = Math.round(yNorm * img.naturalHeight);
+
+        // Couleur moyenne — identique à sampleColorAt
+        const colorHalf = Math.round(colorBoxSize / 2);
+        const csx = Math.max(0, cx - colorHalf);
+        const csy = Math.max(0, cy - colorHalf);
+        const cw = Math.min(colorBoxSize, img.naturalWidth - csx);
+        const ch = Math.min(colorBoxSize, img.naturalHeight - csy);
+        if (cw <= 0 || ch <= 0) { reject(new Error("Coordonnées hors image")); return; }
+        const colorData = ctx.getImageData(csx, csy, cw, ch).data;
+        let r = 0, g = 0, b = 0, n = 0;
+        for (let i = 0; i < colorData.length; i += 4) {
+          r += colorData[i]; g += colorData[i + 1]; b += colorData[i + 2]; n++;
+        }
+        const color = { r: Math.round(r / n), g: Math.round(g / n), b: Math.round(b / n) };
+
+        // Qualité — fenêtre plus large, niveaux de gris (luminance pondérée)
+        const qHalf = Math.round(qualityBoxSize / 2);
+        const qsx = Math.max(0, cx - qHalf);
+        const qsy = Math.max(0, cy - qHalf);
+        const qw = Math.min(qualityBoxSize, img.naturalWidth - qsx);
+        const qh = Math.min(qualityBoxSize, img.naturalHeight - qsy);
+        let sharpness = null, exposure = null, exposureClipped = null;
+        if (qw >= 3 && qh >= 3) {
+          const qData = ctx.getImageData(qsx, qsy, qw, qh).data;
+          const gray = new Float32Array(qw * qh);
+          let sum = 0, clipped = 0;
+          for (let i = 0, p = 0; i < qData.length; i += 4, p++) {
+            const lum = 0.299 * qData[i] + 0.587 * qData[i + 1] + 0.114 * qData[i + 2];
+            gray[p] = lum;
+            sum += lum;
+            if (lum <= 5 || lum >= 250) clipped++;
+          }
+          exposure = Math.round(sum / gray.length);
+          exposureClipped = (clipped / gray.length) > 0.05;
+
+          // Variance de Laplace (noyau [[0,1,0],[1,-4,1],[0,1,0]], bords ignorés)
+          let lapSum = 0, lapSumSq = 0, lapN = 0;
+          for (let y = 1; y < qh - 1; y++) {
+            for (let x = 1; x < qw - 1; x++) {
+              const idx = y * qw + x;
+              const lap = gray[idx - qw] + gray[idx + qw] + gray[idx - 1] + gray[idx + 1] - 4 * gray[idx];
+              lapSum += lap;
+              lapSumSq += lap * lap;
+              lapN++;
+            }
+          }
+          if (lapN > 0) {
+            const lapMean = lapSum / lapN;
+            sharpness = Math.round((lapSumSq / lapN - lapMean * lapMean) * 100) / 100;
+          }
+        }
+
+        resolve({ color, sharpness, exposure, exposureClipped });
+      } catch (e) {
+        reject(e);
+      }
+    };
+    img.onerror = () => reject(new Error("Image illisible"));
+    img.src = dataUrl;
+  });
+}
+
 // ---------- Helpers géocodage (Nominatim / OpenStreetMap) ----------
 // Formate une adresse Nominatim en "Ville (dép)" pour la France, "Ville, Pays" à l'international
 function formatNominatimAddress(addr) {
@@ -3901,7 +3984,7 @@ Correspondances des abréviations courantes :
 - O2 / Active O2 → o2
 
 Réponds UNIQUEMENT en JSON valide, sans texte avant ou après, sans markdown, sans commentaires :
-{"device": "photometre" ou "bandelette", "pH": nombre ou null, "fCl": nombre ou null, "tCl": nombre ou null, "ccl": nombre ou null, "tac": nombre ou null, "cya": nombre ou null, "hard": nombre ou null, "phos": nombre ou null, "copper": nombre ou null, "iron": nombre ou null, "temp": nombre ou null, "brome": nombre ou null, "o2": nombre ou null, "sel": nombre ou null, "confidence": "haute" ou "moyenne" ou "basse", "reliability": entier de 1 à 5 (1=très peu fiable, 5=très fiable), "reliability_by_param": {"pH": entier 1-5, "fCl": entier 1-5, ...} (une entrée par paramètre non-null uniquement, note la lisibilité de CE tampon précis — un reflet ou un angle défavorable sur un seul tampon doit baisser SA note sans affecter les autres), "sample_points": {"pH": {"pad": [x, y], "reference": [x, y]}, ...} (UNIQUEMENT si device est "bandelette" ; pour chaque paramètre où tu es CONFIANT d'avoir localisé précisément à la fois le tampon coloré ET la case de référence correspondante sur l'échelle imprimée du tube, donne leurs coordonnées en fraction de l'image, x et y entre 0 et 1, origine en haut à gauche ; omets complètement l'entrée pour un paramètre si tu n'es pas confiant sur la localisation exacte — ne devine jamais des coordonnées approximatives), "reliability_reason": "une phrase en français expliquant la note de fiabilité (qualité image, lisibilité échelle, etc.)", "note": "une phrase en français sur la lisibilité et la méthode utilisée"}
+{"device": "photometre" ou "bandelette", "pH": nombre ou null, "fCl": nombre ou null, "tCl": nombre ou null, "ccl": nombre ou null, "tac": nombre ou null, "cya": nombre ou null, "hard": nombre ou null, "phos": nombre ou null, "copper": nombre ou null, "iron": nombre ou null, "temp": nombre ou null, "brome": nombre ou null, "o2": nombre ou null, "sel": nombre ou null, "confidence": "haute" ou "moyenne" ou "basse", "reliability": entier de 1 à 5 (1=très peu fiable, 5=très fiable), "reliability_by_param": {"pH": entier 1-5, "fCl": entier 1-5, ...} (une entrée par paramètre non-null uniquement, note la lisibilité de CE tampon précis — un reflet ou un angle défavorable sur un seul tampon doit baisser SA note sans affecter les autres), "sample_points": {"pH": {"pad": [x, y], "reference": [x, y], "padSizeFraction": nombre}, ...} (UNIQUEMENT si device est "bandelette" ; pour chaque paramètre où tu es CONFIANT d'avoir localisé précisément à la fois le tampon coloré ET la case de référence correspondante sur l'échelle imprimée du tube, donne leurs coordonnées en fraction de l'image, x et y entre 0 et 1, origine en haut à gauche ; omets complètement l'entrée pour un paramètre si tu n'es pas confiant sur la localisation exacte — ne devine jamais des coordonnées approximatives ; "padSizeFraction" est une estimation approximative de la largeur du tampon coloré exprimée en fraction de la largeur totale de l'image, 0 à 1, sert uniquement d'indicateur de qualité donc une estimation grossière suffit, contrairement à pad/reference qui doivent être précis — omets ce champ si tu ne peux pas l'estimer visuellement), "reliability_reason": "une phrase en français expliquant la note de fiabilité (qualité image, lisibilité échelle, etc.)", "note": "une phrase en français sur la lisibilité et la méthode utilisée"}
 
 Règles strictes :
 - "device" indique lequel des deux CAS ci-dessus correspond à la photo analysée — jamais null, choisis le plus probable même en cas de doute
@@ -3909,6 +3992,7 @@ Règles strictes :
 - Pour une BANDELETTE : retourne une ESTIMATION de la valeur basée sur la comparaison des couleurs avec l'échelle du tube — une valeur approchée est préférable à null
 - "reliability_by_param" : évalue CHAQUE tampon indépendamment (reflet, angle de vue, netteté de la zone précise), ne recopie pas la même note partout par défaut
 - "sample_points" : uniquement des coordonnées précises et vérifiées, jamais d'estimation grossière — mieux vaut omettre un paramètre que donner des coordonnées fausses
+- "padSizeFraction" : seule exception à la règle ci-dessus — une estimation approximative est acceptée, contrairement aux coordonnées pad/reference
 - Les valeurs doivent être des nombres (pas des chaînes)
 - null uniquement si le paramètre est vraiment impossible à lire ou absent de la bandelette
 - JSON pur, rien d'autre`;
@@ -8471,17 +8555,30 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
         for (const c of calibrationCandidates) {
           try {
             const photoDataUrl = photos[c.photoIdx];
-            const [sampledColor, referenceColor] = await Promise.all([
-              sampleColorAt(photoDataUrl, c.samplePoints.pad[0], c.samplePoints.pad[1]),
+            const [padSample, referenceColor] = await Promise.all([
+              sampleColorAndQuality(photoDataUrl, c.samplePoints.pad[0], c.samplePoints.pad[1]),
               sampleColorAt(photoDataUrl, c.samplePoints.reference[0], c.samplePoints.reference[1]),
             ]);
+            // padCoverageRatio : approximation de l'aire du tampon dans l'image,
+            // à partir de padSizeFraction (largeur estimée par l'IA, fraction de
+            // la largeur totale). Aire ≈ côté² (approximation carrée, suffisante
+            // pour un indicateur de qualité relatif). null si l'IA n'a pas pu
+            // estimer la taille du tampon sur cette photo.
+            const padSizeFraction = c.samplePoints.padSizeFraction;
+            const padCoverageRatio = (typeof padSizeFraction === "number" && padSizeFraction > 0)
+              ? Math.round(padSizeFraction * padSizeFraction * 10000) / 10000
+              : null;
             await FB.addCalibrationPoint({
               stripModel: normalizedModel,
               param: c.param,
-              sampledColor,
+              sampledColor: padSample.color,
               referenceColor,
               trueValue: c.trueValue,
               capturedAt: new Date().toISOString(),
+              sharpness: padSample.sharpness,
+              exposure: padSample.exposure,
+              exposureClipped: padSample.exposureClipped,
+              padCoverageRatio,
             });
           } catch (e) {
             // silencieux — contribution best-effort, jamais bloquante pour l'utilisateur

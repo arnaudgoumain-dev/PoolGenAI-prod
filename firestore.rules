@@ -81,7 +81,8 @@ service cloud.firestore {
       allow create: if request.auth != null &&
         !('uid' in request.resource.data) &&
         request.resource.data.keys().hasOnly(
-          ['stripModel', 'param', 'sampledColor', 'referenceColor', 'trueValue', 'capturedAt']
+          ['stripModel', 'param', 'sampledColor', 'referenceColor', 'trueValue', 'capturedAt',
+           'sharpness', 'exposure', 'exposureClipped', 'padCoverageRatio']
         );
       allow update, delete: if false;
     }
