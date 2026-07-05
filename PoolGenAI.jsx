@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.34.0";
+const APP_VERSION = "1.36.0";
 const CGU_VERSION = "1.2"; // v1.2 : clause 11 - amélioration collective des analyses photo (Lot B, calibration)
 
 const TRANSLATIONS = {
@@ -292,6 +292,8 @@ const TRANSLATIONS = {
     measure_device_photometre: "Photomètre uniquement",
     measure_device_bandelette: "Bandelette uniquement",
     measure_device_both: "Les deux",
+    strip_model_label: "Modèle de bandelette utilisé",
+    strip_model_none: "Non précisé",
     filtration_type: "Type de filtration",
     manage_stock_label: "Gestion du stock",
     manage_stock_desc: "Suit la consommation des produits et l\'affiche dans le rapport.",
@@ -522,6 +524,8 @@ const TRANSLATIONS = {
     api_section: "Clé API (analyse IA)",
     ai_toggle_label: "Activer l'analyse IA",
     ai_toggle_desc: "Permet d'analyser les photos de mesure par intelligence artificielle.",
+    calibration_toggle_label: "Contribuer à l'amélioration collective",
+    calibration_toggle_desc: "Partage des données de calibration anonymes (couleur mesurée, valeur de référence) pour améliorer la lecture des bandelettes pour tous. Aucune photo ni identifiant transmis.",
     ai_password_title: "Accès configuration IA",
     ai_password_prompt: "Saisir le mot de passe pour activer l'analyse IA",
     ai_password_error: "Mot de passe incorrect",
@@ -816,6 +820,8 @@ const TRANSLATIONS = {
     measure_device_photometre: "Photometer only",
     measure_device_bandelette: "Test strip only",
     measure_device_both: "Both",
+    strip_model_label: "Test strip model used",
+    strip_model_none: "Not specified",
     filtration_type: "Filtration type",
     manage_stock_label: "Stock management",
     manage_stock_desc: "Tracks product consumption and displays it in the report.",
@@ -1041,6 +1047,8 @@ const TRANSLATIONS = {
     api_section: "API Key (AI analysis)",
     ai_toggle_label: "Enable AI analysis",
     ai_toggle_desc: "Allows analyzing measurement photos using artificial intelligence.",
+    calibration_toggle_label: "Contribute to collective improvement",
+    calibration_toggle_desc: "Shares anonymous calibration data (measured colour, reference value) to improve test strip reading for everyone. No photo or identifier is transmitted.",
     ai_password_title: "AI configuration access",
     ai_password_prompt: "Enter password to enable AI analysis",
     ai_password_error: "Incorrect password",
@@ -1334,6 +1342,8 @@ const TRANSLATIONS = {
     measure_device_photometre: "Nur Photometer",
     measure_device_bandelette: "Nur Teststreifen",
     measure_device_both: "Beides",
+    strip_model_label: "Verwendetes Teststreifenmodell",
+    strip_model_none: "Nicht angegeben",
     filtration_type: "Filtrationsart",
     manage_stock_label: "Lagerverwaltung",
     manage_stock_desc: "Verfolgt den Produktverbrauch und zeigt ihn im Bericht an.",
@@ -1562,6 +1572,8 @@ const TRANSLATIONS = {
     api_section: "API-Schlüssel (KI-Analyse)",
     ai_toggle_label: "KI-Analyse aktivieren",
     ai_toggle_desc: "Ermöglicht die Analyse von Messfotos mit künstlicher Intelligenz.",
+    calibration_toggle_label: "Zur kollektiven Verbesserung beitragen",
+    calibration_toggle_desc: "Teilt anonyme Kalibrierungsdaten (gemessene Farbe, Referenzwert), um die Teststreifen-Ablesung für alle zu verbessern. Es werden keine Fotos oder Kennungen übertragen.",
     ai_password_title: "KI-Konfigurationszugang",
     ai_password_prompt: "Passwort eingeben, um KI-Analyse zu aktivieren",
     ai_password_error: "Falsches Passwort",
@@ -1855,6 +1867,8 @@ const TRANSLATIONS = {
     measure_device_photometre: "Solo fotometro",
     measure_device_bandelette: "Solo striscia reattiva",
     measure_device_both: "Entrambi",
+    strip_model_label: "Modello di striscia reattiva utilizzato",
+    strip_model_none: "Non specificato",
     filtration_type: "Tipo di filtrazione",
     manage_stock_label: "Gestione stock",
     manage_stock_desc: "Tiene traccia del consumo dei prodotti e lo mostra nel rapporto.",
@@ -2080,6 +2094,8 @@ const TRANSLATIONS = {
     api_section: "Chiave API (analisi IA)",
     ai_toggle_label: "Attiva analisi IA",
     ai_toggle_desc: "Permette di analizzare le foto di misura con intelligenza artificiale.",
+    calibration_toggle_label: "Contribuisci al miglioramento collettivo",
+    calibration_toggle_desc: "Condivide dati di calibrazione anonimi (colore misurato, valore di riferimento) per migliorare la lettura delle strisce reattive per tutti. Nessuna foto o identificativo viene trasmesso.",
     ai_password_title: "Accesso configurazione IA",
     ai_password_prompt: "Inserire la password per attivare l'analisi IA",
     ai_password_error: "Password errata",
@@ -2373,6 +2389,8 @@ const TRANSLATIONS = {
     measure_device_photometre: "Solo fotómetro",
     measure_device_bandelette: "Solo tira reactiva",
     measure_device_both: "Ambos",
+    strip_model_label: "Modelo de tira reactiva utilizado",
+    strip_model_none: "No especificado",
     filtration_type: "Tipo de filtración",
     manage_stock_label: "Gestión de stock",
     manage_stock_desc: "Hace seguimiento del consumo de productos y lo muestra en el informe.",
@@ -2598,6 +2616,8 @@ const TRANSLATIONS = {
     api_section: "Clave API (análisis IA)",
     ai_toggle_label: "Activar análisis IA",
     ai_toggle_desc: "Permite analizar fotos de medición con inteligencia artificial.",
+    calibration_toggle_label: "Contribuir a la mejora colectiva",
+    calibration_toggle_desc: "Comparte datos de calibración anónimos (color medido, valor de referencia) para mejorar la lectura de tiras reactivas para todos. No se transmite ninguna foto ni identificador.",
     ai_password_title: "Acceso configuración IA",
     ai_password_prompt: "Introducir contraseña para activar el análisis IA",
     ai_password_error: "Contraseña incorrecta",
@@ -2891,6 +2911,8 @@ const TRANSLATIONS = {
     measure_device_photometre: "Apenas fotômetro",
     measure_device_bandelette: "Apenas tira de teste",
     measure_device_both: "Ambos",
+    strip_model_label: "Modelo de tira de teste utilizado",
+    strip_model_none: "Não especificado",
     filtration_type: "Tipo de filtração",
     manage_stock_label: "Gestão de estoque",
     manage_stock_desc: "Rastreia o consumo de produtos e o exibe no relatório.",
@@ -3113,6 +3135,8 @@ const TRANSLATIONS = {
     api_section: "Chave API (análise IA)",
     ai_toggle_label: "Ativar análise IA",
     ai_toggle_desc: "Permite analisar fotos de medição com inteligência artificial.",
+    calibration_toggle_label: "Contribuir para a melhoria coletiva",
+    calibration_toggle_desc: "Compartilha dados de calibração anônimos (cor medida, valor de referência) para melhorar a leitura de tiras de teste para todos. Nenhuma foto ou identificador é transmitido.",
     ai_password_title: "Acesso configuração IA",
     ai_password_prompt: "Digite a senha para ativar a análise IA",
     ai_password_error: "Senha incorreta",
@@ -3574,6 +3598,20 @@ async function fileToDataUrl(file) {
 // Redimensionne et recompresse une photo (dataURL) pour rester léger en stockage
 // Firestore (documents limités à 1 Mo) tout en gardant assez de résolution pour
 // la lecture (étiquette produit, bandelette...) et l'analyse IA.
+// v1.35.0 — Lot B (calibration) : normalise le nom d'un produit "outil-mesure"
+// pour en faire une clé de regroupement stable dans calibrationPoints.
+// Minuscules, accents retirés, espaces multiples/en bord de chaîne réduits —
+// évite que "Mareva 6 en 1" et "mareva  6-en-1 " comptent comme deux modèles
+// différents. Pas de liste fermée : la clé est directement dérivée du nom
+// saisi par l'utilisateur dans son stock (cf. discussion Lot B point 2).
+function normalizeStripModel(name) {
+  return (name || "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // accents
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
 function compressImageDataUrl(dataUrl, maxDim = 1280, quality = 0.72) {
   return new Promise((resolve) => {
     const img = new Image();
@@ -3609,6 +3647,45 @@ function parseDataUrl(dataUrl) {
   const match = /^data:(image\/[a-zA-Z]+);base64,(.*)$/.exec(dataUrl);
   if (!match) return null;
   return { mediaType: match[1], data: match[2] };
+}
+
+// v1.36.0 — Lot B (calibration) : échantillonne la couleur moyenne d'un petit
+// carré de pixels autour d'un point donné en coordonnées fractionnaires
+// (0 à 1, origine en haut à gauche), sur l'image chargée depuis dataUrl.
+// Moyenner sur un carré (plutôt qu'un seul pixel) réduit le bruit JPEG et les
+// petites erreurs de localisation de l'IA. boxSize = côté du carré en pixels,
+// mesuré sur l'image réelle (pas redimensionnée).
+function sampleColorAt(dataUrl, xNorm, yNorm, boxSize = 8) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        const cx = Math.round(xNorm * img.naturalWidth);
+        const cy = Math.round(yNorm * img.naturalHeight);
+        const half = Math.round(boxSize / 2);
+        const sx = Math.max(0, cx - half);
+        const sy = Math.max(0, cy - half);
+        const w = Math.min(boxSize, img.naturalWidth - sx);
+        const h = Math.min(boxSize, img.naturalHeight - sy);
+        if (w <= 0 || h <= 0) { reject(new Error("Coordonnées hors image")); return; }
+        const { data } = ctx.getImageData(sx, sy, w, h);
+        let r = 0, g = 0, b = 0, n = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          r += data[i]; g += data[i + 1]; b += data[i + 2]; n++;
+        }
+        resolve({ r: Math.round(r / n), g: Math.round(g / n), b: Math.round(b / n) });
+      } catch (e) {
+        reject(e);
+      }
+    };
+    img.onerror = () => reject(new Error("Image illisible"));
+    img.src = dataUrl;
+  });
 }
 
 // ---------- Helpers géocodage (Nominatim / OpenStreetMap) ----------
@@ -3669,7 +3746,7 @@ async function getFirebaseAuthHeader() {
   }
 }
 
-async function callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl, uid: callerUid }) {
+async function callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl, uid: callerUid, maxTokens = 1000 }) {
   const parsed = parseDataUrl(imageDataUrl);
   if (!parsed) throw new Error("Image invalide");
 
@@ -3682,7 +3759,7 @@ async function callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl, uid:
       },
       body: JSON.stringify({
         model: "gpt-4o",
-        max_tokens: 1000,
+        max_tokens: maxTokens,
         messages: [
           {
             role: "user",
@@ -3720,7 +3797,7 @@ async function callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl, uid:
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
-        max_tokens: 1000,
+        max_tokens: maxTokens,
         messages: [
           {
             role: "user",
@@ -3824,18 +3901,19 @@ Correspondances des abréviations courantes :
 - O2 / Active O2 → o2
 
 Réponds UNIQUEMENT en JSON valide, sans texte avant ou après, sans markdown, sans commentaires :
-{"device": "photometre" ou "bandelette", "pH": nombre ou null, "fCl": nombre ou null, "tCl": nombre ou null, "ccl": nombre ou null, "tac": nombre ou null, "cya": nombre ou null, "hard": nombre ou null, "phos": nombre ou null, "copper": nombre ou null, "iron": nombre ou null, "temp": nombre ou null, "brome": nombre ou null, "o2": nombre ou null, "sel": nombre ou null, "confidence": "haute" ou "moyenne" ou "basse", "reliability": entier de 1 à 5 (1=très peu fiable, 5=très fiable), "reliability_by_param": {"pH": entier 1-5, "fCl": entier 1-5, ...} (une entrée par paramètre non-null uniquement, note la lisibilité de CE tampon précis — un reflet ou un angle défavorable sur un seul tampon doit baisser SA note sans affecter les autres), "reliability_reason": "une phrase en français expliquant la note de fiabilité (qualité image, lisibilité échelle, etc.)", "note": "une phrase en français sur la lisibilité et la méthode utilisée"}
+{"device": "photometre" ou "bandelette", "pH": nombre ou null, "fCl": nombre ou null, "tCl": nombre ou null, "ccl": nombre ou null, "tac": nombre ou null, "cya": nombre ou null, "hard": nombre ou null, "phos": nombre ou null, "copper": nombre ou null, "iron": nombre ou null, "temp": nombre ou null, "brome": nombre ou null, "o2": nombre ou null, "sel": nombre ou null, "confidence": "haute" ou "moyenne" ou "basse", "reliability": entier de 1 à 5 (1=très peu fiable, 5=très fiable), "reliability_by_param": {"pH": entier 1-5, "fCl": entier 1-5, ...} (une entrée par paramètre non-null uniquement, note la lisibilité de CE tampon précis — un reflet ou un angle défavorable sur un seul tampon doit baisser SA note sans affecter les autres), "sample_points": {"pH": {"pad": [x, y], "reference": [x, y]}, ...} (UNIQUEMENT si device est "bandelette" ; pour chaque paramètre où tu es CONFIANT d'avoir localisé précisément à la fois le tampon coloré ET la case de référence correspondante sur l'échelle imprimée du tube, donne leurs coordonnées en fraction de l'image, x et y entre 0 et 1, origine en haut à gauche ; omets complètement l'entrée pour un paramètre si tu n'es pas confiant sur la localisation exacte — ne devine jamais des coordonnées approximatives), "reliability_reason": "une phrase en français expliquant la note de fiabilité (qualité image, lisibilité échelle, etc.)", "note": "une phrase en français sur la lisibilité et la méthode utilisée"}
 
 Règles strictes :
 - "device" indique lequel des deux CAS ci-dessus correspond à la photo analysée — jamais null, choisis le plus probable même en cas de doute
 - Pour un PHOTOMÈTRE : retourne les valeurs numériques exactes affichées à l'écran
 - Pour une BANDELETTE : retourne une ESTIMATION de la valeur basée sur la comparaison des couleurs avec l'échelle du tube — une valeur approchée est préférable à null
 - "reliability_by_param" : évalue CHAQUE tampon indépendamment (reflet, angle de vue, netteté de la zone précise), ne recopie pas la même note partout par défaut
+- "sample_points" : uniquement des coordonnées précises et vérifiées, jamais d'estimation grossière — mieux vaut omettre un paramètre que donner des coordonnées fausses
 - Les valeurs doivent être des nombres (pas des chaînes)
 - null uniquement si le paramètre est vraiment impossible à lire ou absent de la bandelette
 - JSON pur, rien d'autre`;
 
-  const text = await callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl: dataUrl, uid: callerUid });
+  const text = await callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl: dataUrl, uid: callerUid, maxTokens: 1500 });
   const match = text.match(/\{[\s\S]*\}/);
   if (!match) throw new Error("Réponse IA non parseable : " + text.slice(0, 200));
   return JSON.parse(match[0]);
@@ -4166,6 +4244,14 @@ const FB = {
     return window._fbOnSnapshot(ref, (snap) => {
       if (snap.exists()) cb(snap.data());
     });
+  },
+  // ── Calibration Lot B — collection RACINE, create-only, sans uid (cf.
+  // firestore.rules). ID généré côté client via uid() — pas de setDoc avec
+  // merge, chaque point est un document indépendant et immuable.
+  addCalibrationPoint: async (point) => {
+    if (!window._fbDb || !window._fbSetDoc) return;
+    const ref = window._fbDoc(window._fbDb, "calibrationPoints", uid());
+    await window._fbSetDoc(ref, point);
   },
 };
 
@@ -4684,6 +4770,10 @@ function PoolApp() {
   const [apiKey, setApiKey] = useState("https://poolgenai-proxy.support-poolgenai.workers.dev");
   const [apiProvider, setApiProvider] = useState("anthropic"); // "anthropic" | "openai"
   const [aiEnabled, setAiEnabled] = useState(false);
+  // v1.36.0 — Lot B : opt-out de la contribution aux données de calibration
+  // partagées (CGU clause 11). Activé par défaut — données anonymes, coût nul
+  // pour l'utilisateur, cohérent avec le texte CGU ("peut désactiver").
+  const [calibrationContribution, setCalibrationContribution] = useState(true);
   const [loaded, setLoaded] = useState(false);
   const [forceUpdate, setForceUpdate] = useState(false);
   const [suspended, setSuspended] = useState(false);
@@ -5040,6 +5130,9 @@ function PoolApp() {
       }
       if (config.aiEnabled !== undefined) {
         setAiEnabled((prev) => (prev === config.aiEnabled ? prev : config.aiEnabled));
+      }
+      if (config.calibrationContribution !== undefined) {
+        setCalibrationContribution((prev) => (prev === config.calibrationContribution ? prev : config.calibrationContribution));
       }
       if (config.apiProvider) {
         setApiProvider((prev) => (prev === config.apiProvider ? prev : config.apiProvider));
@@ -5844,6 +5937,11 @@ function PoolApp() {
 
   useEffect(() => {
     if (!loaded || !authUser?.uid) return;
+    syncConfig({ calibrationContribution });
+  }, [calibrationContribution]);
+
+  useEffect(() => {
+    if (!loaded || !authUser?.uid) return;
     syncConfig({ apiProvider });
   }, [apiProvider]);
 
@@ -6201,6 +6299,8 @@ function PoolApp() {
             setApiProvider={setApiProvider}
             aiEnabled={aiEnabled}
             setAiEnabled={setAiEnabled}
+            calibrationContribution={calibrationContribution}
+            setCalibrationContribution={setCalibrationContribution}
             lang={lang}
             setLang={setLang}
             cguAcceptedDate={cguAcceptedDate}
@@ -6241,6 +6341,8 @@ function PoolApp() {
           lang={lang}
           authUid={authUser?.uid}
           measureDevice={activePool?.measureDevice}
+          stripProducts={poolProducts.filter((p) => p.action === "outil-mesure")}
+          calibrationContribution={calibrationContribution}
         />
       )}
 
@@ -8147,12 +8249,19 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, applicat
 }
 
 // ---------- Modal Ajout mesure ----------
-function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, apiKey, apiProvider, activeParamKeys, lang, onRequestPhotoAccess, authUid, measureDevice }) {
+function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, apiKey, apiProvider, activeParamKeys, lang, onRequestPhotoAccess, authUid, measureDevice, stripProducts, calibrationContribution }) {
   const t = useT(lang || "fr");
   const isPrefilled = !!measure?.__prefilled;
   const isEditing = !!measure && !isPrefilled;
   const [date, setDate] = useState(
     measure ? new Date(measure.date).toISOString().slice(0, 16) : todayLocalDatetime()
+  );
+  // v1.35.0 — Lot B (calibration) : identifie quel produit "outil-mesure" du
+  // stock a servi pour la lecture bandelette. Pas de liste fermée de marques —
+  // on réutilise directement le nom du produit déjà saisi par l'utilisateur
+  // dans son stock. Auto-sélectionné s'il n'y en a qu'un, à choisir sinon.
+  const [stripModel, setStripModel] = useState(
+    measure?.stripModel || (stripProducts?.length === 1 ? stripProducts[0].name : "")
   );
   // v1.33.0 — Fix : ce champ n'était jamais mis à jour (setMethod jamais
   // appelé nulle part), donc TOUTES les mesures étaient enregistrées avec
@@ -8280,17 +8389,27 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
       const confidenceScore = { "haute": 3, "high": 3, "medio": 2, "moyenne": 2, "medium": 2, "bassa": 1, "basse": 1, "low": 1 };
       const numericKeys = ["pH","fCl","tCl","ccl","tac","cya","hard","phos","copper","iron","temp","brome","o2","sel"];
       const merged = {};
+      // v1.36.0 — Lot B : candidats de calibration collectés en même temps que
+      // la fusion, un par paramètre où on a À LA FOIS une valeur photomètre
+      // (trueValue fiable) ET une lecture bandelette avec sample_points
+      // exploitables sur CETTE mesure. Écrits dans Firestore après la fusion,
+      // seulement si l'utilisateur contribue et a un modèle de bandelette
+      // renseigné (cf. state stripModel plus haut).
+      const calibrationCandidates = [];
 
       numericKeys.forEach(k => {
         // Score par tampon : priorité à reliability_by_param[k] (1-5, spécifique à ce
         // paramètre) ; à défaut (ancien format IA sans ce champ, ou clé absente),
         // repli sur reliability globale de la photo, puis sur confidence.
         const candidates = allResults
-          .filter(r => r[k] !== null && r[k] !== undefined)
-          .map(r => ({
+          .map((r, idx) => ({ r, idx }))
+          .filter(({ r }) => r[k] !== null && r[k] !== undefined)
+          .map(({ r, idx }) => ({
             value: r[k],
             score: r.reliability_by_param?.[k] ?? r.reliability ?? confidenceScore[r.confidence] ?? 1,
             device: r.device,
+            samplePoints: r.sample_points?.[k] || null,
+            photoIdx: idx,
           }));
         if (candidates.length === 0) return;
         const photometerCandidates = candidates.filter(c => c.device === "photometre");
@@ -8300,6 +8419,18 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
         const maxScore = Math.max(...pool.map(c => c.score));
         const best = pool.find(c => c.score === maxScore);
         merged[k] = Math.round(best.value * 100) / 100;
+
+        // Point de calibration : seulement si trueValue vient du photomètre (sinon
+        // ce n'est qu'une estimation, pas une référence), et qu'une lecture
+        // bandelette avec coordonnées exploitables existe pour ce même paramètre.
+        if (best.device === "photometre") {
+          const bandeletteCandidates = candidates.filter(c => c.device === "bandelette" && c.samplePoints?.pad && c.samplePoints?.reference);
+          if (bandeletteCandidates.length) {
+            const bMaxScore = Math.max(...bandeletteCandidates.map(c => c.score));
+            const bBest = bandeletteCandidates.find(c => c.score === bMaxScore);
+            calibrationCandidates.push({ param: k, trueValue: merged[k], photoIdx: bBest.photoIdx, samplePoints: bBest.samplePoints });
+          }
+        }
       });
       if (merged.pH     !== undefined) setPH(String(merged.pH));
       if (merged.fCl    !== undefined) setFCl(String(merged.fCl));
@@ -8330,6 +8461,33 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
       if (merged.brome  !== undefined) setBrome(String(merged.brome));
       if (merged.o2     !== undefined) setO2(String(merged.o2));
       if (merged.sel    !== undefined) setSel(String(merged.sel));
+
+      // v1.36.0 — Lot B : écriture des points de calibration collectés pendant
+      // la fusion. Best-effort et silencieux — un échec d'échantillonnage
+      // couleur (image illisible, coordonnées hors cadre...) ne doit jamais
+      // faire échouer l'analyse principale de la mesure.
+      if (calibrationContribution && stripModel && calibrationCandidates.length) {
+        const normalizedModel = normalizeStripModel(stripModel);
+        for (const c of calibrationCandidates) {
+          try {
+            const photoDataUrl = photos[c.photoIdx];
+            const [sampledColor, referenceColor] = await Promise.all([
+              sampleColorAt(photoDataUrl, c.samplePoints.pad[0], c.samplePoints.pad[1]),
+              sampleColorAt(photoDataUrl, c.samplePoints.reference[0], c.samplePoints.reference[1]),
+            ]);
+            await FB.addCalibrationPoint({
+              stripModel: normalizedModel,
+              param: c.param,
+              sampledColor,
+              referenceColor,
+              trueValue: c.trueValue,
+              capturedAt: new Date().toISOString(),
+            });
+          } catch (e) {
+            // silencieux — contribution best-effort, jamais bloquante pour l'utilisateur
+          }
+        }
+      }
 
       // Calculer la note de fiabilité consolidée (moyenne des notes de chaque photo)
       const reliabilityScores = allResults.filter(r => r.reliability != null).map(r => Number(r.reliability));
@@ -8390,6 +8548,10 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
       ...(isPrefilled && measure?.importedFromPdf ? { importedFromPdf: true } : {}),
       date: new Date(date).toISOString(),
       method,
+      // v1.35.0 — Lot B : clé normalisée du produit "outil-mesure" utilisé,
+      // pour un futur regroupement dans calibrationPoints. null si method
+      // n'est pas "bandelette" ou si l'utilisateur n'a rien précisé.
+      stripModel: method === "bandelette" && stripModel ? normalizeStripModel(stripModel) : null,
       pH,
       fCl,
       tCl,
@@ -8448,6 +8610,18 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
           <span>{measureDevice === "bandelette" ? t("photo_hint_bandelette") : t("photo_hint")}</span>
         </div>
       ) : null}
+
+      {method === "bandelette" && stripProducts && stripProducts.length > 1 && (
+        <>
+          <label style={styles.fieldLabel}>{t("strip_model_label")}</label>
+          <select style={styles.input} value={stripModel} onChange={(e) => setStripModel(e.target.value)}>
+            <option value="">{t("strip_model_none")}</option>
+            {stripProducts.map((p) => (
+              <option key={p.id} value={p.name}>{p.name}</option>
+            ))}
+          </select>
+        </>
+      )}
 
       <label style={styles.fieldLabel}>{t("photos_label")}</label>
       {isPremium ? (
@@ -9769,7 +9943,7 @@ function AccountDataRequestScreen({ lang, authUser, onClose, onSubmit }) {
   );
 }
 
-function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, onDeleteAllMeasures: onDeleteAllMeasuresRaw, orphanedCount, onRepairOrphanedData, poolMeasureCount, onGenerateReport, onWantPremiumForReport, onWantPremium, isPremium, setIsPremium, apiKey, setApiKey, apiProvider, setApiProvider, aiEnabled, setAiEnabled, lang, setLang, authUser, onSignOut, onSignIn, onDeleteAccount, dataConsent, onRevokeDataConsent, cguAcceptedDate }) {
+function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, onDeleteAllMeasures: onDeleteAllMeasuresRaw, orphanedCount, onRepairOrphanedData, poolMeasureCount, onGenerateReport, onWantPremiumForReport, onWantPremium, isPremium, setIsPremium, apiKey, setApiKey, apiProvider, setApiProvider, aiEnabled, setAiEnabled, calibrationContribution, setCalibrationContribution, lang, setLang, authUser, onSignOut, onSignIn, onDeleteAccount, dataConsent, onRevokeDataConsent, cguAcceptedDate }) {
   const [showAiConfig, setShowAiConfig] = useState(false);
   const [editingPool, setEditingPool] = useState(null);
   const [showLegalModal, setShowLegalModal] = useState(false);
@@ -10015,6 +10189,18 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
             <Lock size={18} />
           </button>
         )}
+      </div>
+
+      {/* v1.36.0 — Lot B : opt-out contribution calibration (CGU clause 11) */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#f0f6fb", borderRadius: 12, padding: "12px 14px", marginBottom: 8 }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "#0d2b4e" }}>{t("calibration_toggle_label")}</div>
+          <div style={{ fontSize: 11, color: "#6a7d90", marginTop: 2 }}>{t("calibration_toggle_desc")}</div>
+        </div>
+        <ToggleSwitch
+          checked={calibrationContribution}
+          onChange={(val) => setCalibrationContribution(val)}
+        />
       </div>
 
       {/* Bouton configurer — visible uniquement si IA activée (premium uniquement) */}
