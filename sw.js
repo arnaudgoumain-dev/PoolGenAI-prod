@@ -1,8 +1,8 @@
-// PoolGenAI Service Worker — v5
-// Stratégie : network-first (sans cache HTTP) pour JSX/HTML (toujours la dernière version),
-// réseau pur pour version.json (détection de mise à jour, jamais mis en cache),
+// PoolApp Service Worker — v2
+// Stratégie : network-first pour JSX/HTML (toujours la dernière version),
 // cache-first pour les assets statiques (icônes, librairies CDN).
-const CACHE_NAME = "poolgenai-v5";
+
+const CACHE_NAME = "poolapp-v2";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -11,6 +11,7 @@ const STATIC_ASSETS = [
   "./icon-512.png",
   "./lucide-shim.js",
 ];
+
 // Installation : mise en cache des assets statiques
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -19,6 +20,7 @@ self.addEventListener("install", (event) => {
   // Active immédiatement sans attendre la fermeture des onglets existants
   self.skipWaiting();
 });
+
 // Activation : supprime les anciens caches
 self.addEventListener("activate", (event) => {
   event.waitUntil(
@@ -28,42 +30,53 @@ self.addEventListener("activate", (event) => {
   );
   self.clients.claim();
 });
-// Fetch : réseau pur pour version.json, network-first (no-store) pour HTML/JSX, cache-first pour le reste
+
+// Fetch : network-first pour HTML et JSX, cache-first pour le reste
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
-  // Requêtes Firebase, CDN externes → pas de cache SW
+
+  // Requêtes Firebase, CDN externes, Worker Cloudflare → pas de cache SW
   if (
     url.hostname.includes("firebase") ||
     url.hostname.includes("googleapis") ||
     url.hostname.includes("gstatic") ||
-    url.hostname.includes("unpkg.com")
+    url.hostname.includes("unpkg.com") ||
+    url.hostname.includes("workers.dev")
   ) {
     return;
   }
-  // version.json : toujours réseau pur, jamais mis en cache — sert à détecter les mises à jour
-  if (url.pathname.endsWith("version.json")) {
-    event.respondWith(
-      fetch(event.request, { cache: "no-store" }).catch(() => caches.match(event.request))
-    );
-    return;
-  }
-  // Network-first pour HTML et JSX (toujours la version déployée, bypass du cache HTTP natif)
+
+  // Cache.put() n'accepte que les requêtes GET (limite de l'API Cache).
+  // Toute requête POST/PUT/DELETE échappant aux exclusions ci-dessus
+  // ne doit jamais être mise en cache.
+  const isCacheable = event.request.method === "GET";
+
+  // Network-first pour HTML et JSX (toujours la version déployée)
   if (
     event.request.url.endsWith(".html") ||
     event.request.url.endsWith(".jsx") ||
     event.request.url.endsWith("/")
   ) {
     event.respondWith(
-      fetch(event.request, { cache: "no-store" })
+      fetch(event.request)
         .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          if (isCacheable) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
           return response;
         })
         .catch(() => caches.match(event.request))
     );
     return;
   }
+
+  // Non-GET (ex: POST vers le Worker si un jour non exclu ci-dessus) :
+  // laisser passer directement, aucune interception cache-first.
+  if (!isCacheable) {
+    return;
+  }
+
   // Cache-first pour les autres assets (icônes, manifest, lucide-shim)
   event.respondWith(
     caches.match(event.request).then((cached) => {
