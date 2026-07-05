@@ -71,10 +71,10 @@ const MIN_VALUE_SPREAD = {
   phos: 50, copper: 0.1, iron: 0.05, temp: 4, brome: 2, o2: 5, sel: 1000,
 };
 
-// À adapter avec l'origine réelle de ton PWA (github.io et/ou poolgenai.app)
+// À adapter avec l'origine réelle de ton PWA
 const ALLOWED_ORIGINS = [
   "https://arnaudgoumain-dev.github.io",
-  "https://poolgenai.app",
+  "https://app.poolgenai.com",
 ];
 
 // v1.41.0 — Rate-limiting par UID sur /v1/messages (analyse IA photos +
