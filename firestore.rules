@@ -1,0 +1,87 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+    // Un compte suspendu perd tout accès à ses propres données, même avec un
+    // token encore valide (le champ "suspended" n'est jamais écrit par le client,
+    // seulement par toi via la console Firebase ou l'Admin SDK).
+    function isSuspended(uid) {
+      return exists(/databases/$(database)/documents/suspended/$(uid)) &&
+        get(/databases/$(database)/documents/suspended/$(uid)).data.suspended == true;
+    }
+    function isActiveOwner(uid) {
+      return isOwner(uid) && !isSuspended(uid);
+    }
+    // Statut de suspension : lecture par le propriétaire uniquement (pour afficher
+    // l'écran "Compte suspendu"), écriture strictement interdite au client.
+    match /suspended/{uid} {
+      allow read: if isOwner(uid);
+      allow write: if false;
+    }
+    // Profil utilisateur (email, consentements, CGU...)
+    // Lecture toujours autorisée au propriétaire (même suspendu, pour permettre
+    // l'effacement volontaire des données depuis l'écran de suspension).
+    // Écriture bloquée si suspendu, SAUF suppression (nécessaire pour l'effacement).
+    match /users/{uid} {
+      allow read: if isOwner(uid);
+      allow create, update: if isActiveOwner(uid);
+      allow delete: if isOwner(uid);
+    }
+    // Mesures, plans appliqués, diagnostics IA : lecture/écriture pour le
+    // propriétaire actif ; suppression toujours permise (même suspendu, pour
+    // l'effacement volontaire des données).
+    match /users/{uid}/measures/{docId} {
+      allow read, create, update: if isActiveOwner(uid);
+      allow delete: if isOwner(uid);
+    }
+    match /users/{uid}/applications/{docId} {
+      allow read, create, update: if isActiveOwner(uid);
+      allow delete: if isOwner(uid);
+    }
+    match /users/{uid}/diagnostics/{docId} {
+      allow read, create, update: if isActiveOwner(uid);
+      allow delete: if isOwner(uid);
+    }
+    // v1.30.0 — Photos produits (migrées hors de config/main pour la limite
+    // 1 Mio). Même logique que measures/applications/diagnostics.
+    match /users/{uid}/productPhotos/{productId} {
+      allow read, create, update: if isActiveOwner(uid);
+      allow delete: if isOwner(uid);
+    }
+    // Config (pools, products, lang, aiEnabled, apiProvider, activePlan, isPremium)
+    // Le client peut tout modifier SAUF isPremium, réservé au backend (Admin SDK / webhook Stripe)
+    // NOTE : on utilise .get(clé, défaut) plutôt que l'accès direct (.isPremium) car
+    // ce champ peut être absent sur les tout premiers writes d'un nouveau compte
+    // (plusieurs useEffect côté client créent des writes partiels en parallèle,
+    // isPremium n'est pas forcément inclus dans celui qui gagne la course et crée
+    // le document). L'accès direct sur un champ absent lève une erreur d'évaluation
+    // → refus silencieux "Missing or insufficient permissions", même pour un
+    // utilisateur légitime.
+    match /users/{uid}/config/main {
+      allow read: if isOwner(uid);
+      allow create: if isActiveOwner(uid) &&
+        request.resource.data.get('isPremium', false) == false;
+      allow update: if isActiveOwner(uid) &&
+        request.resource.data.get('isPremium', false) == resource.data.get('isPremium', false);
+      allow delete: if isOwner(uid);
+    }
+    // Lot B — Calibration bandelette/photomètre (v1.32.0). Collection RACINE,
+    // partagée entre tous les comptes (pas sous users/{uid}). Données anonymes
+    // (couleur mesurée, valeur de référence, marque identifiée) : aucun uid
+    // stocké, donc aucune lecture liée à un compte n'est possible. Pas de
+    // lecture client (l'agrégation/apprentissage se fait côté backend) ; create
+    // seulement, jamais d'update ni de delete depuis le client — l'historique
+    // de calibration doit rester immuable.
+    match /calibrationPoints/{docId} {
+      allow read: if false;
+      allow create: if request.auth != null &&
+        !('uid' in request.resource.data) &&
+        request.resource.data.keys().hasOnly(
+          ['brandKey', 'param', 'sampledColor', 'referenceColor', 'trueValue', 'capturedAt']
+        );
+      allow update, delete: if false;
+    }
+  }
+}

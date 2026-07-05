@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.31.0";
+const APP_VERSION = "1.32.0";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -83,6 +83,7 @@ const TRANSLATIONS = {
     action_hard_plus: "Monte la dureté (TH)",
     action_phos_minus: "Réduit les phosphates",
     action_sequestrant: "Séquestrant métaux (cuivre/fer)",
+    action_outil_mesure: "Outil de mesure (bandelettes, etc.)",
     legal_notices: "Mentions légales",
     lcen_title: "Mentions légales (LCEN)",
     lcen_editor: "Éditeur",
@@ -604,6 +605,7 @@ const TRANSLATIONS = {
     action_hard_plus: "Increase hardness (TH)",
     action_phos_minus: "Reduce phosphates",
     action_sequestrant: "Metal sequestrant (copper/iron)",
+    action_outil_mesure: "Measuring tool (test strips, etc.)",
     legal_notices: "Legal notices",
     lcen_title: "Legal notices",
     lcen_editor: "Publisher",
@@ -1115,6 +1117,7 @@ const TRANSLATIONS = {
     action_hard_plus: "Härte erhöhen (TH)",
     action_phos_minus: "Phosphate reduzieren",
     action_sequestrant: "Metallsequestriermittel (Kupfer/Eisen)",
+    action_outil_mesure: "Messwerkzeug (Teststreifen usw.)",
     legal_notices: "Rechtliche Hinweise",
     lcen_title: "Rechtliche Hinweise",
     lcen_editor: "Herausgeber",
@@ -1628,6 +1631,7 @@ const TRANSLATIONS = {
     action_hard_plus: "Aumenta la durezza (TH)",
     action_phos_minus: "Riduce i fosfati",
     action_sequestrant: "Sequestrante metalli (rame/ferro)",
+    action_outil_mesure: "Strumento di misura (strisce reattive, ecc.)",
     legal_notices: "Note legali",
     lcen_title: "Note legali",
     lcen_editor: "Editore",
@@ -2138,6 +2142,7 @@ const TRANSLATIONS = {
     action_hard_plus: "Aumentar dureza (TH)",
     action_phos_minus: "Reducir fosfatos",
     action_sequestrant: "Secuestrante de metales (cobre/hierro)",
+    action_outil_mesure: "Herramienta de medición (tiras reactivas, etc.)",
     legal_notices: "Avisos legales",
     lcen_title: "Avisos legales",
     lcen_editor: "Editor",
@@ -2648,6 +2653,7 @@ const TRANSLATIONS = {
     action_hard_plus: "Aumentar dureza (TH)",
     action_phos_minus: "Reduzir fosfatos",
     action_sequestrant: "Sequestrante de metais (cobre/ferro)",
+    action_outil_mesure: "Ferramenta de medição (tiras de teste, etc.)",
     legal_notices: "Avisos legais",
     lcen_title: "Avisos legais",
     lcen_editor: "Editor",
@@ -3354,6 +3360,11 @@ function getProductActions(lang) {
     { value: "hard+",            label: dict.action_hard_plus || "Monte la dureté (TH)" },
     { value: "phos-",            label: dict.action_phos_minus || "Réduit les phosphates" },
     { value: "sequestrant",      label: dict.action_sequestrant || "Séquestrant métaux (cuivre/fer)" },
+    // Lot B (v1.32.0) — catégorie sans dose ni type de traitement : ne sert
+    // jamais de candidat dans findProduct() (qui filtre par action de
+    // traitement réelle), donc aucun risque qu'un outil de mesure soit
+    // proposé comme produit à appliquer.
+    { value: "outil-mesure",     label: dict.action_outil_mesure || "Outil de mesure (bandelettes, etc.)" },
   ];
 }
 // Fallback statique pour les usages sans lang (prompts IA)
@@ -9243,9 +9254,15 @@ function ProductsView({ products, onEdit, onAddNew, onDelete, onResetAll, isPrem
                 <div style={{ flex: 1, textAlign: "left" }}>
                   <div style={styles.productName}>{p.name}</div>
                   <div style={styles.productMeta}>
-                    {p.doseAmount} {p.doseUnit} → {p.effectAmount} / {p.effectPer} m³ ·{" "}
-                    {getProductActions(lang).find((a) => a.value === p.action)?.label}
-                    {!!p.waitHours && ` · ${p.waitHours}h`}
+                    {p.action === "outil-mesure"
+                      ? getProductActions(lang).find((a) => a.value === p.action)?.label
+                      : (
+                        <>
+                          {p.doseAmount} {p.doseUnit} → {p.effectAmount} / {p.effectPer} m³ ·{" "}
+                          {getProductActions(lang).find((a) => a.value === p.action)?.label}
+                          {!!p.waitHours && ` · ${p.waitHours}h`}
+                        </>
+                      )}
                   </div>
                   {(() => {
                     const pct = p.stockPercent ?? 100;
@@ -9379,15 +9396,16 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
         return;
       }
     }
+    const isTool = action === "outil-mesure";
     onSave({
       id: product?.id,
       name: name.trim(),
       action,
-      doseAmount: parseFloat(doseAmount) || 0,
+      doseAmount: isTool ? 0 : (parseFloat(doseAmount) || 0),
       doseUnit,
-      effectAmount: parseFloat(effectAmount) || 1,
-      effectPer: parseFloat(effectPer) || 1,
-      waitHours: parseFloat(waitHours) || 0,
+      effectAmount: isTool ? 0 : (parseFloat(effectAmount) || 1),
+      effectPer: isTool ? 0 : (parseFloat(effectPer) || 1),
+      waitHours: isTool ? 0 : (parseFloat(waitHours) || 0),
       note,
       photo,
       stockPercent: newStock,
@@ -9474,23 +9492,27 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
         ))}
       </select>
 
-      <div style={styles.fieldGrid}>
-        <div>
-          <label style={styles.fieldLabel}>{t("quantity")}</label>
-          <input type="number" style={styles.input} value={doseAmount} onChange={(e) => setDoseAmount(e.target.value)} />
-        </div>
-        <div>
-          <label style={styles.fieldLabel}>{t("effect_variation")}</label>
-          <input type="number" style={styles.input} value={effectAmount} onChange={(e) => setEffectAmount(e.target.value)} />
-        </div>
-        <div>
-          <label style={styles.fieldLabel}>{t("for_x_m3")}</label>
-          <input type="number" style={styles.input} value={effectPer} onChange={(e) => setEffectPer(e.target.value)} />
-        </div>
-      </div>
+      {action !== "outil-mesure" && (
+        <>
+          <div style={styles.fieldGrid}>
+            <div>
+              <label style={styles.fieldLabel}>{t("quantity")}</label>
+              <input type="number" style={styles.input} value={doseAmount} onChange={(e) => setDoseAmount(e.target.value)} />
+            </div>
+            <div>
+              <label style={styles.fieldLabel}>{t("effect_variation")}</label>
+              <input type="number" style={styles.input} value={effectAmount} onChange={(e) => setEffectAmount(e.target.value)} />
+            </div>
+            <div>
+              <label style={styles.fieldLabel}>{t("for_x_m3")}</label>
+              <input type="number" style={styles.input} value={effectPer} onChange={(e) => setEffectPer(e.target.value)} />
+            </div>
+          </div>
 
-      <label style={styles.fieldLabel}>{t("wait_hours")}</label>
-      <input type="number" style={styles.input} value={waitHours} onChange={(e) => setWaitHours(e.target.value)} placeholder="2" />
+          <label style={styles.fieldLabel}>{t("wait_hours")}</label>
+          <input type="number" style={styles.input} value={waitHours} onChange={(e) => setWaitHours(e.target.value)} placeholder="2" />
+        </>
+      )}
 
       {!isPremium ? (
         <button style={styles.photoLockedBtn} onClick={onWantPremium}>
