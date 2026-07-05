@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.39.0";
+const APP_VERSION = "1.39.1";
 const CGU_VERSION = "1.2"; // v1.2 : clause 11 - amélioration collective des analyses photo (Lot B, calibration)
 
 const TRANSLATIONS = {
@@ -5487,16 +5487,7 @@ function PoolApp() {
       setMeasures(loadedMeasures);
       // Upload des mesures locales vers Firestore si l'utilisateur est connecté
       if (authUser?.uid && loadedMeasures.length > 0) {
-        loadedMeasures.forEach(m => {
-          FB.saveMeasure(authUser.uid, m).catch(() => {});
-          if (m.photos?.length || m.photo || m.poolPhotos?.length) {
-            FB.saveMeasurePhotos(
-              authUser.uid, m.id,
-              m.photos?.length ? m.photos : (m.photo ? [m.photo] : []),
-              m.poolPhotos || []
-            ).catch(() => {});
-          }
-        });
+        loadedMeasures.forEach(m => saveMeasureWithThumbnail(authUser.uid, m));
       }
       if (loadedProducts) {
         // Anciens produits sans poolId (avant la saisie par bassin) : rattachés au bassin actif
@@ -5714,20 +5705,33 @@ function PoolApp() {
     return applications.find((a) => a.measureId === validatingMeasure.id) || null;
   }, [validatingMeasure, applications]);
 
+  // v1.39.0 — Miniature persistée sur measures/{id} (quelques Ko, 150px/q0.5)
+  // pour garder un aperçu visible immédiatement (dashboard "dernière mesure",
+  // en-tête replié de l'historique) sans dépendre du chargement de la
+  // sous-collection photos. Sans elle, le listener temps réel (onMeasures)
+  // écrase measure.photo local en quelques centaines de ms après l'ajout,
+  // avant même que l'utilisateur ait pu voir la photo.
+  function saveMeasureWithThumbnail(uid, m) {
+    const photos = m.photos?.length ? m.photos : (m.photo ? [m.photo] : []);
+    const poolPhotos = m.poolPhotos || [];
+    const firstPhoto = photos[0] || poolPhotos[0] || null;
+    if (firstPhoto) {
+      compressImageDataUrl(firstPhoto, 150, 0.5).then((thumbnail) => {
+        FB.saveMeasure(uid, { ...m, thumbnail }).catch(() => {});
+      });
+    } else {
+      FB.saveMeasure(uid, { ...m, thumbnail: null }).catch(() => {});
+    }
+    FB.saveMeasurePhotos(uid, m.id, photos, poolPhotos).catch(() => {});
+  }
+
   function addMeasure(entry) {
     if (entry.id) {
       setMeasures((prev) => {
         const updated = prev.map((m) => (m.id === entry.id ? { ...m, ...entry } : m));
         if (authUser?.uid) {
           updated.forEach(m => {
-            if (m.id === entry.id) {
-              FB.saveMeasure(authUser.uid, m).catch(() => {});
-              FB.saveMeasurePhotos(
-                authUser.uid, m.id,
-                m.photos?.length ? m.photos : (m.photo ? [m.photo] : []),
-                m.poolPhotos || []
-              ).catch(() => {});
-            }
+            if (m.id === entry.id) saveMeasureWithThumbnail(authUser.uid, m);
           });
         }
         return updated;
@@ -5736,14 +5740,7 @@ function PoolApp() {
     } else {
       const newMeasure = { id: uid(), poolId: activePoolId, ...entry };
       setMeasures((prev) => [...prev, newMeasure]);
-      if (authUser?.uid) {
-        FB.saveMeasure(authUser.uid, newMeasure).catch(() => {});
-        FB.saveMeasurePhotos(
-          authUser.uid, newMeasure.id,
-          newMeasure.photos?.length ? newMeasure.photos : (newMeasure.photo ? [newMeasure.photo] : []),
-          newMeasure.poolPhotos || []
-        ).catch(() => {});
-      }
+      if (authUser?.uid) saveMeasureWithThumbnail(authUser.uid, newMeasure);
       track("measure_add", { has_photos: !!(entry.photos?.length || entry.photo), has_pool_photos: !!(entry.poolPhotos?.length) });
     }
     setShowAddMeasure(false);
@@ -7050,13 +7047,13 @@ Réponds directement en français, sans titre ni introduction.`;
         </div>
       </div>
 
-      {latest.photo && (
+      {(latest.thumbnail || latest.photo) && (
         <div style={styles.measurePhotoWrap}>
           <img
-            src={latest.photo}
+            src={latest.thumbnail || latest.photo}
             alt="Photo de la mesure"
             style={{ ...styles.measurePhoto, cursor: "zoom-in" }}
-            onClick={() => window._openLightbox?.(latest.photo)}
+            onClick={() => window._openLightbox?.(latest.photo || latest.thumbnail)}
           />
         </div>
       )}
@@ -8282,6 +8279,10 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, applicat
   const [loadedPoolPhotos, setLoadedPoolPhotos] = useState(null);
   const [photosLoading, setPhotosLoading] = useState(false);
   const hasAnyPhotos = !!(measure.photoCount || measure.poolPhotoCount || measure.photo || measure.photos?.length || measure.poolPhotos?.length);
+  // v1.39.0 — thumbnail (miniature persistée, quelques Ko) prioritaire pour
+  // l'aperçu replié : contrairement à measure.photo, elle survit à l'écrasement
+  // par le listener temps réel (voir FB.saveMeasure / saveMeasureWithThumbnail).
+  const headerPreview = measure.thumbnail || measure.photo || null;
 
   useEffect(() => {
     if (!open || loadedPhotos !== null || !hasAnyPhotos) return;
@@ -8314,12 +8315,12 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, applicat
         onClick={() => setOpen((o) => !o)}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-          {measure.photo && (
+          {headerPreview && (
             <img
-              src={measure.photo}
+              src={headerPreview}
               alt=""
               style={{ ...styles.measureThumb, cursor: "zoom-in" }}
-              onClick={(e) => { e.stopPropagation(); window._openLightbox?.(measure.photo); }}
+              onClick={(e) => { e.stopPropagation(); window._openLightbox?.(measure.photo || headerPreview); }}
             />
           )}
           <span style={styles.measureDate}>{formatDate(measure.date)}</span>
