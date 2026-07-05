@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.30.0";
+const APP_VERSION = "1.31.0";
 const CGU_VERSION = "1.1"; // v1.4 : clause IA, avertissement photos, mentions LCEN, limitation responsabilité révisée
 
 const TRANSLATIONS = {
@@ -3771,9 +3771,10 @@ Correspondances des abréviations courantes :
 - O2 / Active O2 → o2
 
 Réponds UNIQUEMENT en JSON valide, sans texte avant ou après, sans markdown, sans commentaires :
-{"pH": nombre ou null, "fCl": nombre ou null, "tCl": nombre ou null, "ccl": nombre ou null, "tac": nombre ou null, "cya": nombre ou null, "hard": nombre ou null, "phos": nombre ou null, "copper": nombre ou null, "iron": nombre ou null, "temp": nombre ou null, "brome": nombre ou null, "o2": nombre ou null, "sel": nombre ou null, "confidence": "haute" ou "moyenne" ou "basse", "reliability": entier de 1 à 5 (1=très peu fiable, 5=très fiable), "reliability_reason": "une phrase en français expliquant la note de fiabilité (qualité image, lisibilité échelle, etc.)", "note": "une phrase en français sur la lisibilité et la méthode utilisée"}
+{"device": "photometre" ou "bandelette", "pH": nombre ou null, "fCl": nombre ou null, "tCl": nombre ou null, "ccl": nombre ou null, "tac": nombre ou null, "cya": nombre ou null, "hard": nombre ou null, "phos": nombre ou null, "copper": nombre ou null, "iron": nombre ou null, "temp": nombre ou null, "brome": nombre ou null, "o2": nombre ou null, "sel": nombre ou null, "confidence": "haute" ou "moyenne" ou "basse", "reliability": entier de 1 à 5 (1=très peu fiable, 5=très fiable), "reliability_reason": "une phrase en français expliquant la note de fiabilité (qualité image, lisibilité échelle, etc.)", "note": "une phrase en français sur la lisibilité et la méthode utilisée"}
 
 Règles strictes :
+- "device" indique lequel des deux CAS ci-dessus correspond à la photo analysée — jamais null, choisis le plus probable même en cas de doute
 - Pour un PHOTOMÈTRE : retourne les valeurs numériques exactes affichées à l'écran
 - Pour une BANDELETTE : retourne une ESTIMATION de la valeur basée sur la comparaison des couleurs avec l'échelle du tube — une valeur approchée est préférable à null
 - Les valeurs doivent être des nombres (pas des chaînes)
@@ -8192,28 +8193,45 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
         if (result.note) notes.push(result.note);
       }
 
-      // Priorité de confiance : haute > moyenne > basse > undefined
+      // v1.31.0 — Priorité stricte au photomètre : quand une photo photomètre et une
+      // photo bandelette sont fournies pour la même mesure, la valeur du photomètre est
+      // retenue systématiquement pour chaque paramètre qu'il couvre, quelle que soit la
+      // confiance de la lecture bandelette sur ce même paramètre. La bandelette ne sert
+      // qu'à compléter les paramètres que le photomètre ne couvre pas.
+      const CCL_TOLERANCE = 0.05; // même seuil que la validation de saisie manuelle (handleSave)
       const confidenceScore = { "haute": 3, "high": 3, "medio": 2, "moyenne": 2, "medium": 2, "bassa": 1, "basse": 1, "low": 1 };
       const numericKeys = ["pH","fCl","tCl","ccl","tac","cya","hard","phos","copper","iron","temp","brome","o2","sel"];
       const merged = {};
 
       numericKeys.forEach(k => {
-        // Collecter toutes les valeurs non-null pour ce paramètre avec leur score de confiance
+        // Collecter toutes les valeurs non-null pour ce paramètre avec leur score de
+        // confiance et l'appareil d'origine (photomètre ou bandelette)
         const candidates = allResults
           .filter(r => r[k] !== null && r[k] !== undefined)
-          .map(r => ({ value: r[k], score: confidenceScore[r.confidence] || 1 }));
+          .map(r => ({ value: r[k], score: confidenceScore[r.confidence] || 1, device: r.device }));
         if (candidates.length === 0) return;
-        // Prendre la valeur avec le meilleur score de confiance
-        // En cas d'égalité, faire la moyenne
-        const maxScore = Math.max(...candidates.map(c => c.score));
-        const best = candidates.filter(c => c.score === maxScore);
+        const photometerCandidates = candidates.filter(c => c.device === "photometre");
+        const pool = photometerCandidates.length ? photometerCandidates : candidates;
+        // Prendre la valeur avec le meilleur score de confiance au sein du groupe retenu
+        // (photomètre si disponible, sinon bandelette). En cas d'égalité, faire la moyenne.
+        const maxScore = Math.max(...pool.map(c => c.score));
+        const best = pool.filter(c => c.score === maxScore);
         merged[k] = Math.round((best.reduce((s, c) => s + c.value, 0) / best.length) * 100) / 100;
       });
       if (merged.pH     !== undefined) setPH(String(merged.pH));
       if (merged.fCl    !== undefined) setFCl(String(merged.fCl));
       if (merged.tCl    !== undefined) setTCl(String(merged.tCl));
-      // CCL auto-calculé si non fourni par la photo mais fCl et tCl disponibles
-      if (merged.ccl    !== undefined) {
+      // CCL — la formule TCL - FCL = CCL est impérative. Si l'IA a interprété un CCL qui
+      // ne la respecte pas (tolérance 0.05 mg/L), cette valeur est ignorée et CCL est
+      // recalculé à partir de TCL et FCL plutôt que conservé tel quel.
+      if (merged.ccl !== undefined && merged.fCl !== undefined && merged.tCl !== undefined) {
+        const expectedCcl = merged.tCl - merged.fCl;
+        if (Math.abs(expectedCcl - merged.ccl) > CCL_TOLERANCE) {
+          setCcl(String(Math.max(0, Math.round(expectedCcl * 100) / 100)));
+        } else {
+          setCcl(String(merged.ccl));
+        }
+      } else if (merged.ccl !== undefined) {
         setCcl(String(merged.ccl));
       } else if (merged.fCl !== undefined && merged.tCl !== undefined) {
         const autoCcl = Math.max(0, Math.round((merged.tCl - merged.fCl) * 100) / 100);
@@ -8476,6 +8494,10 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
         </div>
       )}
 
+      {/* v1.31.0 — Couleur plus claire pour les placeholders (valeurs fictives d'exemple),
+          pour mieux les distinguer des valeurs réellement saisies ou interprétées. Le
+          rendu par défaut du navigateur varie trop d'un appareil à l'autre. */}
+      <style>{`.measureFieldInput::placeholder { color: #b7c2cc; opacity: 1; }`}</style>
       <div style={styles.fieldGrid}>
         {fields.map((f) => {
           const isErrorField = cclError && ["fCl","ccl","tCl"].includes(f.key);
@@ -8487,6 +8509,7 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
                 step={f.step}
                 inputMode="decimal"
                 placeholder={f.placeholder}
+                className="measureFieldInput"
                 value={f.value}
                 onChange={(e) => { f.set(e.target.value); setCclError(null); }}
                 style={isErrorField ? { ...styles.input, border: "1.5px solid #e74c3c", background: "#fdf5f5" } : styles.input}
