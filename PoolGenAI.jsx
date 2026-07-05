@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.37.0";
+const APP_VERSION = "1.38.0";
 const CGU_VERSION = "1.2"; // v1.2 : clause 11 - amélioration collective des analyses photo (Lot B, calibration)
 
 const TRANSLATIONS = {
@@ -4337,6 +4337,18 @@ const FB = {
     const ref = window._fbDoc(window._fbDb, "calibrationPoints", uid());
     await window._fbSetDoc(ref, point);
   },
+  // v1.38.0 — Lot B : lit un modèle de calibration agrégé (calculé côté
+  // Worker Cloudflare à partir des points contribués par tous les
+  // utilisateurs). Collection en lecture seule côté client (cf.
+  // firestore.rules), écrite uniquement par le Worker. Retourne null si aucun
+  // modèle n'existe encore pour ce couple modèle de bandelette + paramètre
+  // (pas assez de points collectés).
+  getCalibrationModel: async (stripModel, param) => {
+    if (!window._fbDb || !window._fbGetDoc) return null;
+    const ref = window._fbDoc(window._fbDb, "calibrationModels", `${stripModel}_${param}`);
+    const snap = await window._fbGetDoc(ref);
+    return snap.exists() ? snap.data() : null;
+  },
 };
 
 // Helper analytics — fire-and-forget
@@ -8480,6 +8492,10 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
       // seulement si l'utilisateur contribue et a un modèle de bandelette
       // renseigné (cf. state stripModel plus haut).
       const calibrationCandidates = [];
+      // v1.38.0 — Lot B : paramètres lus uniquement à la bandelette (pas de
+      // valeur photomètre en parallèle) — candidats à une correction par
+      // modèle de calibration communautaire une fois la boucle terminée.
+      const bandeletteOnlyCandidates = [];
 
       numericKeys.forEach(k => {
         // Score par tampon : priorité à reliability_by_param[k] (1-5, spécifique à ce
@@ -8514,8 +8530,40 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
             const bBest = bandeletteCandidates.find(c => c.score === bMaxScore);
             calibrationCandidates.push({ param: k, trueValue: merged[k], photoIdx: bBest.photoIdx, samplePoints: bBest.samplePoints });
           }
+        } else if (best.device === "bandelette" && best.samplePoints?.pad) {
+          // v1.38.0 — Lot B : aucune valeur photomètre disponible pour ce
+          // paramètre — candidat à une correction par modèle de calibration
+          // communautaire (cf. bloc après la boucle).
+          bandeletteOnlyCandidates.push({ param: k, photoIdx: best.photoIdx, samplePoints: best.samplePoints });
         }
       });
+
+      // v1.38.0 — Lot B : correction des lectures bandelette seules (aucune
+      // valeur photomètre disponible pour ce paramètre sur cette mesure) via
+      // le modèle de calibration communautaire (calibrationModels), quand il
+      // existe pour ce modèle de bandelette + paramètre. Le modèle n'existe
+      // que si le Worker a jugé qu'il y avait assez de points de qualité
+      // suffisante (cf. aggregateCalibrationModels côté Worker) — sa seule
+      // présence en base vaut donc validation du seuil. Best-effort et
+      // silencieux : un échec (pas de modèle, image illisible...) laisse
+      // simplement l'estimation visuelle de l'IA inchangée dans merged[k].
+      if (stripModel && bandeletteOnlyCandidates.length) {
+        const normalizedModelForCorrection = normalizeStripModel(stripModel);
+        for (const bc of bandeletteOnlyCandidates) {
+          try {
+            const model = await FB.getCalibrationModel(normalizedModelForCorrection, bc.param);
+            if (!model?.coefficients) continue;
+            const photoDataUrl = photos[bc.photoIdx];
+            const { color } = await sampleColorAndQuality(photoDataUrl, bc.samplePoints.pad[0], bc.samplePoints.pad[1]);
+            const { a, b, c: coefC, d } = model.coefficients;
+            const predicted = a * color.r + b * color.g + coefC * color.b + d;
+            merged[bc.param] = Math.max(0, Math.round(predicted * 100) / 100);
+          } catch (e) {
+            // silencieux — correction best-effort, l'estimation IA reste valable
+          }
+        }
+      }
+
       if (merged.pH     !== undefined) setPH(String(merged.pH));
       if (merged.fCl    !== undefined) setFCl(String(merged.fCl));
       if (merged.tCl    !== undefined) setTCl(String(merged.tCl));
