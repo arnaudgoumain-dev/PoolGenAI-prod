@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.40.0";
+const APP_VERSION = "1.41.0";
 const CGU_VERSION = "1.2"; // v1.2 : clause 11 - amélioration collective des analyses photo (Lot B, calibration)
 
 const TRANSLATIONS = {
@@ -7450,7 +7450,13 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
           : _("missing_product_tip", { action: "chlore" }),
         computedDoseAmount: computedDose,
         doseUnit: prod?.doseUnit || null,
-        note: prodNote(prod, "reco_note_combined"),
+        // v1.40.0 — Fix : cette branche (chlore libre bas, PAS de problème de
+        // combiné) affichait par erreur la note "reco_note_combined" (chloramines,
+        // désinfection insuffisante) — copié-collé de la branche ci-dessus. Cette
+        // note n'a aucun sens ici. On garde uniquement la note propre au produit
+        // si l'utilisateur en a saisi une, sinon pas de note plutôt qu'un message
+        // trompeur.
+        note: prod ? ((prod.noteKey ? _(prod.noteKey) : prod.note) || null) : null,
         waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["chlore"],
       });
     } else if (fCl > fclT.max) {
@@ -9822,7 +9828,7 @@ function ProductsView({ products, onEdit, onAddNew, onDelete, onResetAll, isPrem
                         </>
                       )}
                   </div>
-                  {(() => {
+                  {p.action !== "outil-mesure" && (() => {
                     const pct = p.stockPercent ?? 100;
                     const low = pct <= 20;
                     const container = p.containerAmount || 1;
@@ -9966,9 +9972,13 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
       waitHours: isTool ? 0 : (parseFloat(waitHours) || 0),
       note,
       photo,
-      stockPercent: newStock,
-      containerAmount: parseFloat(containerAmount) || 1,
-      containerUnit: containerUnit || "kg",
+      // v1.40.0 — Un outil de mesure (bandelettes, etc.) n'a pas de contenant
+      // en L/kg ni de stock consommable au sens des produits chimiques : pas
+      // de valeurs par défaut trompeuses (avant : 1 kg par défaut même pour
+      // une boîte de bandelettes).
+      stockPercent: isTool ? null : newStock,
+      containerAmount: isTool ? null : (parseFloat(containerAmount) || 1),
+      containerUnit: isTool ? null : (containerUnit || "kg"),
     });
   }
 
@@ -10072,7 +10082,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
         </>
       )}
 
-      {!isPremium ? (
+      {action === "outil-mesure" ? null : !isPremium ? (
         <button style={styles.photoLockedBtn} onClick={onWantPremium}>
           <Lock size={16} />
           <span>{t("stock_locked")}</span>
@@ -11204,6 +11214,36 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
     });
   }, [sortedMeasures, pool, products, applications]);
 
+  // v1.40.0 — Fix : la section photos du rapport n'affichait plus rien pour les
+  // mesures synchronisées cloud, car measure.photos/poolPhotos sont vides
+  // depuis leur migration vers la sous-collection measures/{id}/photos (voir
+  // FB.saveMeasure). On les recharge ici à l'ouverture du rapport, pour les
+  // seules mesures qui en ont (photoCount/poolPhotoCount) et qui n'ont pas
+  // déjà les photos en mémoire locale (mesure ajoutée dans la session en cours).
+  const [fetchedPhotosByMeasureId, setFetchedPhotosByMeasureId] = useState({});
+  useEffect(() => {
+    if (!authUid) return;
+    const toFetch = rows
+      .map(({ measure: m }) => m)
+      .filter((m) => {
+        if (m.photos?.length || m.photo || m.poolPhotos?.length) return false; // déjà en mémoire
+        return !!(m.photoCount || m.poolPhotoCount);
+      });
+    if (!toFetch.length) return;
+    let cancelled = false;
+    Promise.all(
+      toFetch.map((m) =>
+        FB.getMeasurePhotos(authUid, m.id)
+          .then(({ photos, poolPhotos }) => [m.id, { photos, poolPhotos }])
+          .catch(() => [m.id, { photos: [], poolPhotos: [] }])
+      )
+    ).then((entries) => {
+      if (cancelled) return;
+      setFetchedPhotosByMeasureId((prev) => ({ ...prev, ...Object.fromEntries(entries) }));
+    });
+    return () => { cancelled = true; };
+  }, [rows, authUid]);
+
   const localeMap = { fr: "fr-FR", en: "en-GB", de: "de-DE", it: "it-IT", es: "es-ES", pt: "pt-PT" };
   const generatedAt = new Date().toLocaleString(localeMap[lang] || "fr-FR", {
     dateStyle: "long",
@@ -11903,12 +11943,13 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           </div>
         )}
 
-        {rows.some(({ measure }) => (measure.photos?.length || measure.photo || measure.poolPhotos?.length)) && (
+        {rows.some(({ measure }) => (measure.photoCount || measure.poolPhotoCount || measure.photos?.length || measure.photo || measure.poolPhotos?.length)) && (
           <div style={{ marginTop: 24 }}>
             <div style={styles.reportSectionTitle}>{t("photos_section")}</div>
             {rows.map(({ measure }, i) => {
-              const analysisPhotos = measure.photos?.length ? measure.photos : (measure.photo ? [measure.photo] : []);
-              const poolPhotos = measure.poolPhotos || [];
+              const fetched = fetchedPhotosByMeasureId[measure.id];
+              const analysisPhotos = measure.photos?.length ? measure.photos : (measure.photo ? [measure.photo] : (fetched?.photos || []));
+              const poolPhotos = measure.poolPhotos?.length ? measure.poolPhotos : (fetched?.poolPhotos || []);
               const allPhotos = [...analysisPhotos, ...poolPhotos];
               if (!allPhotos.length) return null;
               return (
