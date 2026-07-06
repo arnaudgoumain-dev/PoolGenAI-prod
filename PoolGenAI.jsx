@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.44.0";
+const APP_VERSION = "1.45.1";
 const CGU_VERSION = "1.2"; // v1.2 : clause 11 - amélioration collective des analyses photo (Lot B, calibration)
 
 const TRANSLATIONS = {
@@ -478,6 +478,12 @@ const TRANSLATIONS = {
     reco_no_product_note: "Aucun produit configuré pour cette action. Ajoute-en un dans l'onglet Produits.",
     product_empty_delete_confirm: "{name} est à 0% de stock. Le supprimer de la liste ?",
     reco_note_ph_before_tac: "pH corrigé avant le TAC : à ce pH le chlore serait peu efficace, et le TAC n'est pas assez bas pour être urgent.",
+    reco_order_intro_default: "Cet ordre suit la logique de traitement : les paramètres qui empêchent l'efficacité des autres sont corrigés en premier.",
+    reco_order_reason_metals: "Le séquestrant passe avant tout désinfectant car des métaux dissous ont été détectés — sinon le chlore les précipite et tache le bassin.",
+    reco_order_reason_contamination: "Le désinfectant passe en priorité car le chlore combiné est élevé ({combined} mg/L) : il faut viser {target} mg/L de chlore libre pour atteindre le point de rupture et détruire les chloramines.",
+    reco_order_reason_cya_block: "Le choc chlore est remplacé par une dilution car le stabilisant (CYA) est trop élevé pour qu'un choc soit efficace.",
+    reco_order_reason_ph_before_tac: "Le pH passe avant le TAC car l'écart est trop important pour attendre.",
+    reco_order_reason_ph_chlore_delay: "Un délai de 6h est respecté entre la correction du pH et le choc chlore pour éviter toute précipitation.",
     reco_note_combined: "Chlore combiné = chloramines, signe d'une désinfection insuffisante. Verser le soir, filtration en continu.",
     reco_note_sel: "Utiliser du sel spécial piscine (NaCl pur ≥ 99%). Dissoudre avant l'ajout ou verser directement près du skimmer, filtration en marche 24h.",
     reco_note_o2: "Ne pas mélanger avec le chlore. Filtration en marche pendant 4h.",
@@ -1009,6 +1015,12 @@ const TRANSLATIONS = {
     reco_no_product_note: "No product configured for this action. Add one in the Products tab.",
     product_empty_delete_confirm: "{name} is at 0% stock. Remove it from the list?",
     reco_note_ph_before_tac: "pH corrected before TAC: chlorine would be inefficient at this pH, and TAC isn't low enough to be urgent.",
+    reco_order_intro_default: "This order follows the treatment logic: parameters that hinder the effectiveness of the others are corrected first.",
+    reco_order_reason_metals: "Sequestrant comes before any disinfectant because dissolved metals were detected — otherwise chlorine precipitates them and stains the pool.",
+    reco_order_reason_contamination: "Disinfectant takes priority because combined chlorine is high ({combined} mg/L): aim for {target} mg/L free chlorine to reach breakpoint and destroy chloramines.",
+    reco_order_reason_cya_block: "The chlorine shock is replaced by dilution because the stabiliser (CYA) is too high for a shock to be effective.",
+    reco_order_reason_ph_before_tac: "pH comes before TAC because the gap is too large to wait.",
+    reco_order_reason_ph_chlore_delay: "A 6-hour delay is enforced between the pH correction and the chlorine shock to avoid precipitation.",
     reco_note_combined: "Combined chlorine = chloramines, sign of insufficient disinfection. Add in the evening, keep filtration running.",
     reco_note_sel: "Use pool-grade salt (pure NaCl ≥ 99%). Dissolve before adding or pour directly near the skimmer, run filtration for 24h.",
     reco_note_o2: "Do not mix with chlorine. Run filtration for 4h.",
@@ -1542,6 +1554,12 @@ const TRANSLATIONS = {
     reco_no_product_note: "Kein Produkt für diese Aktion konfiguriert. Füge eines im Tab Produkte hinzu.",
     product_empty_delete_confirm: "{name} hat 0% Bestand. Aus der Liste entfernen?",
     reco_note_ph_before_tac: "pH vor KH korrigiert: Chlor wäre bei diesem pH-Wert wenig wirksam, und der KH ist nicht niedrig genug, um dringend zu sein.",
+    reco_order_intro_default: "Diese Reihenfolge folgt der Behandlungslogik: Parameter, die die Wirksamkeit der anderen beeinträchtigen, werden zuerst korrigiert.",
+    reco_order_reason_metals: "Der Sequestrierer kommt vor jedem Desinfektionsmittel, da gelöste Metalle festgestellt wurden — sonst fällt das Chlor sie aus und färbt das Becken.",
+    reco_order_reason_contamination: "Das Desinfektionsmittel hat Priorität, da das gebundene Chlor hoch ist ({combined} mg/L): Ziel sind {target} mg/L freies Chlor, um den Breakpoint zu erreichen und Chloramine zu zerstören.",
+    reco_order_reason_cya_block: "Die Chlorschockbehandlung wird durch Verdünnung ersetzt, da der Stabilisator (CYA) zu hoch für eine wirksame Schockbehandlung ist.",
+    reco_order_reason_ph_before_tac: "Der pH-Wert kommt vor dem KH, da die Abweichung zu groß ist, um zu warten.",
+    reco_order_reason_ph_chlore_delay: "Zwischen der pH-Korrektur und der Chlorschockbehandlung wird eine Wartezeit von 6 Stunden eingehalten, um Ausfällungen zu vermeiden.",
     reco_note_combined: "Gebundenes Chlor = Chloramine, Zeichen unzureichender Desinfektion. Abends zugeben, Filtration durchlaufen lassen.",
     reco_note_sel: "Poolsalz (reines NaCl ≥ 99%) verwenden. Vor dem Zugeben auflösen oder direkt beim Skimmer zugeben, 24h filtrieren.",
     reco_note_o2: "Nicht mit Chlor mischen. 4h filtrieren.",
@@ -2072,6 +2090,12 @@ const TRANSLATIONS = {
     reco_no_product_note: "Nessun prodotto configurato per questa azione. Aggiungine uno nella scheda Prodotti.",
     product_empty_delete_confirm: "{name} è allo 0% di scorta. Rimuoverlo dalla lista?",
     reco_note_ph_before_tac: "pH corretto prima del TAC: a questo pH il cloro sarebbe poco efficace, e il TAC non è abbastanza basso da essere urgente.",
+    reco_order_intro_default: "Quest'ordine segue la logica di trattamento: i parametri che ostacolano l'efficacia degli altri vengono corretti per primi.",
+    reco_order_reason_metals: "Il sequestrante passa prima di ogni disinfettante perché sono stati rilevati metalli disciolti — altrimenti il cloro li precipita e macchia la piscina.",
+    reco_order_reason_contamination: "Il disinfettante ha priorità perché il cloro combinato è alto ({combined} mg/L): puntare a {target} mg/L di cloro libero per raggiungere il punto di rottura e distruggere le clorammine.",
+    reco_order_reason_cya_block: "Lo shock a cloro è sostituito dalla diluizione perché lo stabilizzante (CYA) è troppo alto perché uno shock sia efficace.",
+    reco_order_reason_ph_before_tac: "Il pH passa prima del TAC perché lo scarto è troppo grande per aspettare.",
+    reco_order_reason_ph_chlore_delay: "Viene rispettata un'attesa di 6 ore tra la correzione del pH e lo shock a cloro per evitare precipitazioni.",
     reco_note_combined: "Cloro combinato = cloramine, segno di disinfezione insufficiente. Aggiungere la sera, filtrazione in continuo.",
     reco_note_sel: "Usare sale da piscina (NaCl puro ≥ 99%). Sciogliere prima dell'aggiunta o versare vicino allo skimmer, filtrazione 24h.",
     reco_note_o2: "Non mescolare con il cloro. Filtrazione per 4h.",
@@ -2602,6 +2626,12 @@ const TRANSLATIONS = {
     reco_no_product_note: "No hay ningún producto configurado para esta acción. Añade uno en la pestaña Productos.",
     product_empty_delete_confirm: "{name} está al 0% de stock. ¿Eliminarlo de la lista?",
     reco_note_ph_before_tac: "pH corregido antes que el TAC: a este pH el cloro sería poco eficaz, y el TAC no está lo bastante bajo para ser urgente.",
+    reco_order_intro_default: "Este orden sigue la lógica de tratamiento: los parámetros que impiden la eficacia de los demás se corrigen primero.",
+    reco_order_reason_metals: "El secuestrante pasa antes que cualquier desinfectante porque se detectaron metales disueltos — si no, el cloro los precipita y mancha la piscina.",
+    reco_order_reason_contamination: "El desinfectante tiene prioridad porque el cloro combinado es alto ({combined} mg/L): hay que apuntar a {target} mg/L de cloro libre para alcanzar el punto de ruptura y destruir las cloraminas.",
+    reco_order_reason_cya_block: "El choque de cloro se sustituye por dilución porque el estabilizador (CYA) está demasiado alto para que un choque sea eficaz.",
+    reco_order_reason_ph_before_tac: "El pH pasa antes que el TAC porque la desviación es demasiado grande para esperar.",
+    reco_order_reason_ph_chlore_delay: "Se respeta una espera de 6 horas entre la corrección del pH y el choque de cloro para evitar precipitaciones.",
     reco_note_combined: "Cloro combinado = cloraminas, señal de desinfección insuficiente. Añadir por la noche, filtración continua.",
     reco_note_sel: "Usar sal de piscina (NaCl puro ≥ 99%). Disolver antes de añadir o verter cerca del skimmer, filtración 24h.",
     reco_note_o2: "No mezclar con cloro. Filtración durante 4h.",
@@ -3129,6 +3159,12 @@ const TRANSLATIONS = {
     reco_no_product_note: "Nenhum produto configurado para esta ação. Adiciona um no separador Produtos.",
     product_empty_delete_confirm: "{name} está a 0% de stock. Remover da lista?",
     reco_note_ph_before_tac: "pH corrigido antes do TAC: a este pH o cloro seria pouco eficaz, e o TAC não está baixo o suficiente para ser urgente.",
+    reco_order_intro_default: "Esta ordem segue a lógica de tratamento: os parâmetros que impedem a eficácia dos outros são corrigidos primeiro.",
+    reco_order_reason_metals: "O sequestrante passa antes de qualquer desinfetante porque foram detetados metais dissolvidos — caso contrário, o cloro precipita-os e mancha a piscina.",
+    reco_order_reason_contamination: "O desinfetante tem prioridade porque o cloro combinado está alto ({combined} mg/L): o objetivo é {target} mg/L de cloro livre para atingir o ponto de rutura e destruir as cloraminas.",
+    reco_order_reason_cya_block: "O choque de cloro é substituído por diluição porque o estabilizador (CYA) está demasiado alto para um choque ser eficaz.",
+    reco_order_reason_ph_before_tac: "O pH passa antes do TAC porque o desvio é demasiado grande para esperar.",
+    reco_order_reason_ph_chlore_delay: "Respeita-se um intervalo de 6h entre a correção do pH e o choque de cloro para evitar precipitações.",
     reco_note_combined: "Cloro combinado = cloraminas, sinal de desinfecção insuficiente. Adicionar à noite, filtração contínua.",
     reco_note_sel: "Usar sal de piscina (NaCl puro ≥ 99%). Dissolver antes de adicionar ou verter perto do skimmer, filtração 24h.",
     reco_note_o2: "Não misturar com cloro. Filtração por 4h.",
@@ -7184,6 +7220,9 @@ Réponds directement en français, sans titre ni introduction.`;
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {recs.orderExplanation && (
+            <p style={styles.helpText}>{recs.orderExplanation}</p>
+          )}
           {recs.length > 1 && (
             <p style={styles.helpText}>{t("follow_order")}</p>
           )}
@@ -7471,6 +7510,9 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
   const fCl = parseFloat(latestLower.fcl);
   const tCl = parseFloat(latestLower.tcl);
   const combined = !Number.isNaN(fCl) && !Number.isNaN(tCl) ? Math.max(0, tCl - fCl) : null;
+  // v1.45.0 — Capture la cible de point de rupture (10x CC) pour la
+  // réutiliser dans le texte explicatif de l'ordre du plan, plus bas.
+  let combinedShockTarget = null;
 
   if (has("fcl") && !Number.isNaN(fCl) && targetsLower.fcl) {
     const fclT = targetsLower.fcl;
@@ -7502,6 +7544,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       // les autres branches (ph-, ph+, fCl bas, brome, o2) le faisaient déjà,
       // celle-ci utilisait la cible directement, ce qui surdosait.
       const targetFcl = Math.max(fclT.max, combined * 10);
+      combinedShockTarget = targetFcl;
       const diff = Math.max(0, targetFcl - fCl);
       const prod = findProduct("chlore");
       const computedDose = prod ? Math.round(prod.doseAmount * (volume / prod.effectPer) * (diff / prod.effectAmount)) : null;
@@ -7772,12 +7815,33 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
   if (phStepIndex !== -1 && chloreStepIndex !== -1 && chloreStepIndex > phStepIndex) {
     steps[phStepIndex].waitHours = Math.max(steps[phStepIndex].waitHours || 0, 6);
   }
+  // v1.44.0 — Petit texte expliquant l'ordre du plan, affiché avant les
+  // cartes. Reconstruit les mêmes conditions que le tri ci-dessus (même
+  // ordre de priorité) pour rester cohérent avec les étapes affichées.
+  const cyaValForReason = parseFloat(latestLower.cya);
+  const cyaBlockedShockForReason = has("cya") && !Number.isNaN(cyaValForReason) && cyaValForReason > 75 && combined !== null && combined > 0.5;
+  const phChloreDelayApplied = phStepIndex !== -1 && chloreStepIndex !== -1 && chloreStepIndex > phStepIndex;
+  const orderReasons = [];
+  if (metalsUrgent) orderReasons.push(_("reco_order_reason_metals"));
+  if (cyaBlockedShockForReason) {
+    orderReasons.push(_("reco_order_reason_cya_block"));
+  } else if (combined !== null && combined > 0.5) {
+    orderReasons.push(_("reco_order_reason_contamination", { combined: combined.toFixed(2), target: combinedShockTarget }));
+  }
+  if (phTooHigh && tacNotCritical) orderReasons.push(_("reco_order_reason_ph_before_tac"));
+  if (phChloreDelayApplied) orderReasons.push(_("reco_order_reason_ph_chlore_delay"));
+  const orderExplanation = orderReasons.length > 0
+    ? `${_("reco_order_intro_default")} ${orderReasons.join(" ")}`
+    : _("reco_order_intro_default");
+
   let cumulativeHours = 0;
-  return steps.map((step, i) => {
+  const result = steps.map((step, i) => {
     const startsAfter = cumulativeHours;
     cumulativeHours += step.waitHours || 0;
     return { ...step, stepNumber: i + 1, startsAfterHours: startsAfter };
   });
+  result.orderExplanation = orderExplanation;
+  return result;
 }
 
 // ---------- Historique ----------
