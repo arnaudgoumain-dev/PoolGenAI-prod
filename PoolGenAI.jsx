@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.46.0";
+const APP_VERSION = "1.47.0";
 const CGU_VERSION = "1.2"; // v1.2 : clause 11 - amélioration collective des analyses photo (Lot B, calibration)
 
 const TRANSLATIONS = {
@@ -3953,7 +3953,7 @@ async function getFirebaseAuthHeader() {
   }
 }
 
-async function callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl, uid: callerUid, maxTokens = 1000 }) {
+async function callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl, uid: callerUid, maxTokens = 1000, enableWebSearch = false }) {
   const parsed = parseDataUrl(imageDataUrl);
   if (!parsed) throw new Error("Image invalide");
 
@@ -4014,6 +4014,13 @@ async function callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl, uid:
             ],
           },
         ],
+        // v1.47.0 — Recherche web côté serveur (Anthropic), utilisée
+        // uniquement pour l'analyse produit (voir analyzeProductPhoto). Claude
+        // décide lui-même s'il cherche ; la réponse finale arrive dans le même
+        // appel, pas d'aller-retour à gérer ici. Le Worker étant un pur
+        // relais, ce paramètre est transmis tel quel sans modification côté
+        // poolgenai-proxy.js.
+        ...(enableWebSearch ? { tools: [{ type: "web_search_20250305", name: "web_search" }] } : {}),
       }),
     });
     if (!response.ok) {
@@ -4021,7 +4028,12 @@ async function callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl, uid:
       throw new Error(err?.error?.message || err?.error || `Erreur Anthropic ${response.status}`);
     }
     const data = await response.json();
-    return (data.content || []).find((b) => b.type === "text")?.text || "";
+    // v1.47.0 — Avec la recherche web activée, la réponse peut contenir
+    // plusieurs blocs (server_tool_use, web_search_tool_result, text...). Le
+    // dernier bloc "text" est la réponse finale de Claude après recherche,
+    // contrairement au premier qui pourrait être un commentaire intermédiaire.
+    const textBlocks = (data.content || []).filter((b) => b.type === "text");
+    return textBlocks.length > 0 ? textBlocks[textBlocks.length - 1].text : "";
   }
 }
 
@@ -4130,24 +4142,31 @@ Règles strictes :
 async function analyzeProductPhoto({ apiKey, apiProvider, dataUrl, uid: callerUid }) {
   const prompt = `Tu es un expert en chimie de l'eau de piscine. Analyse cette photo d'étiquette ou d'emballage d'un produit de traitement piscine (chlore, pH, sel, algicide, floculant, etc.).
 
-Identifie sur l'étiquette :
-- Le nom commercial du produit
-- Son action principale (une seule valeur parmi : "ph-", "ph+", "chlore", "chlore-stabilise", "tac+", "brome", "o2", "sel", "hard+", "phos-", "sequestrant")
+Procède en deux temps :
+
+1. Identifie sur l'étiquette : le nom commercial exact du produit, la marque, et si visible une référence ou un code-barres.
+
+2. Cherche sur le web la fiche technique ou la notice officielle de ce produit précis (site du fabricant ou d'un revendeur reconnu), pour trouver la dose de traitement recommandée. Les valeurs trouvées par cette recherche priment sur celles lues sur l'étiquette si les deux sont disponibles — une notice officielle en ligne est plus fiable qu'une lecture visuelle d'étiquette (reflets, angle, texte petit). Si la recherche ne trouve rien d'exploitable pour ce produit précis, utilise uniquement ce qui est lisible sur la photo.
+
+Informations à renseigner, dans les deux cas :
+- Son action principale (une seule valeur parmi : "ph-", "ph+", "chlore", "chlore-stabilise", "tac+", "tac-", "brome", "o2", "sel", "hard+", "phos-", "sequestrant")
   - "chlore" = chlore choc/non stabilisé, "chlore-stabilise" = galets/pastilles au chlore stabilisé (contient de l'acide cyanurique/CYA)
-- La dose conseillée par le fabricant et son unité (g, kg, ml ou L)
-- L'effet annoncé sur le paramètre concerné pour un volume d'eau donné (ex : "20g augmente le pH de 0,1 pour 10m³") si l'information est visible
-- Le délai d'attente avant baignade recommandé en heures, si indiqué
-- La taille TOTALE du contenant/emballage tel que vendu (le poids ou volume net indiqué sur l'étiquette, ex : "5 kg", "25 kg", "1 L", "20 L") — c'est différent de la dose par traitement, c'est la quantité totale achetée
+  - "tac-" = acide utilisé pour baisser l'alcalinité (acide chlorhydrique, bisulfate de sodium) — à distinguer de "ph-" même si c'est parfois le même produit physique : choisis "tac-" seulement si l'étiquette ou la notice présente explicitement ce produit comme correcteur de TAC/alcalinité
+- La dose conseillée et son unité (g, kg, ml ou L) — dose de TRAITEMENT, pas la taille du contenant
+- L'effet annoncé sur le paramètre concerné pour un volume d'eau donné (ex : "20g augmente le pH de 0,1 pour 10m³")
+- Le délai d'attente avant baignade recommandé en heures
+- La taille TOTALE du contenant/emballage tel que vendu (ex : "5 kg", "25 kg", "1 L", "20 L")
 
 Réponds UNIQUEMENT en JSON valide, sans texte avant ou après, sans markdown :
-{"name": "nom du produit ou null", "action": "une des valeurs listées ci-dessus ou null", "doseAmount": nombre ou null, "doseUnit": "g" ou "kg" ou "ml" ou "L" ou null, "effectAmount": nombre ou null, "effectPer": nombre de m³ ou null, "waitHours": nombre ou null, "containerAmount": nombre ou null, "containerUnit": "g" ou "kg" ou "ml" ou "L" ou null, "confidence": "haute" ou "moyenne" ou "basse", "note": "une phrase en français sur ce qui a été lu ou non sur l'étiquette"}
+{"name": "nom du produit ou null", "action": "une des valeurs listées ci-dessus ou null", "doseAmount": nombre ou null, "doseUnit": "g" ou "kg" ou "ml" ou "L" ou null, "effectAmount": nombre ou null, "effectPer": nombre de m³ ou null, "waitHours": nombre ou null, "containerAmount": nombre ou null, "containerUnit": "g" ou "kg" ou "ml" ou "L" ou null, "source": "web" ou "etiquette", "confidence": "haute" ou "moyenne" ou "basse", "note": "une phrase en français sur ce qui a été trouvé, en précisant si ça vient de la recherche web ou de la lecture d'étiquette"}
 
 Règles strictes :
-- null pour toute information absente ou illisible sur l'étiquette, ne devine jamais une valeur non présente
+- null pour toute information absente ou illisible, ne devine jamais une valeur non présente
+- "source" doit refléter honnêtement d'où viennent les valeurs de dose/effet renvoyées : "web" seulement si la recherche a effectivement trouvé une notice exploitable pour ce produit précis, "etiquette" sinon
 - Les nombres sont des nombres, jamais des chaînes
 - JSON pur, rien d'autre`;
 
-  const text = await callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl: dataUrl, uid: callerUid });
+  const text = await callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl: dataUrl, uid: callerUid, maxTokens: 1500, enableWebSearch: apiProvider !== "openai" });
   const match = text.match(/\{[\s\S]*\}/);
   if (!match) throw new Error("Réponse IA non parseable : " + text.slice(0, 200));
   return JSON.parse(match[0]);
@@ -10177,6 +10196,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
         waitHours: result.waitHours ?? null,
         containerAmount: result.containerAmount ?? null,
         containerUnit: result.containerUnit ?? null,
+        source: result.source || null,
       });
       if (result.containerUnit) setContainerUnit(result.containerUnit);
       if (result.note) setAiNote(result.note);
