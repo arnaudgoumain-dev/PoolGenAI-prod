@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.48.0";
+const APP_VERSION = "1.48.1";
 const CGU_VERSION = "1.2"; // v1.2 : clause 11 - amélioration collective des analyses photo (Lot B, calibration)
 
 const TRANSLATIONS = {
@@ -10567,7 +10567,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
         <div>
           {photo ? (
             <div style={styles.photoPreviewWrap}>
-              <img src={photo} alt="" style={styles.photoPreview} />
+              <img src={photo} alt="" style={styles.photoPreview} onClick={() => window._openLightbox?.(photo)} />
               <button style={styles.photoRemoveBtn} onClick={() => setPhoto(null)}>
                 <X size={14} /> {t("remove")}
               </button>
@@ -13975,9 +13975,11 @@ const styles = {
   photoPreview: {
     width: "100%",
     maxHeight: 200,
-    objectFit: "cover",
+    objectFit: "contain",
     borderRadius: 12,
     border: "1px solid #d0e4f5",
+    background: "#f0f4f8",
+    cursor: "zoom-in",
   },
   photoRemoveBtn: {
     marginTop: 7,
