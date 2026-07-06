@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.48.1";
+const APP_VERSION = "1.49.0";
 const CGU_VERSION = "1.2"; // v1.2 : clause 11 - amélioration collective des analyses photo (Lot B, calibration)
 
 const TRANSLATIONS = {
@@ -226,6 +226,10 @@ const TRANSLATIONS = {
     edit_product: "Modifier le produit",
     new_product: "Nouveau produit",
     product_photo: "Photo du produit (étiquette)",
+    product_photo_hint: "Prends une photo par élément — face du produit, code-barre, notice indiquant dose/effet/volume — pour une reconnaissance plus fiable. Une seule photo suffit si tout est visible dessus.",
+    common_product_candidate_title: "Produit proche trouvé dans la base commune :",
+    common_product_same: "Oui, même produit",
+    common_product_different: "Non, produit différent",
     product_name: "Nom du produit",
     effect: "Effet",
     quantity: "Quantité",
@@ -790,6 +794,10 @@ const TRANSLATIONS = {
     edit_product: "Edit product",
     new_product: "New product",
     product_photo: "Product photo (label)",
+    product_photo_hint: "Take one photo per element — product front, barcode, dosage notice — for more reliable recognition. One photo is enough if everything is visible on it.",
+    common_product_candidate_title: "Similar product found in the shared database:",
+    common_product_same: "Yes, same product",
+    common_product_different: "No, different product",
     product_name: "Product name",
     effect: "Effect",
     quantity: "Quantity",
@@ -1347,6 +1355,10 @@ const TRANSLATIONS = {
     edit_product: "Produkt bearbeiten",
     new_product: "Neues Produkt",
     product_photo: "Produktfoto (Etikett)",
+    product_photo_hint: "Mach ein Foto pro Element — Produktvorderseite, Barcode, Dosierungshinweis — für eine zuverlässigere Erkennung. Ein Foto reicht, wenn alles darauf sichtbar ist.",
+    common_product_candidate_title: "Ähnliches Produkt in der gemeinsamen Datenbank gefunden:",
+    common_product_same: "Ja, gleiches Produkt",
+    common_product_different: "Nein, anderes Produkt",
     product_name: "Produktname",
     effect: "Wirkung",
     quantity: "Menge",
@@ -1906,6 +1918,10 @@ const TRANSLATIONS = {
     edit_product: "Modifica prodotto",
     new_product: "Nuovo prodotto",
     product_photo: "Foto prodotto (etichetta)",
+    product_photo_hint: "Scatta una foto per ogni elemento — fronte del prodotto, codice a barre, foglio dosaggio — per un riconoscimento più affidabile. Una sola foto basta se tutto è visibile su di essa.",
+    common_product_candidate_title: "Prodotto simile trovato nel database comune:",
+    common_product_same: "Sì, stesso prodotto",
+    common_product_different: "No, prodotto diverso",
     product_name: "Nome prodotto",
     effect: "Effetto",
     quantity: "Quantità",
@@ -2462,6 +2478,10 @@ const TRANSLATIONS = {
     edit_product: "Editar producto",
     new_product: "Nuevo producto",
     product_photo: "Foto del producto (etiqueta)",
+    product_photo_hint: "Toma una foto por elemento — frente del producto, código de barras, ficha de dosis — para un reconocimiento más fiable. Una sola foto basta si todo es visible en ella.",
+    common_product_candidate_title: "Producto similar encontrado en la base común:",
+    common_product_same: "Sí, mismo producto",
+    common_product_different: "No, producto diferente",
     product_name: "Nombre del producto",
     effect: "Efecto",
     quantity: "Cantidad",
@@ -3018,6 +3038,10 @@ const TRANSLATIONS = {
     edit_product: "Editar produto",
     new_product: "Novo produto",
     product_photo: "Foto do produto (rótulo)",
+    product_photo_hint: "Tira uma foto por elemento — frente do produto, código de barras, ficha de dosagem — para um reconhecimento mais fiável. Uma só foto basta se tudo estiver visível nela.",
+    common_product_candidate_title: "Produto semelhante encontrado na base comum:",
+    common_product_same: "Sim, mesmo produto",
+    common_product_different: "Não, produto diferente",
     product_name: "Nome do produto",
     effect: "Efeito",
     quantity: "Quantidade",
@@ -4044,8 +4068,13 @@ async function getFirebaseAuthHeader() {
 }
 
 async function callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl, uid: callerUid, maxTokens = 1000, enableWebSearch = false }) {
-  const parsed = parseDataUrl(imageDataUrl);
-  if (!parsed) throw new Error("Image invalide");
+  // v1.49.0 — imageDataUrl accepte maintenant soit une seule dataUrl (string,
+  // rétrocompatible), soit un tableau de dataUrls (plusieurs photos du même
+  // produit : face, code-barre, notice). Toutes les images sont envoyées
+  // dans le même message pour que Claude puisse croiser les infos entre elles.
+  const dataUrls = Array.isArray(imageDataUrl) ? imageDataUrl : [imageDataUrl];
+  const parsedImages = dataUrls.map((u) => parseDataUrl(u)).filter(Boolean);
+  if (parsedImages.length === 0) throw new Error("Image invalide");
 
   if (apiProvider === "openai") {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -4062,7 +4091,7 @@ async function callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl, uid:
             role: "user",
             content: [
               { type: "text", text: prompt },
-              { type: "image_url", image_url: { url: `data:${parsed.mediaType};base64,${parsed.data}` } },
+              ...parsedImages.map((parsed) => ({ type: "image_url", image_url: { url: `data:${parsed.mediaType};base64,${parsed.data}` } })),
             ],
           },
         ],
@@ -4099,7 +4128,7 @@ async function callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl, uid:
           {
             role: "user",
             content: [
-              { type: "image", source: { type: "base64", media_type: parsed.mediaType, data: parsed.data } },
+              ...parsedImages.map((parsed) => ({ type: "image", source: { type: "base64", media_type: parsed.mediaType, data: parsed.data } })),
               { type: "text", text: prompt },
             ],
           },
@@ -4229,14 +4258,18 @@ Règles strictes :
   return JSON.parse(match[0]);
 }
 
-async function analyzeProductPhoto({ apiKey, apiProvider, dataUrl, uid: callerUid }) {
-  const prompt = `Tu es un expert en chimie de l'eau de piscine. Analyse cette photo d'étiquette ou d'emballage d'un produit de traitement piscine (chlore, pH, sel, algicide, floculant, etc.).
+async function analyzeProductPhoto({ apiKey, apiProvider, dataUrls, uid: callerUid }) {
+  const photos = Array.isArray(dataUrls) ? dataUrls : [dataUrls];
+  const multiPhotoNote = photos.length > 1
+    ? `Tu reçois ${photos.length} photos du MÊME produit, prises séparément (face, code-barre, notice de dosage selon ce qui était visible). Croise les informations entre toutes les photos : le nom peut venir de la photo de face, le code-barre de sa photo dédiée, la dose/effet de la notice. `
+    : "";
+  const prompt = `Tu es un expert en chimie de l'eau de piscine. ${multiPhotoNote}Analyse ${photos.length > 1 ? "ces photos" : "cette photo"} d'étiquette ou d'emballage d'un produit de traitement piscine (chlore, pH, sel, algicide, floculant, etc.).
 
 Procède en deux temps :
 
-1. Identifie sur l'étiquette : le nom commercial exact du produit, la marque, la substance active principale (nom chimique, ex: "hypochlorite de calcium", "acide sulfamique"), et si visible un code-barre (numéro EAN/UPC imprimé sous les barres, PAS le motif de barres lui-même que tu ne peux pas décoder — uniquement le numéro).
+1. Identifie : le nom commercial exact du produit, la marque, la substance active principale (nom chimique, ex: "hypochlorite de calcium", "acide sulfamique"), et si visible un code-barre (numéro EAN/UPC imprimé sous les barres, PAS le motif de barres lui-même que tu ne peux pas décoder — uniquement le numéro).
 
-2. Cherche sur le web la fiche technique ou la notice officielle de ce produit précis (site du fabricant ou d'un revendeur reconnu), pour trouver la dose de traitement recommandée. Les valeurs trouvées par cette recherche priment sur celles lues sur l'étiquette si les deux sont disponibles — une notice officielle en ligne est plus fiable qu'une lecture visuelle d'étiquette (reflets, angle, texte petit). Si la recherche ne trouve rien d'exploitable pour ce produit précis, utilise uniquement ce qui est lisible sur la photo.
+2. Cherche sur le web la fiche technique ou la notice officielle de ce produit précis (site du fabricant ou d'un revendeur reconnu), pour trouver la dose de traitement recommandée. Les valeurs trouvées par cette recherche priment sur celles lues sur l'étiquette si les deux sont disponibles — une notice officielle en ligne est plus fiable qu'une lecture visuelle d'étiquette (reflets, angle, texte petit). Si la recherche ne trouve rien d'exploitable pour ce produit précis, utilise uniquement ce qui est lisible sur la photo. Si tu trouves une photo officielle du produit sur le site du fabricant ou d'un revendeur pendant cette recherche, note son URL directe (lien qui pointe vers le fichier image lui-même, pas une page HTML).
 
 Informations à renseigner, dans les deux cas :
 - Son action principale (une seule valeur parmi : "ph-", "ph+", "chlore", "chlore-stabilise", "tac+", "tac-", "brome", "o2", "sel", "hard+", "phos-", "sequestrant")
@@ -4248,16 +4281,17 @@ Informations à renseigner, dans les deux cas :
 - La taille TOTALE du contenant/emballage tel que vendu (ex : "5 kg", "25 kg", "1 L", "20 L")
 
 Réponds UNIQUEMENT en JSON valide, sans texte avant ou après, sans markdown :
-{"name": "nom du produit ou null", "barcode": "numéro EAN/UPC en chaîne de caractères ou null", "activeSubstance": "nom chimique ou null", "action": "une des valeurs listées ci-dessus ou null", "doseAmount": nombre ou null, "doseUnit": "g" ou "kg" ou "ml" ou "L" ou null, "effectAmount": nombre ou null, "effectPer": nombre de m³ ou null, "waitHours": nombre ou null, "containerAmount": nombre ou null, "containerUnit": "g" ou "kg" ou "ml" ou "L" ou null, "source": "web" ou "etiquette", "confidence": "haute" ou "moyenne" ou "basse", "note": "une phrase en français sur ce qui a été trouvé, en précisant si ça vient de la recherche web ou de la lecture d'étiquette"}
+{"name": "nom du produit ou null", "barcode": "numéro EAN/UPC en chaîne de caractères ou null", "activeSubstance": "nom chimique ou null", "action": "une des valeurs listées ci-dessus ou null", "doseAmount": nombre ou null, "doseUnit": "g" ou "kg" ou "ml" ou "L" ou null, "effectAmount": nombre ou null, "effectPer": nombre de m³ ou null, "waitHours": nombre ou null, "containerAmount": nombre ou null, "containerUnit": "g" ou "kg" ou "ml" ou "L" ou null, "productImageUrl": "URL directe de la photo officielle trouvée en ligne, ou null si aucune", "source": "web" ou "etiquette", "confidence": "haute" ou "moyenne" ou "basse", "note": "une phrase en français sur ce qui a été trouvé, en précisant si ça vient de la recherche web ou de la lecture d'étiquette"}
 
 Règles strictes :
 - null pour toute information absente ou illisible, ne devine jamais une valeur non présente
 - "barcode" doit être le numéro exact lu sous le code-barre, jamais reconstruit ou deviné — null si le numéro n'est pas net
+- "productImageUrl" : uniquement une URL trouvée réellement pendant la recherche web, jamais une URL inventée ou reconstruite — null si aucune trouvée
 - "source" doit refléter honnêtement d'où viennent les valeurs de dose/effet renvoyées : "web" seulement si la recherche a effectivement trouvé une notice exploitable pour ce produit précis, "etiquette" sinon
 - Les nombres sont des nombres, jamais des chaînes
 - JSON pur, rien d'autre`;
 
-  const text = await callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl: dataUrl, uid: callerUid, maxTokens: 1500, enableWebSearch: apiProvider !== "openai" });
+  const text = await callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl: photos, uid: callerUid, maxTokens: 1500, enableWebSearch: apiProvider !== "openai" });
   const match = text.match(/\{[\s\S]*\}/);
   if (!match) throw new Error("Réponse IA non parseable : " + text.slice(0, 200));
   return JSON.parse(match[0]);
@@ -10351,7 +10385,14 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
   const [effectPer, setEffectPer] = useState(product?.effectPer ?? "");
   const [waitHours, setWaitHours] = useState(product?.waitHours ?? DEFAULT_WAIT_HOURS[product?.action || "ph-"] ?? 2);
   const [note, setNote] = useState(product?.note || "");
-  const [photo, setPhoto] = useState(product?.photo || null);
+  // v1.49.0 — Remplace l'ancien état "photo" unique par un tableau : capture
+  // multi-photos (face / code-barre / notice), un seul bouton, envoyées
+  // ensemble à l'IA pour croiser les infos. Seule la première photo du
+  // tableau est sauvegardée comme photo principale du produit (option A du
+  // 260706 — les photos supplémentaires ne servent qu'à l'analyse, pas
+  // stockées, pas de changement de schéma Firestore productPhotos).
+  const [analysisPhotos, setAnalysisPhotos] = useState(product?.photo ? [product.photo] : []);
+  const photo = analysisPhotos[0] || null;
   const [stockPercent, setStockPercent] = useState(product?.stockPercent ?? null);
   const [containerAmount, setContainerAmount] = useState(product?.containerAmount ?? 1);
   const [containerUnit, setContainerUnit] = useState(product?.containerUnit ?? "kg");
@@ -10375,7 +10416,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
   const [detectedBarcode, setDetectedBarcode] = useState(null);
   const [detectedSubstance, setDetectedSubstance] = useState(null);
   const fileInputRef = useRef(null);
-  const galleryInputRef = useRef(null);
+  const formErrorRef = useRef(null);
 
   async function handlePhotoChange(e) {
     const file = e.target.files?.[0];
@@ -10393,22 +10434,29 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
       // miniature produit ne fait que 40x40px à l'affichage : 300px/qualité 0.5
       // suffit largement et réduit le poids d'un facteur ~10.
       const compressed = await compressImageDataUrl(dataUrl, 300, 0.5);
-      setPhoto(compressed);
+      // v1.49.0 — Ajoute au tableau (multi-photos), plafonné à 4 pour éviter
+      // un payload IA disproportionné et un coût par appel qui grimpe.
+      setAnalysisPhotos((prev) => (prev.length >= 4 ? prev : [...prev, compressed]));
     } catch (err) {
       // silencieux
     } finally {
       setPhotoBusy(false);
     }
+    e.target.value = ""; // permet de reprendre la même source (ex: caméra) plusieurs fois de suite
+  }
+
+  function removeAnalysisPhoto(idx) {
+    setAnalysisPhotos((prev) => prev.filter((_, i) => i !== idx));
   }
 
   async function handleAnalyzePhoto() {
-    if (!photo || !apiKey) return;
+    if (analysisPhotos.length === 0 || !apiKey) return;
     setAiAnalyzing(true);
     setAiError(null);
     setAiNote(null);
     setAiSuggestion(null);
     try {
-      const result = await analyzeProductPhoto({ apiKey, apiProvider, dataUrl: photo, uid: authUid });
+      const result = await analyzeProductPhoto({ apiKey, apiProvider, dataUrls: analysisPhotos, uid: authUid });
       if (result.name) setName(result.name);
       if (result.action) setAction(result.action);
       // v1.46.0 — Normalisation : la dose de traitement ne s'exprime jamais en
@@ -10427,6 +10475,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
         containerAmount: result.containerAmount ?? null,
         containerUnit: result.containerUnit ?? null,
         source: result.source || null,
+        productImageUrl: result.productImageUrl || null,
       });
       if (result.containerUnit) setContainerUnit(result.containerUnit);
       if (result.note) setAiNote(result.note);
@@ -10476,6 +10525,14 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
       if (effectPer === "" || effectPer === null || Number.isNaN(parseFloat(effectPer))) missing.push(t("for_x_m3"));
       if (missing.length > 0) {
         setFormError(t("product_missing_values", { fields: missing.join(", ") }));
+        // v1.49.0 — Fix bug remonté le 260706 : le message d'erreur
+        // s'affichait au milieu d'un formulaire long, invisible depuis le
+        // bouton "Enregistrer" tout en bas — donnant l'impression que
+        // l'enregistrement échouait silencieusement. Scroll explicite vers
+        // le message dès qu'il apparaît.
+        requestAnimationFrame(() => {
+          formErrorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        });
         return;
       }
     }
@@ -10524,7 +10581,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
           const idToken = await window._fbAuth.currentUser.getIdToken();
           if (commonMatch?.matchType === "alias" || commonMatch?.matchType === "fuzzy_pending_merge") {
             await markCommonProductUsed({ idToken, productId: commonMatch.productId });
-          } else if (!commonMatch || commonMatch.matchType === "none" || commonMatch.matchType === "fuzzy_candidates") {
+          } else if (!commonMatch || commonMatch.matchType === "none") {
             await createCommonProduct({
               idToken,
               payload: {
@@ -10538,11 +10595,18 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
                 forXm3: parseFloat(effectPer),
                 delay: parseFloat(waitHours) || null,
                 container: `${containerAmount}${containerUnit}`,
-                photoUrl: null, // v1 : pas d'upload d'URL publique, voir Bloc 5
+                // v1.49.0 — URL de la photo officielle trouvée par l'IA
+                // pendant sa recherche web, si disponible. Reste null sinon
+                // (pas d'upload de photo utilisateur vers un stockage public
+                // — chantier séparé, voir Bloc 5).
+                photoUrl: aiSuggestion?.productImageUrl || null,
                 source: aiSuggestion?.source || "etiquette",
               },
             });
           }
+          // v1.49.0 — Point 4 : matchType "fuzzy_candidates" non résolu par
+          // l'utilisateur (aucun bouton Oui/Non cliqué) : on n'écrit rien
+          // dans la base commune plutôt que de créer un doublon silencieux.
         } catch (e) {
           console.warn("Écriture base commune échouée :", e.message);
         }
@@ -10565,29 +10629,45 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
       <label style={styles.fieldLabel}>{t("product_photo")}</label>
       {isPremium ? (
         <div>
-          {photo ? (
-            <div style={styles.photoPreviewWrap}>
-              <img src={photo} alt="" style={styles.photoPreview} onClick={() => window._openLightbox?.(photo)} />
-              <button style={styles.photoRemoveBtn} onClick={() => setPhoto(null)}>
-                <X size={14} /> {t("remove")}
-              </button>
-            </div>
-          ) : (
-            <div style={styles.photoCaptureBtnRow}>
-              <button type="button" style={styles.photoCaptureBtnHalf} onClick={() => fileInputRef.current?.click()}>
-                <Camera size={17} />
-                {photoBusy ? "..." : t("camera_btn")}
-              </button>
-              <button type="button" style={styles.photoCaptureBtnHalf} onClick={() => galleryInputRef.current?.click()}>
-                <ImageOff size={17} />
-                {photoBusy ? "..." : t("gallery_btn")}
-              </button>
+          {/* v1.49.0 — Texte d'aide toujours visible : explique l'intérêt de
+              photographier chaque élément séparément pour une reconnaissance
+              plus fiable (nom + code-barre + dose/effet croisés par l'IA). */}
+          <div style={styles.photoHintBox}>
+            <Sparkles size={15} style={{ flexShrink: 0, marginTop: 1 }} />
+            <span>{t("product_photo_hint")}</span>
+          </div>
+
+          {analysisPhotos.length > 0 && (
+            <div style={styles.photoGrid}>
+              {analysisPhotos.map((src, idx) => (
+                <div key={idx} style={styles.photoThumbWrap}>
+                  <img
+                    src={src}
+                    alt={`Photo ${idx + 1}`}
+                    style={{ ...styles.photoThumb, cursor: "zoom-in" }}
+                    onClick={() => window._openLightbox?.(src)}
+                  />
+                  <button style={styles.photoThumbRemove} onClick={() => removeAnalysisPhoto(idx)}>
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
             </div>
           )}
-          <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoChange} style={styles.hiddenFileInput} />
-          <input ref={galleryInputRef} type="file" accept="image/*" onChange={handlePhotoChange} style={styles.hiddenFileInput} />
 
-          {photo && aiEnabled && apiKey && (
+          {analysisPhotos.length < 4 && (
+            <button
+              type="button"
+              style={{ ...styles.photoCaptureBtn, marginTop: analysisPhotos.length ? 8 : 0 }}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Camera size={17} />
+              {photoBusy ? "..." : analysisPhotos.length ? t("other_photo") : t("camera_btn")}
+            </button>
+          )}
+          <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoChange} style={styles.hiddenFileInput} />
+
+          {analysisPhotos.length > 0 && aiEnabled && apiKey && (
             <button
               type="button"
               style={{ width: "100%", padding: "10px 0", borderRadius: 10, border: "1.5px solid #b0d8f0", background: "#eaf4fb", color: "#0a6ebd", fontWeight: 700, fontSize: 13, cursor: "pointer", marginTop: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
@@ -10598,13 +10678,46 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
               {aiAnalyzing ? t("ai_analyzing") : t("ai_analyze_btn")}
             </button>
           )}
-          {photo && !aiEnabled && (
+          {analysisPhotos.length > 0 && !aiEnabled && (
             <div style={{ fontSize: 11.5, color: "#6a7d90", marginTop: 8, lineHeight: 1.5 }}>
               {t("product_ai_hint")}
             </div>
           )}
           {aiNote && <div style={{ ...styles.analyzeNoteOk, marginTop: 8 }}>{aiNote}</div>}
           {aiError && <div style={{ ...styles.analyzeNoteError, marginTop: 8 }}>{aiError}</div>}
+
+          {/* v1.49.0 — Point 4 : plusieurs candidats flous trouvés dans la base
+              commune, aucun ne dépasse le seuil de fusion automatique (pas de
+              code-barre ou score insuffisant). Choix explicite demandé plutôt
+              que de créer un doublon silencieusement à la sauvegarde. */}
+          {commonMatch?.matchType === "fuzzy_candidates" && commonMatch.candidates?.length > 0 && (
+            <div style={{ ...styles.photoHintBox, background: "#fff8ea", border: "1px solid #f0c96a", marginTop: 8 }}>
+              <div style={{ width: "100%" }}>
+                <div style={{ fontWeight: 700, marginBottom: 6 }}>{t("common_product_candidate_title")}</div>
+                {commonMatch.candidates.map((c) => (
+                  <div key={c.productId} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
+                    <span style={{ fontSize: 13 }}>{c.product.displayName || c.product.normalizedName}</span>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button
+                        type="button"
+                        style={{ padding: "5px 10px", borderRadius: 8, border: "1px solid #0a6ebd", background: "#0a6ebd", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+                        onClick={() => setCommonMatch({ matchType: "alias", productId: c.productId })}
+                      >
+                        {t("common_product_same")}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  style={{ padding: "5px 10px", borderRadius: 8, border: "1px solid #90c4e8", background: "transparent", color: "#0a6ebd", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+                  onClick={() => setCommonMatch({ matchType: "none" })}
+                >
+                  {t("common_product_different")}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <button style={styles.photoLockedBtn} onClick={onWantPremium}>
@@ -10670,7 +10783,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
               />
             </div>
           </div>
-          {formError && <div style={{ ...styles.analyzeNoteError, marginTop: 8 }}>{formError}</div>}
+          {formError && <div ref={formErrorRef} style={{ ...styles.analyzeNoteError, marginTop: 8 }}>{formError}</div>}
 
           <label style={styles.fieldLabel}>{t("wait_hours")}</label>
           <input type="number" style={styles.input} value={waitHours} onChange={(e) => setWaitHours(e.target.value)}
