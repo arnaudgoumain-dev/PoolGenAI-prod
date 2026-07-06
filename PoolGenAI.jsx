@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.50.0";
+const APP_VERSION = "1.51.0";
 const CGU_VERSION = "1.2"; // v1.2 : clause 11 - amélioration collective des analyses photo (Lot B, calibration)
 
 const TRANSLATIONS = {
@@ -37,7 +37,7 @@ const TRANSLATIONS = {
     advice_partial: "partiellement appliqués",
     adjust: "Ajuster",
     ai_analysis: "ANALYSE IA",
-    ai_analyze_btn: "Analyser avec Claude",
+    ai_analyze_btn: "Analyser avec l'IA",
     ai_locked: "Fonctionnalité réservée à la version illimitée",
     ai_analyzing: "Analyse en cours…",
     ai_api_missing: "Renseigne ta clé API dans les Réglages pour activer l'analyse IA.",
@@ -614,7 +614,7 @@ const TRANSLATIONS = {
     advice_partial: "partially applied",
     adjust: "Adjust",
     ai_analysis: "AI ANALYSIS",
-    ai_analyze_btn: "Analyze with Claude",
+    ai_analyze_btn: "Analyze with AI",
     ai_locked: "Feature reserved for the unlimited version",
     ai_analyzing: "Analyzing…",
     ai_api_missing: "Enter your API key in Settings to enable AI analysis.",
@@ -1179,7 +1179,7 @@ const TRANSLATIONS = {
     advice_partial: "teilweise angewendet",
     adjust: "Anpassen",
     ai_analysis: "KI-ANALYSE",
-    ai_analyze_btn: "Mit Claude analysieren",
+    ai_analyze_btn: "Mit KI analysieren",
     ai_locked: "Funktion für unbegrenzte Version reserviert",
     ai_analyzing: "Analyse läuft…",
     ai_api_missing: "API-Schlüssel in Einstellungen eingeben, um KI-Analyse zu aktivieren.",
@@ -1746,7 +1746,7 @@ const TRANSLATIONS = {
     advice_partial: "parzialmente applicati",
     adjust: "Regola",
     ai_analysis: "ANALISI IA",
-    ai_analyze_btn: "Analizza con Claude",
+    ai_analyze_btn: "Analizza con l'IA",
     ai_locked: "Funzione riservata alla versione illimitata",
     ai_analyzing: "Analisi in corso…",
     ai_api_missing: "Inserisci la tua chiave API nelle Impostazioni per abilitare l'analisi IA.",
@@ -2310,7 +2310,7 @@ const TRANSLATIONS = {
     advice_partial: "parcialmente aplicados",
     adjust: "Ajustar",
     ai_analysis: "ANÁLISIS IA",
-    ai_analyze_btn: "Analizar con Claude",
+    ai_analyze_btn: "Analizar con IA",
     ai_locked: "Función reservada para la versión ilimitada",
     ai_analyzing: "Analizando…",
     ai_api_missing: "Introduce tu clave API en Ajustes para activar el análisis IA.",
@@ -2874,7 +2874,7 @@ const TRANSLATIONS = {
     advice_partial: "parcialmente aplicadas",
     adjust: "Ajustar",
     ai_analysis: "ANÁLISE IA",
-    ai_analyze_btn: "Analisar com Claude",
+    ai_analyze_btn: "Analisar com IA",
     ai_locked: "Funcionalidade reservada para a versão ilimitada",
     ai_analyzing: "Analisando…",
     ai_api_missing: "Insira sua chave API nas Configurações para ativar a análise IA.",
@@ -8794,12 +8794,12 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
             style={{ ...styles.input, minHeight: 80, resize: "vertical", marginTop: 8 }}
           />
           <button
-            style={{ ...styles.validateApplyBtn, background: diagLoading ? "#6a7d90" : "#7c3aed", marginTop: 8 }}
+            style={{ ...styles.aiAnalyzeBtn, ...(diagLoading ? styles.aiAnalyzeBtnLoading : {}), marginTop: 8 }}
             onClick={handleDiag}
             disabled={diagLoading || !diagText.trim()}
           >
-            {diagLoading ? <Loader2 size={16} className="spin" /> : <Sparkles size={16} />}
-            {diagLoading ? t("diag_analyzing") : t("diag_submit")}
+            {diagLoading ? <Loader2 size={15} className="spin" /> : <Sparkles size={15} />}
+            {diagLoading ? t("ai_analyzing") : t("ai_analyze_btn")}
           </button>
           {diagError && (
             <div style={{ marginTop: 10, padding: "10px 14px", background: "#fdf0ef", borderRadius: 10, border: "1px solid #f5c6c2", fontSize: 13, color: "#c0392b" }}>
@@ -9584,12 +9584,12 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
               {!confirmAnalyze ? (
                 <button
                   type="button"
-                  style={styles.analyzeBtn}
+                  style={{ ...styles.aiAnalyzeBtn, ...(analyzing ? styles.aiAnalyzeBtnLoading : {}) }}
                   onClick={() => setConfirmAnalyze(true)}
                   disabled={analyzing}
                 >
-                  <Sparkles size={14} />
-                  {t("analyze_btn")} {photos.length > 1 ? `(${photos.length})` : ""}
+                  <Sparkles size={15} />
+                  {t("ai_analyze_btn")} {photos.length > 1 ? `(${photos.length})` : ""}
                 </button>
               ) : (
                 <div style={styles.confirmAnalyzeBox}>
@@ -10775,7 +10775,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
           {analysisPhotos.length > 0 && aiEnabled && apiKey && (
             <button
               type="button"
-              style={{ width: "100%", padding: "10px 0", borderRadius: 10, border: "1.5px solid #b0d8f0", background: "#eaf4fb", color: "#0a6ebd", fontWeight: 700, fontSize: 13, cursor: "pointer", marginTop: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+              style={{ ...styles.aiAnalyzeBtn, ...(aiAnalyzing ? styles.aiAnalyzeBtnLoading : {}), marginTop: 8 }}
               onClick={handleAnalyzePhoto}
               disabled={aiAnalyzing}
             >
@@ -13858,23 +13858,6 @@ const styles = {
     padding: "10px 0",
     fontSize: 12.5,
     color: "#a0a8b0",
-  },
-  analyzeBtn: {
-    display: "flex",
-    alignItems: "center",
-    gap: 5,
-    padding: "7px 12px",
-    borderRadius: 9,
-    border: "none",
-    background: "#7a3fa0",
-    color: "#ffffff",
-    fontWeight: 600,
-    fontSize: 12.5,
-    cursor: "pointer",
-  },
-  analyzeBtnDisabled: {
-    background: "#c8c0d4",
-    cursor: "not-allowed",
   },
   treatmentOption: {
     width: "100%",
