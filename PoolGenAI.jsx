@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.57.5";
+const APP_VERSION = "1.57.6";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 
 const TRANSLATIONS = {
@@ -5743,12 +5743,16 @@ function PoolApp() {
   // Si le lien correspondant a été révoqué entre-temps, retombe sur "mes bassins".
   useEffect(() => {
     if (!viewContext) return;
-    if (!linkedAccounts.some((l) => l.primaryUid === viewContext.primaryUid && l.status === "active")) {
+    const stillActive = linkedAccounts.some((l) => l.primaryUid === viewContext.primaryUid && l.status === "active");
+    console.log("[DEBUG revoke-check]", { viewContext, linkedAccounts, stillActive });
+    if (!stillActive) {
+      console.log("[DEBUG revoke-check] setViewContext(null) déclenché !");
       setViewContext(null);
     }
   }, [linkedAccounts, viewContext]);
 
   function switchToContext(next) {
+    console.log("[DEBUG switchToContext]", next);
     setViewContext(next);
     window.storage.set(STORAGE_KEYS.viewContext, JSON.stringify(next || null)).catch(() => {});
   }
@@ -6200,6 +6204,7 @@ function PoolApp() {
   useEffect(() => {
     if (!dataUid || !FB.ready() || !window._fbOnSnapshot) return;
     const uid = dataUid;
+    console.log("[DEBUG resubscribe]", { dataUid, viewContext });
     cloudConfigReceivedRef.current = false;
     setCloudConfigReceived(false);
 
@@ -6223,6 +6228,7 @@ function PoolApp() {
     });
 
     const unsubConfig = FB.onConfig(uid, (config) => {
+      console.log("[DEBUG onConfig reçu]", { uid, poolsLength: config.pools?.length, pools: config.pools });
       cloudConfigReceivedRef.current = true;
       setCloudConfigReceived(true);
       // IMPORTANT : ne remplacer le state local que si le contenu a réellement changé.
@@ -6624,7 +6630,11 @@ function PoolApp() {
     // v1.55.0 — En contexte secondaire, je ne vois que le bassin qui m'a été
     // confié dans l'invitation, même si techniquement je pourrais lire tous
     // les bassins du principal (règle Firestore large sur config/main).
-    if (viewContext) return base.filter((p) => p.id === viewContext.poolId);
+    if (viewContext) {
+      const filtered = base.filter((p) => p.id === viewContext.poolId);
+      console.log("[DEBUG activePools]", { viewContextPoolId: viewContext.poolId, poolsIds: pools.map(p => ({id: p.id, disabled: p.disabled})), baseIds: base.map(p => p.id), filteredLength: filtered.length });
+      return filtered;
+    }
     return base;
   }, [pools, viewContext]);
 
@@ -6668,6 +6678,7 @@ function PoolApp() {
     : `own:${activePoolId}`;
 
   function handleSelectSwitcherEntry(entry) {
+    console.log("[DEBUG handleSelectSwitcherEntry]", entry);
     if (entry.kind === "invited") {
       switchToContext({ primaryUid: entry.primaryUid, poolId: entry.poolId, poolName: entry.poolName, pseudo: entry.pseudo });
     } else {
