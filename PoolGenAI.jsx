@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.57.7";
+const APP_VERSION = "1.57.8";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 
 const TRANSLATIONS = {
@@ -4870,10 +4870,16 @@ const FB = {
     const snap = await window._fbGetDocs(col);
     return snap.docs.map(d => d.data());
   },
-  onMeasures: (uid, cb) => {
+  // v1.57.8 — poolId optionnel : en contexte secondaire, la règle Firestore
+  // (isActiveSecondaryForPool) ne peut valider un "list" que si la requête
+  // est prouvablement restreinte au bon poolId — sinon Firestore refuse toute
+  // la collection en bloc dès qu'un seul document historique appartient à un
+  // autre bassin (permission-denied silencieux, aucun document livré).
+  onMeasures: (uid, cb, poolId) => {
     if (!window._fbDb || !window._fbOnSnapshot) return () => {};
     const col = window._fbCollection(window._fbDb, "users", uid, "measures");
-    return window._fbOnSnapshot(col, (snap) => {
+    const target = poolId ? window._fbQuery(col, window._fbWhere("poolId", "==", poolId)) : col;
+    return window._fbOnSnapshot(target, (snap) => {
       cb(snap.docs.map(d => d.data()));
     });
   },
@@ -4930,10 +4936,11 @@ const FB = {
     const snap = await window._fbGetDocs(col);
     return snap.docs.map(d => d.data());
   },
-  onApplications: (uid, cb) => {
+  onApplications: (uid, cb, poolId) => {
     if (!window._fbDb || !window._fbOnSnapshot) return () => {};
     const col = window._fbCollection(window._fbDb, "users", uid, "applications");
-    return window._fbOnSnapshot(col, (snap) => {
+    const target = poolId ? window._fbQuery(col, window._fbWhere("poolId", "==", poolId)) : col;
+    return window._fbOnSnapshot(target, (snap) => {
       cb(snap.docs.map(d => d.data()));
     });
   },
@@ -6200,6 +6207,12 @@ function PoolApp() {
   useEffect(() => {
     if (!dataUid || !FB.ready() || !window._fbOnSnapshot) return;
     const uid = dataUid;
+    // v1.57.8 — Restreint measures/applications au bon poolId en contexte
+    // secondaire (cf. isActiveSecondaryForPool dans les règles) : sans ce
+    // filtre, Firestore refuse la liste entière en permission-denied dès
+    // qu'un seul document historique du principal appartient à un autre
+    // bassin que celui assigné à l'invitation.
+    const scopedPoolId = viewContext ? viewContext.poolId : null;
     cloudConfigReceivedRef.current = false;
     setCloudConfigReceived(false);
 
@@ -6213,14 +6226,14 @@ function PoolApp() {
         setMeasures((prev) => (deepEqual(prev, cloudMeasures) ? prev : cloudMeasures));
         window.storage.set(STORAGE_KEYS.measures, JSON.stringify(cloudMeasures)).catch(() => {});
       }
-    });
+    }, scopedPoolId);
 
     const unsubApplications = FB.onApplications(uid, (cloudApps) => {
       if (cloudApps.length > 0) {
         setApplications((prev) => (deepEqual(prev, cloudApps) ? prev : cloudApps));
         window.storage.set(STORAGE_KEYS.applications, JSON.stringify(cloudApps)).catch(() => {});
       }
-    });
+    }, scopedPoolId);
 
     const unsubConfig = FB.onConfig(uid, (config) => {
       cloudConfigReceivedRef.current = true;
@@ -6274,7 +6287,7 @@ function PoolApp() {
       unsubConfig();
       unsubProductPhotos();
     };
-  }, [dataUid]);
+  }, [dataUid, viewContext?.poolId]);
 
   // --- Firebase Auth ---
   useEffect(() => {
