@@ -338,7 +338,17 @@
     return reauthenticateWithCredential(user, credential);
   };
 
+  // v1.57.0 — Fix : sur mobile (Chrome Android notamment), signInWithPopup
+  // reste parfois bloqué indéfiniment sans jamais renvoyer un code d'erreur
+  // géré par le fallback ci-dessous (ni succès, ni popup-blocked/closed/
+  // cancelled) — le bouton de connexion tourne alors sans fin. Comportement
+  // connu et documenté côté Firebase depuis des années sur mobile ; on part
+  // directement en redirect sur mobile plutôt que d'attendre l'échec du popup.
   window._fbSignInWithPopup = async (auth, provider) => {
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobile) {
+      return signInWithRedirect(auth, provider);
+    }
     try {
       return await signInWithPopup(auth, provider);
     } catch (err) {
