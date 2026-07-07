@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.54.0";
+const APP_VERSION = "1.56.0";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 
 const TRANSLATIONS = {
@@ -166,6 +166,7 @@ const TRANSLATIONS = {
     suspended_erase_confirm: "Cette action supprime définitivement toutes tes données (mesures, produits, historique, diagnostics). Continuer ?",
     legend_title: "Légende des paramètres et valeurs cibles",
     ccl_fcl_tcl_error: "Erreur : FCL + CCL ne peut pas dépasser TCL. Vérifie les valeurs saisies.",
+    tcl_forced_to_fcl_info: "TCL ne peut pas être inférieur à FCL — valeur corrigée à {val}. Reclique sur Enregistrer pour confirmer.",
     param_ph_long: "Potentiel Hydrogène", param_fcl_long: "Chlore libre", param_tcl_long: "Chlore total",
     param_ccl_long: "Chlore combiné (chloramines)", param_tac_long: "Titre Alcalimétrique Complet",
     param_cya_long: "Acide cyanurique (stabilisant)", param_th_long: "Titre Hydrotimétrique (dureté)",
@@ -594,6 +595,47 @@ const TRANSLATIONS = {
     filtration_cartouche: "Cartouche",
     filtration_diatomees: "Diatomées",
     filtration_aucune: "Sans filtration (naturelle)",
+    // v1.55.0 — Utilisateurs secondaires (brique 3)
+    secondary_section_title: "Utilisateurs secondaires",
+    secondary_section_intro: "Invite jusqu'à 2 personnes à accéder à un de tes bassins.",
+    secondary_invite_button: "Inviter quelqu'un",
+    secondary_invite_email_label: "Email de la personne à inviter",
+    secondary_invite_pool_label: "Bassin concerné",
+    secondary_invite_send: "Envoyer l'invitation",
+    secondary_invite_sent: "Invitation envoyée.",
+    secondary_invite_error: "Échec de l'invitation",
+    secondary_active_title: "Accès actifs",
+    secondary_active_empty: "Aucun accès actif.",
+    secondary_pool_label: "Bassin : {pool}",
+    secondary_revoke_button: "Révoquer",
+    secondary_revoke_confirm: "Révoquer l'accès de {email} ?",
+    secondary_revoke_error: "Échec de la révocation",
+    secondary_pending_title: "Invitations en attente",
+    secondary_pending_empty: "Aucune invitation en attente.",
+    secondary_pending_expires: "Expire le {date}",
+    secondary_pending_expired: "Expirée",
+    pseudo_label: "Ton pseudo",
+    pseudo_placeholder: "Visible par les personnes qui t'invitent",
+    pseudo_save: "Enregistrer",
+    pseudo_saved: "Pseudo enregistré.",
+    pseudo_invalid: "2 à 24 caractères (lettres, chiffres, espaces, tirets).",
+    pseudo_taken_suggestion: "Déjà pris. Essaie : {suggestion}",
+    pseudo_error: "Échec de l'enregistrement du pseudo",
+    context_title: "Bassin affiché",
+    context_own: "Mes bassins",
+    context_secondary_option: "Bassin de {pseudo}",
+    banner_secondary: "{pool} — compte de {pseudo}",
+    invite_response_title: "Invitation",
+    invite_response_text: "{pseudo} t'invite à accéder au bassin {pool}.",
+    invite_response_accept: "Accepter",
+    invite_response_decline: "Refuser",
+    invite_response_accepted: "Invitation acceptée. Retrouve ce bassin dans Réglages.",
+    invite_response_declined: "Invitation refusée.",
+    invite_response_expired: "Cette invitation a expiré.",
+    invite_response_invalid: "Invitation invalide ou déjà utilisée.",
+    invite_response_mismatch: "Cette invitation ne correspond pas à ton compte connecté.",
+    invite_response_error: "Erreur lors du traitement de l'invitation.",
+    invite_response_checking: "Vérification de l'invitation…",
   },
   en: {
     tab_pool: "Pool",
@@ -743,6 +785,7 @@ const TRANSLATIONS = {
     suspended_erase_confirm: "This permanently deletes all your data (readings, products, history, diagnostics). Continue?",
     legend_title: "Parameters legend and target values",
     ccl_fcl_tcl_error: "Error: FCL + CCL cannot exceed TCL. Check the entered values.",
+    tcl_forced_to_fcl_info: "TCL cannot be lower than FCL — value corrected to {val}. Tap Save again to confirm.",
     param_ph_long: "Hydrogen Potential", param_fcl_long: "Free chlorine", param_tcl_long: "Total chlorine",
     param_ccl_long: "Combined chlorine (chloramines)", param_tac_long: "Total Alkalinity",
     param_cya_long: "Cyanuric acid (stabiliser)", param_th_long: "Total Hardness",
@@ -1161,6 +1204,46 @@ const TRANSLATIONS = {
     filtration_cartouche: "Cartridge",
     filtration_diatomees: "Diatomaceous earth",
     filtration_aucune: "No filtration (natural)",
+    secondary_section_title: "Secondary users",
+    secondary_section_intro: "Invite up to 2 people to access one of your pools.",
+    secondary_invite_button: "Invite someone",
+    secondary_invite_email_label: "Email of the person to invite",
+    secondary_invite_pool_label: "Pool",
+    secondary_invite_send: "Send invitation",
+    secondary_invite_sent: "Invitation sent.",
+    secondary_invite_error: "Failed to send invitation",
+    secondary_active_title: "Active access",
+    secondary_active_empty: "No active access.",
+    secondary_pool_label: "Pool: {pool}",
+    secondary_revoke_button: "Revoke",
+    secondary_revoke_confirm: "Revoke access for {email}?",
+    secondary_revoke_error: "Failed to revoke access",
+    secondary_pending_title: "Pending invitations",
+    secondary_pending_empty: "No pending invitations.",
+    secondary_pending_expires: "Expires on {date}",
+    secondary_pending_expired: "Expired",
+    pseudo_label: "Your nickname",
+    pseudo_placeholder: "Visible to people who invite you",
+    pseudo_save: "Save",
+    pseudo_saved: "Nickname saved.",
+    pseudo_invalid: "2 to 24 characters (letters, digits, spaces, dashes).",
+    pseudo_taken_suggestion: "Already taken. Try: {suggestion}",
+    pseudo_error: "Failed to save nickname",
+    context_title: "Pool shown",
+    context_own: "My pools",
+    context_secondary_option: "{pseudo}'s pool",
+    banner_secondary: "{pool} — {pseudo}'s account",
+    invite_response_title: "Invitation",
+    invite_response_text: "{pseudo} invites you to access the pool {pool}.",
+    invite_response_accept: "Accept",
+    invite_response_decline: "Decline",
+    invite_response_accepted: "Invitation accepted. Find this pool in Settings.",
+    invite_response_declined: "Invitation declined.",
+    invite_response_expired: "This invitation has expired.",
+    invite_response_invalid: "Invalid or already used invitation.",
+    invite_response_mismatch: "This invitation doesn't match your logged-in account.",
+    invite_response_error: "Error while processing the invitation.",
+    invite_response_checking: "Checking invitation…",
   },
   de: {
     tab_pool: "Becken",
@@ -1310,6 +1393,7 @@ const TRANSLATIONS = {
     suspended_erase_confirm: "Dies löscht dauerhaft alle deine Daten (Messungen, Produkte, Verlauf, Diagnosen). Fortfahren?",
     legend_title: "Parameterlegende und Zielwerte",
     ccl_fcl_tcl_error: "Fehler: FCL + CCL darf TCL nicht überschreiten. Bitte Werte prüfen.",
+    tcl_forced_to_fcl_info: "TCL kann nicht niedriger als FCL sein — Wert auf {val} korrigiert. Zum Bestätigen erneut auf Speichern tippen.",
     param_ph_long: "Wasserstoffpotenzial", param_fcl_long: "Freies Chlor", param_tcl_long: "Gesamtchlor",
     param_ccl_long: "Gebundenes Chlor (Chloramine)", param_tac_long: "Gesamtalkalinität",
     param_cya_long: "Cyanursäure (Stabilisator)", param_th_long: "Gesamthärte",
@@ -1730,6 +1814,46 @@ const TRANSLATIONS = {
     filtration_cartouche: "Kartusche",
     filtration_diatomees: "Diatomeenerde",
     filtration_aucune: "Ohne Filtration (natürlich)",
+    secondary_section_title: "Zweitnutzer",
+    secondary_section_intro: "Lade bis zu 2 Personen ein, auf eines deiner Becken zuzugreifen.",
+    secondary_invite_button: "Jemanden einladen",
+    secondary_invite_email_label: "E-Mail der einzuladenden Person",
+    secondary_invite_pool_label: "Becken",
+    secondary_invite_send: "Einladung senden",
+    secondary_invite_sent: "Einladung gesendet.",
+    secondary_invite_error: "Einladung fehlgeschlagen",
+    secondary_active_title: "Aktive Zugänge",
+    secondary_active_empty: "Kein aktiver Zugang.",
+    secondary_pool_label: "Becken: {pool}",
+    secondary_revoke_button: "Widerrufen",
+    secondary_revoke_confirm: "Zugang von {email} widerrufen?",
+    secondary_revoke_error: "Widerruf fehlgeschlagen",
+    secondary_pending_title: "Ausstehende Einladungen",
+    secondary_pending_empty: "Keine ausstehenden Einladungen.",
+    secondary_pending_expires: "Läuft ab am {date}",
+    secondary_pending_expired: "Abgelaufen",
+    pseudo_label: "Dein Spitzname",
+    pseudo_placeholder: "Sichtbar für Personen, die dich einladen",
+    pseudo_save: "Speichern",
+    pseudo_saved: "Spitzname gespeichert.",
+    pseudo_invalid: "2 bis 24 Zeichen (Buchstaben, Zahlen, Leerzeichen, Bindestriche).",
+    pseudo_taken_suggestion: "Bereits vergeben. Versuche: {suggestion}",
+    pseudo_error: "Speichern des Spitznamens fehlgeschlagen",
+    context_title: "Angezeigtes Becken",
+    context_own: "Meine Becken",
+    context_secondary_option: "Becken von {pseudo}",
+    banner_secondary: "{pool} — Konto von {pseudo}",
+    invite_response_title: "Einladung",
+    invite_response_text: "{pseudo} lädt dich ein, auf das Becken {pool} zuzugreifen.",
+    invite_response_accept: "Annehmen",
+    invite_response_decline: "Ablehnen",
+    invite_response_accepted: "Einladung angenommen. Du findest das Becken in den Einstellungen.",
+    invite_response_declined: "Einladung abgelehnt.",
+    invite_response_expired: "Diese Einladung ist abgelaufen.",
+    invite_response_invalid: "Ungültige oder bereits verwendete Einladung.",
+    invite_response_mismatch: "Diese Einladung passt nicht zu deinem angemeldeten Konto.",
+    invite_response_error: "Fehler bei der Verarbeitung der Einladung.",
+    invite_response_checking: "Einladung wird geprüft…",
   },
   it: {
     tab_pool: "Vasca",
@@ -1879,6 +2003,7 @@ const TRANSLATIONS = {
     suspended_erase_confirm: "Questa azione elimina definitivamente tutti i tuoi dati (misurazioni, prodotti, storico, diagnosi). Continuare?",
     legend_title: "Legenda parametri e valori target",
     ccl_fcl_tcl_error: "Errore: FCL + CCL non può superare TCL. Verificare i valori inseriti.",
+    tcl_forced_to_fcl_info: "TCL non può essere inferiore a FCL — valore corretto a {val}. Tocca di nuovo Salva per confermare.",
     param_ph_long: "Potenziale di idrogeno", param_fcl_long: "Cloro libero", param_tcl_long: "Cloro totale",
     param_ccl_long: "Cloro combinato (cloroammine)", param_tac_long: "Alcalinità totale",
     param_cya_long: "Acido cianurico (stabilizzante)", param_th_long: "Durezza totale",
@@ -2296,6 +2421,46 @@ const TRANSLATIONS = {
     filtration_cartouche: "Cartuccia",
     filtration_diatomees: "Diatomee",
     filtration_aucune: "Senza filtrazione (naturale)",
+    secondary_section_title: "Utenti secondari",
+    secondary_section_intro: "Invita fino a 2 persone ad accedere a una delle tue piscine.",
+    secondary_invite_button: "Invita qualcuno",
+    secondary_invite_email_label: "Email della persona da invitare",
+    secondary_invite_pool_label: "Piscina",
+    secondary_invite_send: "Invia invito",
+    secondary_invite_sent: "Invito inviato.",
+    secondary_invite_error: "Invio dell'invito non riuscito",
+    secondary_active_title: "Accessi attivi",
+    secondary_active_empty: "Nessun accesso attivo.",
+    secondary_pool_label: "Piscina: {pool}",
+    secondary_revoke_button: "Revoca",
+    secondary_revoke_confirm: "Revocare l'accesso di {email}?",
+    secondary_revoke_error: "Revoca non riuscita",
+    secondary_pending_title: "Inviti in sospeso",
+    secondary_pending_empty: "Nessun invito in sospeso.",
+    secondary_pending_expires: "Scade il {date}",
+    secondary_pending_expired: "Scaduto",
+    pseudo_label: "Il tuo nome utente",
+    pseudo_placeholder: "Visibile a chi ti invita",
+    pseudo_save: "Salva",
+    pseudo_saved: "Nome utente salvato.",
+    pseudo_invalid: "Da 2 a 24 caratteri (lettere, numeri, spazi, trattini).",
+    pseudo_taken_suggestion: "Già in uso. Prova: {suggestion}",
+    pseudo_error: "Salvataggio del nome utente non riuscito",
+    context_title: "Piscina visualizzata",
+    context_own: "Le mie piscine",
+    context_secondary_option: "Piscina di {pseudo}",
+    banner_secondary: "{pool} — account di {pseudo}",
+    invite_response_title: "Invito",
+    invite_response_text: "{pseudo} ti invita ad accedere alla piscina {pool}.",
+    invite_response_accept: "Accetta",
+    invite_response_decline: "Rifiuta",
+    invite_response_accepted: "Invito accettato. Trovi questa piscina nelle Impostazioni.",
+    invite_response_declined: "Invito rifiutato.",
+    invite_response_expired: "Questo invito è scaduto.",
+    invite_response_invalid: "Invito non valido o già utilizzato.",
+    invite_response_mismatch: "Questo invito non corrisponde al tuo account collegato.",
+    invite_response_error: "Errore durante l'elaborazione dell'invito.",
+    invite_response_checking: "Verifica dell'invito…",
   },
   es: {
     tab_pool: "Piscina",
@@ -2445,6 +2610,7 @@ const TRANSLATIONS = {
     suspended_erase_confirm: "Esto elimina permanentemente todos tus datos (mediciones, productos, historial, diagnósticos). ¿Continuar?",
     legend_title: "Leyenda de parámetros y valores objetivo",
     ccl_fcl_tcl_error: "Error: FCL + CCL no puede superar TCL. Verifica los valores introducidos.",
+    tcl_forced_to_fcl_info: "TCL no puede ser inferior a FCL — valor corregido a {val}. Vuelve a tocar Guardar para confirmar.",
     param_ph_long: "Potencial de hidrógeno", param_fcl_long: "Cloro libre", param_tcl_long: "Cloro total",
     param_ccl_long: "Cloro combinado (cloraminas)", param_tac_long: "Alcalinidad total",
     param_cya_long: "Ácido cianúrico (estabilizador)", param_th_long: "Dureza total",
@@ -2862,6 +3028,46 @@ const TRANSLATIONS = {
     filtration_cartouche: "Cartucho",
     filtration_diatomees: "Tierra de diatomeas",
     filtration_aucune: "Sin filtración (natural)",
+    secondary_section_title: "Usuarios secundarios",
+    secondary_section_intro: "Invita hasta a 2 personas a acceder a una de tus piscinas.",
+    secondary_invite_button: "Invitar a alguien",
+    secondary_invite_email_label: "Email de la persona a invitar",
+    secondary_invite_pool_label: "Piscina",
+    secondary_invite_send: "Enviar invitación",
+    secondary_invite_sent: "Invitación enviada.",
+    secondary_invite_error: "Error al enviar la invitación",
+    secondary_active_title: "Accesos activos",
+    secondary_active_empty: "Ningún acceso activo.",
+    secondary_pool_label: "Piscina: {pool}",
+    secondary_revoke_button: "Revocar",
+    secondary_revoke_confirm: "¿Revocar el acceso de {email}?",
+    secondary_revoke_error: "Error al revocar el acceso",
+    secondary_pending_title: "Invitaciones pendientes",
+    secondary_pending_empty: "Ninguna invitación pendiente.",
+    secondary_pending_expires: "Caduca el {date}",
+    secondary_pending_expired: "Caducada",
+    pseudo_label: "Tu apodo",
+    pseudo_placeholder: "Visible para quienes te inviten",
+    pseudo_save: "Guardar",
+    pseudo_saved: "Apodo guardado.",
+    pseudo_invalid: "De 2 a 24 caracteres (letras, números, espacios, guiones).",
+    pseudo_taken_suggestion: "Ya está en uso. Prueba: {suggestion}",
+    pseudo_error: "Error al guardar el apodo",
+    context_title: "Piscina mostrada",
+    context_own: "Mis piscinas",
+    context_secondary_option: "Piscina de {pseudo}",
+    banner_secondary: "{pool} — cuenta de {pseudo}",
+    invite_response_title: "Invitación",
+    invite_response_text: "{pseudo} te invita a acceder a la piscina {pool}.",
+    invite_response_accept: "Aceptar",
+    invite_response_decline: "Rechazar",
+    invite_response_accepted: "Invitación aceptada. Encuentra esta piscina en Ajustes.",
+    invite_response_declined: "Invitación rechazada.",
+    invite_response_expired: "Esta invitación ha caducado.",
+    invite_response_invalid: "Invitación no válida o ya utilizada.",
+    invite_response_mismatch: "Esta invitación no corresponde a tu cuenta conectada.",
+    invite_response_error: "Error al procesar la invitación.",
+    invite_response_checking: "Comprobando la invitación…",
   },
   pt: {
     tab_pool: "Piscina",
@@ -3011,6 +3217,7 @@ const TRANSLATIONS = {
     suspended_erase_confirm: "Esta ação apaga permanentemente todos os teus dados (medições, produtos, histórico, diagnósticos). Continuar?",
     legend_title: "Legenda dos parâmetros e valores alvo",
     ccl_fcl_tcl_error: "Erro: FCL + CCL não pode ultrapassar TCL. Verifica os valores introduzidos.",
+    tcl_forced_to_fcl_info: "TCL não pode ser inferior a FCL — valor corrigido para {val}. Toca novamente em Guardar para confirmar.",
     param_ph_long: "Potencial de hidrogénio", param_fcl_long: "Cloro livre", param_tcl_long: "Cloro total",
     param_ccl_long: "Cloro combinado (cloraminas)", param_tac_long: "Alcalinidade total",
     param_cya_long: "Ácido cianúrico (estabilizador)", param_th_long: "Dureza total",
@@ -3425,6 +3632,46 @@ const TRANSLATIONS = {
     filtration_cartouche: "Cartucho",
     filtration_diatomees: "Terra de diatomáceas",
     filtration_aucune: "Sem filtração (natural)",
+    secondary_section_title: "Usuários secundários",
+    secondary_section_intro: "Convide até 2 pessoas para acessar uma das tuas piscinas.",
+    secondary_invite_button: "Convidar alguém",
+    secondary_invite_email_label: "Email da pessoa a convidar",
+    secondary_invite_pool_label: "Piscina",
+    secondary_invite_send: "Enviar convite",
+    secondary_invite_sent: "Convite enviado.",
+    secondary_invite_error: "Falha ao enviar o convite",
+    secondary_active_title: "Acessos ativos",
+    secondary_active_empty: "Nenhum acesso ativo.",
+    secondary_pool_label: "Piscina: {pool}",
+    secondary_revoke_button: "Revogar",
+    secondary_revoke_confirm: "Revogar o acesso de {email}?",
+    secondary_revoke_error: "Falha ao revogar o acesso",
+    secondary_pending_title: "Convites pendentes",
+    secondary_pending_empty: "Nenhum convite pendente.",
+    secondary_pending_expires: "Expira em {date}",
+    secondary_pending_expired: "Expirado",
+    pseudo_label: "Teu apelido",
+    pseudo_placeholder: "Visível para quem te convida",
+    pseudo_save: "Guardar",
+    pseudo_saved: "Apelido guardado.",
+    pseudo_invalid: "De 2 a 24 caracteres (letras, números, espaços, hífens).",
+    pseudo_taken_suggestion: "Já em uso. Tenta: {suggestion}",
+    pseudo_error: "Falha ao guardar o apelido",
+    context_title: "Piscina exibida",
+    context_own: "Minhas piscinas",
+    context_secondary_option: "Piscina de {pseudo}",
+    banner_secondary: "{pool} — conta de {pseudo}",
+    invite_response_title: "Convite",
+    invite_response_text: "{pseudo} convida-te a aceder à piscina {pool}.",
+    invite_response_accept: "Aceitar",
+    invite_response_decline: "Recusar",
+    invite_response_accepted: "Convite aceite. Encontra esta piscina nas Definições.",
+    invite_response_declined: "Convite recusado.",
+    invite_response_expired: "Este convite expirou.",
+    invite_response_invalid: "Convite inválido ou já utilizado.",
+    invite_response_mismatch: "Este convite não corresponde à tua conta ligada.",
+    invite_response_error: "Erro ao processar o convite.",
+    invite_response_checking: "A verificar o convite…",
   },
 };
 
@@ -3618,6 +3865,28 @@ const DEFAULT_PRODUCTS = [
     waitHours: 6,
     noteKey: "note_tac_plus",
     note: "Ajouter progressivement, filtration en marche. Attendre 6h avant autre traitement.",
+    containerAmount: 5,
+    containerUnit: "kg",
+    stockPercent: 100,
+    isDefault: true,
+  },
+  // v1.56.0 — Produit standard manquant pour l'action "tac-" : sans lui,
+  // findProduct("tac-") renvoyait null (aucune dose calculable, aucun
+  // produit cohérent proposé dans le wizard). Même acide que ph- (bisulfate
+  // de sodium), mais fiche et dosage séparés car son effet sur le TAC se
+  // calibre différemment de son effet sur le pH (cf. reco_note_tac_minus).
+  {
+    id: "tac-minus",
+    name: "Produit TAC- (acide chlorhydrique ou bisulfate de sodium)",
+    nameKey: "reco_fallback_tac_minus",
+    action: "tac-",
+    doseAmount: 200,
+    doseUnit: "g",
+    effectAmount: 10,
+    effectPer: 10,
+    waitHours: 6,
+    noteKey: "reco_note_tac_minus",
+    note: "Même acide que le pH-, mais effet à calibrer séparément sur le TAC. Corriger avant le pH, par petites doses.",
     containerAmount: 5,
     containerUnit: "kg",
     stockPercent: 100,
@@ -3838,6 +4107,7 @@ const STORAGE_KEYS = {
   cguVersion: "pool:cguVersion",
   cguAcceptedDate: "pool:cguAcceptedDate",
   lastUid: "pool:lastUid",
+  viewContext: "pool:viewContext",
 };
 
 // ---------- Helpers ----------
@@ -4395,6 +4665,23 @@ async function confirmCommonProductMerge({ mergeId, token }) {
   return { status: res.status, ...data };
 }
 
+// v1.55.0 — Utilisateurs secondaires (brique 3)
+async function getInvitationInfo(token) {
+  const res = await fetch(`${PROXY_BASE_URL}/invitation-info?token=${encodeURIComponent(token)}`);
+  const data = await res.json().catch(() => ({}));
+  return { status: res.status, ...data };
+}
+
+async function respondToInvitation(idToken, token, action) {
+  const res = await fetch(`${PROXY_BASE_URL}/respond-invitation`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+    body: JSON.stringify({ token, action }),
+  });
+  const data = await res.json().catch(() => ({}));
+  return { status: res.status, ...data };
+}
+
 // ---------- Composant principal ----------
 
 class ErrorBoundary extends React.Component {
@@ -4761,6 +5048,23 @@ const FB = {
     const ref = window._fbDoc(window._fbDb, "calibrationModels", `${stripModel}_${param}`);
     const snap = await window._fbGetDoc(ref);
     return snap.exists() ? snap.data() : null;
+  },
+  // ── v1.55.0 — Utilisateurs secondaires (brique 3) ──
+  // Comptes qui m'ont invité (moi = secondaire). doc.id = primaryUid.
+  onLinkedAccounts: (uid, cb) => {
+    if (!window._fbDb || !window._fbOnSnapshot) return () => {};
+    const col = window._fbCollection(window._fbDb, "users", uid, "linkedAccounts");
+    return window._fbOnSnapshot(col, (snap) => {
+      cb(snap.docs.map((d) => ({ primaryUid: d.id, ...d.data() })));
+    });
+  },
+  // Comptes que j'ai invités (moi = principal). doc.id = secondaryUid.
+  onSecondaryUsers: (uid, cb) => {
+    if (!window._fbDb || !window._fbOnSnapshot) return () => {};
+    const col = window._fbCollection(window._fbDb, "users", uid, "secondaryUsers");
+    return window._fbOnSnapshot(col, (snap) => {
+      cb(snap.docs.map((d) => ({ secondaryUid: d.id, ...d.data() })));
+    });
   },
 };
 
@@ -5281,6 +5585,107 @@ function PoolApp() {
     }
   }
 
+  // ── v1.55.0 — Utilisateurs secondaires (brique 3) ──
+  // Lien d'invitation entrant (?respondInvitation=token). Contrairement au
+  // lien de fusion, celui-ci exige d'être connecté (avec l'email invité) pour
+  // pouvoir répondre — voir handleInviteResponse.
+  // null | "loading_info" | "info_ready" | "responding" | "accepted" |
+  // "declined" | "expired" | "invalid" | "mismatch" | "error"
+  const [inviteLinkStatus, setInviteLinkStatus] = useState(null);
+  const [inviteLinkToken, setInviteLinkToken] = useState(null);
+  const [inviteLinkInfo, setInviteLinkInfo] = useState(null); // { primaryEmail, poolName }
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("respondInvitation");
+    if (!token) return;
+    setInviteLinkToken(token);
+    setInviteLinkStatus("loading_info");
+    const cleanUrl = window.location.origin + window.location.pathname;
+    window.history.replaceState({}, "", cleanUrl);
+    getInvitationInfo(token)
+      .then((result) => {
+        if (typeof result.status === "number") { setInviteLinkStatus("error"); return; }
+        if (result.status === "pending") {
+          setInviteLinkInfo({ primaryEmail: result.primaryEmail, primaryPseudo: result.primaryPseudo, poolName: result.poolName });
+          setInviteLinkStatus("info_ready");
+        } else {
+          setInviteLinkStatus(result.status || "error"); // invalid | expired | declined | accepted
+        }
+      })
+      .catch(() => setInviteLinkStatus("error"));
+  }, []);
+
+  // Force l'écran de connexion tant qu'une invitation est en attente de
+  // réponse et qu'on n'est pas connecté (il faut être connecté avec l'email
+  // invité pour accepter/refuser).
+  useEffect(() => {
+    if (inviteLinkStatus && authUser === null) setShowLogin(true);
+  }, [inviteLinkStatus, authUser]);
+
+  async function handleInviteResponse(action) {
+    if (!inviteLinkToken || !authUser) return;
+    setInviteLinkStatus("responding");
+    try {
+      const idToken = await authUser.getIdToken();
+      const result = await respondToInvitation(idToken, inviteLinkToken, action);
+      if (result.status === 403) { setInviteLinkStatus("mismatch"); return; }
+      if (typeof result.status === "number") { setInviteLinkStatus("error"); return; }
+      if (result.status === "accepted" && result.primaryEmail) {
+        setInviteLinkInfo((prev) => ({ ...prev, primaryEmail: result.primaryEmail }));
+      }
+      setInviteLinkStatus(result.status || "error");
+    } catch (e) {
+      setInviteLinkStatus("error");
+    }
+  }
+
+  // ── Comptes qui m'ont invité (moi = secondaire) + contexte affiché ──
+  // linkedAccounts : liste brute (users/{moi}/linkedAccounts), enrichie à la
+  // volée (poolName/pseudo) au moment de l'ouverture des réglages — voir
+  // SettingsView. viewContext : null = mes bassins ; sinon
+  // { primaryUid, poolId, poolName, pseudo } = bassin d'un principal.
+  const [linkedAccounts, setLinkedAccounts] = useState([]);
+  const [viewContext, setViewContext] = useState(null);
+  const viewContextLoadedRef = useRef(false);
+
+  useEffect(() => {
+    if (!authUser?.uid || !FB.ready()) { setLinkedAccounts([]); return; }
+    const unsub = FB.onLinkedAccounts(authUser.uid, setLinkedAccounts);
+    return () => unsub();
+  }, [authUser?.uid]);
+
+  // Restaure le dernier contexte choisi (persistant entre sessions), une
+  // seule fois par connexion — et seulement s'il correspond toujours à un
+  // lien actif (au cas où l'accès aurait été révoqué entre-temps).
+  useEffect(() => {
+    if (!authUser?.uid || viewContextLoadedRef.current) return;
+    viewContextLoadedRef.current = true;
+    window.storage.get(STORAGE_KEYS.viewContext).then((res) => {
+      if (!res?.value) return;
+      try {
+        const saved = JSON.parse(res.value);
+        if (saved?.primaryUid) setViewContext(saved);
+      } catch (e) {}
+    }).catch(() => {});
+  }, [authUser?.uid]);
+
+  // Si le lien correspondant a été révoqué entre-temps, retombe sur "mes bassins".
+  useEffect(() => {
+    if (!viewContext) return;
+    if (!linkedAccounts.some((l) => l.primaryUid === viewContext.primaryUid && l.status === "active")) {
+      setViewContext(null);
+    }
+  }, [linkedAccounts, viewContext]);
+
+  function switchToContext(next) {
+    setViewContext(next);
+    window.storage.set(STORAGE_KEYS.viewContext, JSON.stringify(next || null)).catch(() => {});
+  }
+
+  // uid dont les données (measures/applications/config) sont actuellement
+  // affichées : le mien, ou celui du principal dont je consulte le bassin.
+  const dataUid = viewContext ? viewContext.primaryUid : authUser?.uid;
+
   const [pools, setPools] = useState([
     { id: "default", name: "Ma piscine", location: "Valbonne (06)", volume: 72, treatmentType: "chlore", filtration: "sable" },
   ]);
@@ -5304,6 +5709,7 @@ function PoolApp() {
   const [showAddPool, setShowAddPool] = useState(false);
   const [lang, setLang] = useState("fr");
   const [isPremium, setIsPremium] = useState(false);
+  const [myPseudo, setMyPseudo] = useState(""); // v1.55.0 — pseudo de mon compte (vide = fallback email)
   const [applications, setApplications] = useState([]);
   const [validatingMeasure, setValidatingMeasure] = useState(null);
   // v1.53.0 — Plan actif stocké par bassin (poolId -> plan), plus un objet
@@ -5481,6 +5887,7 @@ function PoolApp() {
       [STORAGE_KEYS.dataConsent, "false"],
       [STORAGE_KEYS.cguVersion, ""],
       [STORAGE_KEYS.cguAcceptedDate, ""],
+      [STORAGE_KEYS.viewContext, "null"],
     ];
     await Promise.all(
       blankKeys.map(([key, value]) => window.storage.set(key, value).catch(() => {}))
@@ -5500,6 +5907,12 @@ function PoolApp() {
     setDataConsent(false);
     setAcceptedCguVersion(null);
     setCguAcceptedDate(null);
+    // v1.55.0 — évite qu'un contexte secondaire reste affiché pour le
+    // prochain compte connecté sur le même appareil.
+    setViewContext(null);
+    setLinkedAccounts([]);
+    setMyPseudo("");
+    viewContextLoadedRef.current = false;
   }
 
   // v1.28.0 — Soft delete : ne supprime plus les données Firestore ni le compte
@@ -5628,15 +6041,65 @@ function PoolApp() {
   const lastSyncedPhotosRef = useRef({});
   const productPhotosRef = useRef({});
   const [photoMapVersion, setPhotoMapVersion] = useState(0);
-  function syncConfig(partial, errorKey) {
+  // v1.55.0 — Écriture séparée pour les réglages de compte (isPremium, lang,
+  // aiEnabled, calibrationContribution, apiProvider) : ces champs restent
+  // TOUJOURS ceux de mon propre compte, même quand je consulte le bassin
+  // d'un principal (dataUid ≠ authUser.uid). Debounce indépendant de
+  // syncConfig ci-dessous, qui lui cible dataUid.
+  const ownSyncDebounceRef = useRef(null);
+  const ownSyncPendingRef = useRef({});
+  function syncOwnConfig(partial, errorKey) {
     if (!authUser?.uid || !FB.ready() || teardownRef.current) return;
+    ownSyncPendingRef.current = { ...ownSyncPendingRef.current, ...partial };
+    if (ownSyncDebounceRef.current) clearTimeout(ownSyncDebounceRef.current);
+    ownSyncDebounceRef.current = setTimeout(() => {
+      const toSend = ownSyncPendingRef.current;
+      ownSyncPendingRef.current = {};
+      ownSyncDebounceRef.current = null;
+      FB.saveConfig(authUser.uid, toSend).catch((e) => {
+        const msg = errorKey
+          ? t(errorKey) + (e?.message ? " (" + e.message + ")" : "")
+          : t("config_sync_error").replace("{detail}", e?.message || "?");
+        alert(msg);
+      });
+    }, 800);
+  }
+
+  // v1.55.0 — Écoute toujours mon propre compte (jamais dataUid) pour ces
+  // 4 réglages personnels, indépendamment du contexte affiché.
+  useEffect(() => {
+    if (!authUser?.uid || !FB.ready()) return;
+    const unsub = FB.onConfig(authUser.uid, (config) => {
+      if (config.isPremium !== undefined) {
+        setIsPremium((prev) => (prev === config.isPremium ? prev : config.isPremium));
+        window.storage.set(STORAGE_KEYS.premium, JSON.stringify(config.isPremium)).catch(() => {});
+      }
+      if (config.lang) {
+        setLang((prev) => (prev === config.lang ? prev : config.lang));
+        window.storage.set("app_lang", JSON.stringify(config.lang)).catch(() => {});
+      }
+      if (config.aiEnabled !== undefined) {
+        setAiEnabled((prev) => (prev === config.aiEnabled ? prev : config.aiEnabled));
+      }
+      if (config.calibrationContribution !== undefined) {
+        setCalibrationContribution((prev) => (prev === config.calibrationContribution ? prev : config.calibrationContribution));
+      }
+      if (config.pseudo !== undefined) {
+        setMyPseudo((prev) => (prev === config.pseudo ? prev : (config.pseudo || "")));
+      }
+    });
+    return () => unsub();
+  }, [authUser?.uid]);
+
+  function syncConfig(partial, errorKey) {
+    if (!dataUid || !FB.ready() || teardownRef.current) return;
     syncPendingRef.current = { ...syncPendingRef.current, ...partial };
     if (syncDebounceRef.current) clearTimeout(syncDebounceRef.current);
     syncDebounceRef.current = setTimeout(() => {
       const toSend = syncPendingRef.current;
       syncPendingRef.current = {};
       syncDebounceRef.current = null;
-      FB.saveConfig(authUser.uid, toSend).catch((e) => {
+      FB.saveConfig(dataUid, toSend).catch((e) => {
         const msg = errorKey
           ? t(errorKey) + (e?.message ? " (" + e.message + ")" : "")
           : t("config_sync_error").replace("{detail}", e?.message || "?");
@@ -5648,12 +6111,16 @@ function PoolApp() {
   // ── Synchro Firestore temps réel ──
   // Quand l'utilisateur est connecté, on s'abonne aux collections measures et applications.
   // Les données cloud écrasent les données locales (last-write-wins).
+  // v1.55.0 — Ciblée sur dataUid (mon compte, ou celui du principal dont je
+  // consulte le bassin) plutôt que systématiquement authUser.uid. isPremium/
+  // lang/aiEnabled/calibrationContribution ne sont PLUS gérés ici : voir
+  // l'effet accountSettingsSync ci-dessus, toujours sur mon propre compte.
   const firestoreUnsubRef = useRef(null);
   const cloudConfigReceivedRef = useRef(false);
   const [cloudConfigReceived, setCloudConfigReceived] = useState(false);
   useEffect(() => {
-    if (!authUser?.uid || !FB.ready() || !window._fbOnSnapshot) return;
-    const uid = authUser.uid;
+    if (!dataUid || !FB.ready() || !window._fbOnSnapshot) return;
+    const uid = dataUid;
     cloudConfigReceivedRef.current = false;
     setCloudConfigReceived(false);
 
@@ -5700,20 +6167,8 @@ function PoolApp() {
         setActivePlanByPool((prev) => (deepEqual(prev, migrated) ? prev : migrated));
         window.storage.set(STORAGE_KEYS.activePlan, JSON.stringify(migrated)).catch(() => {});
       }
-      if (config.isPremium !== undefined) {
-        setIsPremium((prev) => (prev === config.isPremium ? prev : config.isPremium));
-        window.storage.set(STORAGE_KEYS.premium, JSON.stringify(config.isPremium)).catch(() => {});
-      }
-      if (config.lang) {
-        setLang((prev) => (prev === config.lang ? prev : config.lang));
-        window.storage.set("app_lang", JSON.stringify(config.lang)).catch(() => {});
-      }
-      if (config.aiEnabled !== undefined) {
-        setAiEnabled((prev) => (prev === config.aiEnabled ? prev : config.aiEnabled));
-      }
-      if (config.calibrationContribution !== undefined) {
-        setCalibrationContribution((prev) => (prev === config.calibrationContribution ? prev : config.calibrationContribution));
-      }
+      // v1.55.0 — isPremium/lang/aiEnabled/calibrationContribution/pseudo : gérés
+      // par l'effet accountSettingsSync (toujours mon propre compte), plus ici.
       // v1.53.0 — apiProvider n'est plus lu depuis Firestore : valeur fixe
       // "anthropic" imposée au chargement (voir plus bas), jamais un réglage
       // synchronisé entre appareils.
@@ -6085,7 +6540,21 @@ function PoolApp() {
   // Bassins non désactivés — utilisé pour l'affichage (switcher, réglages, écran
   // "créer un bassin"). Le tableau brut `pools` (avec les désactivés) reste la
   // source de vérité pour la synchro Firestore et la détection d'orphelins.
-  const activePools = useMemo(() => pools.filter((p) => !p.disabled), [pools]);
+  const activePools = useMemo(() => {
+    const base = pools.filter((p) => !p.disabled);
+    // v1.55.0 — En contexte secondaire, je ne vois que le bassin qui m'a été
+    // confié dans l'invitation, même si techniquement je pourrais lire tous
+    // les bassins du principal (règle Firestore large sur config/main).
+    if (viewContext) return base.filter((p) => p.id === viewContext.poolId);
+    return base;
+  }, [pools, viewContext]);
+
+  // Force le bassin actif sur celui assigné dès qu'un contexte secondaire est actif.
+  useEffect(() => {
+    if (viewContext && activePoolId !== viewContext.poolId) {
+      setActivePoolId(viewContext.poolId);
+    }
+  }, [viewContext, activePoolId]);
 
   const activePool = useMemo(
     () => activePools.find((p) => p.id === activePoolId) || activePools[0],
@@ -6174,9 +6643,9 @@ function PoolApp() {
     if (entry.id) {
       setMeasures((prev) => {
         const updated = prev.map((m) => (m.id === entry.id ? { ...m, ...entry } : m));
-        if (authUser?.uid) {
+        if (dataUid) {
           updated.forEach(m => {
-            if (m.id === entry.id) saveMeasureWithThumbnail(authUser.uid, m);
+            if (m.id === entry.id) saveMeasureWithThumbnail(dataUid, m);
           });
         }
         return updated;
@@ -6185,7 +6654,7 @@ function PoolApp() {
     } else {
       const newMeasure = { id: uid(), poolId: activePoolId, ...entry, createdBy: authUser?.uid || null };
       setMeasures((prev) => [...prev, newMeasure]);
-      if (authUser?.uid) saveMeasureWithThumbnail(authUser.uid, newMeasure);
+      if (dataUid) saveMeasureWithThumbnail(dataUid, newMeasure);
       track("measure_add", { has_photos: !!(entry.photos?.length || entry.photo), has_pool_photos: !!(entry.poolPhotos?.length) });
     }
     setShowAddMeasure(false);
@@ -6195,7 +6664,7 @@ function PoolApp() {
   function deleteMeasure(id) {
     setMeasures((prev) => prev.filter((m) => m.id !== id));
     // FB.deleteMeasure purge aussi la sous-collection photos associée.
-    if (authUser?.uid) FB.deleteMeasure(authUser.uid, id).catch(() => {});
+    if (dataUid) FB.deleteMeasure(dataUid, id).catch(() => {});
   }
 
   function deleteAllMeasuresForActivePool() {
@@ -6206,16 +6675,16 @@ function PoolApp() {
   // aucun bassin existant (ex: après un bug de synchro ayant fait perdre l'ID
   // d'origine du bassin — voir v1.25.1).
   const orphanedCount = useMemo(() => {
-    if (!pools.length) return 0;
+    if (viewContext || !pools.length) return 0; // v1.55.0 — outil réservé au propriétaire du compte
     const poolIds = new Set(pools.map((p) => p.id));
     const orphanMeasures = measures.filter((m) => !poolIds.has(m.poolId || "default")).length;
     const orphanApps = applications.filter((a) => !poolIds.has(a.poolId || "default")).length;
     const orphanProducts = products.filter((p) => !poolIds.has(p.poolId || "default")).length;
     return orphanMeasures + orphanApps + orphanProducts;
-  }, [pools, measures, applications, products]);
+  }, [pools, measures, applications, products, viewContext]);
 
   async function repairOrphanedData() {
-    if (!pools.length) return;
+    if (viewContext || !pools.length) return; // v1.55.0 — outil réservé au propriétaire du compte
     const poolIds = new Set(pools.map((p) => p.id));
     const targetPoolId = activePoolId && poolIds.has(activePoolId) ? activePoolId : pools[0].id;
 
@@ -6295,7 +6764,7 @@ function PoolApp() {
         steps,
         createdBy: authUser?.uid || null,
       };
-      if (authUser?.uid) FB.saveApplication(authUser.uid, newApp).catch(() => {});
+      if (dataUid) FB.saveApplication(dataUid, newApp).catch(() => {});
       return [...withoutThisMeasure, newApp];
     });
     setValidatingMeasure(null);
@@ -6480,7 +6949,7 @@ function PoolApp() {
   // que cloudConfigReceivedRef n'est pas confirmé) suffit à protéger contre un cache
   // local vidé écrasant les bassins existants.
   useEffect(() => {
-    if (!loaded || !authUser?.uid) return;
+    if (!loaded || !dataUid) return;
     if (pools.length === 0 && !cloudConfigReceivedRef.current) return;
     syncConfig({ pools });
   }, [pools]);
@@ -6496,8 +6965,8 @@ function PoolApp() {
   //    onProductPhotos) — jamais avant, pour ne perdre aucune photo si
   //    l'upload échoue ou si l'app se ferme en cours de migration.
   useEffect(() => {
-    if (!loaded || !authUser?.uid || !FB.ready()) return;
-    const uid = authUser.uid;
+    if (!loaded || !dataUid || !FB.ready()) return;
+    const uid = dataUid;
     products.forEach((p) => {
       const prevPhoto = lastSyncedPhotosRef.current[p.id];
       if (prevPhoto === p.photo) return;
@@ -6513,7 +6982,7 @@ function PoolApp() {
   }, [products]);
 
   useEffect(() => {
-    if (!loaded || !authUser?.uid) return;
+    if (!loaded || !dataUid) return;
     if (!FB.ready()) return;
     if (products.length === 0 && !cloudConfigReceivedRef.current) return;
     const confirmedPhotos = productPhotosRef.current;
@@ -6530,33 +6999,33 @@ function PoolApp() {
   }, [products, photoMapVersion]);
 
   useEffect(() => {
-    if (!loaded || !authUser?.uid) return;
+    if (!loaded || !dataUid) return;
     syncConfig({ activePlan: activePlanByPool });
   }, [activePlanByPool]);
 
   useEffect(() => {
     if (!loaded || !authUser?.uid) return;
-    syncConfig({ isPremium });
+    syncOwnConfig({ isPremium });
   }, [isPremium]);
 
   useEffect(() => {
     if (!loaded || !authUser?.uid) return;
-    syncConfig({ lang });
+    syncOwnConfig({ lang });
   }, [lang]);
 
   useEffect(() => {
     if (!loaded || !authUser?.uid) return;
-    syncConfig({ aiEnabled });
+    syncOwnConfig({ aiEnabled });
   }, [aiEnabled]);
 
   useEffect(() => {
     if (!loaded || !authUser?.uid) return;
-    syncConfig({ calibrationContribution });
+    syncOwnConfig({ calibrationContribution });
   }, [calibrationContribution]);
 
   useEffect(() => {
     if (!loaded || !authUser?.uid) return;
-    syncConfig({ apiProvider });
+    syncOwnConfig({ apiProvider });
   }, [apiProvider]);
 
   // v1.29.3 — Fix : le plan de traitement n'affichait plus les quantités.
@@ -6567,6 +7036,7 @@ function PoolApp() {
   // produit correspondant et retombait sur "produit manquant" au lieu de la
   // quantité — quel que soit le statut premium ou la gestion de stock.
   function addPool(pool) {
+    if (viewContext) return; // v1.55.0 — réservé au propriétaire du compte
     const id = uid();
     setPools((prev) => [...prev, { id, ...pool }]);
     setProducts((prev) => {
@@ -6583,6 +7053,7 @@ function PoolApp() {
   }
 
   function updatePool(id, updates) {
+    if (viewContext) return; // v1.55.0 — réservé au propriétaire du compte
     setPools((prev) => prev.map((p) => (p.id === id ? { ...p, ...updates } : p)));
   }
 
@@ -6593,6 +7064,7 @@ function PoolApp() {
   // `activePools`) le masque à l'utilisateur. Si c'était le dernier bassin actif,
   // aucune recréation automatique : l'écran "créer un bassin" (forced) prend le relais.
   function deletePool(id) {
+    if (viewContext) return; // v1.55.0 — réservé au propriétaire du compte
     const ok = window.confirm(t("delete_pool_confirm"));
     if (!ok) return;
     setPools((prev) =>
@@ -6687,6 +7159,61 @@ function PoolApp() {
               </div>
               <button
                 onClick={() => { setMergeLinkStatus(null); setMergeLinkParams(null); }}
+                style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "#0a6ebd", color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: "pointer" }}
+              >
+                {t("verify_link_continue_btn")}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    )}
+    {authUser && inviteLinkStatus && (
+      <div style={{ position: "fixed", inset: 0, zIndex: 3200, background: "rgba(10,30,60,0.94)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+        <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px #0a6ebd33" }}>
+          {inviteLinkStatus === "loading_info" || inviteLinkStatus === "responding" ? (
+            <>
+              <Loader2 size={34} className="spin" style={{ marginBottom: 10, color: "#0a6ebd" }} />
+              <div style={{ fontSize: 14, color: "#4a6480" }}>{t("invite_response_checking")}</div>
+            </>
+          ) : inviteLinkStatus === "info_ready" ? (
+            <>
+              <div style={{ fontSize: 34, marginBottom: 10 }}>🔗</div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: "#0d2b4e", marginBottom: 8 }}>
+                {t("invite_response_title")}
+              </div>
+              <div style={{ fontSize: 13.5, color: "#4a6480", marginBottom: 18, lineHeight: 1.5 }}>
+                {t("invite_response_text", {
+                  pseudo: inviteLinkInfo?.primaryPseudo || inviteLinkInfo?.primaryEmail || "",
+                  pool: inviteLinkInfo?.poolName || "",
+                })}
+              </div>
+              <button
+                onClick={() => handleInviteResponse("accept")}
+                style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "#0a6ebd", color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: "pointer", marginBottom: 10 }}
+              >
+                {t("invite_response_accept")}
+              </button>
+              <button
+                onClick={() => handleInviteResponse("decline")}
+                style={{ width: "100%", padding: "11px 0", borderRadius: 12, border: "1px solid #d8e2ec", background: "transparent", color: "#4a6480", fontWeight: 600, fontSize: 13.5, cursor: "pointer" }}
+              >
+                {t("invite_response_decline")}
+              </button>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: 34, marginBottom: 10 }}>
+                {inviteLinkStatus === "accepted" ? "✅" : "⚠️"}
+              </div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: "#0d2b4e", marginBottom: 8 }}>
+                {t("invite_response_title")}
+              </div>
+              <div style={{ fontSize: 13.5, color: "#4a6480", marginBottom: 18, lineHeight: 1.5 }}>
+                {t(`invite_response_${inviteLinkStatus}`)}
+              </div>
+              <button
+                onClick={() => { setInviteLinkStatus(null); setInviteLinkToken(null); setInviteLinkInfo(null); }}
                 style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "#0a6ebd", color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: "pointer" }}
               >
                 {t("verify_link_continue_btn")}
@@ -6871,7 +7398,7 @@ function PoolApp() {
             activeParamKeys={activeParamKeys}
             activePlan={activePlan}
             onResumePlan={() => setShowWizard(true)}
-            authUid={authUser?.uid}
+            authUid={dataUid}
           />
         )}
         {tab === "history" && (
@@ -6893,7 +7420,7 @@ function PoolApp() {
             lang={lang}
             apiKey={aiEnabled && isPremium ? apiKey : ""}
             apiProvider={apiProvider}
-            authUid={authUser?.uid}
+            authUid={dataUid}
             pool={activePool}
             activePlan={activePlan}
           />
@@ -6920,6 +7447,7 @@ function PoolApp() {
           />
         )}
         {tab === "settings" && (
+          <>
           <SettingsView
             pools={activePools}
             activePoolId={activePoolId}
@@ -6974,10 +7502,22 @@ function PoolApp() {
               }
             }}
           />
+          {authUser && (
+            <SecondaryUsersSection
+              authUser={authUser}
+              lang={lang}
+              linkedAccounts={linkedAccounts}
+              viewContext={viewContext}
+              onSwitchContext={switchToContext}
+              myPseudo={myPseudo}
+            />
+          )}
+          </>
         )}
       </main>
 
-      <TabBar tab={tab} setTab={setTab} lang={lang} />
+
+      <TabBar tab={tab} setTab={setTab} lang={lang} viewContext={viewContext} />
 
       {showAddMeasure && (
         <AddMeasureModal
@@ -7001,7 +7541,7 @@ function PoolApp() {
           apiProvider={apiProvider}
           activeParamKeys={activeParamKeys}
           lang={lang}
-          authUid={authUser?.uid}
+          authUid={dataUid}
           measureDevice={activePool?.measureDevice}
           stripProducts={poolProducts.filter((p) => p.action === "outil-mesure")}
           calibrationContribution={calibrationContribution}
@@ -7028,7 +7568,7 @@ function PoolApp() {
           aiEnabled={aiEnabled}
           apiKey={aiEnabled && isPremium ? apiKey : ""}
           apiProvider={apiProvider}
-          authUid={authUser?.uid}
+          authUid={dataUid}
           onWantManageStock={() => {
             setShowAddProduct(false);
             setEditingProduct(null);
@@ -7180,7 +7720,7 @@ function PoolApp() {
           onClose={() => setShowReport(false)}
           manageStock={!!activePool?.manageStock}
           lang={lang}
-          authUid={authUser?.uid}
+          authUid={dataUid}
           isPremium={isPremium}
         />
       )}
@@ -7404,7 +7944,7 @@ function Header({ poolName, location, poolPhoto, isPremium, pools, activePoolId,
 }
 
 // ---------- Tab bar ----------
-function TabBar({ tab, setTab, lang }) {
+function TabBar({ tab, setTab, lang, viewContext }) {
   const t = useT(lang);
   const tabs = [
     { id: "dashboard", label: t("tab_pool"), icon: Droplets },
@@ -7414,6 +7954,11 @@ function TabBar({ tab, setTab, lang }) {
   ];
   return (
     <div style={{ width: "100%", flexShrink: 0 }}>
+      {viewContext && (
+        <div style={{ textAlign: "center", fontSize: 9.5, color: "#b0bec8", padding: "2px 0", background: "#f5f8fc", letterSpacing: 0.3 }}>
+          {t("banner_secondary", { pool: viewContext.poolName, pseudo: viewContext.pseudo })}
+        </div>
+      )}
       <div style={{ textAlign: "center", fontSize: 9.5, color: "#b0bec8", padding: "2px 0", background: "#f5f8fc", letterSpacing: 0.3, borderTop: "1px solid #e8eef2" }}>
         PoolGenAI v{APP_VERSION}
       </div>
@@ -7446,13 +7991,286 @@ function TabBar({ tab, setTab, lang }) {
   );
 }
 
+// ---------- v1.55.0 — Utilisateurs secondaires (brique 3) ----------
+function SecondaryUsersSection({ authUser, lang, linkedAccounts, viewContext, onSwitchContext, myPseudo }) {
+  const t = useT(lang);
+  const [secondaries, setSecondaries] = useState([]); // personnes que j'ai invitées (moi = principal)
+  const [pendingInvitations, setPendingInvitations] = useState([]);
+  const [enrichedLinked, setEnrichedLinked] = useState([]); // linkedAccounts + poolName/pseudo
+  const [myPools, setMyPools] = useState([]); // mes propres bassins (pour le sélecteur d'invitation)
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [invitePoolId, setInvitePoolId] = useState("");
+  const [inviteBusy, setInviteBusy] = useState(false);
+  const [inviteMsg, setInviteMsg] = useState(null);
+  const [pseudoInput, setPseudoInput] = useState(myPseudo || "");
+  const [pseudoBusy, setPseudoBusy] = useState(false);
+  const [pseudoMsg, setPseudoMsg] = useState(null);
+
+  useEffect(() => { setPseudoInput(myPseudo || ""); }, [myPseudo]);
+
+  useEffect(() => {
+    if (!authUser?.uid || !FB.ready()) return;
+    FB.getConfig(authUser.uid).then((cfg) => {
+      setMyPools((cfg?.pools || []).filter((p) => !p.disabled));
+    }).catch(() => {});
+  }, [authUser?.uid]);
+
+  useEffect(() => {
+    if (!authUser?.uid || !FB.ready()) return;
+    const unsub = FB.onSecondaryUsers(authUser.uid, setSecondaries);
+    return () => unsub();
+  }, [authUser?.uid]);
+
+  async function refreshPendingInvitations() {
+    if (!authUser) return;
+    try {
+      const idToken = await authUser.getIdToken();
+      const res = await fetch(`${PROXY_BASE_URL}/list-pending-invitations`, {
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
+      const data = await res.json().catch(() => ({}));
+      setPendingInvitations(data.invitations || []);
+    } catch (e) {}
+  }
+  useEffect(() => { refreshPendingInvitations(); }, [authUser?.uid, secondaries.length]);
+
+  // Enrichit linkedAccounts (poolName + pseudo du principal), lu directement
+  // depuis config/main du principal — autorisé par la règle isActiveSecondary.
+  useEffect(() => {
+    let cancelled = false;
+    const active = linkedAccounts.filter((l) => l.status === "active");
+    if (!active.length) { setEnrichedLinked([]); return; }
+    Promise.all(active.map(async (l) => {
+      try {
+        const cfg = await FB.getConfig(l.primaryUid);
+        const pool = (cfg?.pools || []).find((p) => p.id === l.poolId);
+        return { ...l, poolName: pool?.name || "", pseudo: cfg?.pseudo || l.primaryEmail };
+      } catch (e) {
+        return { ...l, poolName: "", pseudo: l.primaryEmail };
+      }
+    })).then((results) => { if (!cancelled) setEnrichedLinked(results); });
+    return () => { cancelled = true; };
+  }, [linkedAccounts]);
+
+  async function handleInviteSend() {
+    if (!authUser || !inviteEmail || !invitePoolId) return;
+    setInviteBusy(true);
+    setInviteMsg(null);
+    try {
+      const idToken = await authUser.getIdToken();
+      const res = await fetch(`${PROXY_BASE_URL}/invite-secondary-user`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ poolId: invitePoolId, invitedEmail: inviteEmail.trim() }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setInviteMsg({ type: "error", text: data.error || t("secondary_invite_error") });
+        return;
+      }
+      setInviteMsg({ type: "ok", text: t("secondary_invite_sent") });
+      setInviteEmail("");
+      refreshPendingInvitations();
+    } catch (e) {
+      setInviteMsg({ type: "error", text: t("secondary_invite_error") });
+    } finally {
+      setInviteBusy(false);
+    }
+  }
+
+  async function handleRevoke(secondaryUid, email) {
+    if (!authUser) return;
+    const ok = window.confirm(t("secondary_revoke_confirm", { email }));
+    if (!ok) return;
+    try {
+      const idToken = await authUser.getIdToken();
+      const res = await fetch(`${PROXY_BASE_URL}/revoke-secondary-access`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ secondaryUid }),
+      });
+      if (!res.ok) alert(t("secondary_revoke_error"));
+    } catch (e) {
+      alert(t("secondary_revoke_error"));
+    }
+  }
+
+  async function handleSavePseudo() {
+    if (!authUser || !pseudoInput.trim()) return;
+    setPseudoBusy(true);
+    setPseudoMsg(null);
+    try {
+      const idToken = await authUser.getIdToken();
+      const res = await fetch(`${PROXY_BASE_URL}/set-pseudo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ pseudo: pseudoInput.trim() }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 409) {
+        setPseudoMsg({ type: "error", text: t("pseudo_taken_suggestion", { suggestion: data.suggestion || "?" }) });
+        return;
+      }
+      if (!res.ok) {
+        setPseudoMsg({ type: "error", text: data.error || t("pseudo_error") });
+        return;
+      }
+      setPseudoMsg({ type: "ok", text: t("pseudo_saved") });
+    } catch (e) {
+      setPseudoMsg({ type: "error", text: t("pseudo_error") });
+    } finally {
+      setPseudoBusy(false);
+    }
+  }
+
+  const activeSecondaries = secondaries.filter((s) => s.status === "active");
+  const sectionTitleStyle = { fontSize: 13, fontWeight: 700, color: "#0d2b4e", marginBottom: 8 };
+  const subTitleStyle = { fontSize: 12.5, fontWeight: 600, color: "#4a6480", marginBottom: 6 };
+  const emptyStyle = { fontSize: 12.5, color: "#8a9aa8", marginBottom: 14 };
+  const cardStyle = { padding: "10px 12px", border: "1px solid #d8e2ec", borderRadius: 10 };
+
+  return (
+    <div style={{ marginTop: 24, padding: "0 16px 24px" }}>
+      <div style={sectionTitleStyle}>{t("pseudo_label")}</div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 4 }}>
+        <input
+          value={pseudoInput}
+          onChange={(e) => setPseudoInput(e.target.value)}
+          placeholder={t("pseudo_placeholder")}
+          style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: "1px solid #d8e2ec", fontSize: 13.5 }}
+        />
+        <button
+          onClick={handleSavePseudo}
+          disabled={pseudoBusy}
+          style={{ padding: "10px 16px", borderRadius: 10, border: "none", background: "#0a6ebd", color: "#fff", fontWeight: 600, fontSize: 13, cursor: pseudoBusy ? "not-allowed" : "pointer" }}
+        >
+          {t("pseudo_save")}
+        </button>
+      </div>
+      {pseudoMsg && (
+        <div style={{ fontSize: 12, color: pseudoMsg.type === "error" ? "#c0392b" : "#1a8fd1", marginBottom: 8 }}>{pseudoMsg.text}</div>
+      )}
+      <div style={{ fontSize: 11.5, color: "#8a9aa8", marginBottom: 20 }}>{t("pseudo_invalid")}</div>
+
+      {linkedAccounts.some((l) => l.status === "active") && (
+        <>
+          <div style={sectionTitleStyle}>{t("context_title")}</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
+            <button
+              onClick={() => onSwitchContext(null)}
+              style={{
+                textAlign: "left", padding: "10px 12px", borderRadius: 10, fontSize: 13.5, cursor: "pointer",
+                border: !viewContext ? "2px solid #0a6ebd" : "1px solid #d8e2ec",
+                background: !viewContext ? "#e8f4fd" : "#fff",
+              }}
+            >
+              {t("context_own")}
+            </button>
+            {enrichedLinked.map((l) => (
+              <button
+                key={l.primaryUid}
+                onClick={() => onSwitchContext({ primaryUid: l.primaryUid, poolId: l.poolId, poolName: l.poolName, pseudo: l.pseudo })}
+                style={{
+                  textAlign: "left", padding: "10px 12px", borderRadius: 10, fontSize: 13.5, cursor: "pointer",
+                  border: viewContext?.primaryUid === l.primaryUid ? "2px solid #0a6ebd" : "1px solid #d8e2ec",
+                  background: viewContext?.primaryUid === l.primaryUid ? "#e8f4fd" : "#fff",
+                }}
+              >
+                {t("context_secondary_option", { pseudo: l.pseudo })}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      <div style={sectionTitleStyle}>{t("secondary_section_title")}</div>
+      <div style={{ fontSize: 12, color: "#6a7d90", marginBottom: 12 }}>{t("secondary_section_intro")}</div>
+
+      <div style={subTitleStyle}>{t("secondary_active_title")}</div>
+      {activeSecondaries.length === 0 ? (
+        <div style={emptyStyle}>{t("secondary_active_empty")}</div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
+          {activeSecondaries.map((s) => (
+            <div key={s.secondaryUid} style={{ ...cardStyle, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#0d2b4e" }}>{s.email}</div>
+                <div style={{ fontSize: 11.5, color: "#8a9aa8" }}>
+                  {t("secondary_pool_label", { pool: myPools.find((p) => p.id === s.poolId)?.name || s.poolId })}
+                </div>
+              </div>
+              <button
+                onClick={() => handleRevoke(s.secondaryUid, s.email)}
+                style={{ padding: "7px 12px", borderRadius: 8, border: "1px solid #e0a0a0", background: "#fff5f5", color: "#c0392b", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+              >
+                {t("secondary_revoke_button")}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div style={subTitleStyle}>{t("secondary_pending_title")}</div>
+      {pendingInvitations.length === 0 ? (
+        <div style={emptyStyle}>{t("secondary_pending_empty")}</div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
+          {pendingInvitations.map((inv) => (
+            <div key={inv.invitedEmail + inv.poolId} style={cardStyle}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "#0d2b4e" }}>{inv.invitedEmail}</div>
+              <div style={{ fontSize: 11.5, color: "#8a9aa8" }}>
+                {t("secondary_pool_label", { pool: inv.poolName })} ·{" "}
+                {inv.expired
+                  ? t("secondary_pending_expired")
+                  : t("secondary_pending_expires", { date: new Date(inv.expiresAt).toLocaleDateString(lang) })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {activeSecondaries.length < 2 && (
+        <>
+          <div style={subTitleStyle}>{t("secondary_invite_button")}</div>
+          <input
+            type="email"
+            value={inviteEmail}
+            onChange={(e) => setInviteEmail(e.target.value)}
+            placeholder={t("secondary_invite_email_label")}
+            style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid #d8e2ec", fontSize: 13.5, marginBottom: 8, boxSizing: "border-box" }}
+          />
+          <select
+            value={invitePoolId}
+            onChange={(e) => setInvitePoolId(e.target.value)}
+            style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid #d8e2ec", fontSize: 13.5, marginBottom: 8 }}
+          >
+            <option value="">{t("secondary_invite_pool_label")}</option>
+            {myPools.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+          <button
+            onClick={handleInviteSend}
+            disabled={inviteBusy || !inviteEmail || !invitePoolId}
+            style={{ width: "100%", padding: "12px 0", borderRadius: 10, border: "none", background: "#0a6ebd", color: "#fff", fontWeight: 700, fontSize: 13.5, cursor: inviteBusy ? "not-allowed" : "pointer" }}
+          >
+            {t("secondary_invite_send")}
+          </button>
+          {inviteMsg && (
+            <div style={{ fontSize: 12, color: inviteMsg.type === "error" ? "#c0392b" : "#1a8fd1", marginTop: 8 }}>{inviteMsg.text}</div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 // ---------- Dashboard ----------
 function Dashboard({ latest, volume, products, manageStock, onAddMeasure, onEditMeasure, onValidateApplication, applicationForLatest, blockedByLimit, isPremium, onWantPremium, apiKey, apiProvider, recentMeasures, effectiveTargets, activeParamKeys, lang, activePlan, onResumePlan, authUid }) {
   const t = useT(lang);
   const [aiComment, setAiComment] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState(null);
-  const [selectedRecs, setSelectedRecs] = useState({});
 
   // v1.40.0 — Vignettes de toutes les photos (analyse + bassin) de la dernière
   // mesure, chargées depuis la sous-collection measures/{id}/photos (voir
@@ -7627,22 +8445,16 @@ Réponds directement en français, sans titre ni introduction.`;
           {recs.length > 1 && (
             <p style={styles.helpText}>{t("follow_order")}</p>
           )}
-          {recs.map((r, i) => {
-            const planForLatest = activePlan && latest && activePlan.measureId === latest.id ? activePlan : null;
-            return (
-              <RecoCard
-                key={i}
-                reco={r}
-                isLast={i === recs.length - 1}
-                selectable={!applicationForLatest && !planForLatest}
-                selected={!!selectedRecs[i]}
-                onToggle={() => setSelectedRecs((prev) => ({ ...prev, [i]: !prev[i] }))}
-                manageStock={manageStock}
-                products={products}
-                lang={lang}
-              />
-            );
-          })}
+          {recs.map((r, i) => (
+            <RecoCard
+              key={i}
+              reco={r}
+              isLast={i === recs.length - 1}
+              manageStock={manageStock}
+              products={products}
+              lang={lang}
+            />
+          ))}
 
           {(() => {
             const planForLatest = activePlan && latest && activePlan.measureId === latest.id ? activePlan : null;
@@ -7714,35 +8526,15 @@ function ParamCard({ param, value, effectiveTargets, lang }) {
   );
 }
 
-function RecoCard({ reco, isLast, selectable, selected, onToggle, manageStock, products, lang }) {
+function RecoCard({ reco, isLast, manageStock, products, lang }) {
   const t = useT(lang || "fr");
   return (
-    <div
-      style={{
-        ...styles.recoCard,
-        ...(selectable ? {
-          cursor: "pointer",
-          border: selected ? "2px solid #0a6ebd" : "1.5px solid #d0e4f5",
-          background: selected ? "#eaf5fd" : styles.recoCard.background,
-        } : {}),
-      }}
-      onClick={selectable ? onToggle : undefined}
-    >
+    <div style={styles.recoCard}>
       <div style={{ ...styles.recoTop, justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div style={styles.recoStepBadge}>{reco.stepNumber}</div>
           <span style={styles.recoParam}>{reco.title}</span>
         </div>
-        {selectable && (
-          <div style={{
-            width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-            border: selected ? "2px solid #0a6ebd" : "2px solid #b0c4d8",
-            background: selected ? "#0a6ebd" : "transparent",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            {selected && <CheckCircle2 size={14} color="#fff" />}
-          </div>
-        )}
       </div>
 
       {reco.startsAfterHours > 0 && (
@@ -7845,8 +8637,14 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
     return candidates.find((p) => !p.isDefault) || candidates.find((p) => p.isDefault) || null;
   };
   const tac = parseFloat(latestLower.tac);
+  // v1.56.0 — Dose TAC+/TAC- ajustée au volume du bassin et à l'écart mesuré,
+  // comme pH et chlore (formule doseAmount × (volume/effectPer) × (écart/effectAmount)).
+  // Avant : dose fixe du produit renvoyée telle quelle, sans lien avec l'écart réel.
   if (has("tac") && !Number.isNaN(tac) && targetsLower.tac && tac < targetsLower.tac.min) {
+    const tacTargetMid = (targetsLower.tac.min + targetsLower.tac.max) / 2;
+    const diff = tacTargetMid - tac;
     const prod = findProduct("tac+");
+    const computedDose = prod ? Math.round(prod.doseAmount * (volume / prod.effectPer) * (diff / prod.effectAmount)) : null;
     steps.push({
       action: "tac+",
       title: _("reco_tac_low", { val: tac }),
@@ -7854,9 +8652,9 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       productAvailable: !!prod,
       productPhoto: prod?.photo || null,
       doseText: prod
-        ? `${_("reco_dose_prefix")} ${formatDose(prod.doseAmount, prod.doseUnit)} ${_("see_dosage").toLowerCase()}`
+        ? `${_("reco_dose_prefix")} ${formatDose(computedDose, prod.doseUnit)} ${_("reco_target")} ${tacTargetMid.toFixed(0)}`
         : _("missing_product_tip", { action: "tac+" }),
-      computedDoseAmount: prod?.doseAmount ?? null,
+      computedDoseAmount: computedDose,
       doseUnit: prod?.doseUnit || null,
       note: prodNote(prod, "reco_note_tac"),
       waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["tac+"],
@@ -7868,7 +8666,10 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
   // produit n'est configuré pour cette action (missing_product_tip), pour ne
   // jamais masquer silencieusement un TAC hors cible.
   if (has("tac") && !Number.isNaN(tac) && targetsLower.tac && tac > targetsLower.tac.max) {
+    const tacTargetMid = (targetsLower.tac.min + targetsLower.tac.max) / 2;
+    const diff = tac - tacTargetMid;
     const prod = findProduct("tac-");
+    const computedDose = prod ? Math.round(prod.doseAmount * (volume / prod.effectPer) * (diff / prod.effectAmount)) : null;
     steps.push({
       action: "tac-",
       title: _("reco_tac_high", { val: tac }),
@@ -7876,9 +8677,9 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       productAvailable: !!prod,
       productPhoto: prod?.photo || null,
       doseText: prod
-        ? `${_("reco_dose_prefix")} ${formatDose(prod.doseAmount, prod.doseUnit)} ${_("see_dosage").toLowerCase()}`
+        ? `${_("reco_dose_prefix")} ${formatDose(computedDose, prod.doseUnit)} ${_("reco_target")} ${tacTargetMid.toFixed(0)}`
         : _("missing_product_tip", { action: "tac-" }),
-      computedDoseAmount: prod?.doseAmount ?? null,
+      computedDoseAmount: computedDose,
       doseUnit: prod?.doseUnit || null,
       note: prodNote(prod, "reco_note_tac_minus"),
       waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["tac-"],
@@ -9440,18 +10241,39 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
   }
 
   const [cclError, setCclError] = useState(null);
+  const [tclForcedInfo, setTclForcedInfo] = useState(null);
 
   function handleSave() {
-    // CCL auto-calculé si non saisi et fCl + tCl disponibles
     const fClNum = fCl !== "" ? parseFloat(fCl) : null;
-    const tClNum = tCl !== "" ? parseFloat(tCl) : null;
+    let tClNum = tCl !== "" ? parseFloat(tCl) : null;
+    let tClFinal = tCl;
+
+    // v1.56.0 — TCL (chlore total) ne peut physiquement pas être inférieur à
+    // FCL (chlore libre), puisque TCL = FCL + CCL. Cas rencontré en pratique
+    // avec une interférence métaux (Mn/Fe) faussant la lecture FCL. Plutôt que
+    // de bloquer l'enregistrement (ancien comportement), on force TCL = FCL
+    // et on informe l'utilisateur sans l'empêcher de sauvegarder sa mesure.
+    if (fClNum != null && tClNum != null && tClNum < fClNum) {
+      tClNum = fClNum;
+      tClFinal = String(fClNum);
+      setTCl(tClFinal);
+      setTclForcedInfo(t("tcl_forced_to_fcl_info", { val: fClNum }));
+      // On affiche la correction avant d'enregistrer plutôt que de l'appliquer
+      // silencieusement en arrière-plan pendant que la fenêtre se referme —
+      // l'utilisateur reclique "Enregistrer" une fois la valeur corrigée vue.
+      return;
+    } else {
+      setTclForcedInfo(null);
+    }
+
+    // CCL auto-calculé si non saisi et fCl + tCl disponibles
     let cclFinal = ccl;
     if ((ccl === "" || ccl == null) && fClNum != null && tClNum != null) {
       cclFinal = String(Math.max(0, Math.round((tClNum - fClNum) * 100) / 100));
       setCcl(cclFinal);
     }
 
-    // Validation : FCL + CCL <= TCL (tolérance 0.05)
+    // Validation : FCL + CCL <= TCL (tolérance 0.05), sur les valeurs corrigées
     const cclNum = cclFinal !== "" ? parseFloat(cclFinal) : null;
     if (fClNum != null && cclNum != null && tClNum != null) {
       if (fClNum + cclNum > tClNum + 0.05) {
@@ -9472,7 +10294,7 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
       stripModel: method === "bandelette" && stripModel ? normalizeStripModel(stripModel) : null,
       pH,
       fCl,
-      tCl,
+      tCl: tClFinal,
       ccl: cclFinal,
       tac,
       cya,
@@ -9686,13 +10508,19 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
                 placeholder={f.placeholder}
                 className="measureFieldInput"
                 value={f.value}
-                onChange={(e) => { f.set(e.target.value); setCclError(null); }}
+                onChange={(e) => { f.set(e.target.value); setCclError(null); setTclForcedInfo(null); }}
                 style={isErrorField ? { ...styles.input, border: "1.5px solid #e74c3c", background: "#fdf5f5" } : styles.input}
               />
             </div>
           );
         })}
       </div>
+
+      {tclForcedInfo && (
+        <div style={{ marginTop: 8, padding: "8px 12px", background: "#eaf4fb", border: "1px solid #b0d8f0", borderRadius: 8, fontSize: 12, color: "#0a6ebd", display: "flex", alignItems: "center", gap: 6 }}>
+          <AlertTriangle size={14} /> {tclForcedInfo}
+        </div>
+      )}
 
       {cclError && (
         <div style={{ marginTop: 8, padding: "8px 12px", background: "#fdf0ef", border: "1px solid #f5c6c2", borderRadius: 8, fontSize: 12, color: "#c0392b", display: "flex", alignItems: "center", gap: 6 }}>
@@ -10001,35 +10829,48 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
           </div>
         )}
 
-        {/* Sélecteur de produit alternatif (si gestion stock activée) */}
-        {manageStock && products && products.length > 0 && (
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: "#4a6480", display: "block", marginBottom: 6 }}>
-              {t("product_col")}
-            </label>
-            <select
-              value={selectedProduct || step.productName}
-              onChange={(e) => {
-                const newProd = e.target.value;
-                setSelectedProduct(newProd);
-                if (newProd !== step.productName) {
-                  setEditAmount("");
-                } else {
-                  const amount = step.computedDoseAmount ?? step.appliedAmount;
-                  const { value } = toDisplayUnit(amount, step.doseUnit || "g");
-                  setEditAmount(value != null && value !== "" ? String(value) : "");
-                }
-              }}
-              style={{ width: "100%", boxSizing: "border-box", fontSize: 14, fontWeight: 600, color: "#0d2b4e", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 12px", outline: "none", background: "#fff" }}
-            >
-              {products.map(p => (
-                <option key={p.id || p.name} value={p.name}>
-                  {p.name}{p.name === step.productName ? " ✓" : ""}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+        {/* Sélecteur de produit alternatif (si gestion stock activée).
+            v1.56.0 — Filtré par action du step : la liste ne proposait avant
+            aucun tri, et sans produit configuré pour l'action (ex. tac-),
+            le <select> retombait silencieusement sur le 1er produit de la
+            liste (ex. bandelettes de test) faute d'option correspondant à
+            step.productName. */}
+        {manageStock && products && (() => {
+          const sameActionProducts = products.filter(p => p.action === step.action);
+          if (sameActionProducts.length === 0) return null;
+          const currentValue = selectedProduct || step.productName;
+          const selectValue = sameActionProducts.some(p => p.name === currentValue)
+            ? currentValue
+            : sameActionProducts[0].name;
+          return (
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "#4a6480", display: "block", marginBottom: 6 }}>
+                {t("product_col")}
+              </label>
+              <select
+                value={selectValue}
+                onChange={(e) => {
+                  const newProd = e.target.value;
+                  setSelectedProduct(newProd);
+                  if (newProd !== step.productName) {
+                    setEditAmount("");
+                  } else {
+                    const amount = step.computedDoseAmount ?? step.appliedAmount;
+                    const { value } = toDisplayUnit(amount, step.doseUnit || "g");
+                    setEditAmount(value != null && value !== "" ? String(value) : "");
+                  }
+                }}
+                style={{ width: "100%", boxSizing: "border-box", fontSize: 14, fontWeight: 600, color: "#0d2b4e", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 12px", outline: "none", background: "#fff" }}
+              >
+                {sameActionProducts.map(p => (
+                  <option key={p.id || p.name} value={p.name}>
+                    {p.name}{p.name === step.productName ? " ✓" : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+          );
+        })()}
 
         {/* Quantité */}
         {baseUnit && (
