@@ -551,6 +551,51 @@ async function firestoreQueryExpiredTokenIds(env, nowIso, limit) {
     .map((r) => r.document.name.split("/").pop());
 }
 
+// ---------- Firestore : requête structurée générique (égalités combinées en AND) ----------
+// v1.56.0 — Utilisé par list-pending-invitations et cancel-invitation pour éviter
+// de lister toute la collection "invitations" et filtrer en mémoire (ancien
+// comportement, notait déjà "à revoir avec une requête structurée si le volume
+// grossit"). N'accepte que des égalités simples (stringValue) — suffisant pour
+// filtrer par primaryUid/status, aucun index composite requis côté Firestore
+// tant qu'il n'y a pas de tri ou d'inégalité combinée.
+async function firestoreQueryDocsByEquality(env, collectionId, equalityFilters, limit) {
+  const accessToken = await getGoogleAccessToken(env);
+  const url = `${FIRESTORE_BASE}:runQuery`;
+  const filters = Object.entries(equalityFilters).map(([fieldPath, value]) => ({
+    fieldFilter: {
+      field: { fieldPath },
+      op: "EQUAL",
+      value: { stringValue: value },
+    },
+  }));
+  const where = filters.length === 1
+    ? filters[0]
+    : { compositeFilter: { op: "AND", filters } };
+  const body = {
+    structuredQuery: {
+      from: [{ collectionId }],
+      where,
+      limit: limit || 300,
+    },
+  };
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Échec de la requête Firestore : ${errText}`);
+  }
+  const rows = await response.json();
+  return rows
+    .filter((r) => r.document)
+    .map((r) => ({ id: r.document.name.split("/").pop(), ...fromFirestoreFields(r.document.fields) }));
+}
+
 // ---------- Identity Toolkit : marquer un compte comme vérifié ----------
 async function markFirebaseAccountVerified(env, uid) {
   const accessToken = await getGoogleAccessToken(env);
@@ -1726,10 +1771,10 @@ async function handleSetPseudo(request, env, origin) {
 }
 
 // ---------- Route : GET /list-pending-invitations ----------
-// v1.55.0 — Liste les invitations "pending" envoyées par le compte appelant
-// (brique 3, écran réglages). Filtre en mémoire après un listing complet de
-// la collection racine invitations — acceptable vu le volume attendu (usage
-// perso/petite base), à revoir avec une requête structurée si ça grossit.
+// v1.56.0 — Remplace le listage complet de la collection "invitations" +
+// filtre en mémoire (v1.55.0) par une requête structurée sur primaryUid +
+// status="pending". Expose aussi `token` (id du doc) pour permettre au
+// client d'annuler une invitation via /cancel-invitation.
 async function handleListPendingInvitations(request, env, origin) {
   const authHeader = request.headers.get("Authorization") || "";
   const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
@@ -1743,26 +1788,78 @@ async function handleListPendingInvitations(request, env, origin) {
   }
   const primaryUid = payload.sub;
 
-  let allInvitations;
+  let mineRaw;
   try {
-    allInvitations = await firestoreListAllDocs(env, "invitations");
+    mineRaw = await firestoreQueryDocsByEquality(env, "invitations", {
+      primaryUid,
+      status: "pending",
+    });
   } catch (e) {
     return jsonError(`Erreur serveur : ${e.message}`, 500, origin);
   }
 
   const now = Date.now();
-  const mine = allInvitations
-    .filter((inv) => inv.primaryUid === primaryUid && inv.status === "pending")
-    .map((inv) => ({
-      invitedEmail: inv.invitedEmail,
-      poolId: inv.poolId,
-      poolName: inv.poolName || "",
-      createdAt: inv.createdAt,
-      expiresAt: inv.expiresAt,
-      expired: inv.expiresAt ? inv.expiresAt.getTime() < now : false,
-    }));
+  const mine = mineRaw.map((inv) => ({
+    token: inv.id,
+    invitedEmail: inv.invitedEmail,
+    poolId: inv.poolId,
+    poolName: inv.poolName || "",
+    createdAt: inv.createdAt,
+    expiresAt: inv.expiresAt,
+    expired: inv.expiresAt ? inv.expiresAt.getTime() < now : false,
+  }));
 
   return jsonResponse({ invitations: mine }, 200, origin);
+}
+
+// ---------- Route : POST /cancel-invitation ----------
+// v1.56.0 — Annule une invitation encore en attente (avant acceptation).
+// Distinct de /revoke-secondary-access, qui ne s'applique qu'aux accès déjà
+// actifs (secondaryUsers). Ici on supprime le doc invitations/{token} —
+// aucune notification envoyée, l'invité n'a jamais eu accès à quoi que ce soit.
+async function handleCancelInvitation(request, env, origin) {
+  const authHeader = request.headers.get("Authorization") || "";
+  const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (!idToken) return jsonError("Authentification requise", 401, origin);
+
+  let payload;
+  try {
+    payload = await verifyFirebaseIdToken(idToken);
+  } catch (e) {
+    return jsonError(`Token invalide : ${e.message}`, 401, origin);
+  }
+  const primaryUid = payload.sub;
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return jsonError("Corps de requête invalide", 400, origin);
+  }
+  const { token } = body;
+  if (!token) return jsonError("token manquant", 400, origin);
+
+  let invitation;
+  try {
+    invitation = await firestoreGetDoc(env, "invitations", token);
+  } catch (e) {
+    return jsonError(`Erreur serveur : ${e.message}`, 500, origin);
+  }
+  if (!invitation) return jsonError("Invitation introuvable", 404, origin);
+  if (invitation.primaryUid !== primaryUid) {
+    return jsonError("Cette invitation ne t'appartient pas", 403, origin);
+  }
+  if (invitation.status !== "pending") {
+    return jsonError("Cette invitation n'est plus en attente", 409, origin);
+  }
+
+  try {
+    await firestoreDeleteDoc(env, "invitations", token);
+  } catch (e) {
+    return jsonError(`Échec de l'annulation : ${e.message}`, 500, origin);
+  }
+
+  return jsonResponse({ status: "cancelled" }, 200, origin);
 }
 
 // ---------- Route : GET /invitation-info?token=... ----------
@@ -1878,12 +1975,21 @@ export default {
 
     const url = new URL(request.url);
 
-    // v1.51.0 — Seule route GET du Worker : sert les photos produit stockées
-    // dans R2, appelée par un <img src> qui ne peut pas faire de POST. Toutes
-    // les autres routes restent POST-only comme avant cette version.
+    // v1.51.0 — /product-photo sert les photos R2 (appelé par <img src>, pas de POST possible).
+    // v1.56.0 — Fix bug pré-existant : /list-pending-invitations et /invitation-info sont
+    // appelées en GET côté client (fetch sans method → GET par défaut), mais étaient
+    // routées uniquement sous la branche POST ci-dessous → 405 systématique, jamais
+    // visible côté UI car les erreurs y sont avalées silencieusement (catch vide /
+    // data.invitations || []). Déplacées ici, dans la branche GET qui leur correspond.
     if (request.method === "GET") {
       if (url.pathname === "/product-photo") {
         return handleProductPhotoServe(request, env, origin);
+      }
+      if (url.pathname === "/list-pending-invitations") {
+        return handleListPendingInvitations(request, env, origin);
+      }
+      if (url.pathname === "/invitation-info") {
+        return handleInvitationInfo(request, env, origin);
       }
       return new Response("Not found", { status: 404 });
     }
@@ -1931,11 +2037,8 @@ export default {
     if (url.pathname === "/set-pseudo") {
       return handleSetPseudo(request, env, origin);
     }
-    if (url.pathname === "/list-pending-invitations") {
-      return handleListPendingInvitations(request, env, origin);
-    }
-    if (url.pathname === "/invitation-info") {
-      return handleInvitationInfo(request, env, origin);
+    if (url.pathname === "/cancel-invitation") {
+      return handleCancelInvitation(request, env, origin);
     }
 
     return new Response("Not found", { status: 404 });

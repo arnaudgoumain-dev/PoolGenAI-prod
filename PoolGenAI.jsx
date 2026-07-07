@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.56.0";
+const APP_VERSION = "1.57.0";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 
 const TRANSLATIONS = {
@@ -614,6 +614,9 @@ const TRANSLATIONS = {
     secondary_pending_empty: "Aucune invitation en attente.",
     secondary_pending_expires: "Expire le {date}",
     secondary_pending_expired: "Expirée",
+    secondary_cancel_button: "Annuler",
+    secondary_cancel_confirm: "Annuler l'invitation envoyée à {email} ?",
+    secondary_cancel_error: "Échec de l'annulation",
     pseudo_label: "Ton pseudo",
     pseudo_placeholder: "Visible par les personnes qui t'invitent",
     pseudo_save: "Enregistrer",
@@ -1222,6 +1225,9 @@ const TRANSLATIONS = {
     secondary_pending_empty: "No pending invitations.",
     secondary_pending_expires: "Expires on {date}",
     secondary_pending_expired: "Expired",
+    secondary_cancel_button: "Cancel",
+    secondary_cancel_confirm: "Cancel the invitation sent to {email}?",
+    secondary_cancel_error: "Failed to cancel invitation",
     pseudo_label: "Your nickname",
     pseudo_placeholder: "Visible to people who invite you",
     pseudo_save: "Save",
@@ -1832,6 +1838,9 @@ const TRANSLATIONS = {
     secondary_pending_empty: "Keine ausstehenden Einladungen.",
     secondary_pending_expires: "Läuft ab am {date}",
     secondary_pending_expired: "Abgelaufen",
+    secondary_cancel_button: "Abbrechen",
+    secondary_cancel_confirm: "Die an {email} gesendete Einladung stornieren?",
+    secondary_cancel_error: "Stornierung fehlgeschlagen",
     pseudo_label: "Dein Spitzname",
     pseudo_placeholder: "Sichtbar für Personen, die dich einladen",
     pseudo_save: "Speichern",
@@ -2439,6 +2448,9 @@ const TRANSLATIONS = {
     secondary_pending_empty: "Nessun invito in sospeso.",
     secondary_pending_expires: "Scade il {date}",
     secondary_pending_expired: "Scaduto",
+    secondary_cancel_button: "Annulla",
+    secondary_cancel_confirm: "Annullare l'invito inviato a {email}?",
+    secondary_cancel_error: "Annullamento non riuscito",
     pseudo_label: "Il tuo nome utente",
     pseudo_placeholder: "Visibile a chi ti invita",
     pseudo_save: "Salva",
@@ -3046,6 +3058,9 @@ const TRANSLATIONS = {
     secondary_pending_empty: "Ninguna invitación pendiente.",
     secondary_pending_expires: "Caduca el {date}",
     secondary_pending_expired: "Caducada",
+    secondary_cancel_button: "Cancelar",
+    secondary_cancel_confirm: "¿Cancelar la invitación enviada a {email}?",
+    secondary_cancel_error: "Error al cancelar la invitación",
     pseudo_label: "Tu apodo",
     pseudo_placeholder: "Visible para quienes te inviten",
     pseudo_save: "Guardar",
@@ -3650,6 +3665,9 @@ const TRANSLATIONS = {
     secondary_pending_empty: "Nenhum convite pendente.",
     secondary_pending_expires: "Expira em {date}",
     secondary_pending_expired: "Expirado",
+    secondary_cancel_button: "Cancelar",
+    secondary_cancel_confirm: "Cancelar o convite enviado para {email}?",
+    secondary_cancel_error: "Falha ao cancelar o convite",
     pseudo_label: "Teu apelido",
     pseudo_placeholder: "Visível para quem te convida",
     pseudo_save: "Guardar",
@@ -7374,6 +7392,7 @@ function PoolApp() {
         activePoolId={activePoolId}
         onSwitchPool={setActivePoolId}
         onAddPool={handleWantAddPool}
+        viewContext={viewContext}
         lang={lang}
       />
       <main style={styles.main}>
@@ -7455,6 +7474,7 @@ function PoolApp() {
             onDeletePool={deletePool}
             onSwitchPool={setActivePoolId}
             onWantAddPool={handleWantAddPool}
+            viewContext={viewContext}
             onDeleteAllMeasures={deleteAllMeasuresForActivePool}
             orphanedCount={orphanedCount}
             onRepairOrphanedData={repairOrphanedData}
@@ -7860,7 +7880,7 @@ function PhotoLightbox({ src, onClose }) {
 }
 
 // ---------- Header ----------
-function Header({ poolName, location, poolPhoto, isPremium, pools, activePoolId, onSwitchPool, onAddPool, lang }) {
+function Header({ poolName, location, poolPhoto, isPremium, pools, activePoolId, onSwitchPool, onAddPool, viewContext, lang }) {
   const t = useT(lang);
   const treatmentTypes = getTreatmentTypes(lang);
   const [showSwitcher, setShowSwitcher] = useState(false);
@@ -7927,15 +7947,17 @@ function Header({ poolName, location, poolPhoto, isPremium, pools, activePoolId,
                 {p.id === activePoolId && <CheckCircle2 size={16} color="#1a8fd1" />}
               </button>
             ))}
-            <button
-              style={styles.poolSwitcherAddBtn}
-              onClick={() => {
-                setShowSwitcher(false);
-                onAddPool();
-              }}
-            >
-              <Plus size={16} /> {t("add_pool")}
-            </button>
+            {!viewContext && (
+              <button
+                style={styles.poolSwitcherAddBtn}
+                onClick={() => {
+                  setShowSwitcher(false);
+                  onAddPool();
+                }}
+              >
+                <Plus size={16} /> {t("add_pool")}
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -8095,6 +8117,29 @@ function SecondaryUsersSection({ authUser, lang, linkedAccounts, viewContext, on
     }
   }
 
+  // v1.56.0 — Annule une invitation encore en attente (avant acceptation),
+  // distinct de handleRevoke qui ne concerne que les accès déjà actifs.
+  async function handleCancelInvitation(token, email) {
+    if (!authUser) return;
+    const ok = window.confirm(t("secondary_cancel_confirm", { email }));
+    if (!ok) return;
+    try {
+      const idToken = await authUser.getIdToken();
+      const res = await fetch(`${PROXY_BASE_URL}/cancel-invitation`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ token }),
+      });
+      if (!res.ok) {
+        alert(t("secondary_cancel_error"));
+        return;
+      }
+      refreshPendingInvitations();
+    } catch (e) {
+      alert(t("secondary_cancel_error"));
+    }
+  }
+
   async function handleSavePseudo() {
     if (!authUser || !pseudoInput.trim()) return;
     setPseudoBusy(true);
@@ -8216,14 +8261,24 @@ function SecondaryUsersSection({ authUser, lang, linkedAccounts, viewContext, on
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
           {pendingInvitations.map((inv) => (
-            <div key={inv.invitedEmail + inv.poolId} style={cardStyle}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "#0d2b4e" }}>{inv.invitedEmail}</div>
-              <div style={{ fontSize: 11.5, color: "#8a9aa8" }}>
-                {t("secondary_pool_label", { pool: inv.poolName })} ·{" "}
-                {inv.expired
-                  ? t("secondary_pending_expired")
-                  : t("secondary_pending_expires", { date: new Date(inv.expiresAt).toLocaleDateString(lang) })}
+            <div key={inv.token || (inv.invitedEmail + inv.poolId)} style={{ ...cardStyle, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#0d2b4e" }}>{inv.invitedEmail}</div>
+                <div style={{ fontSize: 11.5, color: "#8a9aa8" }}>
+                  {t("secondary_pool_label", { pool: inv.poolName })} ·{" "}
+                  {inv.expired
+                    ? t("secondary_pending_expired")
+                    : t("secondary_pending_expires", { date: new Date(inv.expiresAt).toLocaleDateString(lang) })}
+                </div>
               </div>
+              {inv.token && (
+                <button
+                  onClick={() => handleCancelInvitation(inv.token, inv.invitedEmail)}
+                  style={{ padding: "7px 12px", borderRadius: 8, border: "1px solid #e0a0a0", background: "#fff5f5", color: "#c0392b", fontSize: 12, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}
+                >
+                  {t("secondary_cancel_button")}
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -11961,7 +12016,7 @@ function AccountDataRequestScreen({ lang, authUser, onClose, onSubmit }) {
   );
 }
 
-function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, onDeleteAllMeasures: onDeleteAllMeasuresRaw, orphanedCount, onRepairOrphanedData, poolMeasureCount, onGenerateReport, onWantPremiumForReport, onWantPremium, isPremium, setIsPremium, aiEnabled, setAiEnabled, calibrationContribution, setCalibrationContribution, lang, setLang, authUser, onSignOut, onSignIn, onDeleteAccount, dataConsent, onRevokeDataConsent, cguAcceptedDate }) {
+function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, viewContext, onDeleteAllMeasures: onDeleteAllMeasuresRaw, orphanedCount, onRepairOrphanedData, poolMeasureCount, onGenerateReport, onWantPremiumForReport, onWantPremium, isPremium, setIsPremium, aiEnabled, setAiEnabled, calibrationContribution, setCalibrationContribution, lang, setLang, authUser, onSignOut, onSignIn, onDeleteAccount, dataConsent, onRevokeDataConsent, cguAcceptedDate }) {
   const [editingPool, setEditingPool] = useState(null);
   const [showLegalModal, setShowLegalModal] = useState(false);
   const t = useT(lang);
@@ -12125,9 +12180,11 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
 
       <div style={styles.sectionRow}>
         <span style={styles.sectionLabel}>{t("my_pools")}</span>
-        <button style={styles.smallAddBtn} onClick={onWantAddPool}>
-          <Plus size={16} />
-        </button>
+        {!viewContext && (
+          <button style={styles.smallAddBtn} onClick={onWantAddPool}>
+            <Plus size={16} />
+          </button>
+        )}
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 18 }}>
@@ -12151,15 +12208,19 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
               </div>
               {p.id === activePoolId && <CheckCircle2 size={16} color="#1a8fd1" />}
             </button>
-            <button
-              style={{ background: "none", border: "none", color: "#0a6ebd", fontSize: 12, fontWeight: 600, cursor: "pointer", padding: "0 8px", flexShrink: 0 }}
-              onClick={() => setEditingPool(p)}
-            >
-              <Settings2 size={14} />
-            </button>
-            <button style={styles.poolListDeleteBtn} onClick={() => onDeletePool(p.id)}>
-              <Trash2 size={14} />
-            </button>
+            {!viewContext && (
+              <button
+                style={{ background: "none", border: "none", color: "#0a6ebd", fontSize: 12, fontWeight: 600, cursor: "pointer", padding: "0 8px", flexShrink: 0 }}
+                onClick={() => setEditingPool(p)}
+              >
+                <Settings2 size={14} />
+              </button>
+            )}
+            {!viewContext && (
+              <button style={styles.poolListDeleteBtn} onClick={() => onDeletePool(p.id)}>
+                <Trash2 size={14} />
+              </button>
+            )}
           </div>
         ))}
       </div>
