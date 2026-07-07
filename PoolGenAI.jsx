@@ -9,8 +9,8 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.53.0";
-const CGU_VERSION = "1.2"; // v1.2 : clause 11 - amélioration collective des analyses photo (Lot B, calibration)
+const APP_VERSION = "1.54.0";
+const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 
 const TRANSLATIONS = {
   fr: {
@@ -96,18 +96,20 @@ const TRANSLATIONS = {
     lcen_contact_val: "support.poolgenai@gmail.com",
     lcen_cgu_title: "Conditions générales d'utilisation",
     lcen_ai_title: "Intelligence artificielle",
-    lcen_ai_val: "Lorsque vous utilisez l'analyse IA, vos données sont transmises directement à Anthropic ou OpenAI via votre clé API personnelle. L'éditeur ne stocke pas vos clés et n'a pas accès aux échanges. Consultez les CGU de votre fournisseur IA avant activation.",
+    lcen_ai_val: "Lorsque vous utilisez l'analyse IA, vos données transitent par l'infrastructure technique de l'éditeur (serveur intermédiaire), qui utilise une clé API souscrite par l'éditeur. Aucune conservation ni journalisation du contenu transmis sur ce serveur.",
     lcen_photos_title: "Photos",
     lcen_photos_val: "Ne soumettez que des photos de matériel de mesure ou d'eau du bassin. Sont exclus : personnes identifiables, éléments de localisation du domicile, données personnelles visibles.",
     lcen_gdpr: "Données personnelles",
     lcen_gdpr_val: "Conformément au RGPD et à la loi Informatique et Libertés, vous disposez d'un droit d'accès, de rectification, d'effacement et de portabilité de vos données. Pour exercer ces droits, contactez-nous à l'adresse ci-dessus. Vous pouvez également déposer une réclamation auprès de la CNIL : www.cnil.fr",
     lcen_calibration_title: "Amélioration collective des analyses",
     lcen_calibration_val: "Lorsqu'une mesure comporte à la fois une photo de photomètre et une photo de bandelette pour un même paramètre, PoolGenAI peut extraire une donnée de calibration anonyme (couleur mesurée, valeur de référence, type de bandelette identifié) et la partager avec l'ensemble des utilisateurs de l'application, dans le seul but d'améliorer la précision de l'interprétation des bandelettes pour tous. Ces données de calibration ne contiennent ni photo, ni identifiant de compte, ni aucune information permettant de remonter à l'utilisateur d'origine. L'utilisateur peut désactiver cette contribution à tout moment dans les réglages de l'application ; ce refus n'affecte pas l'utilisation normale de PoolGenAI.",
+    lcen_photocontrib_title: "Contribution de photos à la base commune de produits",
+    lcen_photocontrib_val: "Lorsqu'un utilisateur photographie un produit qui ne dispose pas encore de photo dans la base commune de produits partagée entre utilisateurs, cette photo peut être transmise et stockée pour illustrer la fiche produit correspondante, visible par l'ensemble des utilisateurs. Seule la photo du produit est concernée. Une fois contribuée, la photo ne peut pas être retirée individuellement — aucune information ne relie une photo à son contributeur.",
     photo_warning_title: "Attention avant de photographier",
     photo_warning_body: "Assurez-vous que la photo ne contient pas :\n• de personnes identifiables\n• d'éléments permettant de localiser votre domicile\n• de données personnelles visibles\n\nNous recommandons de désactiver la géolocalisation dans les paramètres de votre appareil photo.",
     photo_warning_confirm: "J'ai compris, continuer",
     ai_clause_title: "Analyse par intelligence artificielle",
-    ai_clause_body: "Lorsque vous activez l'analyse IA, vos données (mesures et photos) sont transmises directement à Anthropic ou OpenAI via votre clé API personnelle. PoolGenAI ne stocke pas votre clé et n'a pas accès aux échanges. Consultez les CGU de votre fournisseur d'IA avant utilisation.",
+    ai_clause_body: "Lorsque vous activez l'analyse IA, vos données (mesures et photos) transitent par l'infrastructure technique de PoolGenAI, qui utilise une clé API souscrite par l'éditeur — vous n'avez aucune clé à fournir. Aucune conservation ni journalisation du contenu transmis sur ce serveur intermédiaire.",
     cgu_update_title: "Conditions mises à jour",
     cgu_update_body: "Les conditions d'utilisation ont été mises à jour (v{version}). Merci de les relire et de les accepter pour continuer.",
     cgu_update_accept: "Lire et accepter",
@@ -671,18 +673,20 @@ const TRANSLATIONS = {
     lcen_contact_val: "support.poolgenai@gmail.com",
     lcen_cgu_title: "Terms of use",
     lcen_ai_title: "Artificial intelligence",
-    lcen_ai_val: "When using AI analysis, your data is transmitted directly to Anthropic or OpenAI via your personal API key. The publisher does not store your keys and has no access to exchanges. Consult your AI provider's terms before activating.",
+    lcen_ai_val: "When you use AI analysis, your data goes through the publisher's technical infrastructure (intermediary server), which uses an API key subscribed by the publisher. No retention or logging of transmitted content on this server.",
     lcen_photos_title: "Photos",
     lcen_photos_val: "Only submit photos of measuring equipment or pool water. Excluded: identifiable persons, home location elements, visible personal data.",
     lcen_gdpr: "Personal data",
     lcen_gdpr_val: "Under GDPR and applicable data protection law, you have the right to access, rectify, erase and port your data. To exercise these rights, contact us at the address above. You may also file a complaint with your national data protection authority.",
     lcen_calibration_title: "Collective improvement of photo analysis",
     lcen_calibration_val: "When a measurement includes both a photometer photo and a test strip photo for the same parameter, PoolGenAI may extract an anonymous calibration data point (measured colour, reference value, identified test strip type) and share it with all users of the application, solely to improve the accuracy of test strip interpretation for everyone. This calibration data contains no photo, no account identifier, and no information that could identify the original user. Users can disable this contribution at any time in the application settings; declining does not affect normal use of PoolGenAI.",
+    lcen_photocontrib_title: "Photo contribution to the shared product database",
+    lcen_photocontrib_val: "When a user photographs a product that does not yet have a photo in the shared product database, that photo may be transmitted and stored to illustrate the corresponding product entry, visible to all users. Only the product photo itself is concerned. Once contributed, a photo cannot be individually withdrawn — no information links a photo to its contributor.",
     photo_warning_title: "Warning before taking photos",
     photo_warning_body: "Make sure the photo does not contain:\n• identifiable persons\n• elements that could locate your home\n• visible personal data\n\nWe recommend disabling geotagging in your camera settings.",
     photo_warning_confirm: "I understand, continue",
     ai_clause_title: "AI analysis",
-    ai_clause_body: "When you enable AI analysis, your data (measurements and photos) are sent directly to Anthropic or OpenAI via your personal API key. PoolGenAI does not store your key and has no access to the exchanges. Please review your AI provider's terms before use.",
+    ai_clause_body: "When you enable AI analysis, your data (measurements and photos) goes through PoolGenAI's technical infrastructure, which uses an API key subscribed by the publisher — you never need to provide a key. No retention or logging of transmitted content on this intermediary server.",
     cgu_update_title: "Terms updated",
     cgu_update_body: "The terms of use have been updated (v{version}). Please read and accept them to continue.",
     cgu_update_accept: "Read and accept",
@@ -1236,18 +1240,20 @@ const TRANSLATIONS = {
     lcen_contact_val: "support.poolgenai@gmail.com",
     lcen_cgu_title: "Nutzungsbedingungen",
     lcen_ai_title: "Künstliche Intelligenz",
-    lcen_ai_val: "Bei der KI-Analyse werden Ihre Daten direkt über Ihren persönlichen API-Schlüssel an Anthropic oder OpenAI übertragen. Der Herausgeber speichert keine Schlüssel und hat keinen Zugang zu den Austauschen.",
+    lcen_ai_val: "Bei der KI-Analyse laufen Ihre Daten über die technische Infrastruktur des Herausgebers (Vermittlungsserver), der einen vom Herausgeber abonnierten API-Schlüssel verwendet. Keine Speicherung oder Protokollierung der übertragenen Inhalte auf diesem Server.",
     lcen_photos_title: "Fotos",
     lcen_photos_val: "Senden Sie nur Fotos von Messgeräten oder Poolwasser. Ausgeschlossen: identifizierbare Personen, Standortelemente, sichtbare persönliche Daten.",
     lcen_gdpr: "Personenbezogene Daten",
     lcen_gdpr_val: "Gemäß DSGVO haben Sie das Recht auf Zugang, Berichtigung, Löschung und Übertragbarkeit Ihrer Daten. Wenden Sie sich an uns unter der oben genannten Adresse oder reichen Sie eine Beschwerde bei Ihrer Datenschutzbehörde ein.",
     lcen_calibration_title: "Kollektive Verbesserung der Fotoanalyse",
     lcen_calibration_val: "Wenn eine Messung sowohl ein Photometerfoto als auch ein Teststreifenfoto für denselben Parameter enthält, kann PoolGenAI einen anonymen Kalibrierungsdatenpunkt (gemessene Farbe, Referenzwert, erkannter Teststreifentyp) extrahieren und ihn mit allen Nutzern der Anwendung teilen, einzig um die Genauigkeit der Teststreifen-Interpretation für alle zu verbessern. Diese Kalibrierungsdaten enthalten weder Fotos noch Kontokennungen noch Informationen, die Rückschlüsse auf den ursprünglichen Nutzer zulassen. Nutzer können diesen Beitrag jederzeit in den Anwendungseinstellungen deaktivieren; eine Ablehnung beeinträchtigt die normale Nutzung von PoolGenAI nicht.",
+    lcen_photocontrib_title: "Fotobeitrag zur gemeinsamen Produktdatenbank",
+    lcen_photocontrib_val: "Wenn ein Nutzer ein Produkt fotografiert, für das noch kein Foto in der gemeinsamen Produktdatenbank vorhanden ist, kann dieses Foto übermittelt und gespeichert werden, um den entsprechenden Produkteintrag zu illustrieren, sichtbar für alle Nutzer. Nur das Produktfoto selbst ist betroffen. Einmal beigetragen, kann ein Foto nicht einzeln zurückgezogen werden — keine Information verknüpft ein Foto mit seinem Beitragenden.",
     photo_warning_title: "Warnung vor dem Fotografieren",
     photo_warning_body: "Stellen Sie sicher, dass das Foto nicht enthält:\n• erkennbare Personen\n• Elemente, die Ihren Wohnort identifizieren könnten\n• sichtbare personenbezogene Daten\n\nWir empfehlen, die Geolokalisierung in den Kameraeinstellungen zu deaktivieren.",
     photo_warning_confirm: "Verstanden, weiter",
     ai_clause_title: "KI-Analyse",
-    ai_clause_body: "Wenn Sie die KI-Analyse aktivieren, werden Ihre Daten direkt über Ihren persönlichen API-Schlüssel an Anthropic oder OpenAI übermittelt. PoolGenAI speichert Ihren Schlüssel nicht.",
+    ai_clause_body: "Wenn Sie die KI-Analyse aktivieren, laufen Ihre Daten (Messwerte und Fotos) über die technische Infrastruktur von PoolGenAI, die einen vom Herausgeber abonnierten API-Schlüssel verwendet — Sie müssen keinen eigenen Schlüssel angeben. Keine Speicherung oder Protokollierung der übertragenen Inhalte auf diesem Vermittlungsserver.",
     cgu_update_title: "AGB aktualisiert",
     cgu_update_body: "Die Nutzungsbedingungen wurden aktualisiert (v{version}). Bitte lesen und akzeptieren Sie sie.",
     cgu_update_accept: "Lesen und akzeptieren",
@@ -1803,18 +1809,20 @@ const TRANSLATIONS = {
     lcen_contact_val: "support.poolgenai@gmail.com",
     lcen_cgu_title: "Termini di utilizzo",
     lcen_ai_title: "Intelligenza artificiale",
-    lcen_ai_val: "Quando si utilizza l'analisi IA, i dati vengono trasmessi direttamente ad Anthropic o OpenAI tramite la chiave API personale dell'utente. L'editore non memorizza le chiavi e non ha accesso agli scambi.",
+    lcen_ai_val: "Quando utilizzi l'analisi IA, i tuoi dati passano attraverso l'infrastruttura tecnica dell'editore (server intermediario), che utilizza una chiave API sottoscritta dall'editore. Nessuna conservazione né registrazione dei contenuti trasmessi su questo server.",
     lcen_photos_title: "Foto",
     lcen_photos_val: "Inviare solo foto di apparecchiature di misurazione o acqua della piscina. Esclusi: persone identificabili, elementi di localizzazione, dati personali visibili.",
     lcen_gdpr: "Dati personali",
     lcen_gdpr_val: "Ai sensi del RGPD, hai il diritto di accedere, rettificare, cancellare e trasferire i tuoi dati. Contattaci all'indirizzo sopra o presenta un reclamo all'autorità di protezione dei dati.",
     lcen_calibration_title: "Miglioramento collettivo delle analisi foto",
     lcen_calibration_val: "Quando una misurazione include sia una foto del fotometro sia una foto della striscia reattiva per lo stesso parametro, PoolGenAI può estrarre un dato di calibrazione anonimo (colore misurato, valore di riferimento, tipo di striscia identificato) e condividerlo con tutti gli utenti dell'applicazione, al solo scopo di migliorare la precisione dell'interpretazione delle strisce reattive per tutti. Questi dati di calibrazione non contengono foto, identificativi dell'account né alcuna informazione che permetta di risalire all'utente originario. L'utente può disattivare questo contributo in qualsiasi momento nelle impostazioni dell'applicazione; il rifiuto non influisce sull'uso normale di PoolGenAI.",
+    lcen_photocontrib_title: "Contributo di foto al database comune dei prodotti",
+    lcen_photocontrib_val: "Quando un utente fotografa un prodotto che non ha ancora una foto nel database comune dei prodotti condiviso tra utenti, questa foto può essere trasmessa e memorizzata per illustrare la scheda prodotto corrispondente, visibile a tutti gli utenti. È interessata solo la foto del prodotto stesso. Una volta contribuita, la foto non può essere ritirata individualmente — nessuna informazione collega una foto al suo contributore.",
     photo_warning_title: "Attenzione prima di fotografare",
     photo_warning_body: "Assicurati che la foto non contenga:\n• persone identificabili\n• elementi che possano localizzare la tua abitazione\n• dati personali visibili\n\nTi consigliamo di disattivare la geolocalizzazione nelle impostazioni della fotocamera.",
     photo_warning_confirm: "Ho capito, continua",
     ai_clause_title: "Analisi IA",
-    ai_clause_body: "Quando attivi l'analisi IA, i tuoi dati vengono trasmessi direttamente ad Anthropic o OpenAI tramite la tua chiave API personale. PoolGenAI non memorizza la tua chiave.",
+    ai_clause_body: "Quando attivi l'analisi IA, i tuoi dati (misure e foto) passano attraverso l'infrastruttura tecnica di PoolGenAI, che utilizza una chiave API sottoscritta dall'editore — non devi fornire alcuna chiave. Nessuna conservazione né registrazione dei contenuti trasmessi su questo server intermediario.",
     cgu_update_title: "Termini aggiornati",
     cgu_update_body: "I termini di utilizzo sono stati aggiornati (v{version}). Per favore leggili e accettali per continuare.",
     cgu_update_accept: "Leggi e accetta",
@@ -2367,18 +2375,20 @@ const TRANSLATIONS = {
     lcen_contact_val: "support.poolgenai@gmail.com",
     lcen_cgu_title: "Condiciones de uso",
     lcen_ai_title: "Inteligencia artificial",
-    lcen_ai_val: "Al usar el análisis de IA, sus datos se transmiten directamente a Anthropic u OpenAI a través de su clave API personal. El editor no almacena las claves y no tiene acceso a los intercambios.",
+    lcen_ai_val: "Al usar el análisis de IA, sus datos pasan por la infraestructura técnica del editor (servidor intermediario), que utiliza una clave API suscrita por el editor. Sin conservación ni registro del contenido transmitido en este servidor.",
     lcen_photos_title: "Fotos",
     lcen_photos_val: "Solo envíe fotos de equipos de medición o agua de la piscina. Excluidos: personas identificables, elementos de localización, datos personales visibles.",
     lcen_gdpr: "Datos personales",
     lcen_gdpr_val: "De acuerdo con el RGPD, tiene derecho a acceder, rectificar, suprimir y portar sus datos. Contáctenos en la dirección anterior o presente una reclamación ante la autoridad de protección de datos.",
     lcen_calibration_title: "Mejora colectiva de los análisis de fotos",
     lcen_calibration_val: "Cuando una medición incluye tanto una foto del fotómetro como una foto de la tira reactiva para el mismo parámetro, PoolGenAI puede extraer un dato de calibración anónimo (color medido, valor de referencia, tipo de tira identificado) y compartirlo con todos los usuarios de la aplicación, únicamente con el fin de mejorar la precisión de la interpretación de las tiras reactivas para todos. Estos datos de calibración no contienen fotos, identificadores de cuenta ni ninguna información que permita identificar al usuario de origen. El usuario puede desactivar esta contribución en cualquier momento en los ajustes de la aplicación; esta negativa no afecta al uso normal de PoolGenAI.",
+    lcen_photocontrib_title: "Contribución de fotos a la base común de productos",
+    lcen_photocontrib_val: "Cuando un usuario fotografía un producto que aún no tiene foto en la base común de productos compartida entre usuarios, esa foto puede transmitirse y almacenarse para ilustrar la ficha de producto correspondiente, visible para todos los usuarios. Solo se ve afectada la foto del producto en sí. Una vez contribuida, la foto no puede retirarse individualmente — ninguna información vincula una foto con su contribuyente.",
     photo_warning_title: "Atención antes de fotografiar",
     photo_warning_body: "Asegúrese de que la foto no contenga:\n• personas identificables\n• elementos que puedan localizar su domicilio\n• datos personales visibles\n\nRecomendamos desactivar la geolocalización en los ajustes de la cámara.",
     photo_warning_confirm: "Entendido, continuar",
     ai_clause_title: "Análisis IA",
-    ai_clause_body: "Al activar el análisis IA, sus datos se transmiten directamente a Anthropic u OpenAI a través de su clave API personal. PoolGenAI no almacena su clave.",
+    ai_clause_body: "Al activar el análisis IA, sus datos (medidas y fotos) pasan por la infraestructura técnica de PoolGenAI, que utiliza una clave API suscrita por el editor — usted no debe proporcionar ninguna clave. Sin conservación ni registro del contenido transmitido en este servidor intermediario.",
     cgu_update_title: "Términos actualizados",
     cgu_update_body: "Los términos de uso han sido actualizados (v{version}). Por favor léalos y acéptelos para continuar.",
     cgu_update_accept: "Leer y aceptar",
@@ -2931,18 +2941,20 @@ const TRANSLATIONS = {
     lcen_contact_val: "support.poolgenai@gmail.com",
     lcen_cgu_title: "Termos de uso",
     lcen_ai_title: "Inteligência artificial",
-    lcen_ai_val: "Ao usar a análise de IA, seus dados são transmitidos diretamente para Anthropic ou OpenAI através de sua chave API pessoal. O editor não armazena chaves e não tem acesso às trocas.",
+    lcen_ai_val: "Ao usar a análise de IA, os seus dados passam pela infraestrutura técnica do editor (servidor intermediário), que utiliza uma chave API subscrita pelo editor. Sem retenção nem registo do conteúdo transmitido neste servidor.",
     lcen_photos_title: "Fotos",
     lcen_photos_val: "Envie apenas fotos de equipamentos de medição ou água da piscina. Excluídos: pessoas identificáveis, elementos de localização, dados pessoais visíveis.",
     lcen_gdpr: "Dados pessoais",
     lcen_gdpr_val: "De acordo com o RGPD, você tem o direito de acessar, retificar, apagar e portar seus dados. Entre em contato conosco no endereço acima ou apresente uma reclamação à autoridade de proteção de dados.",
     lcen_calibration_title: "Melhoria coletiva das análises de fotos",
     lcen_calibration_val: "Quando uma medição inclui tanto uma foto do fotômetro quanto uma foto da tira de teste para o mesmo parâmetro, o PoolGenAI pode extrair um dado de calibração anônimo (cor medida, valor de referência, tipo de tira identificado) e compartilhá-lo com todos os usuários do aplicativo, com o único objetivo de melhorar a precisão da interpretação das tiras de teste para todos. Esses dados de calibração não contêm fotos, identificadores de conta nem qualquer informação que permita identificar o usuário de origem. O usuário pode desativar essa contribuição a qualquer momento nas configurações do aplicativo; essa recusa não afeta o uso normal do PoolGenAI.",
+    lcen_photocontrib_title: "Contribuição de fotos para a base comum de produtos",
+    lcen_photocontrib_val: "Quando um usuário fotografa um produto que ainda não tem foto na base comum de produtos partilhada entre usuários, essa foto pode ser transmitida e armazenada para ilustrar a ficha de produto correspondente, visível a todos os usuários. Apenas a foto do produto em si está envolvida. Uma vez contribuída, a foto não pode ser retirada individualmente — nenhuma informação liga uma foto ao seu contribuidor.",
     photo_warning_title: "Atenção antes de fotografar",
     photo_warning_body: "Certifique-se de que a foto não contenha:\n• pessoas identificáveis\n• elementos que possam localizar sua residência\n• dados pessoais visíveis\n\nRecomendamos desativar a geolocalização nas configurações da câmera.",
     photo_warning_confirm: "Entendi, continuar",
     ai_clause_title: "Análise IA",
-    ai_clause_body: "Ao ativar a análise IA, seus dados são transmitidos diretamente à Anthropic ou OpenAI via sua chave API pessoal. O PoolGenAI não armazena sua chave.",
+    ai_clause_body: "Ao ativar a análise IA, os seus dados (medições e fotos) passam pela infraestrutura técnica do PoolGenAI, que utiliza uma chave API subscrita pelo editor — não precisa de fornecer nenhuma chave. Sem retenção nem registo do conteúdo transmitido neste servidor intermediário.",
     cgu_update_title: "Termos atualizados",
     cgu_update_body: "Os termos de uso foram atualizados (v{version}). Por favor leia e aceite-os para continuar.",
     cgu_update_accept: "Ler e aceitar",
@@ -4146,8 +4158,15 @@ async function getFirebaseAuthHeader() {
   }
 }
 
-async function callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl, uid: callerUid, maxTokens = 1000, enableWebSearch = false }) {
-  // v1.49.0 — imageDataUrl accepte maintenant soit une seule dataUrl (string,
+// v1.53.0 — Simplifié : un seul fournisseur (Anthropic), un seul chemin (le
+// proxy Cloudflare fourni par l'app dans le cadre de l'abonnement). Plus de
+// choix utilisateur, plus de clé personnelle, plus de branche OpenAI — voir
+// nettoyage Réglages/CGU du 260706. Le paramètre "apiProvider" reste accepté
+// pour compatibilité de signature mais n'est plus utilisé : le fournisseur
+// pourra changer côté app plus tard, mais uniquement en éditant ce fichier,
+// jamais via un choix utilisateur.
+async function callAIWithImage({ apiKey, prompt, imageDataUrl, uid: callerUid, maxTokens = 1000, enableWebSearch = false }) {
+  // v1.49.0 — imageDataUrl accepte soit une seule dataUrl (string,
   // rétrocompatible), soit un tableau de dataUrls (plusieurs photos du même
   // produit : face, code-barre, notice). Toutes les images sont envoyées
   // dans le même message pour que Claude puisse croiser les infos entre elles.
@@ -4155,137 +4174,77 @@ async function callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl, uid:
   const parsedImages = dataUrls.map((u) => parseDataUrl(u)).filter(Boolean);
   if (parsedImages.length === 0) throw new Error("Image invalide");
 
-  if (apiProvider === "openai") {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4o",
-        max_tokens: maxTokens,
-        messages: [
-          {
-            role: "user",
-            content: [
-              { type: "text", text: prompt },
-              ...parsedImages.map((parsed) => ({ type: "image_url", image_url: { url: `data:${parsed.mediaType};base64,${parsed.data}` } })),
-            ],
-          },
-        ],
-      }),
-    });
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err?.error?.message || `Erreur OpenAI ${response.status}`);
-    }
-    const data = await response.json();
-    return data.choices?.[0]?.message?.content || "";
-  } else {
-    // Si apiKey commence par "http", c'est une URL de proxy
-    const endpoint = apiKey.startsWith("http")
-      ? apiKey.replace(/\/+$/, "") + "/v1/messages"
-      : "https://api.anthropic.com/v1/messages";
-    const authHeaders = apiKey.startsWith("http")
-      ? await getFirebaseAuthHeader()
-      : { "x-api-key": apiKey, "anthropic-dangerous-direct-browser-access": "true" };
-    const uidHeaders = (apiKey.startsWith("http") && callerUid) ? { "x-uid": callerUid } : {};
+  const endpoint = apiKey.replace(/\/+$/, "") + "/v1/messages";
+  const authHeaders = await getFirebaseAuthHeader();
+  const uidHeaders = callerUid ? { "x-uid": callerUid } : {};
 
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "anthropic-version": "2023-06-01",
-        ...authHeaders,
-        ...uidHeaders,
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: maxTokens,
-        messages: [
-          {
-            role: "user",
-            content: [
-              ...parsedImages.map((parsed) => ({ type: "image", source: { type: "base64", media_type: parsed.mediaType, data: parsed.data } })),
-              { type: "text", text: prompt },
-            ],
-          },
-        ],
-        // v1.47.0 — Recherche web côté serveur (Anthropic), utilisée
-        // uniquement pour l'analyse produit (voir analyzeProductPhoto). Claude
-        // décide lui-même s'il cherche ; la réponse finale arrive dans le même
-        // appel, pas d'aller-retour à gérer ici. Le Worker étant un pur
-        // relais, ce paramètre est transmis tel quel sans modification côté
-        // poolgenai-proxy.js.
-        ...(enableWebSearch ? { tools: [{ type: "web_search_20250305", name: "web_search" }] } : {}),
-      }),
-    });
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err?.error?.message || err?.error || `Erreur Anthropic ${response.status}`);
-    }
-    const data = await response.json();
-    // v1.47.0 — Avec la recherche web activée, la réponse peut contenir
-    // plusieurs blocs (server_tool_use, web_search_tool_result, text...). Le
-    // dernier bloc "text" est la réponse finale de Claude après recherche,
-    // contrairement au premier qui pourrait être un commentaire intermédiaire.
-    const textBlocks = (data.content || []).filter((b) => b.type === "text");
-    return textBlocks.length > 0 ? textBlocks[textBlocks.length - 1].text : "";
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "anthropic-version": "2023-06-01",
+      ...authHeaders,
+      ...uidHeaders,
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: maxTokens,
+      messages: [
+        {
+          role: "user",
+          content: [
+            ...parsedImages.map((parsed) => ({ type: "image", source: { type: "base64", media_type: parsed.mediaType, data: parsed.data } })),
+            { type: "text", text: prompt },
+          ],
+        },
+      ],
+      // v1.47.0 — Recherche web côté serveur (Anthropic), utilisée
+      // uniquement pour l'analyse produit (voir analyzeProductPhoto). Claude
+      // décide lui-même s'il cherche ; la réponse finale arrive dans le même
+      // appel, pas d'aller-retour à gérer ici. Le Worker étant un pur
+      // relais, ce paramètre est transmis tel quel sans modification côté
+      // poolgenai-proxy.js.
+      ...(enableWebSearch ? { tools: [{ type: "web_search_20250305", name: "web_search" }] } : {}),
+    }),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err?.error?.message || err?.error || `Erreur Anthropic ${response.status}`);
   }
+  const data = await response.json();
+  // v1.47.0 — Avec la recherche web activée, la réponse peut contenir
+  // plusieurs blocs (server_tool_use, web_search_tool_result, text...). Le
+  // dernier bloc "text" est la réponse finale de Claude après recherche,
+  // contrairement au premier qui pourrait être un commentaire intermédiaire.
+  const textBlocks = (data.content || []).filter((b) => b.type === "text");
+  return textBlocks.length > 0 ? textBlocks[textBlocks.length - 1].text : "";
 }
 
-async function callAIText({ apiKey, apiProvider, prompt, uid: callerUid }) {
-  if (apiProvider === "openai") {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4o",
-        max_tokens: 1200,
-        messages: [{ role: "user", content: prompt }],
-      }),
-    });
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err?.error?.message || `Erreur OpenAI ${response.status}`);
-    }
-    const data = await response.json();
-    return data.choices?.[0]?.message?.content || "";
-  } else {
-    const isProxy = apiKey.startsWith("http");
-    const endpoint = isProxy
-      ? apiKey.replace(/\/+$/, "").replace(/\/v1\/messages$/, "") + "/v1/messages"
-      : "https://api.anthropic.com/v1/messages";
-    const authHeaders = isProxy
-      ? await getFirebaseAuthHeader()
-      : { "x-api-key": apiKey, "anthropic-dangerous-direct-browser-access": "true" };
-    const uidHeaders = (isProxy && callerUid) ? { "x-uid": callerUid } : {};
+async function callAIText({ apiKey, prompt, uid: callerUid }) {
+  const endpoint = apiKey.replace(/\/+$/, "").replace(/\/v1\/messages$/, "") + "/v1/messages";
+  const authHeaders = await getFirebaseAuthHeader();
+  const uidHeaders = callerUid ? { "x-uid": callerUid } : {};
 
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "anthropic-version": "2023-06-01",
-        ...authHeaders,
-        ...uidHeaders,
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1200,
-        messages: [{ role: "user", content: prompt }],
-      }),
-    });
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err?.error?.message || err?.error || `Erreur Anthropic ${response.status}`);
-    }
-    const data = await response.json();
-    return (data.content || []).find((b) => b.type === "text")?.text || "";
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "anthropic-version": "2023-06-01",
+      ...authHeaders,
+      ...uidHeaders,
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1200,
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err?.error?.message || err?.error || `Erreur Anthropic ${response.status}`);
   }
+  const data = await response.json();
+  return (data.content || []).find((b) => b.type === "text")?.text || "";
 }
 
 async function analyzeStripPhoto({ apiKey, apiProvider, dataUrl, uid: callerUid }) {
@@ -4904,7 +4863,7 @@ function LoginScreen({ lang, onSkip, onConsentChange, detectedLang }) {
   if (mode === "disclaimer") {
     const tDisc = t; // t est déjà défini via useT au dessus
     const disclaimerText = {
-      fr: `CONDITIONS GÉNÉRALES D'UTILISATION — POOLGENAI CGU v1.1
+      fr: `CONDITIONS GÉNÉRALES D'UTILISATION — POOLGENAI CGU v1.3
 Éditeur : Arnaud Goumain — Particulier
 Contact : support.poolgenai@gmail.com
 Hébergement : GitHub Inc. / Microsoft Corporation, San Francisco, USA
@@ -4922,10 +4881,10 @@ L'utilisateur est seul responsable de la vérification des dosages recommandés,
 Les produits de traitement de l'eau peuvent être dangereux. L'utilisateur doit lire les fiches de données de sécurité (FDS) et respecter les précautions d'emploi, de stockage et d'élimination prescrites par les fabricants.
 
 5. INTELLIGENCE ARTIFICIELLE (ANALYSE PAR IA)
-Lorsque l'utilisateur active la fonctionnalité d'analyse par intelligence artificielle, les données saisies (valeurs de mesure et photos) sont transmises directement au fournisseur d'IA dont l'utilisateur a fourni la clé API personnelle (Anthropic ou OpenAI). Cette transmission s'effectue de façon directe entre l'appareil de l'utilisateur et le serveur du fournisseur, sous la seule responsabilité de l'utilisateur. L'éditeur de PoolGenAI ne stocke pas les clés API et n'a pas accès aux échanges entre l'utilisateur et le fournisseur d'IA. L'utilisateur est invité à consulter les conditions d'utilisation de son fournisseur d'IA avant d'activer cette fonctionnalité.
+Lorsque l'utilisateur active la fonctionnalité d'analyse par intelligence artificielle, les données saisies (valeurs de mesure et photos) sont transmises au fournisseur d'IA via l'infrastructure technique de l'éditeur (serveur intermédiaire), qui utilise une clé API souscrite par l'éditeur. L'éditeur prend en charge les coûts de traitement IA, ne conserve ni ne journalise le contenu transmis sur son serveur intermédiaire, et agit en tant que sous-traitant au sens du RGPD pour cette opération. L'éditeur se réserve le droit de faire évoluer le fournisseur d'IA utilisé sans que cela nécessite une modification des présentes CGU. L'utilisateur reste responsable du contenu des photos qu'il transmet.
 
 6. PHOTOS ET DONNÉES PERSONNELLES
-L'utilisateur s'engage à ne soumettre à l'analyse par intelligence artificielle que des photos du matériel de mesure (photomètre, bandelettes) ou de l'eau du bassin. Sont strictement exclus : toute image permettant d'identifier des personnes, de localiser un domicile (façade, plaque d'immatriculation, rue visible) ou contenant des données personnelles visibles. L'éditeur décline toute responsabilité quant au contenu des photos soumises par l'utilisateur.
+L'utilisateur s'engage à ne soumettre à l'analyse par intelligence artificielle que des photos du matériel de mesure (photomètre, bandelettes), de l'eau du bassin, ou de produits de traitement. Sont strictement exclus : toute image permettant d'identifier des personnes, de localiser un domicile (façade, plaque d'immatriculation, rue visible) ou contenant des données personnelles visibles. L'éditeur décline toute responsabilité quant au contenu des photos soumises par l'utilisateur.
 
 7. USAGE RÉSERVÉ
 L'utilisation de PoolGenAI est réservée aux traitements d'eau de bassins de type piscine ou spa. Tout autre usage est exclu de la présente licence.
@@ -4939,10 +4898,16 @@ Conformément au RGPD et à la loi Informatique et Libertés, l'utilisateur disp
 10. ABSENCE DE GARANTIE
 L'application est fournie "en l'état", sans garantie d'aucune sorte, expresse ou implicite, quant à son exactitude, sa fiabilité ou son adéquation à un usage particulier.
 
-En créant un compte, l'utilisateur reconnaît avoir pris connaissance de l'intégralité du présent document (CGU v1.1) et en accepte les termes.`,
-      en: `TERMS OF USE — POOLGENAI CGU v1.1
+11. AMÉLIORATION COLLECTIVE DES ANALYSES PHOTO (DONNÉES DE CALIBRATION)
+Lorsqu'une mesure comporte à la fois une photo de photomètre et une photo de bandelette pour un même paramètre, PoolGenAI peut extraire une donnée de calibration anonyme et la partager avec l'ensemble des utilisateurs, pour améliorer la précision de l'interprétation des bandelettes pour tous. Ces données ne contiennent ni photo, ni identifiant de compte. L'utilisateur peut désactiver cette contribution à tout moment dans les réglages.
+
+12. CONTRIBUTION DE PHOTOS À LA BASE COMMUNE DE PRODUITS
+Lorsqu'un utilisateur photographie un produit de traitement qui ne dispose pas encore de photo dans la base commune de produits partagée entre utilisateurs, cette photo peut être transmise et stockée pour illustrer la fiche produit correspondante, visible par l'ensemble des utilisateurs. Seule la photo du produit est concernée : l'utilisateur reste seul responsable de ne pas photographier d'éléments personnels ou identifiables. Une fois contribuée, la photo ne peut pas être retirée individuellement (aucune information ne relie une photo à son contributeur).
+
+En créant un compte, l'utilisateur reconnaît avoir pris connaissance de l'intégralité du présent document (CGU v1.3) et en accepte les termes.`,
+      en: `TERMS OF USE — POOLGENAI CGU v1.3
 Publisher: Arnaud Goumain — Private individual
-Contact: [see Settings > Legal notices]
+Contact: support.poolgenai@gmail.com
 Hosting: GitHub Inc. / Microsoft Corporation, San Francisco, USA
 
 1. NATURE OF THE APPLICATION
@@ -4958,10 +4923,10 @@ The user is solely responsible for verifying recommended dosages, following prod
 Water treatment products may be hazardous. The user must read safety data sheets (SDS) and follow the precautions prescribed by manufacturers.
 
 5. ARTIFICIAL INTELLIGENCE (AI ANALYSIS)
-When the user activates the artificial intelligence analysis feature, the data entered (measurement values and photos) are transmitted directly to the AI provider whose personal API key the user has provided (Anthropic or OpenAI). This transmission occurs directly between the user's device and the provider's server, under the user's sole responsibility. The PoolGenAI publisher does not store API keys and has no access to exchanges between the user and the AI provider. The user is invited to consult their AI provider's terms of use before activating this feature.
+When the user activates the AI analysis feature, the data entered (measurement values and photos) is sent to the AI provider through the publisher's technical infrastructure (intermediary server), which uses an API key subscribed by the publisher. The publisher covers the AI processing costs, does not retain or log content transmitted on its intermediary server, and acts as a data processor under GDPR for this operation. The publisher reserves the right to change the AI provider used without this requiring an amendment to these Terms. The user remains responsible for the content of the photos they submit.
 
 6. PHOTOS AND PERSONAL DATA
-The user undertakes to submit to AI analysis only photos of measuring equipment (photometer, test strips) or pool water. Strictly excluded are: any image that could identify persons, locate a residence (facade, license plate, visible street) or contain visible personal data. The publisher accepts no liability for the content of photos submitted by the user.
+The user undertakes to submit to AI analysis only photos of measuring equipment (photometer, test strips), pool water, or treatment products. Strictly excluded are: any image that could identify persons, locate a residence (facade, license plate, visible street) or contain visible personal data. The publisher accepts no liability for the content of photos submitted by the user.
 
 7. PERMITTED USE
 Use of PoolGenAI is reserved for water treatment of pool or spa type basins. Any other use is excluded from this licence.
@@ -4970,12 +4935,18 @@ Use of PoolGenAI is reserved for water treatment of pool or spa type basins. Any
 Professionals using PoolGenAI for services performed on behalf of third parties must inform the owners of treated pools of the terms of this document and obtain their express agreement before any collection of data concerning them.
 
 9. PERSONAL DATA AND GDPR
-In accordance with the GDPR and the French Data Protection Act, users have the right to access, rectify, erase and port their data. To exercise these rights or lodge a complaint, users may contact the publisher via Settings > Legal notices, or contact the CNIL: www.cnil.fr
+In accordance with the GDPR and the French Data Protection Act, users have the right to access, rectify, erase and port their data. To exercise these rights or lodge a complaint, users may contact the publisher at support.poolgenai@gmail.com, or contact the CNIL: www.cnil.fr
 
 10. NO WARRANTY
 The application is provided "as is" without warranty of any kind, express or implied, as to its accuracy, reliability or fitness for a particular purpose.
 
-By creating an account, the user acknowledges having read this document in full (Terms v1.1) and accepts its terms.`,
+11. COLLECTIVE IMPROVEMENT OF PHOTO ANALYSIS (CALIBRATION DATA)
+When a measurement includes both a photometer photo and a test strip photo for the same parameter, PoolGenAI may extract an anonymous calibration data point and share it with all users, to improve strip interpretation accuracy for everyone. This data contains no photo and no account identifier. The user can disable this contribution at any time in settings.
+
+12. PHOTO CONTRIBUTION TO THE SHARED PRODUCT DATABASE
+When a user photographs a treatment product that does not yet have a photo in the shared product database, that photo may be transmitted and stored to illustrate the corresponding product entry, visible to all users. Only the product photo itself is concerned: the user remains solely responsible for not photographing personal or identifiable elements. Once contributed, a photo cannot be individually withdrawn (no information links a photo to its contributor).
+
+By creating an account, the user acknowledges having read this document in full (Terms v1.3) and accepts its terms.`,
     };
     const text = disclaimerText[detectedLang || lang] || disclaimerText.en;
     return (
@@ -5743,10 +5714,9 @@ function PoolApp() {
       if (config.calibrationContribution !== undefined) {
         setCalibrationContribution((prev) => (prev === config.calibrationContribution ? prev : config.calibrationContribution));
       }
-      if (config.apiProvider) {
-        setApiProvider((prev) => (prev === config.apiProvider ? prev : config.apiProvider));
-        window.storage.set(STORAGE_KEYS.apiProvider, JSON.stringify(config.apiProvider)).catch(() => {});
-      }
+      // v1.53.0 — apiProvider n'est plus lu depuis Firestore : valeur fixe
+      // "anthropic" imposée au chargement (voir plus bas), jamais un réglage
+      // synchronisé entre appareils.
     });
 
     // v1.30.0 — Écoute temps réel de productPhotos. Alimente productPhotosRef
@@ -6003,8 +5973,15 @@ function PoolApp() {
         if (aie?.value === "true") setAiEnabled(true);
       } catch (e) {}
       try {
-        const aprov = await window.storage.get(STORAGE_KEYS.apiProvider);
-        if (aprov?.value) setApiProvider(JSON.parse(aprov.value));
+        // v1.53.0 — apiProvider n'est plus un choix utilisateur (voir
+        // nettoyage Réglages IA du 260706) : toujours "anthropic", ignore
+        // toute ancienne valeur "openai" stockée avant ce nettoyage — sinon
+        // enableWebSearch resterait désactivé à tort pour ces comptes
+        // (callAIWithImage ne branche plus du tout sur "openai" désormais,
+        // mais analyzeProductPhoto calcule encore enableWebSearch à partir
+        // de cette valeur).
+        setApiProvider("anthropic");
+        window.storage.set(STORAGE_KEYS.apiProvider, JSON.stringify("anthropic")).catch(() => {});
       } catch (e) {}
       setLoaded(true);
       // Envoie la version comme propriété utilisateur Analytics
@@ -6982,10 +6959,6 @@ function PoolApp() {
             onWantPremium={() => openPaywall()}
             isPremium={isPremium}
             setIsPremium={setIsPremium}
-            apiKey={apiKey}
-            setApiKey={setApiKey}
-            apiProvider={apiProvider}
-            setApiProvider={setApiProvider}
             aiEnabled={aiEnabled}
             setAiEnabled={setAiEnabled}
             calibrationContribution={calibrationContribution}
@@ -11147,8 +11120,7 @@ function AccountDataRequestScreen({ lang, authUser, onClose, onSubmit }) {
   );
 }
 
-function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, onDeleteAllMeasures: onDeleteAllMeasuresRaw, orphanedCount, onRepairOrphanedData, poolMeasureCount, onGenerateReport, onWantPremiumForReport, onWantPremium, isPremium, setIsPremium, apiKey, setApiKey, apiProvider, setApiProvider, aiEnabled, setAiEnabled, calibrationContribution, setCalibrationContribution, lang, setLang, authUser, onSignOut, onSignIn, onDeleteAccount, dataConsent, onRevokeDataConsent, cguAcceptedDate }) {
-  const [showAiConfig, setShowAiConfig] = useState(false);
+function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, onDeleteAllMeasures: onDeleteAllMeasuresRaw, orphanedCount, onRepairOrphanedData, poolMeasureCount, onGenerateReport, onWantPremiumForReport, onWantPremium, isPremium, setIsPremium, aiEnabled, setAiEnabled, calibrationContribution, setCalibrationContribution, lang, setLang, authUser, onSignOut, onSignIn, onDeleteAccount, dataConsent, onRevokeDataConsent, cguAcceptedDate }) {
   const [editingPool, setEditingPool] = useState(null);
   const [showLegalModal, setShowLegalModal] = useState(false);
   const t = useT(lang);
@@ -11157,7 +11129,6 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
   const treatmentTypes = getTreatmentTypes(lang);
   const filtrationTypes = getFiltrationTypes(lang);
   const activePool = pools.find((p) => p.id === activePoolId) || pools[0];
-  const [showApiKey, setShowApiKey] = useState(false);
   const [repairing, setRepairing] = useState(false);
 
   async function handleRepair() {
@@ -11302,7 +11273,6 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
               onWantPremium();
             } else {
               setIsPremium(false);
-              setApiKey("");
             }
           }}
         />
@@ -11407,90 +11377,13 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
         />
       </div>
 
-      {/* Bouton configurer — visible uniquement si IA activée (premium uniquement) */}
-      {isPremium && aiEnabled && (
-        <button
-          style={{ width: "100%", padding: "11px 0", borderRadius: 10, border: "1.5px solid #b0d8f0", background: "#eaf4fb", color: "#0a6ebd", fontWeight: 700, fontSize: 13, cursor: "pointer", marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-          onClick={() => setShowAiConfig(true)}
-        >
-          <Settings2 size={15} /> {t("ai_configure_btn")}
-          {apiKey ? <span style={{ fontSize: 11, color: "#1a8fd1", fontWeight: 400 }}>✓ {apiProvider === "openai" ? "OpenAI" : "Anthropic"}</span> : null}
-        </button>
-      )}
+      {/* v1.53.0 — Le bouton "Configurer" (choix fournisseur + clé API) a été
+          retiré : l'IA est fournie par l'app dans le cadre de l'abonnement,
+          aucune décision à prendre côté utilisateur. Le fournisseur (pour
+          l'instant Anthropic) ne se change que côté code, jamais via un
+          réglage visible. Voir nettoyage CGU/clause 5 du 260706. */}
 
-      {/* Page de configuration IA — overlay plein écran */}
-      {showAiConfig && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 500, background: "#f0f6fb", overflowY: "auto" }}>
-          <div style={{ maxWidth: 480, margin: "0 auto", padding: "0 16px 32px" }}>
-            {/* Header */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "16px 0 20px", borderBottom: "1px solid #d0e4f5", marginBottom: 20 }}>
-              <button
-                onClick={() => setShowAiConfig(false)}
-                style={{ background: "none", border: "none", cursor: "pointer", color: "#0a6ebd", display: "flex", alignItems: "center", gap: 6, fontWeight: 700, fontSize: 13, padding: 0 }}
-              >
-                ← {t("ai_config_back")}
-              </button>
-              <span style={{ flex: 1, textAlign: "center", fontSize: 15, fontWeight: 800, color: "#0d2b4e" }}>{t("ai_config_title")}</span>
-              <div style={{ width: 80 }} />
-            </div>
 
-            {/* Provider */}
-            <label style={styles.fieldLabel}>{t("provider_label")}</label>
-            <div style={styles.segmentedControl}>
-              {[
-                { value: "anthropic", label: "Anthropic (Claude)" },
-                { value: "openai", label: "OpenAI (ChatGPT)" },
-              ].map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => setApiProvider(opt.value)}
-                  style={{ ...styles.segmentedBtn, ...(apiProvider === opt.value ? styles.segmentedBtnActive : {}) }}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Clé API */}
-            <label style={styles.fieldLabel}>
-              {apiProvider === "openai" ? t("api_key_openai") : t("api_key_label")}
-            </label>
-            <div style={styles.apiKeyRow}>
-              <input
-                type={showApiKey ? "text" : "password"}
-                style={{ ...styles.input, flex: 1 }}
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder={t("api_key_placeholder")}
-                autoComplete="off"
-                autoCorrect="off"
-                spellCheck={false}
-              />
-              <button
-                type="button"
-                onClick={() => setShowApiKey((v) => !v)}
-                style={styles.eyeBtn}
-                title={showApiKey ? t("hide") : t("show")}
-              >
-                {showApiKey
-                  ? <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                  : <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                }
-              </button>
-            </div>
-            <p style={styles.helpTextSmall}>{t("api_key_desc")}</p>
-
-            {/* Bouton sauvegarder */}
-            <button
-              style={{ ...styles.primaryBtn, marginTop: 16 }}
-              onClick={() => setShowAiConfig(false)}
-            >
-              {t("save")}
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Mentions légales */}
       <div style={styles.sectionRow}>
@@ -11569,6 +11462,7 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
                   { title: t("lcen_photos_title"), body: t("lcen_photos_val") },
                   { title: t("lcen_gdpr"), body: t("lcen_gdpr_val") },
                   { title: t("lcen_calibration_title"), body: t("lcen_calibration_val") },
+                  { title: t("lcen_photocontrib_title"), body: t("lcen_photocontrib_val") },
                 ].map((s, i) => (
                   <div key={i} style={{ marginBottom: 10 }}>
                     <div style={{ fontWeight: 700, color: "#0d2b4e", marginBottom: 2 }}>{i+1}. {s.title}</div>
