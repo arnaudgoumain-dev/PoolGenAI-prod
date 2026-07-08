@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.59.0";
+const APP_VERSION = "1.59.1";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 
 const TRANSLATIONS = {
@@ -5776,7 +5776,7 @@ function PoolApp() {
       try {
         const cfg = await FB.getConfig(l.primaryUid);
         const pool = (cfg?.pools || []).find((p) => p.id === l.poolId);
-        return { ...l, poolName: pool?.name || "", pseudo: cfg?.pseudo || l.primaryEmail };
+        return { ...l, poolName: pool?.name || "", poolPhoto: pool?.photo || null, pseudo: cfg?.pseudo || l.primaryEmail };
       } catch (e) {
         return { ...l, poolName: "", pseudo: l.primaryEmail };
       }
@@ -6719,7 +6719,7 @@ function PoolApp() {
       id: l.poolId,
       name: t("secondary_invited_label", { pool: l.poolName || l.pseudo }),
       location: "",
-      photo: null,
+      photo: l.poolPhoto || null,
       primaryUid: l.primaryUid,
       poolId: l.poolId,
       poolName: l.poolName,
@@ -7743,6 +7743,32 @@ function PoolApp() {
               myPseudo={myPseudo}
             />
           )}
+          <DangerZoneSection
+            lang={lang}
+            activePoolName={pools.find((p) => p.id === activePoolId)?.name}
+            poolMeasureCount={poolMeasures.length}
+            onDeleteAllMeasures={deleteAllMeasuresForActivePool}
+            authUser={authUser}
+            onDeleteAccount={async () => {
+              const isGoogle = authUser?.providerData?.some(p => p.providerId === "google.com");
+              if (isGoogle) {
+                try {
+                  try {
+                    await FB.reauthGoogle();
+                  } catch (reauthErr) {
+                    if (reauthErr.code !== "auth/cancelled-popup-request") throw reauthErr;
+                    return;
+                  }
+                  await performDeleteAccount();
+                } catch (e) {
+                  alert(e.message);
+                }
+                return;
+              }
+              setDeleteReauthError(null);
+              setShowDeleteReauth(true);
+            }}
+          />
           </>
         )}
       </main>
@@ -8147,13 +8173,14 @@ function Header({ poolName, location, poolPhoto, isPremium, entries, activeEntry
                     setShowSwitcher(false);
                   }}
                 >
-                  {entry.photo ? (
-                    <img src={entry.photo} alt="" style={styles.poolSwitcherThumb} />
-                  ) : (
-                    <Droplets size={16} color={active ? "#0a6ebd" : "#6a7d90"} />
-                  )}
+                  <Droplets size={16} color={active ? "#0a6ebd" : "#6a7d90"} />
                   <div style={{ flex: 1, textAlign: "left" }}>
-                    <div style={{ fontWeight: 700, fontSize: 13.5, color: "#0d2b4e" }}>{entry.name}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontWeight: 700, fontSize: 13.5, color: "#0d2b4e" }}>{entry.name}</span>
+                      {entry.photo && (
+                        <img src={entry.photo} alt="" style={styles.poolSwitcherThumbInline} />
+                      )}
+                    </div>
                     <div style={{ fontSize: 11.5, color: "#6a7d90" }}>
                       {entry.kind === "invited" ? entry.pseudo : entry.location}
                     </div>
@@ -12250,13 +12277,8 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
     }
   }
 
-  function onDeleteAllMeasures() {
-    if (!poolMeasureCount) return;
-    const ok = window.confirm(
-      `${t("delete_measures")} "${activePool?.name}" ?`
-    );
-    if (ok) onDeleteAllMeasuresRaw();
-  }
+  // v1.59.1 — La zone sensible (suppression mesures/compte) a été déplacée
+  // dans DangerZoneSection, rendue en bas de page après SecondaryUsersSection.
 
   return (
     <div>
@@ -12529,28 +12551,8 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
         </div>
       )}
 
-      <div style={styles.sectionRow}>
-        <span style={styles.sectionLabel}>{t("sensitive_zone")}</span>
-      </div>
-      <button style={styles.dangerLinkBtn} onClick={onDeleteAllMeasures}>
-        <Trash2 size={14} /> {t("delete_measures")}
-      </button>
-
-      {/* Suppression de compte — déplacée ici (v1.29.4), loin de "Se déconnecter"
-          dans le bloc Mon compte, pour limiter le risque de clic accidentel. */}
-      {authUser && (
-        <button
-          style={{ ...styles.dangerLinkBtn, marginTop: 8 }}
-          onClick={() => {
-            if (window.confirm(t("delete_account_confirm"))) {
-              onDeleteAccount();
-            }
-          }}
-        >
-          <Trash2 size={14} /> {t("delete_account")}
-        </button>
-      )}
-
+      {/* v1.59.1 — Zone sensible (suppression mesures/compte) déplacée dans
+          DangerZoneSection, rendue en bas de page après SecondaryUsersSection. */}
 
       {showLegalModal && (
         <div style={{ position: "fixed", inset: 0, zIndex: 500, background: "rgba(10,30,60,0.55)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
@@ -12596,6 +12598,43 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
           lang={lang}
           existingPool={editingPool}
         />
+      )}
+    </div>
+  );
+}
+
+// v1.59.1 — Zone sensible (suppression mesures/compte) extraite de SettingsView
+// pour être rendue après SecondaryUsersSection : demande explicite de la
+// positionner tout en bas de la page Réglages (loin des actions courantes).
+function DangerZoneSection({ lang, activePoolName, poolMeasureCount, onDeleteAllMeasures, authUser, onDeleteAccount }) {
+  const t = useT(lang);
+
+  function handleDeleteAllMeasures() {
+    if (!poolMeasureCount) return;
+    const ok = window.confirm(`${t("delete_measures")} "${activePoolName}" ?`);
+    if (ok) onDeleteAllMeasures();
+  }
+
+  return (
+    <div style={{ marginTop: 24 }}>
+      <div style={styles.sectionRow}>
+        <span style={styles.sectionLabel}>{t("sensitive_zone")}</span>
+      </div>
+      <button style={styles.dangerLinkBtn} onClick={handleDeleteAllMeasures}>
+        <Trash2 size={14} /> {t("delete_measures")}
+      </button>
+
+      {authUser && (
+        <button
+          style={{ ...styles.dangerLinkBtn, marginTop: 8 }}
+          onClick={() => {
+            if (window.confirm(t("delete_account_confirm"))) {
+              onDeleteAccount();
+            }
+          }}
+        >
+          <Trash2 size={14} /> {t("delete_account")}
+        </button>
       )}
     </div>
   );
@@ -14170,6 +14209,13 @@ const styles = {
     width: 32,
     height: 32,
     borderRadius: 8,
+    objectFit: "cover",
+    flexShrink: 0,
+  },
+  poolSwitcherThumbInline: {
+    width: 20,
+    height: 20,
+    borderRadius: 6,
     objectFit: "cover",
     flexShrink: 0,
   },
