@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.58.0";
+const APP_VERSION = "1.59.0";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 
 const TRANSLATIONS = {
@@ -3891,6 +3891,58 @@ const DEFAULT_PRODUCTS = [
     noteKey: "note_galets",
     note: "Augmente le CYA à chaque utilisation. À éviter si CYA déjà > 50 mg/L.",
     containerAmount: 1000,
+    containerUnit: "kg",
+    stockPercent: 100,
+    isDefault: true,
+  },
+  // v1.58.0 — Produit standard manquant pour l'action "brome" : sans lui,
+  // findProduct("brome") ne renvoyait jamais de dose calculable (carte
+  // affichait seulement "aucun produit configuré", jamais de quantité).
+  // Référence : galets BCDMH (bromochloro-diméthyl-hydantoïne), ~33% de
+  // brome actif en masse (MM ≈ 241 g/mol, 1 atome de Br ≈ 80 g/mol). Un
+  // galet de 20 g ≈ 6,6 g de brome actif. Dose calibrée à partir d'un cas
+  // vérifié (12 galets de 20 g, soit 240 g de produit, pour amener 40 m³
+  // de 0 à 2 mg/L) → 30 g de produit / 10 m³ / 1 mg/L. Valeur pour une
+  // remise à niveau ponctuelle, pas pour l'amorçage initial d'un
+  // brominateur (qui suit un protocole différent, non couvert ici).
+  {
+    id: "brome-bcdmh",
+    name: "Brome BCDMH (galets ou granulés)",
+    nameKey: "reco_fallback_brome",
+    action: "brome",
+    doseAmount: 30,
+    doseUnit: "g",
+    effectAmount: 1,
+    effectPer: 10,
+    waitHours: 6,
+    noteKey: "reco_note_brome",
+    note: "Verser loin des arrivées d'eau, filtration en marche.",
+    containerAmount: 1,
+    containerUnit: "kg",
+    stockPercent: 100,
+    isDefault: true,
+  },
+  // v1.58.0 — Idem pour "o2" : référence monopersulfate de potassium (MPS)
+  // en granulés, forme solide la plus courante pour un ajout direct (le
+  // peroxyde d'hydrogène liquide se dose en volume, pas en masse, et
+  // suit un ratio différent). Dose calibrée sur plusieurs sources
+  // convergentes (traitement choc usuel : 15 à 20 g/m³ pour remonter
+  // vers le haut de la plage cible 5-10 mg/L) → 200 g / 10 m³ / 10 mg/L,
+  // soit 20 g/m³ pour 10 mg/L. Cohérent avec le format des autres
+  // produits (cf. tac-plus, calcium-plus).
+  {
+    id: "o2-mps",
+    name: "Oxygène actif (monopersulfate de potassium, granulés)",
+    nameKey: "reco_fallback_o2",
+    action: "o2",
+    doseAmount: 200,
+    doseUnit: "g",
+    effectAmount: 10,
+    effectPer: 10,
+    waitHours: 4,
+    noteKey: "reco_note_o2",
+    note: "Ne pas mélanger avec le chlore. Filtration en marche pendant 4h.",
+    containerAmount: 1,
     containerUnit: "kg",
     stockPercent: 100,
     isDefault: true,
@@ -9023,25 +9075,25 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
   if (has("brome") && !Number.isNaN(bromeVal) && targetsLower.brome) {
     const brT = targetsLower.brome;
     if (bromeVal < brT.min) {
-      // v1.58.0 — Pas d'entrée "brome" dans DEFAULT_PRODUCTS (pas de valeurs
-      // de référence dose/effet validées) : contrairement aux autres actions,
-      // aucun repli de dose n'est inventé ici tant que ces valeurs ne sont
-      // pas fournies. À corriger dès que la fiche de référence existe.
+      // v1.58.0 — Repli de dose désormais possible : DEFAULT_PRODUCTS contient
+      // une fiche de référence "brome" (voir commentaire à sa définition).
       const prod = findProduct("brome");
+      const dp = defaultProd("brome");
+      const doseSrc = prod || dp;
       const diff = ((brT.min + brT.max) / 2) - bromeVal;
-      const computedDose = prod ? Math.round(prod.doseAmount * (volume / prod.effectPer) * (diff / prod.effectAmount)) : null;
+      const computedDose = doseSrc ? Math.round(doseSrc.doseAmount * (volume / doseSrc.effectPer) * (diff / doseSrc.effectAmount)) : null;
       steps.push({
         action: "brome",
         title: _("reco_brome_low", { val: bromeVal }),
         productName: prodName(prod, "reco_fallback_brome"),
         productAvailable: !!prod,
         productPhoto: prod?.photo || null,
-        doseText: prod
-          ? `${_("reco_dose_prefix")} ${formatDose(computedDose, prod.doseUnit)} ${_("reco_target")} ${(brT.min + brT.max) / 2} mg/L`
+        doseText: doseSrc
+          ? `${_("reco_dose_prefix")} ${formatDose(computedDose, doseSrc.doseUnit)} ${_("reco_target")} ${(brT.min + brT.max) / 2} mg/L`
           : null,
         missingTip: !prod ? _("missing_product_tip", { action: "brome" }) : null,
         computedDoseAmount: computedDose,
-        doseUnit: prod?.doseUnit || null,
+        doseUnit: doseSrc?.doseUnit || null,
         note: _("reco_note_brome"),
         waitHours: prod?.waitHours ?? 6,
       });
@@ -9053,23 +9105,25 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
   if (has("o2") && !Number.isNaN(o2Val) && targets.o2) {
     const o2T = targets.o2;
     if (o2Val < o2T.min) {
-      // v1.58.0 — Idem brome : pas d'entrée "o2" dans DEFAULT_PRODUCTS, pas de
-      // repli inventé faute de valeurs de référence validées.
+      // v1.58.0 — Repli de dose désormais possible : DEFAULT_PRODUCTS contient
+      // une fiche de référence "o2" (voir commentaire à sa définition).
       const prod = findProduct("o2");
+      const dp = defaultProd("o2");
+      const doseSrc = prod || dp;
       const diff = ((o2T.min + o2T.max) / 2) - o2Val;
-      const computedDose = prod ? Math.round(prod.doseAmount * (volume / prod.effectPer) * (diff / prod.effectAmount)) : null;
+      const computedDose = doseSrc ? Math.round(doseSrc.doseAmount * (volume / doseSrc.effectPer) * (diff / doseSrc.effectAmount)) : null;
       steps.push({
         action: "o2",
         title: _("reco_o2_low", { val: o2Val }),
         productName: prodName(prod, "reco_fallback_o2"),
         productAvailable: !!prod,
         productPhoto: prod?.photo || null,
-        doseText: prod
-          ? `${_("reco_dose_prefix")} ${formatDose(computedDose, prod.doseUnit)}`
+        doseText: doseSrc
+          ? `${_("reco_dose_prefix")} ${formatDose(computedDose, doseSrc.doseUnit)}`
           : null,
         missingTip: !prod ? _("missing_product_tip", { action: "o2" }) : null,
         computedDoseAmount: computedDose,
-        doseUnit: prod?.doseUnit || null,
+        doseUnit: doseSrc?.doseUnit || null,
         note: _("reco_note_o2"),
         waitHours: prod?.waitHours ?? 4,
       });
