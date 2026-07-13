@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.59.3";
+const APP_VERSION = "1.88.0";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 
 const TRANSLATIONS = {
@@ -117,6 +117,10 @@ const TRANSLATIONS = {
     cgu_accepted_on: "Acceptées le",
     cgu_updated_title: "Mise à jour des conditions",
     cgu_updated_body: "Les conditions d'utilisation ont été mises à jour. Merci de les relire et de les accepter pour continuer.",
+    cgu_required_title: "Conditions d'utilisation",
+    cgu_required_body: "Merci de valider nos conditions d'utilisation pour continuer.",
+    cgu_read_full_text: "Lire le texte complet",
+    cgu_hide_full_text: "Masquer le texte",
     applied_col: "Appliqué",
     disclaimer_title: "Mentions légales & Conditions d'utilisation",
     disclaimer_cgu: "J'accepte les conditions générales d'utilisation et la politique de confidentialité",
@@ -149,6 +153,8 @@ const TRANSLATIONS = {
     update_required_title: "Nouvelle version disponible",
     update_required_desc: "Une nouvelle version de PoolGenAI a été déployée. Mets à jour l'application pour continuer.",
     update_required_btn: "Mettre à jour maintenant",
+    update_in_progress_title: "Mise à jour en cours",
+    update_in_progress_desc: "Ça ne prend que quelques instants, l'application va se recharger automatiquement.",
     diag_off_topic: "Cette question ne concerne pas le traitement de l'eau de bassin. Je ne peux répondre qu'aux questions liées à la chimie de l'eau, aux produits de traitement et aux équipements de piscine.",
             diag_error: "Analyse impossible",
     import_pdf_btn: "Importer un rapport PDF",
@@ -221,6 +227,16 @@ const TRANSLATIONS = {
     // Products
     my_products: "MES PRODUITS",
     products_formula: "Le dosage est calculé selon : {quantité produit} pour faire varier le paramètre de {effet} sur {volume de référence} m³. Ces produits sont propres à ce bassin.",
+    products_to_buy: "Mes produits à acheter",
+    products_to_buy_empty: "Rien à acheter pour le moment — tous les stocks sont suffisants.",
+    generic_products_section: "Produits recommandés manquants",
+    generic_products_hint: "D'après le type de traitement de ce bassin, ces produits ne sont pas encore dans ta liste.",
+    add_generic_product: "Ajouter",
+    generic_product_added: "Ajouté à tes produits",
+    reason_low_stock: "Stock bas",
+    reason_insufficient_plan: "Insuffisant pour le plan en cours",
+    apply_product_manual: "Appliquer un produit",
+    reason_manual_maintenance: "Entretien manuel",
     products_locked: "Fonctionnalité réservée à la version illimitée",
     stock_not_managed: "La gestion du stock n'est pas activée pour ce bassin. Active-la dans Réglages pour gérer les quantités et voir les consommations.",
     activate_in_settings: "Activer dans Réglages →",
@@ -272,6 +288,8 @@ const TRANSLATIONS = {
     wizard_in: "Dans",
     wizard_at: "à",
     wizard_scheduled: "Prévu",
+    wizard_earliest: "Au plus tôt",
+    chlore_timing_tip: "Pour une meilleure efficacité, applique de préférence le soir, après la dernière baignade et au coucher du soleil.",
     wizard_done: "C'est fait",
     wizard_skip: "Passer cette étape",
     wizard_anticipate: "Appliquer maintenant",
@@ -289,6 +307,7 @@ const TRANSLATIONS = {
     wizard_partial: "Plan en cours",
     countdown_done: "C'est l'heure !",
     treatment_at: "Traitement appliqué à",
+    edit_treatment_section_title: "Traitement appliqué",
     treatment_skipped: "Étape passée",
     // Settings
     settings_title: "Réglages",
@@ -314,7 +333,7 @@ const TRANSLATIONS = {
     premium_section: "VERSION",
     premium_label: "Version illimitée",
     premium_test: "Interrupteur de test — pas de vrai paiement ici",
-    premium_desc: "En version gratuite : 1 mesure par jour (tous bassins confondus), plusieurs bassins avec photo d'identification. En illimité : mesures sans limite, photos sur mesures et produits.",
+    premium_desc: "En version gratuite : 1 bassin (+ 2 bassins invités), 1 mesure par jour. En illimité : bassins et invitations sans limite, mesures sans limite, photos sur mesures et produits.",
     delete_measures: "Supprimer toutes les mesures de ce bassin",
     sensitive_zone: "ZONE SENSIBLE",
     add_pool: "Ajouter un bassin",
@@ -469,6 +488,22 @@ const TRANSLATIONS = {
     prod_name_ph_plus: "pH plus",
     prod_name_chlore_choc: "Chlore choc non stabilisé (type Chloryte)",
     prod_name_galets: "Galets chlore stabilisé 5-en-1 (type Chlorilong)",
+    packaging_type: "Conditionnement",
+    packaging_vrac: "Vrac / granulés",
+    packaging_galets: "Galets / sticks",
+    unit_weight_label: "Poids d'une unité (g)",
+    maintenance_ratio_label: "Ratio d'entretien fabricant",
+    maintenance_units_label: "Nb unités",
+    maintenance_volume_label: "Pour m³",
+    maintenance_days_label: "Tous les X jours",
+    unit_galets: "galets",
+    unit_units: "unités",
+    quantity_unit_mode_kg: "kg",
+    quantity_unit_mode_units: "unités",
+    maintenance_card_title: "Entretien continu",
+    maintenance_card_text: "{units} galet(s) / {volume} m³, tous les {days} jours",
+    no_stock_category_hint: "Aucun produit en stock dans cette catégorie — saisie libre",
+    no_stock_generic_hint: "Aucun produit en stock dans cette catégorie — produit générique proposé",
     prod_name_tac_plus: "Produit TAC+ (bicarbonate de sodium)",
     prod_name_calcium: "Chlorure de calcium (dureté +)",
     prod_name_anti_phos: "Anti-phosphates (PHOSfree type)",
@@ -501,6 +536,7 @@ const TRANSLATIONS = {
     reco_water_renewal: "Renouvellement d'eau partiel",
     reco_water_renewal_text: "Renouveler ≈ {pct} % du volume pour revenir vers 40 mg/L",
     reco_cl_excess_text: "Laisser le chlore se dégrader naturellement au soleil, ne pas se baigner en attendant.",
+    reco_recheck_later: "Recontrôle recommandé dans quelques heures",
     reco_cl_shock_text: "ce soir (choc renforcé)",
     reco_note_tac: "Un TAC bas rend le pH instable.",
     reco_note_tac_minus: "Même acide que le pH-, mais effet à calibrer séparément sur le TAC. Corriger avant le pH, par petites doses.",
@@ -517,6 +553,8 @@ const TRANSLATIONS = {
     reco_note_combined: "Chlore combiné = chloramines, signe d'une désinfection insuffisante. Verser le soir, filtration en continu.",
     reco_note_sel: "Utiliser du sel spécial piscine (NaCl pur ≥ 99%). Dissoudre avant l'ajout ou verser directement près du skimmer, filtration en marche 24h.",
     reco_note_o2: "Ne pas mélanger avec le chlore. Filtration en marche pendant 4h.",
+    prod_name_o2_liquide: "Oxygène actif liquide (peroxyde d'hydrogène)",
+    note_o2_liquide: "Ne pas mélanger avec le chlore. Verser devant les buses de refoulement, filtration en marche.",
     reco_note_brome: "Verser loin des arrivées d'eau, filtration en marche.",
     reco_note_cya: "Aucun produit ne fait baisser le CYA chimiquement, seule la dilution fonctionne. Éviter le chlore stabilisé tant que le CYA est haut.",
     reco_cya_block_shock: "Stabilisant trop élevé pour un choc efficace ({val} mg/L)",
@@ -537,8 +575,34 @@ const TRANSLATIONS = {
 
     paywall_perk5: "Historique illimité + rapport PDF",
     paywall_perk6: "Gestion du stock de produits",
-    paywall_perk7: "Multi-bassins",
+    paywall_perk7: "Bassins et invitations sans limite",
     paywall_test_note: "Ceci est une version de test. Aucun paiement réel n'est effectué.",
+    premium_reveal_title: "Premium activé",
+    premium_reveal_sub: "Bassins, invitations et mesures sans limite",
+    premium_downgrade_title: "Retour à la version gratuite",
+    premium_downgrade_sub: "Les fonctionnalités illimitées sont désormais désactivées",
+    premium_downgrade_confirm_title: "Désactiver la version illimitée ?",
+    premium_downgrade_confirm_desc: "Tu perdras l'accès à :",
+    premium_downgrade_confirm_btn: "Désactiver la version illimitée",
+    premium_downgrade_cancel_btn: "Annuler et continuer Premium",
+    onboarding_step1_title: "Bienvenue sur PoolGenAI",
+    onboarding_step1_text: "Suis la chimie de ta piscine facilement : mesures, dosages, plan de traitement personnalisé.",
+    onboarding_step2_title: "Deux façons de mesurer",
+    onboarding_step2_text: "Photo de ton dispositif de mesure (bandelette ou photomètre) : l'app analyse et remplit les champs automatiquement.\n\nOu saisie manuelle des valeurs, à tout moment.",
+    onboarding_step3_title: "Des résultats clairs",
+    onboarding_step3_text: "Chaque paramètre est comparé à sa cible. L'app te propose alors les doses à appliquer.",
+    onboarding_step4_title: "Prêt à commencer",
+    onboarding_step4_text: "Ajoute ta première mesure quand tu veux.\n\nBassins illimités, rapport PDF et plus : découvre Premium plus tard dans Réglages.",
+    onboarding_step3_legend_bad: "Trop haut ou trop bas",
+    onboarding_next: "Suivant",
+    onboarding_skip: "Passer",
+    onboarding_start: "C'est parti",
+    help_section: "Aide",
+    settings_replay_onboarding: "Revoir la présentation",
+    context_switch_premium_title: "Bassin Premium",
+    context_switch_premium_sub: "Ce bassin profite des fonctionnalités Premium de son propriétaire",
+    context_switch_free_title: "Retour à ton bassin",
+    context_switch_free_sub: "Tu es de retour sur ton propre bassin",
     report_print_btn: "Imprimer / Enregistrer en PDF",
     share_report: "Partager le rapport",
     report_email_subject: "Rapport PoolGenAI — {pool}",
@@ -566,7 +630,7 @@ const TRANSLATIONS = {
     subscription: "Abonnement",
     unlimited_active: "Mode illimité actif",
     free_mode: "Version gratuite",
-    api_section: "Clé API (analyse IA)",
+    api_section: "ANALYSE IA",
     ai_toggle_label: "Activer l'analyse IA",
     ai_toggle_desc: "Permet d'analyser les photos de mesure par intelligence artificielle.",
     calibration_toggle_label: "Contribuer à l'amélioration collective",
@@ -595,6 +659,15 @@ const TRANSLATIONS = {
     filtration_cartouche: "Cartouche",
     filtration_diatomees: "Diatomées",
     filtration_aucune: "Sans filtration (naturelle)",
+    // v1.60.0 — Section Délégation (regroupe utilisateurs secondaires +
+    // bassins où JE suis invité)
+    delegation_section_title: "Délégation",
+    linked_pools_title: "Bassins où je suis invité",
+    linked_pools_empty: "Tu n'as accès à aucun bassin en tant qu'invité.",
+    request_revocation_button: "Demander la révocation",
+    request_revocation_confirm: "Demander la révocation de ton accès au bassin \"{pool}\" ? {pseudo} recevra un email pour confirmer.",
+    request_revocation_sent: "Demande envoyée. Tu recevras un email une fois la révocation confirmée.",
+    request_revocation_error: "Échec de l'envoi de la demande.",
     // v1.55.0 — Utilisateurs secondaires (brique 3)
     secondary_section_title: "Utilisateurs secondaires",
     secondary_section_intro: "Invite jusqu'à 2 personnes à accéder à un de tes bassins.",
@@ -627,7 +700,8 @@ const TRANSLATIONS = {
     context_title: "Bassin affiché",
     context_own: "Mes bassins",
     secondary_pool_unavailable_title: "Bassin introuvable",
-    secondary_pool_unavailable_desc: "Ce bassin n'est plus accessible, ou son chargement est en cours. Si le problème persiste, l'accès a peut-être été révoqué.",
+    secondary_pool_unavailable_desc: "Ce bassin est introuvable. Il a peut-être été supprimé, ou le chargement rencontre un problème réseau. Réessaie plus tard.",
+    secondary_pool_revoked_desc: "Ton accès à ce bassin a été révoqué par son propriétaire.",
     secondary_invited_label: "{pool} - Invité",
     context_loading: "Chargement du bassin…",
     context_secondary_option: "Bassin de {pseudo}",
@@ -644,6 +718,15 @@ const TRANSLATIONS = {
     invite_response_mismatch: "Cette invitation ne correspond pas à ton compte connecté.",
     invite_response_error: "Erreur lors du traitement de l'invitation.",
     invite_response_checking: "Vérification de l'invitation…",
+    // v1.60.0 — Confirmation de révocation (côté propriétaire, miroir invite_response_*)
+    revocation_response_title: "Demande de révocation",
+    revocation_response_text: "{pseudo} a demandé la révocation de son invitation sur le bassin {pool}.",
+    revocation_response_accept: "Accepter la demande de révocation",
+    revocation_response_done: "Révocation effectuée.",
+    revocation_response_invalid: "Cette demande n'existe plus ou a déjà été traitée.",
+    revocation_response_expired: "Cette demande de révocation a expiré.",
+    revocation_response_mismatch: "Cette demande ne concerne pas ton compte connecté.",
+    revocation_response_error: "Erreur lors du traitement de la demande.",
   },
   en: {
     tab_pool: "Pool",
@@ -744,6 +827,10 @@ const TRANSLATIONS = {
     cgu_accepted_on: "Accepted on",
     cgu_updated_title: "Terms updated",
     cgu_updated_body: "The terms of use have been updated. Please read and accept them to continue.",
+    cgu_required_title: "Terms of use",
+    cgu_required_body: "Please accept our terms of use to continue.",
+    cgu_read_full_text: "Read the full text",
+    cgu_hide_full_text: "Hide text",
     applied_col: "Applied",
     disclaimer_title: "Legal Notice & Terms of Use",
     disclaimer_cgu: "I accept the terms of use and privacy policy",
@@ -776,6 +863,8 @@ const TRANSLATIONS = {
     update_required_title: "New version available",
     update_required_desc: "A new version of PoolGenAI has been released. Update the app to continue.",
     update_required_btn: "Update now",
+    update_in_progress_title: "Update in progress",
+    update_in_progress_desc: "This only takes a moment, the app will reload automatically.",
     diag_off_topic: "This question is not related to pool water treatment. I can only answer questions about water chemistry, treatment products and pool equipment.",
             diag_error: "Analysis failed",
     import_pdf_btn: "Import PDF report",
@@ -846,6 +935,16 @@ const TRANSLATIONS = {
     save_changes: "Save changes",
     my_products: "MY PRODUCTS",
     products_formula: "Dosage calculated as: {quantity} to change parameter by {effect} per {volume} m³. These products are specific to this pool.",
+    products_to_buy: "Products to buy",
+    products_to_buy_empty: "Nothing to buy right now — all stock levels are sufficient.",
+    generic_products_section: "Missing recommended products",
+    generic_products_hint: "Based on this pool's treatment type, these products aren't in your list yet.",
+    add_generic_product: "Add",
+    generic_product_added: "Added to your products",
+    reason_low_stock: "Low stock",
+    reason_insufficient_plan: "Not enough for the current plan",
+    apply_product_manual: "Apply a product",
+    reason_manual_maintenance: "Manual maintenance",
     products_locked: "Feature reserved for the unlimited version",
     stock_not_managed: "Stock management is not enabled for this pool. Enable it in Settings to track quantities and view consumption.",
     activate_in_settings: "Enable in Settings →",
@@ -895,6 +994,8 @@ const TRANSLATIONS = {
     wizard_in: "In",
     wizard_at: "at",
     wizard_scheduled: "Scheduled",
+    wizard_earliest: "Earliest",
+    chlore_timing_tip: "For best results, apply preferably in the evening, after the last swim and at sunset.",
     wizard_done: "Done",
     wizard_skip: "Skip this step",
     wizard_anticipate: "Apply now",
@@ -912,6 +1013,7 @@ const TRANSLATIONS = {
     wizard_partial: "Plan in progress",
     countdown_done: "Time to treat!",
     treatment_at: "Treatment applied at",
+    edit_treatment_section_title: "Treatment applied",
     treatment_skipped: "Step skipped",
     settings_title: "Settings",
     my_pools: "My pools",
@@ -936,7 +1038,7 @@ const TRANSLATIONS = {
     premium_section: "VERSION",
     premium_label: "Unlimited version",
     premium_test: "Test toggle — no real payment here",
-    premium_desc: "Free: 1 reading per day (all pools combined), multiple pools with photo. Unlimited: unlimited readings, photos on readings and products.",
+    premium_desc: "Free: 1 pool (+ 2 invited pools), 1 reading per day. Unlimited: no limit on pools or invitations, unlimited readings, photos on readings and products.",
     delete_measures: "Delete all readings for this pool",
     sensitive_zone: "SENSITIVE ZONE",
     add_pool: "Add a pool",
@@ -1086,6 +1188,22 @@ const TRANSLATIONS = {
     prod_name_ph_plus: "pH increaser",
     prod_name_chlore_choc: "Unstabilised shock chlorine (Chloryte type)",
     prod_name_galets: "5-in-1 stabilised chlorine tablets (Chlorilong type)",
+    packaging_type: "Packaging",
+    packaging_vrac: "Bulk / granules",
+    packaging_galets: "Tablets / sticks",
+    unit_weight_label: "Weight per unit (g)",
+    maintenance_ratio_label: "Manufacturer maintenance ratio",
+    maintenance_units_label: "Nb units",
+    maintenance_volume_label: "Per m³",
+    maintenance_days_label: "Every X days",
+    unit_galets: "tablets",
+    unit_units: "units",
+    quantity_unit_mode_kg: "kg",
+    quantity_unit_mode_units: "units",
+    maintenance_card_title: "Ongoing maintenance",
+    maintenance_card_text: "{units} tablet(s) / {volume} m³, every {days} days",
+    no_stock_category_hint: "No product in stock in this category — free entry",
+    no_stock_generic_hint: "No product in stock in this category — generic product suggested",
     prod_name_tac_plus: "TAC+ product (sodium bicarbonate)",
     prod_name_calcium: "Calcium chloride (hardness +)",
     prod_name_anti_phos: "Anti-phosphates (PHOSfree type)",
@@ -1118,6 +1236,7 @@ const TRANSLATIONS = {
     reco_water_renewal: "Partial water renewal",
     reco_water_renewal_text: "Renew ≈ {pct} % of volume to return to 40 mg/L",
     reco_cl_excess_text: "Let chlorine degrade naturally in sunlight, avoid swimming in the meantime.",
+    reco_recheck_later: "Recheck recommended in a few hours",
     reco_cl_shock_text: "tonight (shock treatment)",
     reco_note_tac: "Low TAC makes pH unstable.",
     reco_note_tac_minus: "Same acid as pH-, but its TAC effect must be calibrated separately. Correct before pH, in small doses.",
@@ -1134,6 +1253,8 @@ const TRANSLATIONS = {
     reco_note_combined: "Combined chlorine = chloramines, sign of insufficient disinfection. Add in the evening, keep filtration running.",
     reco_note_sel: "Use pool-grade salt (pure NaCl ≥ 99%). Dissolve before adding or pour directly near the skimmer, run filtration for 24h.",
     reco_note_o2: "Do not mix with chlorine. Run filtration for 4h.",
+    prod_name_o2_liquide: "Liquid active oxygen (hydrogen peroxide)",
+    note_o2_liquide: "Do not mix with chlorine. Pour in front of the return jets, filtration running.",
     reco_note_brome: "Pour away from water inlets, run filtration.",
     reco_note_cya: "No product lowers CYA chemically, only dilution works. Avoid stabilised chlorine while CYA is high.",
     reco_cya_block_shock: "Stabiliser too high for an effective shock ({val} mg/L)",
@@ -1154,8 +1275,34 @@ const TRANSLATIONS = {
 
     paywall_perk5: "Unlimited history + PDF report",
     paywall_perk6: "Product stock management",
-    paywall_perk7: "Multi-pool",
+    paywall_perk7: "Unlimited pools and invitations",
     paywall_test_note: "This is a test version. No real payment is made.",
+    premium_reveal_title: "Premium activated",
+    premium_reveal_sub: "Unlimited pools, invitations and readings",
+    premium_downgrade_title: "Back to the free version",
+    premium_downgrade_sub: "Unlimited features are now disabled",
+    premium_downgrade_confirm_title: "Disable the unlimited version?",
+    premium_downgrade_confirm_desc: "You will lose access to:",
+    premium_downgrade_confirm_btn: "Disable unlimited version",
+    premium_downgrade_cancel_btn: "Cancel and keep Premium",
+    onboarding_step1_title: "Welcome to PoolGenAI",
+    onboarding_step1_text: "Track your pool's chemistry with ease: readings, dosing, and a personalized treatment plan.",
+    onboarding_step2_title: "Two ways to measure",
+    onboarding_step2_text: "Photo of your measuring device (test strip or photometer): the app analyzes it and fills in the fields automatically.\n\nOr enter the values manually, anytime.",
+    onboarding_step3_title: "Clear results",
+    onboarding_step3_text: "Each parameter is compared to its target. The app then suggests the doses to apply.",
+    onboarding_step4_title: "Ready to start",
+    onboarding_step4_text: "Add your first reading whenever you like.\n\nUnlimited pools, PDF reports and more: discover Premium later in Settings.",
+    onboarding_step3_legend_bad: "Too high or too low",
+    onboarding_next: "Next",
+    onboarding_skip: "Skip",
+    onboarding_start: "Let's go",
+    help_section: "Help",
+    settings_replay_onboarding: "Replay the introduction",
+    context_switch_premium_title: "Premium pool",
+    context_switch_premium_sub: "This pool benefits from its owner's Premium features",
+    context_switch_free_title: "Back to your pool",
+    context_switch_free_sub: "You're back on your own pool",
     report_print_btn: "Print / Save as PDF",
     share_report: "Share report",
     report_email_subject: "PoolGenAI report — {pool}",
@@ -1183,7 +1330,7 @@ const TRANSLATIONS = {
     subscription: "Subscription",
     unlimited_active: "Unlimited mode active",
     free_mode: "Free version",
-    api_section: "API Key (AI analysis)",
+    api_section: "AI ANALYSIS",
     ai_toggle_label: "Enable AI analysis",
     ai_toggle_desc: "Allows analyzing measurement photos using artificial intelligence.",
     calibration_toggle_label: "Contribute to collective improvement",
@@ -1212,6 +1359,14 @@ const TRANSLATIONS = {
     filtration_cartouche: "Cartridge",
     filtration_diatomees: "Diatomaceous earth",
     filtration_aucune: "No filtration (natural)",
+    // v1.60.0 — Delegation section (secondary users + pools I'm invited to)
+    delegation_section_title: "Delegation",
+    linked_pools_title: "Pools I'm invited to",
+    linked_pools_empty: "You don't have access to any pool as a guest.",
+    request_revocation_button: "Request revocation",
+    request_revocation_confirm: "Request revocation of your access to pool \"{pool}\"? {pseudo} will get an email to confirm.",
+    request_revocation_sent: "Request sent. You'll get an email once the revocation is confirmed.",
+    request_revocation_error: "Failed to send the request.",
     secondary_section_title: "Secondary users",
     secondary_section_intro: "Invite up to 2 people to access one of your pools.",
     secondary_invite_button: "Invite someone",
@@ -1243,7 +1398,8 @@ const TRANSLATIONS = {
     context_title: "Pool shown",
     context_own: "My pools",
     secondary_pool_unavailable_title: "Pool unavailable",
-    secondary_pool_unavailable_desc: "This pool is no longer accessible, or is still loading. If this persists, access may have been revoked.",
+    secondary_pool_unavailable_desc: "This pool can't be found. It may have been deleted, or there's a network issue loading it. Try again later.",
+    secondary_pool_revoked_desc: "Your access to this pool has been revoked by its owner.",
     secondary_invited_label: "{pool} - Invited",
     context_loading: "Loading pool…",
     context_secondary_option: "{pseudo}'s pool",
@@ -1260,6 +1416,14 @@ const TRANSLATIONS = {
     invite_response_mismatch: "This invitation doesn't match your logged-in account.",
     invite_response_error: "Error while processing the invitation.",
     invite_response_checking: "Checking invitation…",
+    revocation_response_title: "Revocation request",
+    revocation_response_text: "{pseudo} requested revocation of their invitation to pool {pool}.",
+    revocation_response_accept: "Accept the revocation request",
+    revocation_response_done: "Revocation done.",
+    revocation_response_invalid: "This request no longer exists or was already handled.",
+    revocation_response_expired: "This revocation request has expired.",
+    revocation_response_mismatch: "This request doesn't match your logged-in account.",
+    revocation_response_error: "Error while processing the request.",
   },
   de: {
     tab_pool: "Becken",
@@ -1360,6 +1524,10 @@ const TRANSLATIONS = {
     cgu_accepted_on: "Akzeptiert am",
     cgu_updated_title: "AGB aktualisiert",
     cgu_updated_body: "Die Nutzungsbedingungen wurden aktualisiert. Bitte lesen und akzeptieren Sie sie.",
+    cgu_required_title: "Nutzungsbedingungen",
+    cgu_required_body: "Bitte akzeptiere unsere Nutzungsbedingungen, um fortzufahren.",
+    cgu_read_full_text: "Vollständigen Text lesen",
+    cgu_hide_full_text: "Text ausblenden",
     applied_col: "Angewendet",
     disclaimer_title: "Rechtliche Hinweise & Nutzungsbedingungen",
     disclaimer_cgu: "Ich akzeptiere die Nutzungsbedingungen und Datenschutzrichtlinie",
@@ -1392,6 +1560,8 @@ const TRANSLATIONS = {
     update_required_title: "Neue Version verfügbar",
     update_required_desc: "Eine neue Version von PoolGenAI wurde veröffentlicht. Aktualisiere die App, um fortzufahren.",
     update_required_btn: "Jetzt aktualisieren",
+    update_in_progress_title: "Aktualisierung läuft",
+    update_in_progress_desc: "Das dauert nur einen Moment, die App wird automatisch neu geladen.",
     diag_off_topic: "Diese Frage betrifft nicht die Wasserbehandlung. Ich beantworte nur Fragen zur Wasserchemie, Behandlungsprodukten und Poolausrüstung.",
             diag_error: "Analyse fehlgeschlagen",
     import_pdf_btn: "PDF-Bericht importieren",
@@ -1462,6 +1632,16 @@ const TRANSLATIONS = {
     save_changes: "Änderungen speichern",
     my_products: "MEINE PRODUKTE",
     products_formula: "Dosierung berechnet als: {Menge} um Parameter um {Effekt} pro {Volumen} m³ zu ändern.",
+    products_to_buy: "Einkaufsliste",
+    products_to_buy_empty: "Aktuell nichts zu kaufen — alle Bestände sind ausreichend.",
+    generic_products_section: "Fehlende empfohlene Produkte",
+    generic_products_hint: "Basierend auf der Behandlungsart dieses Pools fehlen diese Produkte noch in deiner Liste.",
+    add_generic_product: "Hinzufügen",
+    generic_product_added: "Zu deinen Produkten hinzugefügt",
+    reason_low_stock: "Niedriger Bestand",
+    reason_insufficient_plan: "Nicht genug für den laufenden Plan",
+    apply_product_manual: "Produkt anwenden",
+    reason_manual_maintenance: "Manuelle Pflege",
     products_locked: "Funktion für unbegrenzte Version reserviert",
     stock_not_managed: "Lagerverwaltung für dieses Becken nicht aktiviert. In Einstellungen aktivieren.",
     activate_in_settings: "In Einstellungen aktivieren →",
@@ -1510,6 +1690,8 @@ const TRANSLATIONS = {
     wizard_in: "In",
     wizard_at: "um",
     wizard_scheduled: "Geplant",
+    wizard_earliest: "Frühestens",
+    chlore_timing_tip: "Für beste Wirksamkeit am besten abends anwenden, nach dem letzten Bad und bei Sonnenuntergang.",
     wizard_done: "Erledigt",
     wizard_skip: "Schritt überspringen",
     wizard_anticipate: "Jetzt anwenden",
@@ -1527,6 +1709,7 @@ const TRANSLATIONS = {
     wizard_partial: "Plan läuft",
     countdown_done: "Zeit für die Behandlung!",
     treatment_at: "Behandlung angewendet um",
+    edit_treatment_section_title: "Angewendete Behandlung",
     treatment_skipped: "Schritt übersprungen",
     settings_title: "Einstellungen",
     my_pools: "Meine Becken",
@@ -1551,7 +1734,7 @@ const TRANSLATIONS = {
     premium_section: "VERSION",
     premium_label: "Unbegrenzte Version",
     premium_test: "Testschalter — keine echte Zahlung",
-    premium_desc: "Kostenlos: 1 Messung pro Tag, mehrere Becken. Unbegrenzt: unbegrenzte Messungen, Fotos, Produkte.",
+    premium_desc: "Kostenlos: 1 Becken (+ 2 eingeladene Becken), 1 Messung pro Tag. Unbegrenzt: unbegrenzte Becken und Einladungen, unbegrenzte Messungen, Fotos, Produkte.",
     delete_measures: "Alle Messungen für dieses Becken löschen",
     sensitive_zone: "KRITISCHER BEREICH",
     add_pool: "Becken hinzufügen",
@@ -1704,6 +1887,22 @@ const TRANSLATIONS = {
     prod_name_ph_plus: "pH-Heber",
     prod_name_chlore_choc: "Nicht stabilisiertes Schockchlor (Chloryte Typ)",
     prod_name_galets: "5-in-1 stabilisierte Chlortabletten (Chlorilong Typ)",
+    packaging_type: "Verpackung",
+    packaging_vrac: "Lose / Granulat",
+    packaging_galets: "Tabletten / Sticks",
+    unit_weight_label: "Gewicht pro Einheit (g)",
+    maintenance_ratio_label: "Herstellerangabe Pflegedosierung",
+    maintenance_units_label: "Anzahl Einheiten",
+    maintenance_volume_label: "Pro m³",
+    maintenance_days_label: "Alle X Tage",
+    unit_galets: "Tabletten",
+    unit_units: "Einheiten",
+    quantity_unit_mode_kg: "kg",
+    quantity_unit_mode_units: "Einheiten",
+    maintenance_card_title: "Laufende Pflege",
+    maintenance_card_text: "{units} Tablette(n) / {volume} m³, alle {days} Tage",
+    no_stock_category_hint: "Kein Produkt in dieser Kategorie auf Lager — freie Eingabe",
+    no_stock_generic_hint: "Kein Produkt in dieser Kategorie auf Lager — generisches Produkt vorgeschlagen",
     prod_name_tac_plus: "KH+-Produkt (Natriumbicarbonat)",
     prod_name_calcium: "Calciumchlorid (Härte +)",
     prod_name_anti_phos: "Anti-Phosphat (PHOSfree Typ)",
@@ -1736,6 +1935,7 @@ const TRANSLATIONS = {
     reco_water_renewal: "Teilweiser Wasserwechsel",
     reco_water_renewal_text: "≈ {pct} % des Volumens erneuern, um auf 40 mg/L zu kommen",
     reco_cl_excess_text: "Chlor natürlich in der Sonne abbauen lassen, zwischenzeitlich nicht schwimmen.",
+    reco_recheck_later: "Erneute Kontrolle in ein paar Stunden empfohlen",
     reco_cl_shock_text: "heute Abend (Schockbehandlung)",
     reco_note_tac: "Niedriger KH macht den pH instabil.",
     reco_note_tac_minus: "Gleiche Säure wie pH-, aber die KH-Wirkung muss separat kalibriert werden. Vor dem pH korrigieren, in kleinen Dosen.",
@@ -1752,6 +1952,8 @@ const TRANSLATIONS = {
     reco_note_combined: "Gebundenes Chlor = Chloramine, Zeichen unzureichender Desinfektion. Abends zugeben, Filtration durchlaufen lassen.",
     reco_note_sel: "Poolsalz (reines NaCl ≥ 99%) verwenden. Vor dem Zugeben auflösen oder direkt beim Skimmer zugeben, 24h filtrieren.",
     reco_note_o2: "Nicht mit Chlor mischen. 4h filtrieren.",
+    prod_name_o2_liquide: "Flüssiger Aktivsauerstoff (Wasserstoffperoxid)",
+    note_o2_liquide: "Nicht mit Chlor mischen. Vor den Rücklaufdüsen eingießen, Filtration eingeschaltet.",
     reco_note_brome: "Weit von Wasserzuläufen entfernt zugeben, Filtration laufen lassen.",
     reco_note_cya: "Kein Produkt senkt CYA chemisch, nur Verdünnung wirkt. Stabilisiertes Chlor vermeiden solange CYA hoch ist.",
     reco_cya_block_shock: "Stabilisator zu hoch für eine wirksame Schockbehandlung ({val} mg/L)",
@@ -1772,8 +1974,34 @@ const TRANSLATIONS = {
 
     paywall_perk5: "Unbegrenzte Historie + PDF-Bericht",
     paywall_perk6: "Produktlagerverwaltung",
-    paywall_perk7: "Mehrere Becken",
+    paywall_perk7: "Unbegrenzte Becken und Einladungen",
     paywall_test_note: "Dies ist eine Testversion. Es wird keine echte Zahlung vorgenommen.",
+    premium_reveal_title: "Premium aktiviert",
+    premium_reveal_sub: "Unbegrenzte Pools, Einladungen und Messungen",
+    premium_downgrade_title: "Zurück zur kostenlosen Version",
+    premium_downgrade_sub: "Unbegrenzte Funktionen sind jetzt deaktiviert",
+    premium_downgrade_confirm_title: "Unbegrenzte Version deaktivieren?",
+    premium_downgrade_confirm_desc: "Du verlierst den Zugriff auf:",
+    premium_downgrade_confirm_btn: "Unbegrenzte Version deaktivieren",
+    premium_downgrade_cancel_btn: "Abbrechen und Premium behalten",
+    onboarding_step1_title: "Willkommen bei PoolGenAI",
+    onboarding_step1_text: "Behalte die Chemie deines Pools im Blick: Messungen, Dosierung und ein persönlicher Behandlungsplan.",
+    onboarding_step2_title: "Zwei Messmethoden",
+    onboarding_step2_text: "Foto deines Messgeräts (Teststreifen oder Photometer): Die App analysiert es und füllt die Felder automatisch aus.\n\nOder gib die Werte jederzeit manuell ein.",
+    onboarding_step3_title: "Klare Ergebnisse",
+    onboarding_step3_text: "Jeder Parameter wird mit seinem Zielwert verglichen. Die App schlägt dir dann die passende Dosierung vor.",
+    onboarding_step4_title: "Bereit loszulegen",
+    onboarding_step4_text: "Füge deine erste Messung hinzu, wann immer du möchtest.\n\nUnbegrenzte Pools, PDF-Berichte und mehr: entdecke Premium später in den Einstellungen.",
+    onboarding_step3_legend_bad: "Zu hoch oder zu niedrig",
+    onboarding_next: "Weiter",
+    onboarding_skip: "Überspringen",
+    onboarding_start: "Los geht's",
+    help_section: "Hilfe",
+    settings_replay_onboarding: "Einführung erneut ansehen",
+    context_switch_premium_title: "Premium-Pool",
+    context_switch_premium_sub: "Dieser Pool profitiert von den Premium-Funktionen seines Eigentümers",
+    context_switch_free_title: "Zurück zu deinem Pool",
+    context_switch_free_sub: "Du bist zurück auf deinem eigenen Pool",
     report_print_btn: "Drucken / Als PDF speichern",
     share_report: "Bericht teilen",
     report_email_subject: "PoolGenAI-Bericht — {pool}",
@@ -1801,7 +2029,7 @@ const TRANSLATIONS = {
     subscription: "Abonnement",
     unlimited_active: "Unbegrenzter Modus aktiv",
     free_mode: "Kostenlose Version",
-    api_section: "API-Schlüssel (KI-Analyse)",
+    api_section: "KI-ANALYSE",
     ai_toggle_label: "KI-Analyse aktivieren",
     ai_toggle_desc: "Ermöglicht die Analyse von Messfotos mit künstlicher Intelligenz.",
     calibration_toggle_label: "Zur kollektiven Verbesserung beitragen",
@@ -1830,6 +2058,13 @@ const TRANSLATIONS = {
     filtration_cartouche: "Kartusche",
     filtration_diatomees: "Diatomeenerde",
     filtration_aucune: "Ohne Filtration (natürlich)",
+    delegation_section_title: "Delegation",
+    linked_pools_title: "Becken, zu denen ich eingeladen bin",
+    linked_pools_empty: "Du hast als Gast keinen Zugriff auf ein Becken.",
+    request_revocation_button: "Widerruf beantragen",
+    request_revocation_confirm: "Widerruf deines Zugriffs auf das Becken \"{pool}\" beantragen? {pseudo} erhält eine E-Mail zur Bestätigung.",
+    request_revocation_sent: "Anfrage gesendet. Du erhältst eine E-Mail, sobald der Widerruf bestätigt ist.",
+    request_revocation_error: "Anfrage konnte nicht gesendet werden.",
     secondary_section_title: "Zweitnutzer",
     secondary_section_intro: "Lade bis zu 2 Personen ein, auf eines deiner Becken zuzugreifen.",
     secondary_invite_button: "Jemanden einladen",
@@ -1861,7 +2096,8 @@ const TRANSLATIONS = {
     context_title: "Angezeigtes Becken",
     context_own: "Meine Becken",
     secondary_pool_unavailable_title: "Becken nicht verfügbar",
-    secondary_pool_unavailable_desc: "Dieses Becken ist nicht mehr zugänglich oder wird noch geladen. Falls das Problem bestehen bleibt, wurde der Zugriff möglicherweise widerrufen.",
+    secondary_pool_unavailable_desc: "Dieses Becken wurde nicht gefunden. Es wurde eventuell gelöscht, oder es gibt ein Netzwerkproblem beim Laden. Versuche es später erneut.",
+    secondary_pool_revoked_desc: "Dein Zugriff auf dieses Becken wurde vom Eigentümer widerrufen.",
     secondary_invited_label: "{pool} - Eingeladen",
     context_loading: "Becken wird geladen…",
     context_secondary_option: "Becken von {pseudo}",
@@ -1878,6 +2114,14 @@ const TRANSLATIONS = {
     invite_response_mismatch: "Diese Einladung passt nicht zu deinem angemeldeten Konto.",
     invite_response_error: "Fehler bei der Verarbeitung der Einladung.",
     invite_response_checking: "Einladung wird geprüft…",
+    revocation_response_title: "Widerrufsanfrage",
+    revocation_response_text: "{pseudo} hat den Widerruf der Einladung zum Becken {pool} beantragt.",
+    revocation_response_accept: "Widerrufsanfrage bestätigen",
+    revocation_response_done: "Widerruf durchgeführt.",
+    revocation_response_invalid: "Diese Anfrage existiert nicht mehr oder wurde bereits bearbeitet.",
+    revocation_response_expired: "Diese Widerrufsanfrage ist abgelaufen.",
+    revocation_response_mismatch: "Diese Anfrage passt nicht zu deinem angemeldeten Konto.",
+    revocation_response_error: "Fehler bei der Bearbeitung der Anfrage.",
   },
   it: {
     tab_pool: "Vasca",
@@ -1978,6 +2222,10 @@ const TRANSLATIONS = {
     cgu_accepted_on: "Accettato il",
     cgu_updated_title: "Termini aggiornati",
     cgu_updated_body: "I termini di utilizzo sono stati aggiornati. Si prega di rileggerli e accettarli.",
+    cgu_required_title: "Termini di utilizzo",
+    cgu_required_body: "Accetta i nostri termini di utilizzo per continuare.",
+    cgu_read_full_text: "Leggi il testo completo",
+    cgu_hide_full_text: "Nascondi il testo",
     applied_col: "Applicato",
     disclaimer_title: "Note legali & Condizioni d'uso",
     disclaimer_cgu: "Accetto i termini di utilizzo e la politica sulla privacy",
@@ -2010,6 +2258,8 @@ const TRANSLATIONS = {
     update_required_title: "Nuova versione disponibile",
     update_required_desc: "È stata rilasciata una nuova versione di PoolGenAI. Aggiorna l'app per continuare.",
     update_required_btn: "Aggiorna ora",
+    update_in_progress_title: "Aggiornamento in corso",
+    update_in_progress_desc: "Ci vuole solo un attimo, l'app si ricaricherà automaticamente.",
     diag_off_topic: "Questa domanda non riguarda il trattamento dell'acqua della piscina. Rispondo solo a domande sulla chimica dell'acqua, sui prodotti di trattamento e sulle attrezzature per piscine.",
             diag_error: "Analisi impossibile",
     import_pdf_btn: "Importa rapporto PDF",
@@ -2080,6 +2330,16 @@ const TRANSLATIONS = {
     save_changes: "Salva modifiche",
     my_products: "I MIEI PRODOTTI",
     products_formula: "Il dosaggio è calcolato come: {quantità} per variare il parametro di {effetto} per {volume} m³.",
+    products_to_buy: "Prodotti da acquistare",
+    products_to_buy_empty: "Niente da acquistare al momento — le scorte sono sufficienti.",
+    generic_products_section: "Prodotti consigliati mancanti",
+    generic_products_hint: "In base al tipo di trattamento di questa piscina, questi prodotti non sono ancora nella tua lista.",
+    add_generic_product: "Aggiungi",
+    generic_product_added: "Aggiunto ai tuoi prodotti",
+    reason_low_stock: "Scorta bassa",
+    reason_insufficient_plan: "Insufficiente per il piano in corso",
+    apply_product_manual: "Applica un prodotto",
+    reason_manual_maintenance: "Manutenzione manuale",
     products_locked: "Funzione riservata alla versione illimitata",
     stock_not_managed: "La gestione dello stock non è attivata per questa vasca. Attivala nelle Impostazioni.",
     activate_in_settings: "Attiva nelle Impostazioni →",
@@ -2128,6 +2388,8 @@ const TRANSLATIONS = {
     wizard_in: "Tra",
     wizard_at: "alle",
     wizard_scheduled: "Previsto",
+    wizard_earliest: "Al più presto",
+    chlore_timing_tip: "Per una migliore efficacia, applica preferibilmente la sera, dopo l'ultimo bagno e al tramonto.",
     wizard_done: "Fatto",
     wizard_skip: "Salta questo passo",
     wizard_anticipate: "Applica ora",
@@ -2145,6 +2407,7 @@ const TRANSLATIONS = {
     wizard_partial: "Piano in corso",
     countdown_done: "È ora di trattare!",
     treatment_at: "Trattamento applicato alle",
+    edit_treatment_section_title: "Trattamento applicato",
     treatment_skipped: "Passo saltato",
     settings_title: "Impostazioni",
     my_pools: "Le mie vasche",
@@ -2169,7 +2432,7 @@ const TRANSLATIONS = {
     premium_section: "VERSIONE",
     premium_label: "Versione illimitata",
     premium_test: "Interruttore di test — nessun pagamento reale",
-    premium_desc: "Gratuito: 1 misurazione al giorno, più vasche. Illimitato: misurazioni illimitate, foto, prodotti.",
+    premium_desc: "Gratuito: 1 vasca (+ 2 vasche invitate), 1 misurazione al giorno. Illimitato: vasche e inviti illimitati, misurazioni illimitate, foto, prodotti.",
     delete_measures: "Elimina tutte le misurazioni per questa vasca",
     sensitive_zone: "ZONA SENSIBILE",
     add_pool: "Aggiungi vasca",
@@ -2319,6 +2582,22 @@ const TRANSLATIONS = {
     prod_name_ph_plus: "Aumentatore pH",
     prod_name_chlore_choc: "Cloro shock non stabilizzato (tipo Chloryte)",
     prod_name_galets: "Pastiglie cloro stabilizzato 5-in-1 (tipo Chlorilong)",
+    packaging_type: "Confezione",
+    packaging_vrac: "Sfuso / granulare",
+    packaging_galets: "Pastiglie / stick",
+    unit_weight_label: "Peso per unità (g)",
+    maintenance_ratio_label: "Rapporto di manutenzione del produttore",
+    maintenance_units_label: "N. unità",
+    maintenance_volume_label: "Per m³",
+    maintenance_days_label: "Ogni X giorni",
+    unit_galets: "pastiglie",
+    unit_units: "unità",
+    quantity_unit_mode_kg: "kg",
+    quantity_unit_mode_units: "unità",
+    maintenance_card_title: "Manutenzione continua",
+    maintenance_card_text: "{units} pastiglia/e / {volume} m³, ogni {days} giorni",
+    no_stock_category_hint: "Nessun prodotto in stock in questa categoria — inserimento libero",
+    no_stock_generic_hint: "Nessun prodotto in stock in questa categoria — prodotto generico proposto",
     prod_name_tac_plus: "Prodotto TAC+ (bicarbonato di sodio)",
     prod_name_calcium: "Cloruro di calcio (durezza +)",
     prod_name_anti_phos: "Anti-fosfati (tipo PHOSfree)",
@@ -2351,6 +2630,7 @@ const TRANSLATIONS = {
     reco_water_renewal: "Rinnovo parziale dell'acqua",
     reco_water_renewal_text: "Rinnovare ≈ {pct} % del volume per tornare a 40 mg/L",
     reco_cl_excess_text: "Lasciare che il cloro si degradi naturalmente al sole, evitare di nuotare nel frattempo.",
+    reco_recheck_later: "Ricontrollo consigliato tra qualche ora",
     reco_cl_shock_text: "stasera (trattamento shock)",
     reco_note_tac: "Un TAC basso rende il pH instabile.",
     reco_note_tac_minus: "Stesso acido del pH-, ma l'effetto sul TAC va calibrato separatamente. Correggere prima del pH, a piccole dosi.",
@@ -2367,6 +2647,8 @@ const TRANSLATIONS = {
     reco_note_combined: "Cloro combinato = cloramine, segno di disinfezione insufficiente. Aggiungere la sera, filtrazione in continuo.",
     reco_note_sel: "Usare sale da piscina (NaCl puro ≥ 99%). Sciogliere prima dell'aggiunta o versare vicino allo skimmer, filtrazione 24h.",
     reco_note_o2: "Non mescolare con il cloro. Filtrazione per 4h.",
+    prod_name_o2_liquide: "Ossigeno attivo liquido (perossido di idrogeno)",
+    note_o2_liquide: "Non mescolare con il cloro. Versare davanti agli ugelli di mandata, filtrazione in funzione.",
     reco_note_brome: "Versare lontano dagli ingressi d'acqua, filtrazione in marcia.",
     reco_note_cya: "Nessun prodotto abbassa il CYA chimicamente, solo la diluizione funziona. Evitare cloro stabilizzato finché il CYA è alto.",
     reco_cya_block_shock: "Stabilizzante troppo alto per uno shock efficace ({val} mg/L)",
@@ -2387,8 +2669,34 @@ const TRANSLATIONS = {
 
     paywall_perk5: "Storico illimitato + report PDF",
     paywall_perk6: "Gestione stock prodotti",
-    paywall_perk7: "Multi-vasca",
+    paywall_perk7: "Vasche e inviti illimitati",
     paywall_test_note: "Questa è una versione di test. Nessun pagamento reale viene effettuato.",
+    premium_reveal_title: "Premium attivato",
+    premium_reveal_sub: "Piscine, inviti e misurazioni senza limiti",
+    premium_downgrade_title: "Ritorno alla versione gratuita",
+    premium_downgrade_sub: "Le funzionalità illimitate sono ora disattivate",
+    premium_downgrade_confirm_title: "Disattivare la versione illimitata?",
+    premium_downgrade_confirm_desc: "Perderai l'accesso a:",
+    premium_downgrade_confirm_btn: "Disattiva versione illimitata",
+    premium_downgrade_cancel_btn: "Annulla e mantieni Premium",
+    onboarding_step1_title: "Benvenuto su PoolGenAI",
+    onboarding_step1_text: "Tieni sotto controllo la chimica della tua piscina: misurazioni, dosaggi e un piano di trattamento personalizzato.",
+    onboarding_step2_title: "Due modi per misurare",
+    onboarding_step2_text: "Foto del tuo dispositivo di misurazione (striscia reattiva o fotometro): l'app lo analizza e compila i campi automaticamente.\n\nOppure inserisci i valori manualmente, in qualsiasi momento.",
+    onboarding_step3_title: "Risultati chiari",
+    onboarding_step3_text: "Ogni parametro viene confrontato con il suo obiettivo. L'app ti suggerisce quindi le dosi da applicare.",
+    onboarding_step4_title: "Pronto per iniziare",
+    onboarding_step4_text: "Aggiungi la tua prima misurazione quando vuoi.\n\nPiscine illimitate, report PDF e altro: scopri Premium più avanti nelle Impostazioni.",
+    onboarding_step3_legend_bad: "Troppo alto o troppo basso",
+    onboarding_next: "Avanti",
+    onboarding_skip: "Salta",
+    onboarding_start: "Iniziamo",
+    help_section: "Aiuto",
+    settings_replay_onboarding: "Rivedi la presentazione",
+    context_switch_premium_title: "Piscina Premium",
+    context_switch_premium_sub: "Questa piscina beneficia delle funzionalità Premium del suo proprietario",
+    context_switch_free_title: "Ritorno alla tua piscina",
+    context_switch_free_sub: "Sei tornato sulla tua piscina",
     report_print_btn: "Stampa / Salva come PDF",
     share_report: "Condividi il rapporto",
     report_email_subject: "Rapporto PoolGenAI — {pool}",
@@ -2416,7 +2724,7 @@ const TRANSLATIONS = {
     subscription: "Abbonamento",
     unlimited_active: "Modalità illimitata attiva",
     free_mode: "Versione gratuita",
-    api_section: "Chiave API (analisi IA)",
+    api_section: "ANALISI IA",
     ai_toggle_label: "Attiva analisi IA",
     ai_toggle_desc: "Permette di analizzare le foto di misura con intelligenza artificiale.",
     calibration_toggle_label: "Contribuisci al miglioramento collettivo",
@@ -2445,6 +2753,13 @@ const TRANSLATIONS = {
     filtration_cartouche: "Cartuccia",
     filtration_diatomees: "Diatomee",
     filtration_aucune: "Senza filtrazione (naturale)",
+    delegation_section_title: "Delega",
+    linked_pools_title: "Vasche a cui sono invitato",
+    linked_pools_empty: "Non hai accesso a nessuna vasca come ospite.",
+    request_revocation_button: "Richiedi revoca",
+    request_revocation_confirm: "Richiedere la revoca del tuo accesso alla vasca \"{pool}\"? {pseudo} riceverà un'email per confermare.",
+    request_revocation_sent: "Richiesta inviata. Riceverai un'email quando la revoca sarà confermata.",
+    request_revocation_error: "Invio della richiesta non riuscito.",
     secondary_section_title: "Utenti secondari",
     secondary_section_intro: "Invita fino a 2 persone ad accedere a una delle tue piscine.",
     secondary_invite_button: "Invita qualcuno",
@@ -2476,7 +2791,8 @@ const TRANSLATIONS = {
     context_title: "Piscina visualizzata",
     context_own: "Le mie piscine",
     secondary_pool_unavailable_title: "Piscina non disponibile",
-    secondary_pool_unavailable_desc: "Questa piscina non è più accessibile, oppure è ancora in caricamento. Se il problema persiste, l'accesso potrebbe essere stato revocato.",
+    secondary_pool_unavailable_desc: "Questa piscina non è stata trovata. Potrebbe essere stata eliminata, oppure c'è un problema di rete nel caricamento. Riprova più tardi.",
+    secondary_pool_revoked_desc: "Il tuo accesso a questa piscina è stato revocato dal proprietario.",
     secondary_invited_label: "{pool} - Invitato",
     context_loading: "Caricamento piscina…",
     context_secondary_option: "Piscina di {pseudo}",
@@ -2493,6 +2809,14 @@ const TRANSLATIONS = {
     invite_response_mismatch: "Questo invito non corrisponde al tuo account collegato.",
     invite_response_error: "Errore durante l'elaborazione dell'invito.",
     invite_response_checking: "Verifica dell'invito…",
+    revocation_response_title: "Richiesta di revoca",
+    revocation_response_text: "{pseudo} ha richiesto la revoca del proprio invito alla vasca {pool}.",
+    revocation_response_accept: "Accetta la richiesta di revoca",
+    revocation_response_done: "Revoca effettuata.",
+    revocation_response_invalid: "Questa richiesta non esiste più o è già stata gestita.",
+    revocation_response_expired: "Questa richiesta di revoca è scaduta.",
+    revocation_response_mismatch: "Questa richiesta non corrisponde al tuo account connesso.",
+    revocation_response_error: "Errore durante l'elaborazione della richiesta.",
   },
   es: {
     tab_pool: "Piscina",
@@ -2593,6 +2917,10 @@ const TRANSLATIONS = {
     cgu_accepted_on: "Aceptado el",
     cgu_updated_title: "Términos actualizados",
     cgu_updated_body: "Los términos de uso han sido actualizados. Por favor léalos y acéptelos.",
+    cgu_required_title: "Términos de uso",
+    cgu_required_body: "Acepta nuestros términos de uso para continuar.",
+    cgu_read_full_text: "Leer el texto completo",
+    cgu_hide_full_text: "Ocultar el texto",
     applied_col: "Aplicado",
     disclaimer_title: "Aviso legal & Condiciones de uso",
     disclaimer_cgu: "Acepto los términos de uso y la política de privacidad",
@@ -2625,6 +2953,8 @@ const TRANSLATIONS = {
     update_required_title: "Nueva versión disponible",
     update_required_desc: "Se ha publicado una nueva versión de PoolGenAI. Actualiza la aplicación para continuar.",
     update_required_btn: "Actualizar ahora",
+    update_in_progress_title: "Actualización en curso",
+    update_in_progress_desc: "Solo tardará un momento, la aplicación se recargará automáticamente.",
     diag_off_topic: "Esta pregunta no está relacionada con el tratamiento del agua de piscina. Solo respondo preguntas sobre química del agua, productos de tratamiento y equipos de piscina.",
             diag_error: "Análisis fallido",
     import_pdf_btn: "Importar informe PDF",
@@ -2695,6 +3025,16 @@ const TRANSLATIONS = {
     save_changes: "Guardar cambios",
     my_products: "MIS PRODUCTOS",
     products_formula: "El dosaje se calcula como: {cantidad} para variar el parámetro en {efecto} por {volumen} m³.",
+    products_to_buy: "Productos por comprar",
+    products_to_buy_empty: "Nada que comprar por ahora — todas las existencias son suficientes.",
+    generic_products_section: "Productos recomendados que faltan",
+    generic_products_hint: "Según el tipo de tratamiento de esta piscina, estos productos aún no están en tu lista.",
+    add_generic_product: "Añadir",
+    generic_product_added: "Añadido a tus productos",
+    reason_low_stock: "Stock bajo",
+    reason_insufficient_plan: "Insuficiente para el plan en curso",
+    apply_product_manual: "Aplicar un producto",
+    reason_manual_maintenance: "Mantenimiento manual",
     products_locked: "Función reservada para la versión ilimitada",
     stock_not_managed: "La gestión de stock no está activada para esta piscina. Actívala en Ajustes.",
     activate_in_settings: "Activar en Ajustes →",
@@ -2743,6 +3083,8 @@ const TRANSLATIONS = {
     wizard_in: "En",
     wizard_at: "a las",
     wizard_scheduled: "Programado",
+    wizard_earliest: "Lo antes posible",
+    chlore_timing_tip: "Para una mejor eficacia, aplica preferiblemente por la noche, después del último baño y al atardecer.",
     wizard_done: "Hecho",
     wizard_skip: "Saltar este paso",
     wizard_anticipate: "Aplicar ahora",
@@ -2760,6 +3102,7 @@ const TRANSLATIONS = {
     wizard_partial: "Plan en curso",
     countdown_done: "¡Es hora de tratar!",
     treatment_at: "Tratamiento aplicado a las",
+    edit_treatment_section_title: "Tratamiento aplicado",
     treatment_skipped: "Paso omitido",
     settings_title: "Ajustes",
     my_pools: "Mis piscinas",
@@ -2784,7 +3127,7 @@ const TRANSLATIONS = {
     premium_section: "VERSIÓN",
     premium_label: "Versión ilimitada",
     premium_test: "Interruptor de prueba — sin pago real",
-    premium_desc: "Gratuito: 1 medición por día, varias piscinas. Ilimitado: mediciones ilimitadas, fotos, productos.",
+    premium_desc: "Gratuito: 1 piscina (+ 2 piscinas invitadas), 1 medición por día. Ilimitado: piscinas e invitaciones ilimitadas, mediciones ilimitadas, fotos, productos.",
     delete_measures: "Eliminar todas las mediciones de esta piscina",
     sensitive_zone: "ZONA SENSIBLE",
     add_pool: "Añadir piscina",
@@ -2934,6 +3277,22 @@ const TRANSLATIONS = {
     prod_name_ph_plus: "Incrementador de pH",
     prod_name_chlore_choc: "Cloro choque no estabilizado (tipo Chloryte)",
     prod_name_galets: "Pastillas cloro estabilizado 5-en-1 (tipo Chlorilong)",
+    packaging_type: "Envase",
+    packaging_vrac: "A granel / granulado",
+    packaging_galets: "Pastillas / sticks",
+    unit_weight_label: "Peso por unidad (g)",
+    maintenance_ratio_label: "Ratio de mantenimiento del fabricante",
+    maintenance_units_label: "Nº unidades",
+    maintenance_volume_label: "Por m³",
+    maintenance_days_label: "Cada X días",
+    unit_galets: "pastillas",
+    unit_units: "unidades",
+    quantity_unit_mode_kg: "kg",
+    quantity_unit_mode_units: "unidades",
+    maintenance_card_title: "Mantenimiento continuo",
+    maintenance_card_text: "{units} pastilla(s) / {volume} m³, cada {days} días",
+    no_stock_category_hint: "Ningún producto en stock en esta categoría — entrada libre",
+    no_stock_generic_hint: "Ningún producto en stock en esta categoría — producto genérico propuesto",
     prod_name_tac_plus: "Producto TAC+ (bicarbonato de sodio)",
     prod_name_calcium: "Cloruro de calcio (dureza +)",
     prod_name_anti_phos: "Anti-fosfatos (tipo PHOSfree)",
@@ -2966,6 +3325,7 @@ const TRANSLATIONS = {
     reco_water_renewal: "Renovación parcial del agua",
     reco_water_renewal_text: "Renovar ≈ {pct} % del volumen para volver a 40 mg/L",
     reco_cl_excess_text: "Dejar que el cloro se degrade naturalmente al sol, evitar bañarse mientras tanto.",
+    reco_recheck_later: "Se recomienda volver a comprobar en unas horas",
     reco_cl_shock_text: "esta noche (tratamiento de choque)",
     reco_note_tac: "Un TAC bajo hace el pH inestable.",
     reco_note_tac_minus: "Mismo ácido que el pH-, pero su efecto sobre el TAC debe calibrarse por separado. Corregir antes que el pH, en dosis pequeñas.",
@@ -2982,6 +3342,8 @@ const TRANSLATIONS = {
     reco_note_combined: "Cloro combinado = cloraminas, señal de desinfección insuficiente. Añadir por la noche, filtración continua.",
     reco_note_sel: "Usar sal de piscina (NaCl puro ≥ 99%). Disolver antes de añadir o verter cerca del skimmer, filtración 24h.",
     reco_note_o2: "No mezclar con cloro. Filtración durante 4h.",
+    prod_name_o2_liquide: "Oxígeno activo líquido (peróxido de hidrógeno)",
+    note_o2_liquide: "No mezclar con cloro. Verter delante de las boquillas de retorno, con la filtración en marcha.",
     reco_note_brome: "Verter lejos de las entradas de agua, filtración en marcha.",
     reco_note_cya: "Ningún producto baja el CYA químicamente, solo la dilución funciona. Evitar cloro estabilizado mientras el CYA sea alto.",
     reco_cya_block_shock: "Estabilizador demasiado alto para un choque eficaz ({val} mg/L)",
@@ -3002,8 +3364,34 @@ const TRANSLATIONS = {
 
     paywall_perk5: "Historial ilimitado + informe PDF",
     paywall_perk6: "Gestión de stock de productos",
-    paywall_perk7: "Multi-piscina",
+    paywall_perk7: "Piscinas e invitaciones ilimitadas",
     paywall_test_note: "Esta es una versión de prueba. No se realiza ningún pago real.",
+    premium_reveal_title: "Premium activado",
+    premium_reveal_sub: "Piscinas, invitaciones y mediciones sin límite",
+    premium_downgrade_title: "Volver a la versión gratuita",
+    premium_downgrade_sub: "Las funciones ilimitadas están ahora desactivadas",
+    premium_downgrade_confirm_title: "¿Desactivar la versión ilimitada?",
+    premium_downgrade_confirm_desc: "Perderás el acceso a:",
+    premium_downgrade_confirm_btn: "Desactivar versión ilimitada",
+    premium_downgrade_cancel_btn: "Cancelar y mantener Premium",
+    onboarding_step1_title: "Bienvenido a PoolGenAI",
+    onboarding_step1_text: "Controla la química de tu piscina fácilmente: mediciones, dosis y un plan de tratamiento personalizado.",
+    onboarding_step2_title: "Dos formas de medir",
+    onboarding_step2_text: "Foto de tu dispositivo de medición (tira reactiva o fotómetro): la app lo analiza y rellena los campos automáticamente.\n\nO introduce los valores manualmente, cuando quieras.",
+    onboarding_step3_title: "Resultados claros",
+    onboarding_step3_text: "Cada parámetro se compara con su objetivo. La app te sugiere entonces las dosis a aplicar.",
+    onboarding_step4_title: "Listo para empezar",
+    onboarding_step4_text: "Añade tu primera medición cuando quieras.\n\nPiscinas ilimitadas, informes en PDF y más: descubre Premium más tarde en Ajustes.",
+    onboarding_step3_legend_bad: "Demasiado alto o demasiado bajo",
+    onboarding_next: "Siguiente",
+    onboarding_skip: "Omitir",
+    onboarding_start: "Empezar",
+    help_section: "Ayuda",
+    settings_replay_onboarding: "Volver a ver la presentación",
+    context_switch_premium_title: "Piscina Premium",
+    context_switch_premium_sub: "Esta piscina se beneficia de las funciones Premium de su propietario",
+    context_switch_free_title: "De vuelta a tu piscina",
+    context_switch_free_sub: "Has vuelto a tu propia piscina",
     report_print_btn: "Imprimir / Guardar como PDF",
     share_report: "Compartir informe",
     report_email_subject: "Informe PoolGenAI — {pool}",
@@ -3031,7 +3419,7 @@ const TRANSLATIONS = {
     subscription: "Suscripción",
     unlimited_active: "Modo ilimitado activo",
     free_mode: "Versión gratuita",
-    api_section: "Clave API (análisis IA)",
+    api_section: "ANÁLISIS IA",
     ai_toggle_label: "Activar análisis IA",
     ai_toggle_desc: "Permite analizar fotos de medición con inteligencia artificial.",
     calibration_toggle_label: "Contribuir a la mejora colectiva",
@@ -3060,6 +3448,13 @@ const TRANSLATIONS = {
     filtration_cartouche: "Cartucho",
     filtration_diatomees: "Tierra de diatomeas",
     filtration_aucune: "Sin filtración (natural)",
+    delegation_section_title: "Delegación",
+    linked_pools_title: "Piscinas a las que estoy invitado",
+    linked_pools_empty: "No tienes acceso a ninguna piscina como invitado.",
+    request_revocation_button: "Solicitar revocación",
+    request_revocation_confirm: "¿Solicitar la revocación de tu acceso a la piscina \"{pool}\"? {pseudo} recibirá un email para confirmar.",
+    request_revocation_sent: "Solicitud enviada. Recibirás un email cuando se confirme la revocación.",
+    request_revocation_error: "Fallo al enviar la solicitud.",
     secondary_section_title: "Usuarios secundarios",
     secondary_section_intro: "Invita hasta a 2 personas a acceder a una de tus piscinas.",
     secondary_invite_button: "Invitar a alguien",
@@ -3091,7 +3486,8 @@ const TRANSLATIONS = {
     context_title: "Piscina mostrada",
     context_own: "Mis piscinas",
     secondary_pool_unavailable_title: "Piscina no disponible",
-    secondary_pool_unavailable_desc: "Esta piscina ya no está accesible, o todavía se está cargando. Si el problema persiste, es posible que se haya revocado el acceso.",
+    secondary_pool_unavailable_desc: "No se encuentra esta piscina. Puede que haya sido eliminada, o hay un problema de red al cargarla. Inténtalo más tarde.",
+    secondary_pool_revoked_desc: "Tu acceso a esta piscina ha sido revocado por su propietario.",
     secondary_invited_label: "{pool} - Invitado",
     context_loading: "Cargando piscina…",
     context_secondary_option: "Piscina de {pseudo}",
@@ -3108,6 +3504,14 @@ const TRANSLATIONS = {
     invite_response_mismatch: "Esta invitación no corresponde a tu cuenta conectada.",
     invite_response_error: "Error al procesar la invitación.",
     invite_response_checking: "Comprobando la invitación…",
+    revocation_response_title: "Solicitud de revocación",
+    revocation_response_text: "{pseudo} ha solicitado la revocación de su invitación a la piscina {pool}.",
+    revocation_response_accept: "Aceptar la solicitud de revocación",
+    revocation_response_done: "Revocación realizada.",
+    revocation_response_invalid: "Esta solicitud ya no existe o ya ha sido gestionada.",
+    revocation_response_expired: "Esta solicitud de revocación ha caducado.",
+    revocation_response_mismatch: "Esta solicitud no corresponde a tu cuenta conectada.",
+    revocation_response_error: "Error al procesar la solicitud.",
   },
   pt: {
     tab_pool: "Piscina",
@@ -3208,6 +3612,10 @@ const TRANSLATIONS = {
     cgu_accepted_on: "Aceito em",
     cgu_updated_title: "Termos atualizados",
     cgu_updated_body: "Os termos de uso foram atualizados. Por favor leia e aceite-os.",
+    cgu_required_title: "Termos de uso",
+    cgu_required_body: "Aceita os nossos termos de uso para continuar.",
+    cgu_read_full_text: "Ler o texto completo",
+    cgu_hide_full_text: "Ocultar o texto",
     applied_col: "Aplicado",
     disclaimer_title: "Aviso legal & Termos de uso",
     disclaimer_cgu: "Aceito os termos de uso e a política de privacidade",
@@ -3240,6 +3648,8 @@ const TRANSLATIONS = {
     update_required_title: "Nova versão disponível",
     update_required_desc: "Uma nova versão do PoolGenAI foi lançada. Atualize o aplicativo para continuar.",
     update_required_btn: "Atualizar agora",
+    update_in_progress_title: "Atualização em curso",
+    update_in_progress_desc: "Demora apenas um instante, a aplicação vai recarregar automaticamente.",
     diag_off_topic: "Esta pergunta não está relacionada com o tratamento da água da piscina. Só respondo a perguntas sobre química da água, produtos de tratamento e equipamentos de piscina.",
             diag_error: "Análise impossível",
     import_pdf_btn: "Importar relatório PDF",
@@ -3310,6 +3720,16 @@ const TRANSLATIONS = {
     save_changes: "Salvar alterações",
     my_products: "MEUS PRODUTOS",
     products_formula: "A dosagem é calculada como: {quantidade} para variar o parâmetro em {efeito} por {volume} m³.",
+    products_to_buy: "Produtos a comprar",
+    products_to_buy_empty: "Nada a comprar por agora — todos os stocks são suficientes.",
+    generic_products_section: "Produtos recomendados em falta",
+    generic_products_hint: "Com base no tipo de tratamento desta piscina, estes produtos ainda não estão na tua lista.",
+    add_generic_product: "Adicionar",
+    generic_product_added: "Adicionado aos teus produtos",
+    reason_low_stock: "Stock baixo",
+    reason_insufficient_plan: "Insuficiente para o plano em curso",
+    apply_product_manual: "Aplicar um produto",
+    reason_manual_maintenance: "Manutenção manual",
     products_locked: "Funcionalidade reservada para a versão ilimitada",
     stock_not_managed: "A gestão de estoque não está ativada para esta piscina. Ative nas Configurações.",
     activate_in_settings: "Ativar nas Configurações →",
@@ -3358,6 +3778,8 @@ const TRANSLATIONS = {
     wizard_in: "Em",
     wizard_at: "às",
     wizard_scheduled: "Previsto",
+    wizard_earliest: "O mais cedo possível",
+    chlore_timing_tip: "Para melhor eficácia, aplica de preferência à noite, após o último banho e ao pôr do sol.",
     wizard_done: "Feito",
     wizard_skip: "Pular este passo",
     wizard_anticipate: "Aplicar agora",
@@ -3375,6 +3797,7 @@ const TRANSLATIONS = {
     wizard_partial: "Plano em andamento",
     countdown_done: "Hora do tratamento!",
     treatment_at: "Tratamento aplicado às",
+    edit_treatment_section_title: "Tratamento aplicado",
     treatment_skipped: "Passo ignorado",
     settings_title: "Configurações",
     my_pools: "Minhas piscinas",
@@ -3399,7 +3822,7 @@ const TRANSLATIONS = {
     premium_section: "VERSÃO",
     premium_label: "Versão ilimitada",
     premium_test: "Interruptor de teste — sem pagamento real",
-    premium_desc: "Gratuito: 1 medição por dia, várias piscinas. Ilimitado: medições ilimitadas, fotos, produtos.",
+    premium_desc: "Gratuito: 1 piscina (+ 2 piscinas convidadas), 1 medição por dia. Ilimitado: piscinas e convites ilimitados, medições ilimitadas, fotos, produtos.",
     delete_measures: "Excluir todas as medições desta piscina",
     sensitive_zone: "ZONA SENSÍVEL",
     add_pool: "Adicionar piscina",
@@ -3546,6 +3969,22 @@ const TRANSLATIONS = {
     prod_name_ph_plus: "Aumentador de pH",
     prod_name_chlore_choc: "Cloro choque não estabilizado (tipo Chloryte)",
     prod_name_galets: "Pastilhas cloro estabilizado 5-em-1 (tipo Chlorilong)",
+    packaging_type: "Embalagem",
+    packaging_vrac: "A granel / granulado",
+    packaging_galets: "Pastilhas / sticks",
+    unit_weight_label: "Peso por unidade (g)",
+    maintenance_ratio_label: "Rácio de manutenção do fabricante",
+    maintenance_units_label: "Nº unidades",
+    maintenance_volume_label: "Por m³",
+    maintenance_days_label: "A cada X dias",
+    unit_galets: "pastilhas",
+    unit_units: "unidades",
+    quantity_unit_mode_kg: "kg",
+    quantity_unit_mode_units: "unidades",
+    maintenance_card_title: "Manutenção contínua",
+    maintenance_card_text: "{units} pastilha(s) / {volume} m³, a cada {days} dias",
+    no_stock_category_hint: "Nenhum produto em stock nesta categoria — entrada livre",
+    no_stock_generic_hint: "Nenhum produto em stock nesta categoria — produto genérico sugerido",
     prod_name_tac_plus: "Produto TAC+ (bicarbonato de sódio)",
     prod_name_calcium: "Cloreto de cálcio (dureza +)",
     prod_name_anti_phos: "Anti-fosfatos (tipo PHOSfree)",
@@ -3578,6 +4017,7 @@ const TRANSLATIONS = {
     reco_water_renewal: "Renovação parcial da água",
     reco_water_renewal_text: "Renovar ≈ {pct} % do volume para voltar a 40 mg/L",
     reco_cl_excess_text: "Deixar o cloro degradar naturalmente ao sol, evitar nadar enquanto isso.",
+    reco_recheck_later: "Recomenda-se novo controlo dentro de algumas horas",
     reco_cl_shock_text: "esta noite (tratamento de choque)",
     reco_note_tac: "Um TAC baixo torna o pH instável.",
     reco_note_tac_minus: "Mesmo ácido do pH-, mas o efeito no TAC deve ser calibrado à parte. Corrigir antes do pH, em pequenas doses.",
@@ -3594,6 +4034,8 @@ const TRANSLATIONS = {
     reco_note_combined: "Cloro combinado = cloraminas, sinal de desinfecção insuficiente. Adicionar à noite, filtração contínua.",
     reco_note_sel: "Usar sal de piscina (NaCl puro ≥ 99%). Dissolver antes de adicionar ou verter perto do skimmer, filtração 24h.",
     reco_note_o2: "Não misturar com cloro. Filtração por 4h.",
+    prod_name_o2_liquide: "Oxigénio ativo líquido (peróxido de hidrogénio)",
+    note_o2_liquide: "Não misturar com cloro. Deitar em frente aos bicais de retorno, com a filtração em funcionamento.",
     reco_note_brome: "Verter longe das entradas de água, filtração em funcionamento.",
     reco_note_cya: "Nenhum produto baixa o CYA quimicamente, só a diluição funciona. Evitar cloro estabilizado enquanto o CYA estiver alto.",
     reco_cya_block_shock: "Estabilizador muito alto para um choque eficaz ({val} mg/L)",
@@ -3614,8 +4056,34 @@ const TRANSLATIONS = {
 
     paywall_perk5: "Histórico ilimitado + relatório PDF",
     paywall_perk6: "Gestão de stock de produtos",
-    paywall_perk7: "Multi-piscina",
+    paywall_perk7: "Piscinas e convites ilimitados",
     paywall_test_note: "Esta é uma versão de teste. Nenhum pagamento real é efetuado.",
+    premium_reveal_title: "Premium ativado",
+    premium_reveal_sub: "Piscinas, convites e medições sem limite",
+    premium_downgrade_title: "Voltar à versão gratuita",
+    premium_downgrade_sub: "Os recursos ilimitados estão agora desativados",
+    premium_downgrade_confirm_title: "Desativar a versão ilimitada?",
+    premium_downgrade_confirm_desc: "Perderás o acesso a:",
+    premium_downgrade_confirm_btn: "Desativar versão ilimitada",
+    premium_downgrade_cancel_btn: "Cancelar e manter Premium",
+    onboarding_step1_title: "Bem-vindo ao PoolGenAI",
+    onboarding_step1_text: "Acompanha a química da tua piscina com facilidade: medições, dosagens e um plano de tratamento personalizado.",
+    onboarding_step2_title: "Duas formas de medir",
+    onboarding_step2_text: "Foto do teu dispositivo de medição (tira reagente ou fotómetro): a app analisa e preenche os campos automaticamente.\n\nOu introduz os valores manualmente, a qualquer momento.",
+    onboarding_step3_title: "Resultados claros",
+    onboarding_step3_text: "Cada parâmetro é comparado com o seu objetivo. A app sugere então as doses a aplicar.",
+    onboarding_step4_title: "Pronto para começar",
+    onboarding_step4_text: "Adiciona a tua primeira medição quando quiseres.\n\nPiscinas ilimitadas, relatório PDF e mais: descobre o Premium mais tarde em Definições.",
+    onboarding_step3_legend_bad: "Demasiado alto ou demasiado baixo",
+    onboarding_next: "Seguinte",
+    onboarding_skip: "Saltar",
+    onboarding_start: "Vamos lá",
+    help_section: "Ajuda",
+    settings_replay_onboarding: "Rever a apresentação",
+    context_switch_premium_title: "Piscina Premium",
+    context_switch_premium_sub: "Esta piscina beneficia das funcionalidades Premium do seu proprietário",
+    context_switch_free_title: "De volta à tua piscina",
+    context_switch_free_sub: "Estás de volta à tua própria piscina",
     report_print_btn: "Imprimir / Salvar como PDF",
     share_report: "Partilhar relatório",
     report_email_subject: "Relatório PoolGenAI — {pool}",
@@ -3643,7 +4111,7 @@ const TRANSLATIONS = {
     subscription: "Assinatura",
     unlimited_active: "Modo ilimitado ativo",
     free_mode: "Versão gratuita",
-    api_section: "Chave API (análise IA)",
+    api_section: "ANÁLISE IA",
     ai_toggle_label: "Ativar análise IA",
     ai_toggle_desc: "Permite analisar fotos de medição com inteligência artificial.",
     calibration_toggle_label: "Contribuir para a melhoria coletiva",
@@ -3672,6 +4140,13 @@ const TRANSLATIONS = {
     filtration_cartouche: "Cartucho",
     filtration_diatomees: "Terra de diatomáceas",
     filtration_aucune: "Sem filtração (natural)",
+    delegation_section_title: "Delegação",
+    linked_pools_title: "Piscinas às quais fui convidado",
+    linked_pools_empty: "Não tens acesso a nenhuma piscina como convidado.",
+    request_revocation_button: "Pedir revogação",
+    request_revocation_confirm: "Pedir a revogação do teu acesso à piscina \"{pool}\"? {pseudo} vai receber um email para confirmar.",
+    request_revocation_sent: "Pedido enviado. Vais receber um email assim que a revogação for confirmada.",
+    request_revocation_error: "Falha ao enviar o pedido.",
     secondary_section_title: "Usuários secundários",
     secondary_section_intro: "Convide até 2 pessoas para acessar uma das tuas piscinas.",
     secondary_invite_button: "Convidar alguém",
@@ -3703,7 +4178,8 @@ const TRANSLATIONS = {
     context_title: "Piscina exibida",
     context_own: "Minhas piscinas",
     secondary_pool_unavailable_title: "Piscina indisponível",
-    secondary_pool_unavailable_desc: "Esta piscina já não está acessível, ou ainda está a carregar. Se o problema persistir, o acesso pode ter sido revogado.",
+    secondary_pool_unavailable_desc: "Esta piscina não foi encontrada. Pode ter sido eliminada, ou há um problema de rede ao carregar. Tenta novamente mais tarde.",
+    secondary_pool_revoked_desc: "O teu acesso a esta piscina foi revogado pelo proprietário.",
     secondary_invited_label: "{pool} - Convidado",
     context_loading: "A carregar a piscina…",
     context_secondary_option: "Piscina de {pseudo}",
@@ -3720,6 +4196,14 @@ const TRANSLATIONS = {
     invite_response_mismatch: "Este convite não corresponde à tua conta ligada.",
     invite_response_error: "Erro ao processar o convite.",
     invite_response_checking: "A verificar o convite…",
+    revocation_response_title: "Pedido de revogação",
+    revocation_response_text: "{pseudo} pediu a revogação do seu convite à piscina {pool}.",
+    revocation_response_accept: "Aceitar o pedido de revogação",
+    revocation_response_done: "Revogação efetuada.",
+    revocation_response_invalid: "Este pedido já não existe ou já foi tratado.",
+    revocation_response_expired: "Este pedido de revogação expirou.",
+    revocation_response_mismatch: "Este pedido não corresponde à tua conta ligada.",
+    revocation_response_error: "Erro ao processar o pedido.",
   },
 };
 
@@ -3832,6 +4316,28 @@ function getActiveParams(treatmentType) {
   return tt.params; // conserve la casse d'origine ex: "pH", "fCl", "tCl"
 }
 
+// v1.68.0 — Actions produit pertinentes pour un type de traitement donné,
+// utilisé pour proposer les produits génériques manquants (DEFAULT_PRODUCTS)
+// dans "Mes produits à acheter". ph-/ph+/tac+/tac-/sequestrant/floculant
+// sont communs à tous les types (entretien général, indépendant du mode de
+// désinfection).
+function getRelevantActionsForTreatment(treatmentType) {
+  const common = ["ph-", "ph+", "tac+", "tac-", "sequestrant", "floculant"];
+  switch (treatmentType) {
+    case "sel":
+      return [...common, "chlore", "chlore-stabilise", "hard+", "phos-", "sel"];
+    case "brome":
+      return [...common, "brome"];
+    case "o2":
+      return [...common, "o2"];
+    case "autre":
+      return [...common, "chlore"];
+    case "chlore":
+    default:
+      return [...common, "chlore", "chlore-stabilise", "hard+", "phos-"];
+  }
+}
+
 const DEFAULT_PRODUCTS = [
   {
     id: "ph-minus",
@@ -3900,6 +4406,9 @@ const DEFAULT_PRODUCTS = [
     containerUnit: "kg",
     stockPercent: 100,
     isDefault: true,
+    packagingType: "galets",
+    unitWeight: 250,
+    maintenanceRatio: { units: 1, volumePer: 30, days: 10 },
   },
   // v1.58.0 — Produit standard manquant pour l'action "brome" : sans lui,
   // findProduct("brome") ne renvoyait jamais de dose calculable (carte
@@ -3927,6 +4436,8 @@ const DEFAULT_PRODUCTS = [
     containerUnit: "kg",
     stockPercent: 100,
     isDefault: true,
+    packagingType: "galets",
+    unitWeight: 20,
   },
   // v1.58.0 — Idem pour "o2" : référence monopersulfate de potassium (MPS)
   // en granulés, forme solide la plus courante pour un ajout direct (le
@@ -3950,6 +4461,30 @@ const DEFAULT_PRODUCTS = [
     note: "Ne pas mélanger avec le chlore. Filtration en marche pendant 4h.",
     containerAmount: 1,
     containerUnit: "kg",
+    stockPercent: 100,
+    isDefault: true,
+  },
+  // v1.75.0 — Backlog : dosage liquide pour l'oxygène actif. Le peroxyde
+  // d'hydrogène liquide se dose en volume, avec un ratio différent du
+  // granulé MPS ci-dessus. Dose calibrée sur plusieurs sources convergentes
+  // (entretien hebdomadaire usuel : 6 à 8 cL/m³ pour un plafond cible de
+  // 10 mg/L, produit générique ~30% — cf. Swimmy, leprodestravaux.fr, Delta
+  // Industrie) → 70 mL/10 m³/10 mg/L, milieu de la fourchette. Bidon
+  // courant 5 L.
+  {
+    id: "o2-liquide",
+    name: "Oxygène actif liquide (peroxyde d'hydrogène)",
+    nameKey: "prod_name_o2_liquide",
+    action: "o2",
+    doseAmount: 70,
+    doseUnit: "mL",
+    effectAmount: 10,
+    effectPer: 10,
+    waitHours: 4,
+    noteKey: "note_o2_liquide",
+    note: "Ne pas mélanger avec le chlore. Verser devant les buses de refoulement, filtration en marche.",
+    containerAmount: 5,
+    containerUnit: "L",
     stockPercent: 100,
     isDefault: true,
   },
@@ -4260,7 +4795,7 @@ function statusColor(status) {
   if (status === "ok") return "#1a8fd1";
   if (status === "low") return "#d98c2b";
   if (status === "high") return "#c4502f";
-  return "#6a7d90";
+  return "#6a7d90"; // v1.71.0 — statut inconnu : couleur neutre fixe, jamais thémée
 }
 
 function statusLabel(status, t) {
@@ -4687,15 +5222,19 @@ Informations à renseigner, dans les deux cas :
 - L'effet annoncé sur le paramètre concerné pour un volume d'eau donné (ex : "20g augmente le pH de 0,1 pour 10m³")
 - Le délai d'attente avant baignade recommandé en heures
 - La taille TOTALE du contenant/emballage tel que vendu (ex : "5 kg", "25 kg", "1 L", "20 L")
+- Le conditionnement du produit : "galets" si le produit se présente sous forme d'unités solides discrètes (galets, pastilles, sticks, comprimés), "vrac" sinon (poudre, granulés en vrac, liquide)
+- Si conditionnement "galets" : le poids d'une seule unité en grammes (ex: "galets de 250g" → 250). Cherche cette info sur l'étiquette (souvent indiquée à côté du nombre d'unités ou du poids total divisé par le nombre d'unités), puis sur le web si absente de l'étiquette (même recherche que pour la dose de traitement)
+- Si conditionnement "galets" : le ratio d'entretien continu annoncé par le fabricant, tel qu'affiché sur l'emballage ou trouvé sur le web (ex : "1 galet / 30 m³ / 7-10 jours") — nombre d'unités, volume en m³, et nombre de jours entre deux ajouts. Ce ratio est différent de la dose de traitement correctif : ne pas le confondre ni le déduire, uniquement le rapporter s'il est explicitement indiqué
 
 Réponds UNIQUEMENT en JSON valide, sans texte avant ou après, sans markdown :
-{"name": "nom du produit ou null", "barcode": "numéro EAN/UPC en chaîne de caractères ou null", "activeSubstance": "nom chimique ou null", "action": "une des valeurs listées ci-dessus ou null", "doseAmount": nombre ou null, "doseUnit": "g" ou "kg" ou "ml" ou "L" ou null, "effectAmount": nombre ou null, "effectPer": nombre de m³ ou null, "waitHours": nombre ou null, "containerAmount": nombre ou null, "containerUnit": "g" ou "kg" ou "ml" ou "L" ou null, "productImageUrl": "URL directe de la photo officielle trouvée en ligne, ou null si aucune", "source": "web" ou "etiquette", "confidence": "haute" ou "moyenne" ou "basse", "note": "une phrase en français sur ce qui a été trouvé, en précisant si ça vient de la recherche web ou de la lecture d'étiquette"}
+{"name": "nom du produit ou null", "barcode": "numéro EAN/UPC en chaîne de caractères ou null", "activeSubstance": "nom chimique ou null", "action": "une des valeurs listées ci-dessus ou null", "doseAmount": nombre ou null, "doseUnit": "g" ou "kg" ou "ml" ou "L" ou null, "effectAmount": nombre ou null, "effectPer": nombre de m³ ou null, "waitHours": nombre ou null, "containerAmount": nombre ou null, "containerUnit": "g" ou "kg" ou "ml" ou "L" ou null, "packagingType": "galets" ou "vrac" ou null, "unitWeight": nombre en grammes ou null, "maintenanceUnits": nombre ou null, "maintenanceVolumePer": nombre de m³ ou null, "maintenanceDays": nombre ou null, "productImageUrl": "URL directe de la photo officielle trouvée en ligne, ou null si aucune", "source": "web" ou "etiquette", "confidence": "haute" ou "moyenne" ou "basse", "note": "une phrase en français sur ce qui a été trouvé, en précisant si ça vient de la recherche web ou de la lecture d'étiquette"}
 
 Règles strictes :
 - null pour toute information absente ou illisible, ne devine jamais une valeur non présente
 - "barcode" doit être le numéro exact lu sous le code-barre, jamais reconstruit ou deviné — null si le numéro n'est pas net
 - "productImageUrl" : uniquement une URL trouvée réellement pendant la recherche web, jamais une URL inventée ou reconstruite — null si aucune trouvée
 - "source" doit refléter honnêtement d'où viennent les valeurs de dose/effet renvoyées : "web" seulement si la recherche a effectivement trouvé une notice exploitable pour ce produit précis, "etiquette" sinon
+- "maintenanceUnits"/"maintenanceVolumePer"/"maintenanceDays" : uniquement si "packagingType" est "galets" ET que le ratio est explicitement affiché — null sinon, jamais déduit de la dose de traitement
 - Les nombres sont des nombres, jamais des chaînes
 - JSON pur, rien d'autre`;
 
@@ -4709,7 +5248,26 @@ Règles strictes :
 // v1.48.0 — Trois routes ajoutées côté Worker (voir poolgenai-proxy.js) :
 // lookup (par code-barre puis recherche floue), create (nouvelle fiche),
 // use (incrément callCount + re-vérification web au multiple de 50).
-const PROXY_BASE_URL = "https://poolgenai-proxy.support-poolgenai.workers.dev";
+// v1.79.0 — Séparation dev/test/prod : le Worker Cloudflare (proxy IA) est
+// choisi selon le hostname, même logique que la config Firebase dans
+// index.html.
+// v1.88.0 — BUG : dev restait à null, donc TOUS les appels proxy (set-pseudo,
+// analyse photo IA, invitations, vérification email, etc.) partaient vers le
+// Worker PROD (fallback silencieux), qui rejetait les tokens émis par
+// poolgenai-dev (FIREBASE_PROJECT_ID ne correspond pas). URL réelle branchée.
+const PROXY_URLS = {
+  prod: "https://poolgenai-proxy.support-poolgenai.workers.dev",
+  test: "https://poolgenai-proxy-test.support-poolgenai.workers.dev",
+  dev: "https://poolgenai-proxy-dev.support-poolgenai.workers.dev",
+};
+function detectPoolGenAIEnv() {
+  if (typeof window !== "undefined" && window.__poolgenaiEnv) return window.__poolgenaiEnv;
+  const h = typeof window !== "undefined" ? window.location.hostname : "";
+  if (h === "app.poolgenai.com") return "prod";
+  if (h === "test.poolgenai.com") return "test";
+  return "dev";
+}
+const PROXY_BASE_URL = PROXY_URLS[detectPoolGenAIEnv()] || PROXY_URLS.prod;
 
 async function lookupCommonProduct({ idToken, barcode, name, activeSubstance }) {
   const res = await fetch(`${PROXY_BASE_URL}/product-lookup`, {
@@ -4777,6 +5335,24 @@ async function respondToInvitation(idToken, token, action) {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
     body: JSON.stringify({ token, action }),
+  });
+  const data = await res.json().catch(() => ({}));
+  return { status: res.status, ...data };
+}
+
+// v1.60.0 — Demande de révocation initiée par l'invité, confirmée par le
+// propriétaire (miroir de getInvitationInfo/respondToInvitation).
+async function getRevocationRequestInfo(token) {
+  const res = await fetch(`${PROXY_BASE_URL}/revocation-info?token=${encodeURIComponent(token)}`);
+  const data = await res.json().catch(() => ({}));
+  return { status: res.status, ...data };
+}
+
+async function respondToRevocation(idToken, token) {
+  const res = await fetch(`${PROXY_BASE_URL}/respond-revocation`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+    body: JSON.stringify({ token }),
   });
   const data = await res.json().catch(() => ({}));
   return { status: res.status, ...data };
@@ -5129,12 +5705,25 @@ const FB = {
     const snap = await window._fbGetDoc(window._fbDoc(window._fbDb, "users", uid, "config", "main"));
     return snap.exists() ? snap.data() : null;
   },
-  onConfig: (uid, cb) => {
+  // v1.70.0 — errCb optionnel : Firestore n'appelle jamais cb() en cas de
+  // permission-denied (accès secondaire révoqué), l'écoute restait donc
+  // bloquée en silence dans "context_loading" indéfiniment. errCb permet de
+  // distinguer explicitement ce cas plutôt que de compter uniquement sur un
+  // timeout côté UI.
+  onConfig: (uid, cb, errCb) => {
     if (!window._fbDb || !window._fbOnSnapshot) return () => {};
     const ref = window._fbDoc(window._fbDb, "users", uid, "config", "main");
+    // v1.85.0 — BUG : cb() n'était appelé QUE si le document existait déjà.
+    // Pour un compte tout neuf (aucune écriture cloud encore effectuée),
+    // config/main n'existe pas → cb() n'était jamais invoqué → cloudConfigReceived
+    // restait bloqué à false indéfiniment → spinner "Chargement du bassin"
+    // permanent, écran de création du premier bassin jamais atteint. Masqué
+    // jusqu'ici sur test/prod car leurs comptes de test avaient déjà un doc
+    // config/main d'une session antérieure. Tous les accès aux champs dans le
+    // callback (config.pools?.length, etc.) tolèrent déjà un objet vide.
     return window._fbOnSnapshot(ref, (snap) => {
-      if (snap.exists()) cb(snap.data());
-    });
+      cb(snap.exists() ? snap.data() : {});
+    }, (err) => { if (errCb) errCb(err); });
   },
   // ── Calibration Lot B — collection RACINE, create-only, sans uid (cf.
   // firestore.rules). ID généré côté client via uid() — pas de setDoc avec
@@ -5247,7 +5836,7 @@ function LoginScreen({ lang, onSkip, onConsentChange, detectedLang }) {
         }).catch(() => {});
         if (onConsentChange) onConsentChange({ gdpr: true, data: dataAccepted, cguVersion: CGU_VERSION, cguDate: new Date().toISOString() });
         setMode("done");
-        // onAuthStateChanged se déclenchera et appellera onSuccess via PoolApp
+        // onAuthStateChanged se déclenchera et appellera onSuccess via PoolGenAIApp
       } else {
         await FB.signIn(email, pwd);
         // onAuthStateChanged se déclenchera automatiquement
@@ -5362,16 +5951,16 @@ By creating an account, the user acknowledges having read this document in full 
     const text = disclaimerText[detectedLang || lang] || disclaimerText.en;
     return (
       <div style={{ minHeight: "100vh", background: "#eaf4fb", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 16 }}>
-        <div style={{ width: "100%", maxWidth: 480, background: "#fff", borderRadius: 20, padding: 24, boxShadow: "0 4px 24px #0a6ebd18", maxHeight: "90dvh", display: "flex", flexDirection: "column" }}>
+        <div style={{ width: "100%", maxWidth: 480, background: "#fff", borderRadius: 20, padding: 24, boxShadow: "0 4px 24px var(--brand-primary)18", maxHeight: "90dvh", display: "flex", flexDirection: "column" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-            <div style={{ fontSize: 15, fontWeight: 800, color: "#0d2b4e" }}>{tDisc("disclaimer_title")}</div>
-            <button onClick={() => setMode("signup")} style={{ background: "none", border: "none", cursor: "pointer", color: "#6a7d90" }}><X size={20} /></button>
+            <div style={{ fontSize: 15, fontWeight: 800, color: "var(--brand-text-strong)" }}>{tDisc("disclaimer_title")}</div>
+            <button onClick={() => setMode("signup")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--brand-text-muted)" }}><X size={20} /></button>
           </div>
           <div style={{ flex: 1, overflowY: "auto", fontSize: 12, color: "#2d4a6e", lineHeight: 1.7, whiteSpace: "pre-wrap", background: "#f5f8fc", borderRadius: 10, padding: "12px 14px", marginBottom: 16 }}>
             {text}
           </div>
           <button
-            style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "#0a6ebd", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" }}
+            style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" }}
             onClick={() => { setCguAccepted(true); setMode("signup"); }}
           >
             {tDisc("disclaimer_cgu")}
@@ -5391,12 +5980,12 @@ By creating an account, the user acknowledges having read this document in full 
   if (mode === "done") {
     return (
       <div style={{ minHeight: "100vh", background: "#eaf4fb", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 }}>
-        <div style={{ width: "100%", maxWidth: 380, background: "#fff", borderRadius: 20, padding: 32, boxShadow: "0 4px 24px #0a6ebd18", textAlign: "center" }}>
+        <div style={{ width: "100%", maxWidth: 380, background: "#fff", borderRadius: 20, padding: 32, boxShadow: "0 4px 24px var(--brand-primary)18", textAlign: "center" }}>
           <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#e8f8ef", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
             <CheckCircle2 size={28} color="#1a8fd1" />
           </div>
-          <div style={{ fontSize: 18, fontWeight: 800, color: "#0d2b4e", marginBottom: 8 }}>{t("account_created")}</div>
-          <div style={{ fontSize: 13, color: "#6a7d90", marginBottom: 12 }}>{t("account_created_sub")}</div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 8 }}>{t("account_created")}</div>
+          <div style={{ fontSize: 13, color: "var(--brand-text-muted)", marginBottom: 12 }}>{t("account_created_sub")}</div>
           {verifyEmailFailed ? (
             <div style={{ fontSize: 12, color: "#c0392b", background: "#fdf0ef", border: "1px solid #f3c9c4", borderRadius: 10, padding: "10px 14px", marginBottom: 14, textAlign: "left" }}>
               ⚠️ {t("verify_email_send_failed")}
@@ -5408,7 +5997,7 @@ By creating an account, the user acknowledges having read this document in full 
           )}
           {verifyEmailFailed && (
             <button
-              style={{ width: "100%", padding: "11px 0", borderRadius: 12, border: "1.5px solid #0a6ebd", background: "#fff", color: "#0a6ebd", fontWeight: 600, fontSize: 13.5, cursor: resendBusy ? "default" : "pointer", marginBottom: 14 }}
+              style={{ width: "100%", padding: "11px 0", borderRadius: 12, border: "1.5px solid var(--brand-primary)", background: "#fff", color: "var(--brand-primary)", fontWeight: 600, fontSize: 13.5, cursor: resendBusy ? "default" : "pointer", marginBottom: 14 }}
               disabled={resendBusy}
               onClick={async () => {
                 setResendBusy(true);
@@ -5426,7 +6015,7 @@ By creating an account, the user acknowledges having read this document in full 
             </button>
           )}
           <button
-            style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "#0a6ebd", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" }}
+            style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" }}
             onClick={onSkip}
           >
             {t("start_app")}
@@ -5438,14 +6027,14 @@ By creating an account, the user acknowledges having read this document in full 
 
   return (
     <div style={{ minHeight: "100vh", background: "#eaf4fb", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 }}>
-      <div style={{ width: "100%", maxWidth: 380, background: "#fff", borderRadius: 20, padding: 28, boxShadow: "0 4px 24px #0a6ebd18" }}>
+      <div style={{ width: "100%", maxWidth: 380, background: "#fff", borderRadius: 20, padding: 28, boxShadow: "0 4px 24px var(--brand-primary)18" }}>
         {/* Logo */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 24 }}>
-          <div style={{ width: 56, height: 56, borderRadius: 16, background: "#0a6ebd", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
+          <div style={{ width: 56, height: 56, borderRadius: 16, background: "var(--brand-primary)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
             <Droplets size={28} color="#fff" />
           </div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: "#0d2b4e" }}>PoolGenAI</div>
-          <div style={{ fontSize: 13, color: "#6a7d90", marginTop: 2 }}>
+          <div style={{ fontSize: 22, fontWeight: 800, color: "var(--brand-text-strong)" }}>PoolGenAI</div>
+          <div style={{ fontSize: 13, color: "var(--brand-text-muted)", marginTop: 2 }}>
             {mode === "signup" ? t("create_account") : mode === "reset" ? t("reset_password") : t("sign_in")}
           </div>
         </div>
@@ -5460,7 +6049,7 @@ By creating an account, the user acknowledges having read this document in full 
         {firebaseReady && mode !== "reset" && (
           <>
             <button
-              style={{ width: "100%", padding: "12px 0", borderRadius: 12, border: "1.5px solid #d0e4f5", background: "#f8fafd", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, fontSize: 14, fontWeight: 600, color: "#0d2b4e", cursor: busy ? "not-allowed" : "pointer", marginBottom: 16, opacity: busy ? 0.6 : 1 }}
+              style={{ width: "100%", padding: "12px 0", borderRadius: 12, border: "1.5px solid #d0e4f5", background: "#f8fafd", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, fontSize: 14, fontWeight: 600, color: "var(--brand-text-strong)", cursor: busy ? "not-allowed" : "pointer", marginBottom: 16, opacity: busy ? 0.6 : 1 }}
               onClick={handleGoogle}
               disabled={busy}
             >
@@ -5478,7 +6067,7 @@ By creating an account, the user acknowledges having read this document in full 
         {/* Formulaire email */}
         {firebaseReady && (
           <>
-            <FieldLabel required style={{ fontSize: 12, fontWeight: 600, color: "#4a6480", display: "block", marginBottom: 4 }}>Email</FieldLabel>
+            <FieldLabel required style={{ fontSize: 12, fontWeight: 600, color: "var(--brand-text-secondary)", display: "block", marginBottom: 4 }}>Email</FieldLabel>
             <input
               type="email" value={email} onChange={e => setEmail(e.target.value)}
               style={{ width: "100%", padding: "11px 14px", borderRadius: 10, border: "1.5px solid #d0e4f5", fontSize: 14, marginBottom: 10, boxSizing: "border-box" }}
@@ -5488,7 +6077,7 @@ By creating an account, the user acknowledges having read this document in full 
 
             {mode !== "reset" && (
               <>
-                <FieldLabel required style={{ fontSize: 12, fontWeight: 600, color: "#4a6480", display: "block", marginBottom: 4 }}>{t("password")}</FieldLabel>
+                <FieldLabel required style={{ fontSize: 12, fontWeight: 600, color: "var(--brand-text-secondary)", display: "block", marginBottom: 4 }}>{t("password")}</FieldLabel>
                 <input
                   type="password" value={pwd} onChange={e => setPwd(e.target.value)}
                   style={{ width: "100%", padding: "11px 14px", borderRadius: 10, border: "1.5px solid #d0e4f5", fontSize: 14, marginBottom: 10, boxSizing: "border-box" }}
@@ -5501,7 +6090,7 @@ By creating an account, the user acknowledges having read this document in full 
             {/* Confirmation mot de passe à l'inscription */}
             {mode === "signup" && (
               <>
-                <FieldLabel required style={{ fontSize: 12, fontWeight: 600, color: "#4a6480", display: "block", marginBottom: 4 }}>{t("confirm_password")}</FieldLabel>
+                <FieldLabel required style={{ fontSize: 12, fontWeight: 600, color: "var(--brand-text-secondary)", display: "block", marginBottom: 4 }}>{t("confirm_password")}</FieldLabel>
                 <input
                   type="password" value={pwd2} onChange={e => setPwd2(e.target.value)}
                   style={{ width: "100%", padding: "11px 14px", borderRadius: 10, border: pwd2 && pwd !== pwd2 ? "1.5px solid #c0392b" : "1.5px solid #d0e4f5", fontSize: 14, marginBottom: 10, boxSizing: "border-box" }}
@@ -5523,12 +6112,12 @@ By creating an account, the user acknowledges having read this document in full 
                     type="checkbox"
                     checked={cguAccepted}
                     onChange={e => setCguAccepted(e.target.checked)}
-                    style={{ marginTop: 2, accentColor: "#0a6ebd", width: 16, height: 16, flexShrink: 0 }}
+                    style={{ marginTop: 2, accentColor: "var(--brand-primary)", width: 16, height: 16, flexShrink: 0 }}
                   />
-                  <span style={{ fontSize: 12, color: "#0d2b4e", lineHeight: 1.5 }}>
+                  <span style={{ fontSize: 12, color: "var(--brand-text-strong)", lineHeight: 1.5 }}>
                     <strong>{t("disclaimer_cgu")}</strong>
                     {" "}<span
-                      style={{ color: "#0a6ebd", textDecoration: "underline", cursor: "pointer" }}
+                      style={{ color: "var(--brand-primary)", textDecoration: "underline", cursor: "pointer" }}
                       onClick={e => { e.preventDefault(); setMode("disclaimer"); }}
                     >{t("disclaimer_title")}</span>
                   </span>
@@ -5539,9 +6128,9 @@ By creating an account, the user acknowledges having read this document in full 
                     type="checkbox"
                     checked={dataAccepted}
                     onChange={e => setDataAccepted(e.target.checked)}
-                    style={{ marginTop: 2, accentColor: "#0a6ebd", width: 16, height: 16, flexShrink: 0 }}
+                    style={{ marginTop: 2, accentColor: "var(--brand-primary)", width: 16, height: 16, flexShrink: 0 }}
                   />
-                  <span style={{ fontSize: 12, color: "#4a6480", lineHeight: 1.5 }}>
+                  <span style={{ fontSize: 12, color: "var(--brand-text-secondary)", lineHeight: 1.5 }}>
                     {t("disclaimer_data")}
                   </span>
                 </label>
@@ -5558,7 +6147,7 @@ By creating an account, the user acknowledges having read this document in full 
                   <button
                     type="button"
                     onClick={() => { setMode("signup"); setError(""); setShowCreateAccountHint(false); }}
-                    style={{ marginTop: 6, background: "none", border: "none", color: "#0a6ebd", fontSize: 12.5, fontWeight: 600, cursor: "pointer", padding: 0, textDecoration: "underline" }}
+                    style={{ marginTop: 6, background: "none", border: "none", color: "var(--brand-primary)", fontSize: 12.5, fontWeight: 600, cursor: "pointer", padding: 0, textDecoration: "underline" }}
                   >
                     {t("create_account_hint")}
                   </button>
@@ -5567,7 +6156,7 @@ By creating an account, the user acknowledges having read this document in full 
                   <button
                     type="button"
                     onClick={() => { setMode("reset"); setError(""); setShowResetHint(false); }}
-                    style={{ marginTop: 6, background: "none", border: "none", color: "#0a6ebd", fontSize: 12.5, fontWeight: 600, cursor: "pointer", padding: 0, textDecoration: "underline" }}
+                    style={{ marginTop: 6, background: "none", border: "none", color: "var(--brand-primary)", fontSize: 12.5, fontWeight: 600, cursor: "pointer", padding: 0, textDecoration: "underline" }}
                   >
                     {t("reset_password_hint")}
                   </button>
@@ -5577,7 +6166,7 @@ By creating an account, the user acknowledges having read this document in full 
             {info && <div style={{ fontSize: 12, color: "#1a8fd1", marginBottom: 8, padding: "8px 10px", background: "#e8f4fd", borderRadius: 8 }}>{info}</div>}
 
             <button
-              style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: busy ? "#7ab8e8" : "#0a6ebd", color: "#fff", fontWeight: 700, fontSize: 15, cursor: busy ? "not-allowed" : "pointer", marginBottom: 14 }}
+              style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: busy ? "var(--brand-icon-light)" : "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 15, cursor: busy ? "not-allowed" : "pointer", marginBottom: 14 }}
               onClick={handleSubmit}
               disabled={busy}
             >
@@ -5587,15 +6176,15 @@ By creating an account, the user acknowledges having read this document in full 
             <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "center" }}>
               {mode === "login" && (
                 <>
-                  <button onClick={() => { setMode("signup"); setError(""); setPwd(""); setPwd2(""); }} style={{ background: "none", border: "none", color: "#0a6ebd", fontSize: 13, cursor: "pointer", fontWeight: 600 }}>{t("no_account")}</button>
+                  <button onClick={() => { setMode("signup"); setError(""); setPwd(""); setPwd2(""); }} style={{ background: "none", border: "none", color: "var(--brand-primary)", fontSize: 13, cursor: "pointer", fontWeight: 600 }}>{t("no_account")}</button>
                   <button onClick={() => { setMode("reset"); setError(""); }} style={{ background: "none", border: "none", color: "#9aa9a5", fontSize: 12, cursor: "pointer" }}>{t("forgot_password")}</button>
                 </>
               )}
               {mode === "signup" && (
-                <button onClick={() => { setMode("login"); setError(""); setPwd(""); setPwd2(""); }} style={{ background: "none", border: "none", color: "#6a7d90", fontSize: 13, cursor: "pointer" }}>{t("already_account")}</button>
+                <button onClick={() => { setMode("login"); setError(""); setPwd(""); setPwd2(""); }} style={{ background: "none", border: "none", color: "var(--brand-text-muted)", fontSize: 13, cursor: "pointer" }}>{t("already_account")}</button>
               )}
               {mode === "reset" && (
-                <button onClick={() => { setMode("login"); setError(""); }} style={{ background: "none", border: "none", color: "#6a7d90", fontSize: 12, cursor: "pointer" }}>{t("back_to_login")}</button>
+                <button onClick={() => { setMode("login"); setError(""); }} style={{ background: "none", border: "none", color: "var(--brand-text-muted)", fontSize: 12, cursor: "pointer" }}>{t("back_to_login")}</button>
               )}
             </div>
           </>
@@ -5610,7 +6199,7 @@ By creating an account, the user acknowledges having read this document in full 
 }
 
 
-function PoolApp() {
+function PoolGenAIApp() {
   const [authUser, setAuthUser] = useState(undefined); // undefined=loading, null=anonymous, object=logged in
   const [showLogin, setShowLogin] = useState(false);
   const [showDeleteReauth, setShowDeleteReauth] = useState(false);
@@ -5747,12 +6336,68 @@ function PoolApp() {
     }
   }
 
+  // v1.60.0 — Landing de confirmation de révocation (côté PROPRIÉTAIRE cette
+  // fois, pas l'invité) : miroir exact du bloc invitation ci-dessus, avec
+  // ?respondRevocation=token à la place de ?respondInvitation=token.
+  // null | "loading_info" | "info_ready" | "responding" | "done" |
+  // "expired" | "invalid" | "mismatch" | "error"
+  const [revocationLinkStatus, setRevocationLinkStatus] = useState(null);
+  const [revocationLinkToken, setRevocationLinkToken] = useState(null);
+  const [revocationLinkInfo, setRevocationLinkInfo] = useState(null); // { secondaryPseudo, poolName }
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("respondRevocation");
+    if (!token) return;
+    setRevocationLinkToken(token);
+    setRevocationLinkStatus("loading_info");
+    const cleanUrl = window.location.origin + window.location.pathname;
+    window.history.replaceState({}, "", cleanUrl);
+    getRevocationRequestInfo(token)
+      .then((result) => {
+        if (typeof result.status === "number") { setRevocationLinkStatus("error"); return; }
+        if (result.status === "pending") {
+          setRevocationLinkInfo({ secondaryPseudo: result.secondaryPseudo, poolName: result.poolName });
+          setRevocationLinkStatus("info_ready");
+        } else {
+          setRevocationLinkStatus(result.status || "error"); // invalid | expired | done
+        }
+      })
+      .catch(() => setRevocationLinkStatus("error"));
+  }, []);
+
+  // Force l'écran de connexion tant qu'une demande de révocation est en
+  // attente de confirmation et qu'on n'est pas connecté (il faut être
+  // connecté avec le compte propriétaire pour confirmer).
+  useEffect(() => {
+    if (revocationLinkStatus && authUser === null) setShowLogin(true);
+  }, [revocationLinkStatus, authUser]);
+
+  async function handleRevocationConfirm() {
+    if (!revocationLinkToken || !authUser) return;
+    setRevocationLinkStatus("responding");
+    try {
+      const idToken = await authUser.getIdToken();
+      const result = await respondToRevocation(idToken, revocationLinkToken);
+      if (result.status === 403) { setRevocationLinkStatus("mismatch"); return; }
+      if (typeof result.status === "number") { setRevocationLinkStatus("error"); return; }
+      setRevocationLinkStatus(result.status || "error");
+    } catch (e) {
+      setRevocationLinkStatus("error");
+    }
+  }
+
   // ── Comptes qui m'ont invité (moi = secondaire) + contexte affiché ──
   // linkedAccounts : liste brute (users/{moi}/linkedAccounts), enrichie à la
   // volée (poolName/pseudo) au moment de l'ouverture des réglages — voir
   // SettingsView. viewContext : null = mes bassins ; sinon
   // { primaryUid, poolId, poolName, pseudo } = bassin d'un principal.
   const [linkedAccounts, setLinkedAccounts] = useState([]);
+  // v1.70.0 — Distingue "linkedAccounts pas encore chargé" de "chargé et
+  // vide" : sans ce flag, le useEffect de contrôle de révocation voyait un
+  // tableau vide dès le premier rendu (avant même que l'écoute Firestore
+  // n'ait renvoyé son premier snapshot) et éjectait à tort un utilisateur
+  // secondaire dont l'accès était pourtant toujours actif.
+  const [linkedAccountsLoaded, setLinkedAccountsLoaded] = useState(false);
   const [viewContext, setViewContext] = useState(null);
   const viewContextLoadedRef = useRef(false);
   // v1.57.4 — Switcher unifié (mes bassins + bassins invités, cf. incident
@@ -5766,8 +6411,12 @@ function PoolApp() {
   const [linkedPoolsInfo, setLinkedPoolsInfo] = useState([]);
 
   useEffect(() => {
-    if (!authUser?.uid || !FB.ready()) { setLinkedAccounts([]); return; }
-    const unsub = FB.onLinkedAccounts(authUser.uid, setLinkedAccounts);
+    if (!authUser?.uid || !FB.ready()) { setLinkedAccounts([]); setLinkedAccountsLoaded(false); return; }
+    setLinkedAccountsLoaded(false);
+    const unsub = FB.onLinkedAccounts(authUser.uid, (accounts) => {
+      setLinkedAccounts(accounts);
+      setLinkedAccountsLoaded(true);
+    });
     return () => unsub();
   }, [authUser?.uid]);
 
@@ -5807,16 +6456,35 @@ function PoolApp() {
   }, [authUser?.uid]);
 
   // Si le lien correspondant a été révoqué entre-temps, retombe sur "mes bassins".
+  // v1.70.0 — Attend linkedAccountsLoaded : sinon le tableau vide de l'état
+  // initial déclenchait ce fallback avant même que la vraie liste n'arrive.
   useEffect(() => {
-    if (!viewContext) return;
+    if (!viewContext || !linkedAccountsLoaded) return;
     if (!linkedAccounts.some((l) => l.primaryUid === viewContext.primaryUid && l.status === "active")) {
       setViewContext(null);
     }
-  }, [linkedAccounts, viewContext]);
+  }, [linkedAccounts, linkedAccountsLoaded, viewContext]);
 
   function switchToContext(next) {
     setViewContext(next);
     window.storage.set(STORAGE_KEYS.viewContext, JSON.stringify(next || null)).catch(() => {});
+  }
+
+  // v1.60.0 — Demande de révocation de mon propre accès à un bassin invité
+  // (je ne peux pas me révoquer moi-même). Envoie un email au propriétaire
+  // avec un lien de confirmation — voir /request-revoke-own-access.
+  async function handleRequestRevocation(primaryUid) {
+    if (!authUser) throw new Error("not_signed_in");
+    const idToken = await authUser.getIdToken();
+    const res = await fetch(`${PROXY_BASE_URL}/request-revoke-own-access`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+      body: JSON.stringify({ primaryUid }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || "request_failed");
+    }
   }
 
   // uid dont les données (measures/applications/config) sont actuellement
@@ -5834,9 +6502,24 @@ function PoolApp() {
   const [tab, setTab] = useState("dashboard"); // dashboard | history | products | settings
   const [showAddMeasure, setShowAddMeasure] = useState(false);
   const [showAddProduct, setShowAddProduct] = useState(false);
+  // v1.62.0 — Sous-page "Mes produits à acheter", accessible depuis l'onglet Produits.
+  const [showProductsToBuy, setShowProductsToBuy] = useState(false);
+  // v1.63.0 — Application manuelle d'un produit hors plan de traitement.
+  const [showManualApply, setShowManualApply] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [editingMeasure, setEditingMeasure] = useState(null);
+  // v1.66.0 — Application (traitement) associée à la mesure en cours
+  // d'édition, pour permettre de modifier produit/quantité/heure en même
+  // temps que la mesure depuis l'écran "Modifier" de l'historique.
+  const [editingApplication, setEditingApplication] = useState(null);
   const [showPaywall, setShowPaywall] = useState(false);
+  // v1.69.0 — Écran plein cadre joué à l'activation du Premium (effet
+  // effervescent), avant que l'app ne se ré-affiche déjà débloquée.
+  // v1.70.0 — Rejoué aussi à la désactivation (revealVariant "downgrade"),
+  // après confirmation explicite (showDowngradeConfirm).
+  const [showPremiumReveal, setShowPremiumReveal] = useState(false);
+  const [revealVariant, setRevealVariant] = useState("activate");
+  const [showDowngradeConfirm, setShowDowngradeConfirm] = useState(false);
   const [paywallSource, setPaywallSource] = useState(null);
   function openPaywall(source) {
     track("paywall_shown", { source: source || "unknown" });
@@ -5880,8 +6563,15 @@ function PoolApp() {
   const [dataConsent, setDataConsent] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [acceptedCguVersion, setAcceptedCguVersion] = useState(null);
+  // v1.85.0 — Permet de consulter le texte complet des CGU directement depuis
+  // l'écran de validation obligatoire (needsCguAcceptance), plutôt que de forcer
+  // une acceptation sans possibilité de lecture.
+  const [showFullCguInGate, setShowFullCguInGate] = useState(false);
   const [cguAcceptedDate, setCguAcceptedDate] = useState(null);
-  const [showCguUpdate, setShowCguUpdate] = useState(false);
+  // v1.83.0 — Dérivé (pas un flag manuel) : couvre à la fois "jamais accepté"
+  // (comptes Google, cguVersion cloud absent) et "version dépassée" (re-acceptation).
+  // Se recalcule automatiquement dès que acceptedCguVersion change (ex: rapatriement
+  // cloud après connexion), contrairement à l'ancien setShowCguUpdate posé une seule fois.
   const detectedLang = (() => {
     const nav = (navigator.language || navigator.userLanguage || "fr").toLowerCase().slice(0, 2);
     return ["fr","en","de","it","es","pt"].includes(nav) ? nav : "fr";
@@ -5896,8 +6586,19 @@ function PoolApp() {
   // partagées (CGU clause 11). Activé par défaut — données anonymes, coût nul
   // pour l'utilisateur, cohérent avec le texte CGU ("peut désactiver").
   const [calibrationContribution, setCalibrationContribution] = useState(true);
+  // v1.72.0 — Wizard d'accueil : affiché une seule fois après la création du
+  // tout premier bassin d'un compte. onboardingSeen est synchronisé via
+  // Firestore (comme calibrationContribution) pour ne pas le revoir en cas
+  // de changement d'appareil.
+  const [onboardingSeen, setOnboardingSeen] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [forceUpdate, setForceUpdate] = useState(false);
+  // v1.77.0 — Écran d'attente affiché après clic sur "Mettre à jour" : au
+  // lieu de recharger immédiatement (risque de tomber en plein milieu d'un
+  // déploiement GitHub Pages pas encore propagé), on poll version.json
+  // jusqu'à obtenir une valeur stable, puis seulement là on recharge.
+  const [updating, setUpdating] = useState(false);
   const [suspended, setSuspended] = useState(false);
   const [suspendReason, setSuspendReason] = useState("");
   const [erasingData, setErasingData] = useState(false);
@@ -5956,6 +6657,44 @@ function PoolApp() {
     // en plus du nettoyage du Service Worker ci-dessus)
     const base = window.location.origin + window.location.pathname;
     window.location.href = `${base}?_r=${Date.now()}`;
+  }
+
+  // v1.77.0 — Poll version.json jusqu'à 2 lectures consécutives identiques
+  // (déploiement stabilisé, plus en cours de propagation) avant de vraiment
+  // recharger. Garde-fou à 45s : si ça ne se stabilise jamais (souci réseau
+  // persistant), on recharge quand même plutôt que de bloquer l'utilisateur
+  // indéfiniment sur l'écran d'attente.
+  function startUpdatePolling() {
+    setUpdating(true);
+    const startedAt = Date.now();
+    let lastVersion = null;
+    let stableCount = 0;
+    async function poll() {
+      try {
+        const res = await fetch(`version.json?t=${Date.now()}`, { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.version && data.version === lastVersion) {
+            stableCount += 1;
+          } else {
+            stableCount = 0;
+            lastVersion = data?.version || null;
+          }
+          if (stableCount >= 2) {
+            forceReloadApp();
+            return;
+          }
+        }
+      } catch (e) {
+        // Erreur réseau : on continue simplement à réessayer.
+      }
+      if (Date.now() - startedAt > 45000) {
+        forceReloadApp();
+        return;
+      }
+      setTimeout(poll, 3000);
+    }
+    poll();
   }
 
   // ── Statut de suspension du compte — écoute temps réel ──
@@ -6221,6 +6960,9 @@ function PoolApp() {
       if (config.calibrationContribution !== undefined) {
         setCalibrationContribution((prev) => (prev === config.calibrationContribution ? prev : config.calibrationContribution));
       }
+      if (config.onboardingSeen !== undefined) {
+        setOnboardingSeen((prev) => (prev === config.onboardingSeen ? prev : config.onboardingSeen));
+      }
       if (config.pseudo !== undefined) {
         setMyPseudo((prev) => (prev === config.pseudo ? prev : (config.pseudo || "")));
       }
@@ -6263,6 +7005,14 @@ function PoolApp() {
   const firestoreUnsubRef = useRef(null);
   const cloudConfigReceivedRef = useRef(false);
   const [cloudConfigReceived, setCloudConfigReceived] = useState(false);
+  // v1.70.0 — "Bassin introuvable" (contexte secondaire) : deux signaux
+  // combinés plutôt qu'un seul. poolAccessError se pose immédiatement si
+  // Firestore renvoie explicitement permission-denied (accès révoqué de
+  // façon certaine). secondaryLoadTimeout ne se déclenche qu'après 5s sans
+  // nouvelle ni confirmation ni infirmation (latence réseau, bassin
+  // supprimé) — le temps normal de charger reste juste un spinner.
+  const [poolAccessError, setPoolAccessError] = useState(null);
+  const [secondaryLoadTimeout, setSecondaryLoadTimeout] = useState(false);
   useEffect(() => {
     if (!dataUid || !FB.ready() || !window._fbOnSnapshot) return;
     const uid = dataUid;
@@ -6274,6 +7024,8 @@ function PoolApp() {
     const scopedPoolId = viewContext ? viewContext.poolId : null;
     cloudConfigReceivedRef.current = false;
     setCloudConfigReceived(false);
+    setPoolAccessError(null);
+    setSecondaryLoadTimeout(false);
 
     // Nettoyage abonnements précédents
     if (firestoreUnsubRef.current) {
@@ -6323,6 +7075,13 @@ function PoolApp() {
       // v1.53.0 — apiProvider n'est plus lu depuis Firestore : valeur fixe
       // "anthropic" imposée au chargement (voir plus bas), jamais un réglage
       // synchronisé entre appareils.
+    }, (err) => {
+      // v1.70.0 — permission-denied confirme sans ambiguïté un accès révoqué
+      // (cf. règle users/{uid}/config/main : lecture conditionnée à
+      // isActiveSecondary). Affiché immédiatement, sans attendre le timeout.
+      if (viewContext && err?.code === "permission-denied") {
+        setPoolAccessError("denied");
+      }
     });
 
     // v1.30.0 — Écoute temps réel de productPhotos. Alimente productPhotosRef
@@ -6347,6 +7106,17 @@ function PoolApp() {
       unsubProductPhotos();
     };
   }, [dataUid, viewContext?.poolId]);
+
+  // v1.70.0 — Filet de sécurité pour le contexte secondaire : si après 5s le
+  // bassin n'est toujours ni confirmé (cloudConfigReceived) ni explicitement
+  // refusé (poolAccessError), on cesse de considérer ça comme un simple
+  // temps de chargement — l'écran "Bassin introuvable" prend le relais avec
+  // un message générique (bassin supprimé, ou souci réseau persistant).
+  useEffect(() => {
+    if (!viewContext || cloudConfigReceived || poolAccessError) return;
+    const timer = setTimeout(() => setSecondaryLoadTimeout(true), 5000);
+    return () => clearTimeout(timer);
+  }, [viewContext, cloudConfigReceived, poolAccessError]);
 
   // --- Firebase Auth ---
   useEffect(() => {
@@ -6378,6 +7148,14 @@ function PoolApp() {
         try {
           const data = await FB.getUser(user.uid);
           if (data?.isPremium !== undefined) setIsPremium(data.isPremium);
+          // v1.83.0 — Le cloud (Firestore users/{uid}) fait foi pour l'acceptation
+          // CGU, plus le cache local seul : un compte Google n'a jamais eu ce champ
+          // écrit (handleGoogle ne collecte aucun consentement) et un compte email
+          // sur un nouvel appareil n'a pas encore ce champ en cache local. Sans ce
+          // rapatriement, acceptedCguVersion reste indéfiniment null/périmé et
+          // l'écran de validation ne se déclenche jamais pour ces cas.
+          setAcceptedCguVersion(data?.cguVersion || null);
+          setCguAcceptedDate(data?.cguAcceptedDate || null);
         } catch (e) {}
         FB.saveUser(user.uid, { email: user.email, lastSeen: new Date().toISOString() }).catch(() => {});
         if (!resolved) { resolved = true; setAuthResolved(true); }
@@ -6421,6 +7199,12 @@ function PoolApp() {
   const needsEmailVerification =
     !!authUser && !isGoogleUser &&
     (emailVerifiedNow !== null ? !emailVerifiedNow : authUser.emailVerified === false);
+  // v1.83.0 — Couvre le compte jamais passé par l'acceptation CGU (acceptedCguVersion
+  // null — cas Google, cf. handleGoogle qui ne collecte aucun consentement) ET le
+  // compte dont la version acceptée est dépassée (re-acceptation après mise à jour).
+  const cguNeverAccepted = !!authUser && !acceptedCguVersion;
+  const needsCguAcceptance =
+    !!authUser && (cguNeverAccepted || acceptedCguVersion < CGU_VERSION);
 
   async function handleCheckEmailVerified() {
     if (!window._fbAuth?.currentUser) return;
@@ -6552,10 +7336,7 @@ function PoolApp() {
         const dc = await window.storage.get(STORAGE_KEYS.dataConsent);
         if (dc?.value === "true") setDataConsent(true);
         const cv = await window.storage.get(STORAGE_KEYS.cguVersion);
-        if (cv?.value) {
-          setAcceptedCguVersion(cv.value);
-          if (cv.value < CGU_VERSION) setShowCguUpdate(true);
-        }
+        if (cv?.value) setAcceptedCguVersion(cv.value);
         const cd = await window.storage.get(STORAGE_KEYS.cguAcceptedDate);
         if (cd?.value) setCguAcceptedDate(cd.value);
         const pr = await window.storage.get(STORAGE_KEYS.premium);
@@ -6707,6 +7488,21 @@ function PoolApp() {
     }
   }, [viewContext, activePoolId]);
 
+  // v1.59.5 — Filet de sécurité : en contexte propriétaire (pas de viewContext),
+  // si activePoolId ne correspond plus à aucun de mes bassins actifs (ex. valeur
+  // restée sur l'ID d'un bassin invité consulté lors d'une session précédente,
+  // ou bassin supprimé/désactivé entre-temps), on retombe sur le premier bassin
+  // disponible plutôt que de rester bloqué sur un ID fantôme. Sans ce filet :
+  // mesures filtrées sur un ID inexistant → "Aucune mesure" alors que
+  // l'historique existe bien, et aucune entrée du switcher n'apparaît cochée.
+  useEffect(() => {
+    if (viewContext) return;
+    if (!activePools.length) return;
+    if (!activePools.some((p) => p.id === activePoolId)) {
+      setActivePoolId(activePools[0].id);
+    }
+  }, [viewContext, activePools, activePoolId]);
+
   // v1.57.4 — Switcher unifié : mes bassins + bassins invités dans une seule
   // liste (remplace l'ancien sélecteur séparé "Bassin affiché" / "Bassin de
   // {pseudo}"). `key` distingue own/invited pour éviter toute collision — les
@@ -6731,6 +7527,7 @@ function PoolApp() {
       poolId: l.poolId,
       poolName: l.poolName,
       pseudo: l.pseudo,
+      ownerIsPremium: l.ownerIsPremium,
     }));
     return [...own, ...invited];
   }, [ownPools, linkedPoolsInfo, lang]);
@@ -6752,11 +7549,20 @@ function PoolApp() {
   const effectiveIsPremium = viewContext ? !!currentLinkedInfo?.ownerIsPremium : isPremium;
 
   function handleSelectSwitcherEntry(entry) {
+    // v1.74.0 — Si le bassin ciblé change le contexte gratuit/premium effectif
+    // (bassin délégué Premium <-> mon bassin gratuit, ou l'inverse), rejoue la
+    // transition effervescente entre les deux couleurs, dans les deux sens.
+    const wasEffectivePremium = effectiveIsPremium;
+    const willBeEffectivePremium = entry.kind === "invited" ? !!entry.ownerIsPremium : isPremium;
     if (entry.kind === "invited") {
       switchToContext({ primaryUid: entry.primaryUid, poolId: entry.poolId, poolName: entry.poolName, pseudo: entry.pseudo });
     } else {
       if (viewContext) switchToContext(null);
       setActivePoolId(entry.id);
+    }
+    if (willBeEffectivePremium !== wasEffectivePremium) {
+      setRevealVariant(willBeEffectivePremium ? "context-premium" : "context-free");
+      setShowPremiumReveal(true);
     }
   }
 
@@ -6974,6 +7780,92 @@ function PoolApp() {
     setValidatingMeasure(null);
   }
 
+  // v1.63.0 — Application manuelle hors plan (ex. entretien périodique).
+  // Décrémente le stock immédiatement (contrairement au plan, pas d'attente
+  // de fin de séquence) et enregistre une application distincte, sans
+  // measureId, marquée type: "manual" pour être reconnue dans l'historique
+  // et le rapport PDF sans se substituer aux applications liées à une mesure.
+  function saveManualApplication(product, amount, doseUnit, appliedAt) {
+    track("manual_application", { product: product.name });
+    if (product.containerAmount) {
+      const cUnit = product.containerUnit || "kg";
+      let appliedInContainerUnit = amount;
+      if (cUnit === "kg" && doseUnit === "g") appliedInContainerUnit = amount / 1000;
+      if (cUnit === "L" && doseUnit === "mL") appliedInContainerUnit = amount / 1000;
+      const consumed = (appliedInContainerUnit / product.containerAmount) * 100;
+      const prevStock = product.stockPercent ?? 100;
+      const newStock = Math.max(0, prevStock - consumed);
+      const rounded = Math.round(newStock * 10) / 10;
+      setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, stockPercent: rounded } : p)));
+      if (!product.isDefault && prevStock > 0 && rounded <= 0) {
+        setTimeout(() => {
+          setProducts((prev) => {
+            const p = prev.find((x) => x.id === product.id);
+            if (!p) return prev;
+            const ok = window.confirm(t("product_empty_delete_confirm", { name: p.name }));
+            return ok ? prev.filter((x) => x.id !== product.id) : prev;
+          });
+        }, 300);
+      }
+    }
+    const newApp = {
+      id: uid(),
+      poolId: activePoolId,
+      measureId: null,
+      type: "manual",
+      productName: product.name,
+      appliedAmount: amount,
+      doseUnit,
+      appliedAt,
+      createdBy: authUser?.uid || null,
+    };
+    setApplications((prev) => [...prev, newApp]);
+    if (dataUid) FB.saveApplication(dataUid, newApp).catch(() => {});
+    setShowManualApply(false);
+  }
+
+  // v1.66.0 — Édition d'une application déjà enregistrée (produit/quantité/
+  // heure), depuis l'écran "Modifier" de l'historique. Corrige le stock en
+  // delta : recrédite l'ancien produit puis décompte le nouveau, uniquement
+  // pour les steps réellement modifiés (produit ou quantité différents).
+  // Un produit générique (non trouvé dans poolProducts) ne subit aucun
+  // mouvement de stock, comme partout ailleurs dans l'app.
+  function editHistoricalApplication(applicationId, newSteps) {
+    const app = applications.find((a) => a.id === applicationId);
+    if (!app) return;
+    const oldSteps = app.steps || [];
+
+    function applyDelta(list, productName, amount, doseUnit, sign) {
+      if (!amount) return list;
+      return list.map((p) => {
+        if (p.name !== productName || !p.containerAmount) return p;
+        const cUnit = p.containerUnit || "kg";
+        let inContainerUnit = amount;
+        if (cUnit === "kg" && doseUnit === "g") inContainerUnit = amount / 1000;
+        if (cUnit === "L" && doseUnit === "mL") inContainerUnit = amount / 1000;
+        const pct = (inContainerUnit / p.containerAmount) * 100;
+        const next = Math.max(0, Math.min(100, (p.stockPercent ?? 100) + sign * pct));
+        return { ...p, stockPercent: Math.round(next * 10) / 10 };
+      });
+    }
+
+    setProducts((prev) => {
+      let updated = prev;
+      newSteps.forEach((ns, i) => {
+        const os = oldSteps[i];
+        if (!os || ns.skipped || !ns.appliedAt) return;
+        if (ns.productName === os.productName && ns.appliedAmount === os.appliedAmount) return;
+        updated = applyDelta(updated, os.productName, os.appliedAmount, os.doseUnit, +1); // recrédite l'ancien
+        updated = applyDelta(updated, ns.productName, ns.appliedAmount, ns.doseUnit, -1); // décompte le nouveau
+      });
+      return updated;
+    });
+
+    const updatedApp = { ...app, steps: newSteps };
+    setApplications((prev) => prev.map((a) => (a.id === applicationId ? updatedApp : a)));
+    if (dataUid) FB.saveApplication(dataUid, updatedApp).catch(() => {});
+  }
+
   // Démarre le wizard pour une mesure donnée
   function startPlan(measureId, recs) {
     const now = new Date();
@@ -7003,6 +7895,7 @@ function PoolApp() {
       appliedAmount: (s.appliedAt && !s.skipped) ? s.appliedAmount : null,
       doseUnit: s.doseUnit,
       appliedAt: s.appliedAt, skipped: s.skipped, scheduledAt: s.scheduledAt,
+      mode: s.mode, doseText: s.doseText,
     }));
   }
 
@@ -7022,13 +7915,44 @@ function PoolApp() {
     });
     // Recalculer les scheduledAt des étapes suivantes
     let lastApplied = new Date(now);
-    const recalcSteps = newSteps.map((s, i) => {
+    let recalcSteps = newSteps.map((s, i) => {
       if (i < stepIdx) return s;
       if (i === stepIdx) { lastApplied = new Date(now); return s; }
       const scheduled = new Date(lastApplied.getTime() + (newSteps[i-1]?.waitHours || 0) * 3600 * 1000);
       lastApplied = scheduled;
       return { ...s, scheduledAt: scheduled.toISOString() };
     });
+
+    // v1.61.0 — Carte "entretien continu" : si le produit utilisé pour cette
+    // étape est configuré en galets/sticks avec un ratio d'entretien
+    // fabricant renseigné, on ajoute une carte informative en fin de plan
+    // (une seule fois par plan — recalcSteps contient déjà la carte si elle
+    // a été ajoutée à une étape précédente). Elle termine le plan : pas de
+    // dose à saisir, pas de décompte de stock, juste l'information.
+    const appliedStep = recalcSteps[stepIdx];
+    const usedProductName = appliedStep.appliedProductName || appliedStep.productName;
+    const usedProduct = poolProducts.find((p) => p.name === usedProductName);
+    const alreadyHasMaintenanceCard = recalcSteps.some((s) => s.mode === "entretien");
+    if (!alreadyHasMaintenanceCard && usedProduct?.packagingType === "galets" && usedProduct?.maintenanceRatio?.units && usedProduct?.maintenanceRatio?.volumePer) {
+      const mr = usedProduct.maintenanceRatio;
+      recalcSteps = [...recalcSteps, {
+        action: "entretien-galets",
+        mode: "entretien",
+        title: tFn("maintenance_card_title"),
+        productName: usedProduct.name,
+        productAvailable: true,
+        doseText: tFn("maintenance_card_text", { units: mr.units, volume: mr.volumePer, days: mr.days || "?" }),
+        computedDoseAmount: null,
+        appliedAmount: null,
+        doseUnit: null,
+        note: null,
+        waitHours: 0,
+        scheduledAt: new Date(now).toISOString(),
+        appliedAt: null,
+        skipped: false,
+      }];
+    }
+
     // Trouver la prochaine étape non traitée
     let nextIdx = stepIdx + 1;
     while (nextIdx < recalcSteps.length && (recalcSteps[nextIdx].appliedAt || recalcSteps[nextIdx].skipped)) nextIdx++;
@@ -7111,14 +8035,16 @@ function PoolApp() {
     if (blockedByLimit) {
       openPaywall("measure_limit");
     } else {
+      setEditingApplication(null);
       setShowAddMeasure(true);
     }
   }
 
-  function handleEditMeasure(m) {
+  function handleEditMeasure(m, application) {
     // Modifier une mesure existante ne crée pas de nouvelle entrée :
     // pas concerné par la limite quotidienne gratuite.
     setEditingMeasure(m);
+    setEditingApplication(application || null);
     setShowAddMeasure(true);
   }
 
@@ -7218,12 +8144,18 @@ function PoolApp() {
     syncConfig({ activePlan: activePlanByPool });
   }, [activePlanByPool]);
 
-  // v1.57.9 — isPremium reste volontairement local (pas de sync Firestore) :
-  // la règle de sécurité bloque toute écriture client sur ce champ, y compris
-  // pour le propriétaire (empêche l'auto-attribution du statut premium).
-  // C'est le comportement voulu — seul un futur webhook Stripe côté Worker
-  // (service account, hors règles de sécurité) pourra le faire passer à true.
-  // L'interrupteur de test ici ne simule que l'état local, sans persistance.
+  // v1.57.9 — isPremium : la règle de sécurité bloque toute écriture client
+  // qui ferait passer ce champ à TRUE (empêche l'auto-attribution du statut
+  // premium), y compris pour le propriétaire. Seul un futur webhook Stripe
+  // côté Worker (service account, hors règles de sécurité) pourra le faire
+  // passer à true. L'activation via l'interrupteur de test ici ne simule que
+  // l'état local, sans persistance.
+  // v1.76.0 — La direction inverse (désactivation, passage à FALSE) est en
+  // revanche bien persistée sur Firestore désormais (voir syncOwnConfig dans
+  // le handler onConfirm de PremiumDowngradeConfirmModal) : sans ça, un true
+  // resté en base d'un test antérieur pouvait indéfiniment réaffirmer
+  // isPremium=true à chaque snapshot onConfig, rendant le toggle local
+  // impuissant à le faire tenir sur OFF après un rechargement.
 
   useEffect(() => {
     if (!loaded || !authUser?.uid) return;
@@ -7269,6 +8201,17 @@ function PoolApp() {
     setShowAddPool(false);
   }
 
+  // v1.72.0 — Marque l'onboarding comme vu (fin normale ou "Passer"), synchronisé
+  // Firestore pour ne pas le revoir sur un autre appareil. Le lien "Revoir la
+  // présentation" dans Réglages rouvre le wizard sans repasser par ici.
+  function markOnboardingSeen() {
+    setShowOnboarding(false);
+    if (!onboardingSeen) {
+      setOnboardingSeen(true);
+      syncOwnConfig({ onboardingSeen: true });
+    }
+  }
+
   function updatePool(id, updates) {
     if (viewContext) return; // v1.55.0 — réservé au propriétaire du compte
     setPools((prev) => prev.map((p) => (p.id === id ? { ...p, ...updates } : p)));
@@ -7301,30 +8244,47 @@ function PoolApp() {
     setShowAddPool(true);
   }
 
+  // v1.82.0 — BUG : ces variables n'étaient posées que sur le <div className="app">
+  // interne, alors que plusieurs écrans (vérification email, compte suspendu/supprimé,
+  // bassin introuvable, premier bassin forcé...) sont rendus AVANT ce div, dans un
+  // Fragment <> qui ne peut porter aucun style. Ces écrans utilisaient donc
+  // var(--brand-primary) non définie → fond/texte transparents, boutons invisibles
+  // ("blanc sur blanc"). Calculées une fois ici et appliquées au vrai conteneur racine.
+  const themeVars = {
+    "--brand-primary": effectiveIsPremium ? "#1ca7d1" : "#4a9b82",
+    "--brand-primary-dark": effectiveIsPremium ? "#0c7a9e" : "#2a6553",
+    "--brand-text-strong": effectiveIsPremium ? "#0d2b4e" : "#173a2b",
+    "--brand-text-secondary": effectiveIsPremium ? "#4a6480" : "#3f6552",
+    "--brand-text-muted": effectiveIsPremium ? "#6a7d90" : "#5c7d6c",
+    "--brand-icon-light": effectiveIsPremium ? "#7ab8e8" : "#7fc7a4",
+    "--brand-header-sub": effectiveIsPremium ? "#a8d4f0" : "#bfe0cf",
+    "--brand-bg-tint": effectiveIsPremium ? "#f0f6fb" : "#eef6f1",
+  };
+
   return (
-    <>
+    <div style={themeVars}>
     {verifyLinkStatus && (
       <div style={{ position: "fixed", inset: 0, zIndex: 3200, background: "rgba(10,30,60,0.94)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-        <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px #0a6ebd33" }}>
+        <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px var(--brand-primary)33" }}>
           {verifyLinkStatus === "verifying" ? (
             <>
-              <Loader2 size={34} className="spin" style={{ marginBottom: 10, color: "#0a6ebd" }} />
-              <div style={{ fontSize: 14, color: "#4a6480" }}>{t("verify_link_checking")}</div>
+              <Loader2 size={34} className="spin" style={{ marginBottom: 10, color: "var(--brand-primary)" }} />
+              <div style={{ fontSize: 14, color: "var(--brand-text-secondary)" }}>{t("verify_link_checking")}</div>
             </>
           ) : (
             <>
               <div style={{ fontSize: 34, marginBottom: 10 }}>
                 {verifyLinkStatus === "verified" || verifyLinkStatus === "already_verified" ? "✅" : "⚠️"}
               </div>
-              <div style={{ fontSize: 17, fontWeight: 800, color: "#0d2b4e", marginBottom: 8 }}>
+              <div style={{ fontSize: 17, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 8 }}>
                 {t(`verify_link_${verifyLinkStatus}_title`)}
               </div>
-              <div style={{ fontSize: 13.5, color: "#4a6480", marginBottom: 18, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 13.5, color: "var(--brand-text-secondary)", marginBottom: 18, lineHeight: 1.5 }}>
                 {t(`verify_link_${verifyLinkStatus}_desc`)}
               </div>
               <button
                 onClick={() => setVerifyLinkStatus(null)}
-                style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "#0a6ebd", color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: "pointer" }}
+                style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: "pointer" }}
               >
                 {t("verify_link_continue_btn")}
               </button>
@@ -7335,48 +8295,48 @@ function PoolApp() {
     )}
     {mergeLinkStatus && (
       <div style={{ position: "fixed", inset: 0, zIndex: 3200, background: "rgba(10,30,60,0.94)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-        <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px #0a6ebd33" }}>
+        <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px var(--brand-primary)33" }}>
           {mergeLinkStatus === "pending_confirmation" ? (
             <>
               <div style={{ fontSize: 34, marginBottom: 10 }}>🔗</div>
-              <div style={{ fontSize: 17, fontWeight: 800, color: "#0d2b4e", marginBottom: 8 }}>
+              <div style={{ fontSize: 17, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 8 }}>
                 {t("merge_link_pending_title")}
               </div>
-              <div style={{ fontSize: 13.5, color: "#4a6480", marginBottom: 18, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 13.5, color: "var(--brand-text-secondary)", marginBottom: 18, lineHeight: 1.5 }}>
                 {t("merge_link_pending_desc")}
               </div>
               <button
                 onClick={handleConfirmMergeClick}
-                style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "#0a6ebd", color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: "pointer", marginBottom: 10 }}
+                style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: "pointer", marginBottom: 10 }}
               >
                 {t("merge_link_confirm_btn")}
               </button>
               <button
                 onClick={() => { setMergeLinkStatus(null); setMergeLinkParams(null); }}
-                style={{ width: "100%", padding: "11px 0", borderRadius: 12, border: "1px solid #d8e2ec", background: "transparent", color: "#4a6480", fontWeight: 600, fontSize: 13.5, cursor: "pointer" }}
+                style={{ width: "100%", padding: "11px 0", borderRadius: 12, border: "1px solid #d8e2ec", background: "transparent", color: "var(--brand-text-secondary)", fontWeight: 600, fontSize: 13.5, cursor: "pointer" }}
               >
                 {t("merge_link_cancel_btn")}
               </button>
             </>
           ) : mergeLinkStatus === "confirming" ? (
             <>
-              <Loader2 size={34} className="spin" style={{ marginBottom: 10, color: "#0a6ebd" }} />
-              <div style={{ fontSize: 14, color: "#4a6480" }}>{t("merge_link_confirming")}</div>
+              <Loader2 size={34} className="spin" style={{ marginBottom: 10, color: "var(--brand-primary)" }} />
+              <div style={{ fontSize: 14, color: "var(--brand-text-secondary)" }}>{t("merge_link_confirming")}</div>
             </>
           ) : (
             <>
               <div style={{ fontSize: 34, marginBottom: 10 }}>
                 {mergeLinkStatus === "merged" || mergeLinkStatus === "already_merged" ? "✅" : "⚠️"}
               </div>
-              <div style={{ fontSize: 17, fontWeight: 800, color: "#0d2b4e", marginBottom: 8 }}>
+              <div style={{ fontSize: 17, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 8 }}>
                 {t(`merge_link_${mergeLinkStatus}_title`)}
               </div>
-              <div style={{ fontSize: 13.5, color: "#4a6480", marginBottom: 18, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 13.5, color: "var(--brand-text-secondary)", marginBottom: 18, lineHeight: 1.5 }}>
                 {t(`merge_link_${mergeLinkStatus}_desc`)}
               </div>
               <button
                 onClick={() => { setMergeLinkStatus(null); setMergeLinkParams(null); }}
-                style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "#0a6ebd", color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: "pointer" }}
+                style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: "pointer" }}
               >
                 {t("verify_link_continue_btn")}
               </button>
@@ -7387,19 +8347,19 @@ function PoolApp() {
     )}
     {authUser && inviteLinkStatus && (
       <div style={{ position: "fixed", inset: 0, zIndex: 3200, background: "rgba(10,30,60,0.94)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-        <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px #0a6ebd33" }}>
+        <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px var(--brand-primary)33" }}>
           {inviteLinkStatus === "loading_info" || inviteLinkStatus === "responding" ? (
             <>
-              <Loader2 size={34} className="spin" style={{ marginBottom: 10, color: "#0a6ebd" }} />
-              <div style={{ fontSize: 14, color: "#4a6480" }}>{t("invite_response_checking")}</div>
+              <Loader2 size={34} className="spin" style={{ marginBottom: 10, color: "var(--brand-primary)" }} />
+              <div style={{ fontSize: 14, color: "var(--brand-text-secondary)" }}>{t("invite_response_checking")}</div>
             </>
           ) : inviteLinkStatus === "info_ready" ? (
             <>
               <div style={{ fontSize: 34, marginBottom: 10 }}>🔗</div>
-              <div style={{ fontSize: 17, fontWeight: 800, color: "#0d2b4e", marginBottom: 8 }}>
+              <div style={{ fontSize: 17, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 8 }}>
                 {t("invite_response_title")}
               </div>
-              <div style={{ fontSize: 13.5, color: "#4a6480", marginBottom: 18, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 13.5, color: "var(--brand-text-secondary)", marginBottom: 18, lineHeight: 1.5 }}>
                 {t("invite_response_text", {
                   pseudo: inviteLinkInfo?.primaryPseudo || inviteLinkInfo?.primaryEmail || "",
                   pool: inviteLinkInfo?.poolName || "",
@@ -7407,13 +8367,13 @@ function PoolApp() {
               </div>
               <button
                 onClick={() => handleInviteResponse("accept")}
-                style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "#0a6ebd", color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: "pointer", marginBottom: 10 }}
+                style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: "pointer", marginBottom: 10 }}
               >
                 {t("invite_response_accept")}
               </button>
               <button
                 onClick={() => handleInviteResponse("decline")}
-                style={{ width: "100%", padding: "11px 0", borderRadius: 12, border: "1px solid #d8e2ec", background: "transparent", color: "#4a6480", fontWeight: 600, fontSize: 13.5, cursor: "pointer" }}
+                style={{ width: "100%", padding: "11px 0", borderRadius: 12, border: "1px solid #d8e2ec", background: "transparent", color: "var(--brand-text-secondary)", fontWeight: 600, fontSize: 13.5, cursor: "pointer" }}
               >
                 {t("invite_response_decline")}
               </button>
@@ -7423,15 +8383,64 @@ function PoolApp() {
               <div style={{ fontSize: 34, marginBottom: 10 }}>
                 {inviteLinkStatus === "accepted" ? "✅" : "⚠️"}
               </div>
-              <div style={{ fontSize: 17, fontWeight: 800, color: "#0d2b4e", marginBottom: 8 }}>
+              <div style={{ fontSize: 17, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 8 }}>
                 {t("invite_response_title")}
               </div>
-              <div style={{ fontSize: 13.5, color: "#4a6480", marginBottom: 18, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 13.5, color: "var(--brand-text-secondary)", marginBottom: 18, lineHeight: 1.5 }}>
                 {t(`invite_response_${inviteLinkStatus}`)}
               </div>
               <button
                 onClick={() => { setInviteLinkStatus(null); setInviteLinkToken(null); setInviteLinkInfo(null); }}
-                style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "#0a6ebd", color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: "pointer" }}
+                style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: "pointer" }}
+              >
+                {t("verify_link_continue_btn")}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    )}
+    {authUser && revocationLinkStatus && (
+      <div style={{ position: "fixed", inset: 0, zIndex: 3200, background: "rgba(10,30,60,0.94)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+        <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px var(--brand-primary)33" }}>
+          {revocationLinkStatus === "loading_info" || revocationLinkStatus === "responding" ? (
+            <>
+              <Loader2 size={34} className="spin" style={{ marginBottom: 10, color: "var(--brand-primary)" }} />
+              <div style={{ fontSize: 14, color: "var(--brand-text-secondary)" }}>{t("invite_response_checking")}</div>
+            </>
+          ) : revocationLinkStatus === "info_ready" ? (
+            <>
+              <div style={{ fontSize: 34, marginBottom: 10 }}>🔓</div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 8 }}>
+                {t("revocation_response_title")}
+              </div>
+              <div style={{ fontSize: 13.5, color: "var(--brand-text-secondary)", marginBottom: 18, lineHeight: 1.5 }}>
+                {t("revocation_response_text", {
+                  pseudo: revocationLinkInfo?.secondaryPseudo || "",
+                  pool: revocationLinkInfo?.poolName || "",
+                })}
+              </div>
+              <button
+                onClick={handleRevocationConfirm}
+                style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: "pointer" }}
+              >
+                {t("revocation_response_accept")}
+              </button>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: 34, marginBottom: 10 }}>
+                {revocationLinkStatus === "done" ? "✅" : "⚠️"}
+              </div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 8 }}>
+                {t("revocation_response_title")}
+              </div>
+              <div style={{ fontSize: 13.5, color: "var(--brand-text-secondary)", marginBottom: 18, lineHeight: 1.5 }}>
+                {t(`revocation_response_${revocationLinkStatus}`)}
+              </div>
+              <button
+                onClick={() => { setRevocationLinkStatus(null); setRevocationLinkToken(null); setRevocationLinkInfo(null); }}
+                style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: "pointer" }}
               >
                 {t("verify_link_continue_btn")}
               </button>
@@ -7442,25 +8451,35 @@ function PoolApp() {
     )}
     {forceUpdate && (
       <div style={{ position: "fixed", inset: 0, zIndex: 3000, background: "rgba(10,30,60,0.94)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-        <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px #0a6ebd33" }}>
-          <div style={{ fontSize: 34, marginBottom: 10 }}>🔄</div>
-          <div style={{ fontSize: 17, fontWeight: 800, color: "#0d2b4e", marginBottom: 8 }}>{t("update_required_title")}</div>
-          <div style={{ fontSize: 13.5, color: "#4a6480", marginBottom: 20, lineHeight: 1.5 }}>{t("update_required_desc")}</div>
-          <button
-            onClick={forceReloadApp}
-            style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "#0a6ebd", color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: "pointer" }}
-          >
-            {t("update_required_btn")}
-          </button>
+        <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px var(--brand-primary)33" }}>
+          {updating ? (
+            <>
+              <Loader2 size={34} className="spin" style={{ color: "var(--brand-primary)", marginBottom: 14 }} />
+              <div style={{ fontSize: 17, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 8 }}>{t("update_in_progress_title")}</div>
+              <div style={{ fontSize: 13.5, color: "var(--brand-text-secondary)", lineHeight: 1.5 }}>{t("update_in_progress_desc")}</div>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: 34, marginBottom: 10 }}>🔄</div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 8 }}>{t("update_required_title")}</div>
+              <div style={{ fontSize: 13.5, color: "var(--brand-text-secondary)", marginBottom: 20, lineHeight: 1.5 }}>{t("update_required_desc")}</div>
+              <button
+                onClick={startUpdatePolling}
+                style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: "pointer" }}
+              >
+                {t("update_required_btn")}
+              </button>
+            </>
+          )}
         </div>
       </div>
     )}
-    {needsEmailVerification && !forceUpdate && (
+    {needsEmailVerification && !forceUpdate && !needsCguAcceptance && (
       <div style={{ position: "fixed", inset: 0, zIndex: 3050, background: "rgba(10,60,50,0.94)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
         <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px #00000033" }}>
           <div style={{ fontSize: 34, marginBottom: 10 }}>📧</div>
-          <div style={{ fontSize: 17, fontWeight: 800, color: "#0d2b4e", marginBottom: 8 }}>{t("verify_gate_title")}</div>
-          <div style={{ fontSize: 13.5, color: "#4a6480", marginBottom: 18, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 17, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 8 }}>{t("verify_gate_title")}</div>
+          <div style={{ fontSize: 13.5, color: "var(--brand-text-secondary)", marginBottom: 18, lineHeight: 1.5 }}>
             {t("verify_gate_desc")}{authUser?.email ? ` (${authUser.email})` : ""}
           </div>
           {verifyCheckFailed && (
@@ -7481,7 +8500,7 @@ function PoolApp() {
           <button
             onClick={handleCheckEmailVerified}
             disabled={verifyChecking}
-            style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "#0a6ebd", color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: verifyChecking ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 10 }}
+            style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: verifyChecking ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 10 }}
           >
             {verifyChecking ? <Loader2 size={16} className="spin" /> : null}
             {verifyChecking ? t("verify_gate_checking") : t("verify_gate_check_btn")}
@@ -7489,13 +8508,13 @@ function PoolApp() {
           <button
             onClick={handleResendVerification}
             disabled={verifySending}
-            style={{ width: "100%", padding: "11px 0", borderRadius: 12, border: "1.5px solid #d0e4f5", background: "#fff", color: "#0a6ebd", fontWeight: 600, fontSize: 13.5, cursor: verifySending ? "default" : "pointer", marginBottom: 14 }}
+            style={{ width: "100%", padding: "11px 0", borderRadius: 12, border: "1.5px solid #d0e4f5", background: "#fff", color: "var(--brand-primary)", fontWeight: 600, fontSize: 13.5, cursor: verifySending ? "default" : "pointer", marginBottom: 14 }}
           >
             {verifySending ? "..." : t("verify_gate_resend_btn")}
           </button>
           <button
             onClick={handleSignOutFromVerification}
-            style={{ background: "none", border: "none", color: "#6a7d90", fontSize: 12.5, cursor: "pointer" }}
+            style={{ background: "none", border: "none", color: "var(--brand-text-muted)", fontSize: 12.5, cursor: "pointer" }}
           >
             {t("verify_gate_signout")}
           </button>
@@ -7506,10 +8525,10 @@ function PoolApp() {
       <div style={{ position: "fixed", inset: 0, zIndex: 3100, background: "rgba(60,20,20,0.94)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
         <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px #00000033" }}>
           <div style={{ fontSize: 34, marginBottom: 10 }}>⛔</div>
-          <div style={{ fontSize: 17, fontWeight: 800, color: "#0d2b4e", marginBottom: 8 }}>{t("suspended_title")}</div>
-          <div style={{ fontSize: 13.5, color: "#4a6480", marginBottom: suspendReason ? 8 : 20, lineHeight: 1.5 }}>{t("suspended_desc")}</div>
+          <div style={{ fontSize: 17, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 8 }}>{t("suspended_title")}</div>
+          <div style={{ fontSize: 13.5, color: "var(--brand-text-secondary)", marginBottom: suspendReason ? 8 : 20, lineHeight: 1.5 }}>{t("suspended_desc")}</div>
           {suspendReason && (
-            <div style={{ fontSize: 12.5, color: "#6a7d90", marginBottom: 20, fontStyle: "italic", background: "#f5f7fa", borderRadius: 8, padding: "8px 10px" }}>
+            <div style={{ fontSize: 12.5, color: "var(--brand-text-muted)", marginBottom: 20, fontStyle: "italic", background: "#f5f7fa", borderRadius: 8, padding: "8px 10px" }}>
               {suspendReason}
             </div>
           )}
@@ -7528,27 +8547,27 @@ function PoolApp() {
       <div style={{ position: "fixed", inset: 0, zIndex: 3100, background: "rgba(60,20,20,0.94)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
         <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px #00000033" }}>
           <div style={{ fontSize: 34, marginBottom: 10 }}>⛔</div>
-          <div style={{ fontSize: 17, fontWeight: 800, color: "#0d2b4e", marginBottom: 8 }}>{t("account_deleted_title")}</div>
-          <div style={{ fontSize: 13.5, color: "#4a6480", marginBottom: 20, lineHeight: 1.5 }}>{t("account_deleted_desc")}</div>
+          <div style={{ fontSize: 17, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 8 }}>{t("account_deleted_title")}</div>
+          <div style={{ fontSize: 13.5, color: "var(--brand-text-secondary)", marginBottom: 20, lineHeight: 1.5 }}>{t("account_deleted_desc")}</div>
           <button
             onClick={() => {
               if (window.confirm(t("reactivate_confirm"))) reactivateAccount();
             }}
             disabled={reactivating}
-            style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: reactivating ? "#7ab8e8" : "#0a6ebd", color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: reactivating ? "default" : "pointer", marginBottom: 10, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+            style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: reactivating ? "var(--brand-icon-light)" : "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: reactivating ? "default" : "pointer", marginBottom: 10, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
           >
             {reactivating ? <Loader2 size={16} className="spin" /> : null}
             {t("reactivate_btn")}
           </button>
           <button
             onClick={() => setShowDataRequestScreen(true)}
-            style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "1.5px solid #0a6ebd", background: "#fff", color: "#0a6ebd", fontWeight: 700, fontSize: 14.5, cursor: "pointer", marginBottom: 14 }}
+            style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "1.5px solid var(--brand-primary)", background: "#fff", color: "var(--brand-primary)", fontWeight: 700, fontSize: 14.5, cursor: "pointer", marginBottom: 14 }}
           >
             {t("account_deleted_request_btn")}
           </button>
           <button
             onClick={handleSignOut}
-            style={{ background: "none", border: "none", color: "#6a7d90", fontWeight: 600, fontSize: 13, cursor: "pointer", textDecoration: "underline" }}
+            style={{ background: "none", border: "none", color: "var(--brand-text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer", textDecoration: "underline" }}
           >
             {t("back_to_home")}
           </button>
@@ -7568,33 +8587,50 @@ function PoolApp() {
         l'ancien contexte (measures/products encore en mémoire) — donnait
         l'impression trompeuse d'un historique perdu le temps que la vraie
         config du nouveau dataUid arrive (1-2s sur mobile). */}
-    {loaded && authUser && !suspended && !accountDeleted && !forceUpdate && !needsEmailVerification && !cloudConfigReceived && (
+    {/* v1.70.0 — En contexte secondaire, ce spinner générique ne doit plus
+        tourner indéfiniment si l'accès a été explicitement refusé
+        (poolAccessError) ou si 5s se sont écoulées sans résolution
+        (secondaryLoadTimeout) : l'écran "Bassin introuvable" prend le relais
+        dans ces deux cas au lieu de laisser croire à un simple chargement. */}
+    {loaded && authUser && !suspended && !accountDeleted && !forceUpdate && !needsEmailVerification && !needsCguAcceptance && !cloudConfigReceived && !(viewContext && (poolAccessError || secondaryLoadTimeout)) && (
       <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "#f5f8f7", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-        <Loader2 size={34} className="spin" style={{ marginBottom: 10, color: "#0a6ebd" }} />
-        <div style={{ fontSize: 13.5, color: "#4a6480" }}>{t("context_loading")}</div>
+        <Loader2 size={34} className="spin" style={{ marginBottom: 10, color: "var(--brand-primary)" }} />
+        <div style={{ fontSize: 13.5, color: "var(--brand-text-secondary)" }}>{t("context_loading")}</div>
       </div>
     )}
-    {loaded && authUser && !suspended && !accountDeleted && !forceUpdate && !needsEmailVerification && activePools.length === 0 && cloudConfigReceived && !viewContext && (
+    {loaded && authUser && !suspended && !accountDeleted && !forceUpdate && !needsEmailVerification && !needsCguAcceptance && activePools.length === 0 && cloudConfigReceived && !viewContext && onboardingSeen && (
       <AddPoolModal forced onSave={addPool} lang={lang} />
+    )}
+    {/* v1.87.0 — L'onboarding doit venir AVANT la création du premier bassin, pas
+        après (ordre inversé jusqu'ici : le formulaire de création s'affichait
+        immédiatement, l'onboarding ne se déclenchait qu'une fois addPool() appelé).
+        Condition identique à isFirstPoolEver (pools.length === 0 dans addPool),
+        mais évaluée ici en amont via activePools.length === 0 && !onboardingSeen. */}
+    {loaded && authUser && !suspended && !accountDeleted && !forceUpdate && !needsEmailVerification && !needsCguAcceptance && activePools.length === 0 && cloudConfigReceived && !viewContext && !onboardingSeen && (
+      <OnboardingWizard onDone={markOnboardingSeen} lang={lang} />
     )}
     {/* v1.57.3 — En contexte secondaire, activePools peut être vide un court
         instant (le temps que la config du principal arrive après le switch
         de contexte) ou durablement (accès révoqué, bassin supprimé). Dans les
         deux cas, ce n'est JAMAIS au secondaire de créer un bassin — l'ancien
         code affichait le formulaire de création forcée y compris ici, un
-        cul-de-sac puisque addPool() est un no-op en contexte secondaire. */}
-    {loaded && authUser && !suspended && !accountDeleted && !forceUpdate && !needsEmailVerification && activePools.length === 0 && cloudConfigReceived && viewContext && (
+        cul-de-sac puisque addPool() est un no-op en contexte secondaire.
+        v1.70.0 — Se déclenche aussi sur poolAccessError (refus confirmé) ou
+        secondaryLoadTimeout (5s sans résolution), pas seulement quand
+        cloudConfigReceived est déjà arrivé avec un tableau de bassins vide. */}
+    {loaded && authUser && !suspended && !accountDeleted && !forceUpdate && !needsEmailVerification && !needsCguAcceptance && viewContext &&
+      ((activePools.length === 0 && cloudConfigReceived) || poolAccessError || secondaryLoadTimeout) && (
       <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "#f5f8f7", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24, textAlign: "center" }}>
-        <Droplets size={40} color="#7ab8e8" style={{ marginBottom: 16 }} />
-        <div style={{ fontSize: 16, fontWeight: 700, color: "#0d2b4e", marginBottom: 8 }}>
+        <Droplets size={40} color="var(--brand-icon-light)" style={{ marginBottom: 16 }} />
+        <div style={{ fontSize: 16, fontWeight: 700, color: "var(--brand-text-strong)", marginBottom: 8 }}>
           {t("secondary_pool_unavailable_title")}
         </div>
-        <div style={{ fontSize: 13.5, color: "#6a7d90", marginBottom: 24, maxWidth: 320 }}>
-          {t("secondary_pool_unavailable_desc")}
+        <div style={{ fontSize: 13.5, color: "var(--brand-text-muted)", marginBottom: 24, maxWidth: 320 }}>
+          {poolAccessError === "denied" ? t("secondary_pool_revoked_desc") : t("secondary_pool_unavailable_desc")}
         </div>
         <button
           onClick={() => switchToContext(null)}
-          style={{ padding: "12px 24px", borderRadius: 12, border: "none", background: "#0a6ebd", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}
+          style={{ padding: "12px 24px", borderRadius: 12, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}
         >
           {t("context_own")}
         </button>
@@ -7615,7 +8651,29 @@ function PoolApp() {
         />
       </div>
     )}
-    <div style={styles.app} className="app">
+    <div
+      style={{
+        ...styles.app,
+        // v1.82.0 — themeVars calculé une fois en tête du composant (voir plus
+        // haut) et réappliqué ici aussi ; redondant avec le conteneur racine
+        // mais inoffensif, et évite de casser un éventuel style CSS ciblant
+        // spécifiquement .app pour d'autres besoins.
+        ...themeVars,
+      }}
+      className="app"
+    >
+      {typeof window !== "undefined" && window.__poolgenaiEnv && window.__poolgenaiEnv !== "prod" && (
+        <div
+          style={{
+            position: "fixed", top: 0, left: 0, right: 0, zIndex: 5000,
+            textAlign: "center", padding: "4px 0", fontSize: 11, fontWeight: 700,
+            letterSpacing: 0.5, color: "#fff",
+            background: window.__poolgenaiEnv === "test" ? "#c98a1f" : "#7a3fb0",
+          }}
+        >
+          {window.__poolgenaiEnv === "test" ? "🧪 ENVIRONNEMENT TEST" : "🛠️ ENVIRONNEMENT DEV"}
+        </div>
+      )}
       <Header
         poolName={activePool?.name}
         location={activePool?.location}
@@ -7650,6 +8708,7 @@ function PoolApp() {
             activeParamKeys={activeParamKeys}
             activePlan={activePlan}
             onResumePlan={() => setShowWizard(true)}
+            onOpenManualApply={() => setShowManualApply(true)}
             authUid={dataUid}
           />
         )}
@@ -7661,6 +8720,7 @@ function PoolApp() {
             onAdd={handleOpenAddMeasure}
             onAddPrefilled={(prefilled) => {
               setEditingMeasure({ ...prefilled, __prefilled: true });
+              setEditingApplication(null);
               setShowAddMeasure(true);
             }}
             onValidateApplication={handleValidateApplication}
@@ -7677,7 +8737,28 @@ function PoolApp() {
             activePlan={activePlan}
           />
         )}
-        {tab === "products" && (
+        {tab === "products" && showProductsToBuy && (
+          <ProductsToBuyView
+            products={poolProducts}
+            plan={activePlan}
+            latest={latest}
+            volume={activePool?.volume || 0}
+            effectiveTargets={effectiveTargets}
+            activeParamKeys={activeParamKeys}
+            lang={lang}
+            manageStock={!!activePool?.manageStock}
+            poolName={activePool?.name}
+            treatmentType={activePool?.treatmentType}
+            onQuickAddProduct={(dp) => saveProduct({ ...dp, stockPercent: 0, isDefault: false, photo: null })}
+            onBack={() => setShowProductsToBuy(false)}
+            onEditProduct={(p) => {
+              setEditingProduct(p);
+              setShowAddProduct(true);
+              setShowProductsToBuy(false);
+            }}
+          />
+        )}
+        {tab === "products" && !showProductsToBuy && (
           <ProductsView
             products={poolProducts}
             onEdit={(p) => {
@@ -7695,6 +8776,7 @@ function PoolApp() {
             manageStock={!!activePool?.manageStock}
             onWantPremium={() => openPaywall("products")}
             onWantSettings={() => setTab("settings")}
+            onWantProductsToBuy={() => setShowProductsToBuy(true)}
             lang={lang}
           />
         )}
@@ -7740,6 +8822,8 @@ function PoolApp() {
             onWantPremium={() => openPaywall()}
             isPremium={isPremium}
             setIsPremium={setIsPremium}
+            onWantDowngrade={() => setShowDowngradeConfirm(true)}
+            onReplayOnboarding={() => setShowOnboarding(true)}
             aiEnabled={aiEnabled}
             setAiEnabled={setAiEnabled}
             calibrationContribution={calibrationContribution}
@@ -7748,6 +8832,7 @@ function PoolApp() {
             setLang={setLang}
             cguAcceptedDate={cguAcceptedDate}
             dataConsent={dataConsent}
+            myPseudo={myPseudo}
             onRevokeDataConsent={() => {
               setDataConsent(false);
               if (authUser?.uid) {
@@ -7756,10 +8841,11 @@ function PoolApp() {
             }}
           />
           {authUser && (
-            <SecondaryUsersSection
+            <DelegationSection
               authUser={authUser}
               lang={lang}
-              myPseudo={myPseudo}
+              linkedPoolsInfo={linkedPoolsInfo}
+              onRequestRevocation={handleRequestRevocation}
             />
           )}
           <DangerZoneSection
@@ -7768,6 +8854,7 @@ function PoolApp() {
             poolMeasureCount={poolMeasures.length}
             onDeleteAllMeasures={deleteAllMeasuresForActivePool}
             authUser={authUser}
+            cguAcceptedDate={cguAcceptedDate}
             onDeleteAccount={async () => {
               const isGoogle = authUser?.providerData?.some(p => p.providerId === "google.com");
               if (isGoogle) {
@@ -7798,9 +8885,14 @@ function PoolApp() {
       {showAddMeasure && (
         <AddMeasureModal
           measure={editingMeasure}
+          application={editingApplication}
+          products={poolProducts}
+          manageStock={!!activePool?.manageStock}
+          onSaveApplication={editHistoricalApplication}
           onClose={() => {
             setShowAddMeasure(false);
             setEditingMeasure(null);
+            setEditingApplication(null);
           }}
           onSave={addMeasure}
           isPremium={effectiveIsPremium}
@@ -7811,6 +8903,7 @@ function PoolApp() {
           onWantPremium={(source) => {
             setShowAddMeasure(false);
             setEditingMeasure(null);
+            setEditingApplication(null);
             openPaywall(source || "photos");
           }}
           apiKey={aiEnabled && effectiveIsPremium ? apiKey : ""}
@@ -7876,9 +8969,41 @@ function PoolApp() {
                 )
               );
             }
+            // v1.69.0 — L'activation réelle est déjà faite ci-dessus (donc pas
+            // de flash/incohérence si l'utilisateur ferme l'overlay tôt) ;
+            // l'overlay masque juste la transition le temps de l'effet.
             setShowPaywall(false);
+            setRevealVariant("activate");
+            setShowPremiumReveal(true);
           }}
         />
+      )}
+
+      {showDowngradeConfirm && (
+        <PremiumDowngradeConfirmModal
+          lang={lang}
+          onClose={() => setShowDowngradeConfirm(false)}
+          onConfirm={() => {
+            track("downgrade_confirmed");
+            setIsPremium(false);
+            // v1.76.0 — Écrit réellement false côté serveur (autorisé par la
+            // règle Firestore, direction sûre) : sans ça, si un true traînait
+            // en base d'un test antérieur, le prochain snapshot onConfig
+            // réaffirmait indéfiniment true, rendant le toggle local impuissant.
+            syncOwnConfig({ isPremium: false });
+            setShowDowngradeConfirm(false);
+            setRevealVariant("downgrade");
+            setShowPremiumReveal(true);
+          }}
+        />
+      )}
+
+      {showPremiumReveal && (
+        <PremiumRevealOverlay onDone={() => setShowPremiumReveal(false)} lang={lang} variant={revealVariant} />
+      )}
+
+      {showOnboarding && (
+        <OnboardingWizard onDone={markOnboardingSeen} lang={lang} />
       )}
 
       {showAddPool && (
@@ -7914,16 +9039,16 @@ function PoolApp() {
 
       {showPhotoWarning && (
         <div style={{ position: "fixed", inset: 0, zIndex: 600, background: "rgba(10,30,60,0.65)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-          <div style={{ background: "#fff", borderRadius: 20, padding: 24, maxWidth: 420, width: "100%", boxShadow: "0 8px 32px #0a6ebd22" }}>
+          <div style={{ background: "#fff", borderRadius: 20, padding: 24, maxWidth: 420, width: "100%", boxShadow: "0 8px 32px var(--brand-primary)22" }}>
             <div style={{ fontSize: 28, textAlign: "center", marginBottom: 8 }}>📸</div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: "#0d2b4e", textAlign: "center", marginBottom: 12 }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: "var(--brand-text-strong)", textAlign: "center", marginBottom: 12 }}>
               {tFn("photo_warning_title")}
             </div>
-            <div style={{ fontSize: 13, color: "#4a6480", lineHeight: 1.7, background: "#f5f8fc", borderRadius: 10, padding: "12px 14px", marginBottom: 16, whiteSpace: "pre-line" }}>
+            <div style={{ fontSize: 13, color: "var(--brand-text-secondary)", lineHeight: 1.7, background: "#f5f8fc", borderRadius: 10, padding: "12px 14px", marginBottom: 16, whiteSpace: "pre-line" }}>
               {tFn("photo_warning_body")}
             </div>
             <button
-              style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "#0a6ebd", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" }}
+              style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" }}
               onClick={() => {
                 setShowPhotoWarning(false);
                 if (photoWarningCallback) { photoWarningCallback(); setPhotoWarningCallback(null); }
@@ -7941,28 +9066,41 @@ function PoolApp() {
         </div>
       )}
 
-      {/* Modale re-acceptation CGU si nouvelle version */}
-      {showCguUpdate && !showLogin && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 900, background: "rgba(10,30,60,0.8)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-          <div style={{ background: "#fff", borderRadius: 20, padding: 24, maxWidth: 440, width: "100%", boxShadow: "0 8px 32px #0a6ebd22" }}>
+      {/* v1.83.0 — Écran bloquant CGU : jamais accepté (comptes Google, jamais
+          passés par la case CGU du signup email) ou version dépassée (re-acceptation).
+          zIndex 3060 > 3050 (vérification email) : la CGU prime toujours. */}
+      {needsCguAcceptance && !showLogin && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 3060, background: "rgba(10,30,60,0.92)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <div style={{ background: "#fff", borderRadius: 20, padding: 24, maxWidth: 440, width: "100%", maxHeight: "90dvh", overflowY: "auto", boxSizing: "border-box", boxShadow: "0 8px 32px var(--brand-primary)22" }}>
             <div style={{ fontSize: 24, textAlign: "center", marginBottom: 8 }}>📋</div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: "#0d2b4e", textAlign: "center", marginBottom: 8 }}>
-              {tFn("cgu_updated_title")}
+            <div style={{ fontSize: 16, fontWeight: 800, color: "var(--brand-text-strong)", textAlign: "center", marginBottom: 8 }}>
+              {tFn(cguNeverAccepted ? "cgu_required_title" : "cgu_updated_title")}
             </div>
-            <div style={{ fontSize: 13, color: "#4a6480", lineHeight: 1.6, marginBottom: 16, textAlign: "center" }}>
-              {tFn("cgu_updated_body")}
+            <div style={{ fontSize: 13, color: "var(--brand-text-secondary)", lineHeight: 1.6, marginBottom: 16, textAlign: "center" }}>
+              {tFn(cguNeverAccepted ? "cgu_required_body" : "cgu_updated_body")}
             </div>
             <div style={{ fontSize: 11, color: "#9ab0c4", textAlign: "center", marginBottom: 16 }}>
               CGU {CGU_VERSION}
             </div>
             <button
-              style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "#0a6ebd", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" }}
+              style={{ width: "100%", background: "none", border: "none", color: "var(--brand-primary)", fontSize: 12.5, fontWeight: 600, cursor: "pointer", textAlign: "center", marginBottom: 14, textDecoration: "underline" }}
+              onClick={() => setShowFullCguInGate((v) => !v)}
+            >
+              {tFn(showFullCguInGate ? "cgu_hide_full_text" : "cgu_read_full_text")}
+            </button>
+            {showFullCguInGate && (
+              <div style={{ maxHeight: 260, overflowY: "auto", fontSize: 11.5, color: "#2d4a6e", lineHeight: 1.6, background: "#f5f8fc", borderRadius: 10, padding: "12px 14px", marginBottom: 16 }}>
+                <CguLegalContent lang={lang} />
+              </div>
+            )}
+            <button
+              style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" }}
               onClick={() => {
+                const now = new Date().toISOString();
                 setAcceptedCguVersion(CGU_VERSION);
-                setCguAcceptedDate(new Date().toISOString());
-                setShowCguUpdate(false);
+                setCguAcceptedDate(now);
                 if (authUser?.uid) {
-                  FB.saveUser(authUser.uid, { cguVersion: CGU_VERSION, cguAcceptedDate: new Date().toISOString() }).catch(() => {});
+                  FB.saveUser(authUser.uid, { cguVersion: CGU_VERSION, cguAcceptedDate: now }).catch(() => {});
                 }
               }}
             >
@@ -7987,6 +9125,15 @@ function PoolApp() {
         />
       )}
 
+      {showManualApply && (
+        <ManualApplyModal
+          products={poolProducts}
+          lang={lang}
+          onClose={() => setShowManualApply(false)}
+          onSave={saveManualApplication}
+        />
+      )}
+
       {showReport && effectiveIsPremium && (
         <ReportView
           pool={activePool}
@@ -8005,7 +9152,7 @@ function PoolApp() {
         <PhotoLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
       )}
     </div>
-    </>
+    </div>
   );
 }
 
@@ -8192,15 +9339,15 @@ function Header({ poolName, location, poolPhoto, isPremium, entries, activeEntry
                     setShowSwitcher(false);
                   }}
                 >
-                  <Droplets size={16} color={active ? "#0a6ebd" : "#6a7d90"} />
+                  <Droplets size={16} color={active ? "var(--brand-primary)" : "var(--brand-text-muted)"} />
                   <div style={{ flex: 1, textAlign: "left" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ fontWeight: 700, fontSize: 13.5, color: "#0d2b4e" }}>{entry.name}</span>
+                      <span style={{ fontWeight: 700, fontSize: 13.5, color: "var(--brand-text-strong)" }}>{entry.name}</span>
                       {entry.photo && (
                         <img src={entry.photo} alt="" style={styles.poolSwitcherThumbInline} />
                       )}
                     </div>
-                    <div style={{ fontSize: 11.5, color: "#6a7d90" }}>
+                    <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)" }}>
                       {entry.kind === "invited" ? entry.pseudo : entry.location}
                     </div>
                   </div>
@@ -8258,7 +9405,7 @@ function TabBar({ tab, setTab, lang, viewContext }) {
               }}
               style={{
                 ...styles.tabBtn,
-                color: active ? "#0a6ebd" : "#6a7d90",
+                color: active ? "var(--brand-primary)" : "var(--brand-text-muted)",
               }}
             >
               <Icon size={20} strokeWidth={active ? 2.4 : 1.8} />
@@ -8275,7 +9422,7 @@ function TabBar({ tab, setTab, lang, viewContext }) {
 }
 
 // ---------- v1.55.0 — Utilisateurs secondaires (brique 3) ----------
-function SecondaryUsersSection({ authUser, lang, myPseudo }) {
+function DelegationSection({ authUser, lang, linkedPoolsInfo, onRequestRevocation }) {
   const t = useT(lang);
   const [secondaries, setSecondaries] = useState([]); // personnes que j'ai invitées (moi = principal)
   const [pendingInvitations, setPendingInvitations] = useState([]);
@@ -8284,11 +9431,8 @@ function SecondaryUsersSection({ authUser, lang, myPseudo }) {
   const [invitePoolId, setInvitePoolId] = useState("");
   const [inviteBusy, setInviteBusy] = useState(false);
   const [inviteMsg, setInviteMsg] = useState(null);
-  const [pseudoInput, setPseudoInput] = useState(myPseudo || "");
-  const [pseudoBusy, setPseudoBusy] = useState(false);
-  const [pseudoMsg, setPseudoMsg] = useState(null);
-
-  useEffect(() => { setPseudoInput(myPseudo || ""); }, [myPseudo]);
+  const [revokeReqBusy, setRevokeReqBusy] = useState(null); // primaryUid en cours
+  const [revokeReqMsg, setRevokeReqMsg] = useState(null); // { primaryUid, text }
 
   useEffect(() => {
     if (!authUser?.uid || !FB.ready()) return;
@@ -8382,65 +9526,72 @@ function SecondaryUsersSection({ authUser, lang, myPseudo }) {
     }
   }
 
-  async function handleSavePseudo() {
-    if (!authUser || !pseudoInput.trim()) return;
-    setPseudoBusy(true);
-    setPseudoMsg(null);
+  // v1.60.0 — Demande de révocation de mon propre accès (bassin où je suis
+  // invité). Je ne peux pas me révoquer moi-même (écriture réservée au
+  // Worker) : ça envoie un email au propriétaire avec un lien de confirmation.
+  async function handleRequestRevocation(link) {
+    if (!authUser) return;
+    const ok = window.confirm(t("request_revocation_confirm", { pool: link.poolName, pseudo: link.pseudo }));
+    if (!ok) return;
+    setRevokeReqBusy(link.primaryUid);
+    setRevokeReqMsg(null);
     try {
-      const idToken = await authUser.getIdToken();
-      const res = await fetch(`${PROXY_BASE_URL}/set-pseudo`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
-        body: JSON.stringify({ pseudo: pseudoInput.trim() }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.status === 409) {
-        setPseudoMsg({ type: "error", text: t("pseudo_taken_suggestion", { suggestion: data.suggestion || "?" }) });
-        return;
-      }
-      if (!res.ok) {
-        setPseudoMsg({ type: "error", text: data.error || t("pseudo_error") });
-        return;
-      }
-      setPseudoMsg({ type: "ok", text: t("pseudo_saved") });
+      await onRequestRevocation(link.primaryUid);
+      setRevokeReqMsg({ primaryUid: link.primaryUid, text: t("request_revocation_sent") });
     } catch (e) {
-      setPseudoMsg({ type: "error", text: t("pseudo_error") });
+      setRevokeReqMsg({ primaryUid: link.primaryUid, text: t("request_revocation_error"), error: true });
     } finally {
-      setPseudoBusy(false);
+      setRevokeReqBusy(null);
     }
   }
 
   const activeSecondaries = secondaries.filter((s) => s.status === "active");
-  const sectionTitleStyle = { fontSize: 13, fontWeight: 700, color: "#0d2b4e", marginBottom: 8 };
-  const subTitleStyle = { fontSize: 12.5, fontWeight: 600, color: "#4a6480", marginBottom: 6 };
+  const activeLinkedPools = (linkedPoolsInfo || []).filter((l) => l.status === "active");
+  const sectionTitleStyle = { fontSize: 13, fontWeight: 700, color: "var(--brand-text-strong)", marginBottom: 8 };
+  const subTitleStyle = { fontSize: 12.5, fontWeight: 600, color: "var(--brand-text-secondary)", marginBottom: 6 };
   const emptyStyle = { fontSize: 12.5, color: "#8a9aa8", marginBottom: 14 };
   const cardStyle = { padding: "10px 12px", border: "1px solid #d8e2ec", borderRadius: 10 };
 
   return (
     <div style={{ marginTop: 24, padding: "0 16px 24px" }}>
-      <div style={sectionTitleStyle}>{t("pseudo_label")}</div>
-      <div style={{ display: "flex", gap: 8, marginBottom: 4 }}>
-        <input
-          value={pseudoInput}
-          onChange={(e) => setPseudoInput(e.target.value)}
-          placeholder={t("pseudo_placeholder")}
-          style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: "1px solid #d8e2ec", fontSize: 13.5 }}
-        />
-        <button
-          onClick={handleSavePseudo}
-          disabled={pseudoBusy}
-          style={{ padding: "10px 16px", borderRadius: 10, border: "none", background: "#0a6ebd", color: "#fff", fontWeight: 600, fontSize: 13, cursor: pseudoBusy ? "not-allowed" : "pointer" }}
-        >
-          {t("pseudo_save")}
-        </button>
-      </div>
-      {pseudoMsg && (
-        <div style={{ fontSize: 12, color: pseudoMsg.type === "error" ? "#c0392b" : "#1a8fd1", marginBottom: 8 }}>{pseudoMsg.text}</div>
+      <div style={sectionTitleStyle}>{t("delegation_section_title")}</div>
+
+      {/* v1.60.0 — Bassins où JE suis invité (l'inverse de "Utilisateurs
+          secondaires" ci-dessous, qui liste les personnes que J'AI invitées).
+          Pas de révocation directe côté invité : demande envoyée par email
+          au propriétaire, qui confirme via un lien (voir /request-revoke-own-access). */}
+      <div style={subTitleStyle}>{t("linked_pools_title")}</div>
+      {activeLinkedPools.length === 0 ? (
+        <div style={emptyStyle}>{t("linked_pools_empty")}</div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
+          {activeLinkedPools.map((l) => (
+            <div key={l.primaryUid} style={cardStyle}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "var(--brand-text-strong)" }}>{l.poolName || t("secondary_pool_label", { pool: "" })}</div>
+                  <div style={{ fontSize: 11.5, color: "#8a9aa8" }}>{l.pseudo}</div>
+                </div>
+                <button
+                  onClick={() => handleRequestRevocation(l)}
+                  disabled={revokeReqBusy === l.primaryUid}
+                  style={{ padding: "7px 12px", borderRadius: 8, border: "1px solid #e0a0a0", background: "#fff5f5", color: "#c0392b", fontSize: 12, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}
+                >
+                  {revokeReqBusy === l.primaryUid ? "..." : t("request_revocation_button")}
+                </button>
+              </div>
+              {revokeReqMsg?.primaryUid === l.primaryUid && (
+                <div style={{ fontSize: 11.5, color: revokeReqMsg.error ? "#c0392b" : "#1a7a4a", marginTop: 6 }}>
+                  {revokeReqMsg.text}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       )}
-      <div style={{ fontSize: 11.5, color: "#8a9aa8", marginBottom: 20 }}>{t("pseudo_invalid")}</div>
 
       <div style={sectionTitleStyle}>{t("secondary_section_title")}</div>
-      <div style={{ fontSize: 12, color: "#6a7d90", marginBottom: 12 }}>{t("secondary_section_intro")}</div>
+      <div style={{ fontSize: 12, color: "var(--brand-text-muted)", marginBottom: 12 }}>{t("secondary_section_intro")}</div>
 
       <div style={subTitleStyle}>{t("secondary_active_title")}</div>
       {activeSecondaries.length === 0 ? (
@@ -8450,7 +9601,7 @@ function SecondaryUsersSection({ authUser, lang, myPseudo }) {
           {activeSecondaries.map((s) => (
             <div key={s.secondaryUid} style={{ ...cardStyle, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "#0d2b4e" }}>{s.email}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--brand-text-strong)" }}>{s.email}</div>
                 <div style={{ fontSize: 11.5, color: "#8a9aa8" }}>
                   {t("secondary_pool_label", { pool: myPools.find((p) => p.id === s.poolId)?.name || s.poolId })}
                 </div>
@@ -8474,7 +9625,7 @@ function SecondaryUsersSection({ authUser, lang, myPseudo }) {
           {pendingInvitations.map((inv) => (
             <div key={inv.token || (inv.invitedEmail + inv.poolId)} style={{ ...cardStyle, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "#0d2b4e" }}>{inv.invitedEmail}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--brand-text-strong)" }}>{inv.invitedEmail}</div>
                 <div style={{ fontSize: 11.5, color: "#8a9aa8" }}>
                   {t("secondary_pool_label", { pool: inv.poolName })} ·{" "}
                   {inv.expired
@@ -8518,7 +9669,7 @@ function SecondaryUsersSection({ authUser, lang, myPseudo }) {
           <button
             onClick={handleInviteSend}
             disabled={inviteBusy || !inviteEmail || !invitePoolId}
-            style={{ width: "100%", padding: "12px 0", borderRadius: 10, border: "none", background: "#0a6ebd", color: "#fff", fontWeight: 700, fontSize: 13.5, cursor: inviteBusy ? "not-allowed" : "pointer" }}
+            style={{ width: "100%", padding: "12px 0", borderRadius: 10, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 13.5, cursor: inviteBusy ? "not-allowed" : "pointer" }}
           >
             {t("secondary_invite_send")}
           </button>
@@ -8532,7 +9683,7 @@ function SecondaryUsersSection({ authUser, lang, myPseudo }) {
 }
 
 // ---------- Dashboard ----------
-function Dashboard({ latest, volume, products, manageStock, onAddMeasure, onEditMeasure, onValidateApplication, applicationForLatest, blockedByLimit, isPremium, onWantPremium, apiKey, apiProvider, recentMeasures, effectiveTargets, activeParamKeys, lang, activePlan, onResumePlan, authUid }) {
+function Dashboard({ latest, volume, products, manageStock, onAddMeasure, onEditMeasure, onValidateApplication, applicationForLatest, blockedByLimit, isPremium, onWantPremium, apiKey, apiProvider, recentMeasures, effectiveTargets, activeParamKeys, lang, activePlan, onResumePlan, onOpenManualApply, authUid }) {
   const t = useT(lang);
   const [aiComment, setAiComment] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -8627,7 +9778,7 @@ Réponds directement en français, sans titre ni introduction.`;
   if (!latest) {
     return (
       <div style={styles.emptyState}>
-        <Droplets size={40} color="#7ab8e8" strokeWidth={1.5} />
+        <Droplets size={40} color="var(--brand-icon-light)" strokeWidth={1.5} />
         <p style={styles.emptyTitle}>{t("no_measure")}</p>
         <p style={styles.emptyText}>{t("no_measure_sub")}</p>
         <button style={styles.primaryBtn} onClick={onAddMeasure}>
@@ -8696,68 +9847,107 @@ Réponds directement en français, sans titre ni introduction.`;
         <span style={styles.sectionLabel}>{t("treatment_plan")}</span>
       </div>
 
-      {recs.length === 0 ? (
-        <div style={styles.allGoodCard}>
-          <CheckCircle2 size={22} color="#1a8fd1" />
-          <span style={{ color: "#0a6ebd", fontWeight: 600, fontSize: 14 }}>
-            {t("all_in_range")}
-          </span>
-        </div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {recs.orderExplanation && (
-            <p style={styles.helpText}>{recs.orderExplanation}</p>
-          )}
-          {recs.length > 1 && (
-            <p style={styles.helpText}>{t("follow_order")}</p>
-          )}
-          {recs.map((r, i) => (
-            <RecoCard
-              key={i}
-              reco={r}
-              isLast={i === recs.length - 1}
-              manageStock={manageStock}
-              products={products}
-              lang={lang}
-            />
-          ))}
+      {(() => {
+        // v1.65.1 — Une fois le plan de traitement entièrement terminé (tous
+        // les steps appliqués, aucun skip), on n'affiche plus les cartes de
+        // recommandations : elles restent basées sur la mesure d'origine
+        // (toujours hors cible) et n'apportent plus rien une fois le plan
+        // clos. Seule la confirmation "Plan de traitement terminé ✓" reste.
+        const planForLatest = activePlan && latest && activePlan.measureId === latest.id ? activePlan : null;
+        const planFullyDone = !!(applicationForLatest && !planForLatest && applicationForLatest.allApplied);
 
-          {(() => {
-            const planForLatest = activePlan && latest && activePlan.measureId === latest.id ? activePlan : null;
-            if (applicationForLatest && !planForLatest) {
+        if (recs.length === 0) {
+          return (
+            <div style={styles.allGoodCard}>
+              <CheckCircle2 size={22} color="#1a8fd1" />
+              <span style={{ color: "var(--brand-primary)", fontWeight: 600, fontSize: 14 }}>
+                {t("all_in_range")}
+              </span>
+            </div>
+          );
+        }
+
+        if (planFullyDone) {
+          return (
+            <div style={styles.applyConfirmedCard}>
+              <CheckCircle2 size={16} color="#1a8fd1" />
+              <span style={{ flex: 1 }}>{t("wizard_completed")}</span>
+            </div>
+          );
+        }
+
+        return (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {recs.orderExplanation && (
+              <p style={styles.helpText}>{recs.orderExplanation}</p>
+            )}
+            {recs.length > 1 && (
+              <p style={styles.helpText}>{t("follow_order")}</p>
+            )}
+            {recs.map((r, i) => (
+              <RecoCard
+                key={i}
+                reco={r}
+                isLast={i === recs.length - 1}
+                manageStock={manageStock}
+                products={products}
+                lang={lang}
+              />
+            ))}
+
+            {(() => {
+              if (applicationForLatest && !planForLatest) {
+                return (
+                  <div style={styles.applyConfirmedCard}>
+                    <CheckCircle2 size={16} color="#1a8fd1" />
+                    <span style={{ flex: 1 }}>
+                      {applicationForLatest.allApplied ? t("wizard_completed") : t("wizard_partial")}
+                    </span>
+                  </div>
+                );
+              }
+              if (planForLatest) {
+                return <PlanStatusCard plan={planForLatest} onResume={onResumePlan} lang={lang} />;
+              }
               return (
-                <div style={styles.applyConfirmedCard}>
-                  <CheckCircle2 size={16} color="#1a8fd1" />
-                  <span style={{ flex: 1 }}>
-                    {applicationForLatest.allApplied ? t("wizard_completed") : t("wizard_partial")}
-                  </span>
+                <div>
+                  {!latest?.importedFromPdf && (
+                    <button
+                      style={{
+                        ...styles.validateApplyBtn,
+                        ...(!manageStock ? { background: "#c3d6e6", color: "#f0f5fa", cursor: "pointer" } : {}),
+                      }}
+                      onClick={() => onValidateApplication(latest, recs)}
+                    >
+                      <CheckCircle2 size={16} /> {t("wizard_start")}
+                      {!manageStock && <Lock size={14} style={{ marginLeft: 4 }} />}
+                    </button>
+                  )}
+                  <p style={{ ...styles.helpTextSmall, marginTop: 6, textAlign: "center" }}>
+                    {t("follow_order")}
+                  </p>
                 </div>
               );
-            }
-            if (planForLatest) {
-              return <PlanStatusCard plan={planForLatest} onResume={onResumePlan} lang={lang} />;
-            }
-            return (
-              <div>
-                {!latest?.importedFromPdf && (
-                  <button
-                    style={{
-                      ...styles.validateApplyBtn,
-                      ...(!manageStock ? { background: "#c3d6e6", color: "#f0f5fa", cursor: "pointer" } : {}),
-                    }}
-                    onClick={() => onValidateApplication(latest, recs)}
-                  >
-                    <CheckCircle2 size={16} /> {t("wizard_start")}
-                    {!manageStock && <Lock size={14} style={{ marginLeft: 4 }} />}
-                  </button>
-                )}
-                <p style={{ ...styles.helpTextSmall, marginTop: 6, textAlign: "center" }}>
-                  {t("follow_order")}
-                </p>
-              </div>
-            );
-          })()}
-        </div>
+            })()}
+          </div>
+        );
+      })()}
+
+      {/* v1.63.0 — Application manuelle hors plan (ex. entretien périodique
+          au galet), indépendante d'une mesure/plan de traitement. */}
+      {manageStock && (
+        <button
+          type="button"
+          onClick={onOpenManualApply}
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+            width: "100%", boxSizing: "border-box", marginTop: 10,
+            padding: "11px 0", borderRadius: 12, border: "1.5px solid #d0e4f5",
+            background: "#fff", color: "var(--brand-primary)", fontWeight: 700, fontSize: 14, cursor: "pointer",
+          }}
+        >
+          <Plus size={16} /> {t("apply_product_manual")}
+        </button>
       )}
 
     </div>
@@ -8794,16 +9984,21 @@ function ParamCard({ param, value, effectiveTargets, lang }) {
 
 function RecoCard({ reco, isLast, manageStock, products, lang }) {
   const t = useT(lang || "fr");
+  const isInfo = !!reco.noAction;
   return (
-    <div style={styles.recoCard}>
+    <div style={isInfo ? styles.recoCardInfo : styles.recoCard}>
       <div style={{ ...styles.recoTop, justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={styles.recoStepBadge}>{reco.stepNumber}</div>
-          <span style={styles.recoParam}>{reco.title}</span>
+          <div style={isInfo ? styles.recoStepBadgeInfo : styles.recoStepBadge}>{reco.stepNumber}</div>
+          <span style={isInfo ? styles.recoParamInfo : styles.recoParam}>{reco.title}</span>
         </div>
       </div>
 
-      {reco.startsAfterHours > 0 && (
+      {/* v1.66.1 — Le badge "À débuter au moins Xh après" n'a de sens que
+          pour une vraie action à déclencher. Sur une carte informative
+          (rien à appliquer), on affiche à la place un simple rappel de
+          recontrôle, sans lien avec le timing des étapes précédentes. */}
+      {!isInfo && reco.startsAfterHours > 0 && (
         <div style={styles.recoTiming}>
           <Clock size={13} color="#a8721a" />
           {t("start_after", { h: reco.startsAfterHours })}
@@ -8836,10 +10031,18 @@ function RecoCard({ reco, isLast, manageStock, products, lang }) {
       })()}
       {reco.doseText && <div style={styles.recoDose}>{reco.doseText}</div>}
       {reco.missingTip && <div style={styles.recoNote}>{reco.missingTip}</div>}
+      {reco.timingTip && <div style={{ fontSize: 12.5, color: "#3a5a78", marginTop: 4 }}>🌙 {reco.timingTip}</div>}
 
-      {!!reco.waitHours && (
+      {isInfo && (
+        <div style={styles.recoInfoTiming}>
+          <Clock size={13} color="#2d6a9a" />
+          {t("reco_recheck_later")}
+        </div>
+      )}
+
+      {!isInfo && !!reco.waitHours && (
         <div style={styles.recoWait}>
-          <Clock size={13} color="#0a6ebd" />
+          <Clock size={13} color="var(--brand-primary)" />
           {isLast ? t("measure_after", { h: reco.waitHours }) : t("wait_before_next", { h: reco.waitHours })}
         </div>
       )}
@@ -8988,7 +10191,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
         missingTip: !prod ? _("missing_product_tip", { action: "ph-" }) : null,
         computedDoseAmount: computedDose,
         doseUnit: doseSrc?.doseUnit || null,
-        note: prodNote(prod, "reco_note_tac"),
+        note: prodNote(prod, "note_ph_minus"),
         waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["ph-"],
       });
     } else if (phVal < phTargets.min) {
@@ -9009,7 +10212,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
         missingTip: !prod ? _("missing_product_tip", { action: "ph+" }) : null,
         computedDoseAmount: computedDose,
         doseUnit: doseSrc?.doseUnit || null,
-        note: prodNote(prod, "reco_note_tac"),
+        note: prodNote(prod, "note_ph_plus"),
         waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["ph+"],
       });
     }
@@ -9072,6 +10275,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
         computedDoseAmount: computedDose,
         doseUnit: doseSrc?.doseUnit || null,
         note: _("reco_note_combined"),
+        timingTip: _("chlore_timing_tip"),
         waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["chlore"],
       });
     } else if (fCl < fclT.min) {
@@ -9100,6 +10304,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
         // si l'utilisateur en a saisi une, sinon pas de note plutôt qu'un message
         // trompeur.
         note: prod ? ((prod.noteKey ? _(prod.noteKey) : prod.note) || null) : null,
+        timingTip: _("chlore_timing_tip"),
         waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["chlore"],
       });
     } else if (fCl > fclT.max) {
@@ -9112,6 +10317,10 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
         computedDoseAmount: null,
         doseUnit: null,
         waitHours: 0,
+        // v1.66.1 — Carte purement informative (rien à appliquer, dégradation
+        // naturelle) : pas de "À débuter après" ni de style "à traiter", voir
+        // RecoCard.
+        noAction: true,
       });
     }
   }
@@ -9241,6 +10450,8 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
         doseUnit: null,
         note: _("reco_note_cya"),
         waitHours: 0,
+        // v1.66.1 — Idem chlore-excess : carte informative, pas d'action.
+        noAction: true,
       });
     }
   }
@@ -9343,12 +10554,11 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
     combined,
     metalsUrgent,
   };
-  const tacNotCritical = stepPriorityCtx.tac == null || stepPriorityCtx.tac >= 60;
-  const phTooHigh = stepPriorityCtx.phVal != null && stepPriorityCtx.phTargetMax != null && stepPriorityCtx.phVal > stepPriorityCtx.phTargetMax;
-  if (phTooHigh && tacNotCritical) {
-    const phStep = steps.find((s) => s.action === "ph-");
-    if (phStep) phStep.note = _("reco_note_ph_before_tac");
-  }
+  // v1.59.4 — Ne plus écraser la note de l'étape pH avec une justification
+  // d'ordonnancement mentionnant le TAC et le chlore : cette étape ne doit
+  // parler que du produit pH appliqué. L'ordre de traitement reste calculé
+  // par computeStepPriority (inchangé), seul l'affichage de la justification
+  // est retiré.
 
   steps.sort((a, b) => computeStepPriority(a, stepPriorityCtx) - computeStepPriority(b, stepPriorityCtx));
 
@@ -9374,7 +10584,10 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
   } else if (combined !== null && combined > 0.5) {
     orderReasons.push(_("reco_order_reason_contamination", { combined: combined.toFixed(2), target: combinedShockTarget }));
   }
-  if (phTooHigh && tacNotCritical) orderReasons.push(_("reco_order_reason_ph_before_tac"));
+  // v1.59.5 — Fix crash : ligne orpheline du refactoring v1.59.4 (variables
+  // phTooHigh/tacNotCritical jamais déclarées) provoquant un ReferenceError
+  // sur TOUT bassin ayant au moins une mesure. Le commentaire v1.59.4
+  // ci-dessus indiquait déjà que cette justification devait être retirée.
   if (phChloreDelayApplied) orderReasons.push(_("reco_order_reason_ph_chlore_delay"));
   const orderExplanation = orderReasons.length > 0
     ? `${_("reco_order_intro_default")} ${orderReasons.join(" ")}`
@@ -9384,7 +10597,11 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
   const result = steps.map((step, i) => {
     const startsAfter = cumulativeHours;
     cumulativeHours += step.waitHours || 0;
-    return { ...step, stepNumber: i + 1, startsAfterHours: startsAfter };
+    // v1.61.0 — Tous les steps issus de ce calcul sont des actions de
+    // traitement correctif ponctuel (par opposition à la carte "entretien
+    // continu", ajoutée séparément au moment de l'application d'un step
+    // galets dans le Wizard — voir applyWizardStep).
+    return { ...step, stepNumber: i + 1, startsAfterHours: startsAfter, mode: "correctif" };
   });
   result.orderExplanation = orderExplanation;
   return result;
@@ -9678,7 +10895,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
   if (measures.length === 0) {
     return (
       <div style={styles.emptyState}>
-        <History size={40} color="#7ab8e8" strokeWidth={1.5} />
+        <History size={40} color="var(--brand-icon-light)" strokeWidth={1.5} />
         <p style={styles.emptyTitle}>{t("no_history")}</p>
         <p style={styles.emptyText}>{t("no_history_sub")}</p>
         <input
@@ -9691,7 +10908,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
         {apiKey ? (
           <>
             <button
-              style={{ ...styles.validateApplyBtn, background: importLoading ? "#6a7d90" : "#0a6ebd", fontSize: 13, padding: "9px 14px", marginTop: 8 }}
+              style={{ ...styles.validateApplyBtn, background: importLoading ? "var(--brand-text-muted)" : "var(--brand-primary)", fontSize: 13, padding: "9px 14px", marginTop: 8 }}
               onClick={() => importFileRef.current?.click()}
               disabled={importLoading}
             >
@@ -9710,8 +10927,8 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
             )}
           </>
         ) : (
-          <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#6a7d90", padding: "8px 12px", background: "#f0f6fb", borderRadius: 10, border: "1px solid #d0e4f5" }}>
-            <Lock size={13} color="#6a7d90" />
+          <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--brand-text-muted)", padding: "8px 12px", background: "var(--brand-bg-tint)", borderRadius: 10, border: "1px solid #d0e4f5" }}>
+            <Lock size={13} color="var(--brand-text-muted)" />
             <span>{t("import_pdf_needs_ai")}</span>
           </div>
         )}
@@ -9732,8 +10949,8 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
           style={{
             ...styles.chip,
             ...styles.chipAll,
-            background: allActive ? "#0a6ebd" : "#f1f4f3",
-            borderColor: allActive ? "#0a6ebd" : "#d0e4f5",
+            background: allActive ? "var(--brand-primary)" : "#f1f4f3",
+            borderColor: allActive ? "var(--brand-primary)" : "#d0e4f5",
             color: allActive ? "#ffffff" : "#2d4a6e",
           }}
         >
@@ -9747,7 +10964,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
               ...styles.chip,
               background: activeParams.includes(cp.key) ? cp.color + "22" : "#f1f4f3",
               borderColor: activeParams.includes(cp.key) ? cp.color : "#d0e4f5",
-              color: activeParams.includes(cp.key) ? cp.color : "#6a7d90",
+              color: activeParams.includes(cp.key) ? cp.color : "var(--brand-text-muted)",
             }}
           >
             {cp.label}
@@ -9792,17 +11009,17 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
                     }
                     return `${d.getDate().toString().padStart(2,"0")}/${(d.getMonth()+1).toString().padStart(2,"0")}`;
                   }}
-                  tick={{ fontSize: 10, fill: "#6a7d90" }}
+                  tick={{ fontSize: 10, fill: "var(--brand-text-muted)" }}
                 />
             <YAxis
               yAxisId="left"
-              tick={{ fontSize: 10, fill: "#6a7d90" }}
+              tick={{ fontSize: 10, fill: "var(--brand-text-muted)" }}
               width={28}
             />
             <YAxis
               yAxisId="right"
               orientation="right"
-              tick={{ fontSize: 10, fill: "#6a7d90" }}
+              tick={{ fontSize: 10, fill: "var(--brand-text-muted)" }}
               width={28}
             />
             <Tooltip
@@ -9838,8 +11055,59 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
         <span style={styles.sectionLabel}>{t("journal")}</span>
       </div>
 
-      {/* Bouton import PDF */}
+      {/* v1.66.2 — Bouton "Générer le rapport" déplacé en haut du Journal
+          (à la place de l'import PDF, désormais en bas de la liste), sur
+          demande d'Arnaud : c'est l'action la plus utilisée depuis cet écran. */}
       <div style={{ marginBottom: 8 }}>
+        {isPremium ? (
+          <button style={styles.validateApplyBtn} onClick={onGenerateReport}>
+            <FileText size={16} /> {t("generate_report")}
+          </button>
+        ) : (
+          <button style={styles.photoLockedBtn} onClick={onWantPremiumForReport}>
+            <Lock size={16} />
+            <span>{t("report_locked")}</span>
+          </button>
+        )}
+        <p style={styles.helpTextSmall}>{t("report_desc")}</p>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {(() => {
+          // v1.63.0 — Journal fusionné : mesures + entretiens manuels (hors
+          // plan), triés ensemble par date décroissante (comme measures seul
+          // auparavant). Les entretiens manuels n'ont pas de measureId — ils
+          // ne rentrent jamais en collision avec la logique existante de
+          // MeasureRow/application liée à une mesure.
+          const manualApps = (applications || []).filter((a) => a.type === "manual");
+          const items = [
+            ...measures.map((m) => ({ kind: "measure", date: m.date, m })),
+            ...manualApps.map((a) => ({ kind: "manual", date: a.appliedAt, a })),
+          ].sort((x, y) => new Date(y.date) - new Date(x.date));
+          return items.map((item) =>
+            item.kind === "measure" ? (
+              <MeasureRow
+                key={item.m.id}
+                measure={item.m}
+                onDelete={() => onDelete(item.m.id)}
+                onEdit={() => onEdit(item.m, applications.find((a) => a.measureId === item.m.id))}
+                onValidateApplication={() => onValidateApplication(item.m)}
+                application={applications.find((a) => a.measureId === item.m.id)}
+                isPremium={isPremium}
+                manageStock={!!pool?.manageStock}
+                lang={lang}
+                activePlan={activePlan}
+                authUid={authUid}
+              />
+            ) : (
+              <ManualApplicationRow key={item.a.id} app={item.a} lang={lang} />
+            )
+          );
+        })()}
+      </div>
+
+      {/* Bouton import PDF — déplacé en bas (v1.66.2) */}
+      <div style={{ marginTop: 18 }}>
         <input
           ref={importFileRef}
           type="file"
@@ -9850,7 +11118,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
         {apiKey ? (
           <>
             <button
-              style={{ ...styles.validateApplyBtn, background: importLoading ? "#6a7d90" : "#0a6ebd", fontSize: 13, padding: "9px 14px" }}
+              style={{ ...styles.validateApplyBtn, background: importLoading ? "var(--brand-text-muted)" : "var(--brand-primary)", fontSize: 13, padding: "9px 14px" }}
               onClick={() => importFileRef.current?.click()}
               disabled={importLoading}
             >
@@ -9869,45 +11137,12 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
             )}
           </>
         ) : (
-          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#6a7d90", padding: "8px 12px", background: "#f0f6fb", borderRadius: 10, border: "1px solid #d0e4f5" }}>
-            <Lock size={13} color="#6a7d90" />
+          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--brand-text-muted)", padding: "8px 12px", background: "var(--brand-bg-tint)", borderRadius: 10, border: "1px solid #d0e4f5" }}>
+            <Lock size={13} color="var(--brand-text-muted)" />
             <span>{t("import_pdf_needs_ai")}</span>
           </div>
         )}
       </div>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {measures.map((m) => (
-          <MeasureRow
-            key={m.id}
-            measure={m}
-            onDelete={() => onDelete(m.id)}
-            onEdit={() => onEdit(m)}
-            onValidateApplication={() => onValidateApplication(m)}
-            application={applications.find((a) => a.measureId === m.id)}
-            isPremium={isPremium}
-            manageStock={!!pool?.manageStock}
-            lang={lang}
-            activePlan={activePlan}
-            authUid={authUid}
-          />
-        ))}
-      </div>
-
-      <div style={{ ...styles.sectionRow, marginTop: 18 }}>
-        <span style={styles.sectionLabel}>{t("report")}</span>
-      </div>
-      {isPremium ? (
-        <button style={styles.validateApplyBtn} onClick={onGenerateReport}>
-          <FileText size={16} /> {t("generate_report")}
-        </button>
-      ) : (
-        <button style={styles.photoLockedBtn} onClick={onWantPremiumForReport}>
-          <Lock size={16} />
-          <span>{t("report_locked")}</span>
-        </button>
-      )}
-      <p style={styles.helpTextSmall}>{t("report_desc")}</p>
 
       {apiKey && (
         <div style={{ marginTop: 20 }}>
@@ -9940,16 +11175,16 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
                 {diagResult.suggestion}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ fontSize: 11, color: "#6a7d90", fontWeight: 600 }}>{t("diag_confidence")} :</span>
+                <span style={{ fontSize: 11, color: "var(--brand-text-muted)", fontWeight: 600 }}>{t("diag_confidence")} :</span>
                 <span style={{ fontSize: 16, letterSpacing: 2 }}>
                   {Array.from({ length: 5 }).map((_, i) => (
                     <span key={i} style={{ color: i < diagResult.confidence ? "#f59e0b" : "#d1d5db" }}>★</span>
                   ))}
                 </span>
-                <span style={{ fontSize: 11, color: "#6a7d90" }}>({diagResult.confidence}/5)</span>
+                <span style={{ fontSize: 11, color: "var(--brand-text-muted)" }}>({diagResult.confidence}/5)</span>
               </div>
               {diagResult.confidence_reason && (
-                <div style={{ fontSize: 11, color: "#6a7d90", marginTop: 4, fontStyle: "italic" }}>
+                <div style={{ fontSize: 11, color: "var(--brand-text-muted)", marginTop: 4, fontStyle: "italic" }}>
                   {diagResult.confidence_reason}
                 </div>
               )}
@@ -9960,8 +11195,8 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
             <span style={styles.sectionLabel}>{t("diag_history_title")}</span>
           </div>
           {!isPremium ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#6a7d90", padding: "8px 12px", background: "#f0f6fb", borderRadius: 10, border: "1px solid #d0e4f5" }}>
-              <Lock size={13} color="#6a7d90" />
+            <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--brand-text-muted)", padding: "8px 12px", background: "var(--brand-bg-tint)", borderRadius: 10, border: "1px solid #d0e4f5" }}>
+              <Lock size={13} color="var(--brand-text-muted)" />
               <span>{t("diag_history_locked")}</span>
             </div>
           ) : diagHistory.length === 0 ? (
@@ -9986,7 +11221,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
                       <td style={styles.diagHistTd}>
                         {d.suggestion}
                         {d.confidence_reason && (
-                          <div style={{ fontSize: 10.5, color: "#6a7d90", marginTop: 4, fontStyle: "italic" }}>
+                          <div style={{ fontSize: 10.5, color: "var(--brand-text-muted)", marginTop: 4, fontStyle: "italic" }}>
                             {d.confidence_reason}
                           </div>
                         )}
@@ -10015,6 +11250,32 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+// v1.63.0 — Ligne compacte pour une application manuelle hors plan (ex.
+// entretien périodique), affichée dans le même journal que les mesures.
+function ManualApplicationRow({ app, lang }) {
+  const t = useT(lang || "fr");
+  return (
+    <div style={{ ...styles.productRow, cursor: "default" }}>
+      <div style={{ ...styles.productThumbPlaceholder, background: "#fff7f2" }}>
+        <Beaker size={16} color="#c4502f" />
+      </div>
+      <div style={{ flex: 1, textAlign: "left" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: "#c4502f", background: "#fff0e8", border: "1px solid #f3d9c8", borderRadius: 99, padding: "2px 8px" }}>
+            🔧 {t("reason_manual_maintenance")}
+          </span>
+          <span style={{ fontSize: 11.5, color: "var(--brand-text-muted)" }}>
+            {formatDate(app.appliedAt)} · {new Date(app.appliedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          </span>
+        </div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: "var(--brand-text-strong)", marginTop: 4 }}>
+          {app.productName} — {formatDose(app.appliedAmount, app.doseUnit || "g")}
+        </div>
+      </div>
     </div>
   );
 }
@@ -10080,14 +11341,14 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, applicat
         </div>
         <ChevronRight
           size={16}
-          color="#6a7d90"
+          color="var(--brand-text-muted)"
           style={{ transform: open ? "rotate(90deg)" : "none", transition: "transform .15s" }}
         />
       </button>
       {open && (
         <div style={styles.measureDetails}>
           {photosLoading && (
-            <div style={{ fontSize: 12, color: "#6a7d90", marginBottom: 8 }}>{t("loading")}</div>
+            <div style={{ fontSize: 12, color: "var(--brand-text-muted)", marginBottom: 8 }}>{t("loading")}</div>
           )}
           {/* Photos d'analyse (photomètre/bandelette) */}
           {loadedPhotos?.length > 0 && (
@@ -10149,10 +11410,10 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, applicat
                       : <CheckCircle2 size={14} color="#1a8fd1" />}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: s.skipped ? "#9ab0c4" : "#0d2b4e" }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: s.skipped ? "#9ab0c4" : "var(--brand-text-strong)" }}>
                       {s.productName || s.title}
                       {s.appliedAmount && !s.skipped && (
-                        <span style={{ fontWeight: 400, color: "#4a6480", marginLeft: 6 }}>
+                        <span style={{ fontWeight: 400, color: "var(--brand-text-secondary)", marginLeft: 6 }}>
                           — {s.appliedAmount >= 1000 ? `${(s.appliedAmount/1000).toFixed(2)} ${s.doseUnit === "g" ? "kg" : "L"}` : `${s.appliedAmount} ${s.doseUnit || "g"}`}
                         </span>
                       )}
@@ -10165,15 +11426,15 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, applicat
                   </div>
                 </div>
               ))}
-              <div style={{ fontSize: 11, color: "#6a7d90", marginTop: 4 }}>
+              <div style={{ fontSize: 11, color: "var(--brand-text-muted)", marginTop: 4 }}>
                 {application.allApplied ? t("wizard_completed") : t("wizard_partial")}
               </div>
             </div>
           ) : (
             !measure.importedFromPdf && (
               activePlan && activePlan.measureId === measure.id ? (
-                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#0a6ebd", fontWeight: 600, padding: "6px 0" }}>
-                  <Clock size={14} color="#0a6ebd" />
+                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--brand-primary)", fontWeight: 600, padding: "6px 0" }}>
+                  <Clock size={14} color="var(--brand-primary)" />
                   {t("plan_in_progress")}
                 </div>
               ) : (
@@ -10206,10 +11467,86 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, applicat
 }
 
 // ---------- Modal Ajout mesure ----------
-function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, apiKey, apiProvider, activeParamKeys, lang, onRequestPhotoAccess, authUid, measureDevice, stripProducts, calibrationContribution }) {
+function AddMeasureModal({ measure, application, products, manageStock, onSaveApplication, onClose, onSave, isPremium, onWantPremium, apiKey, apiProvider, activeParamKeys, lang, onRequestPhotoAccess, authUid, measureDevice, stripProducts, calibrationContribution }) {
   const t = useT(lang || "fr");
   const isPrefilled = !!measure?.__prefilled;
   const isEditing = !!measure && !isPrefilled;
+
+  // v1.66.0 — Édition du traitement appliqué (produit/quantité/heure) en
+  // même temps que la mesure. N'a de sens qu'en édition d'une mesure ayant
+  // une application enregistrée avec au moins une étape non ignorée.
+  function findAnyProdForEdit(name) {
+    return (products || []).find((p) => p.name === name) || DEFAULT_PRODUCTS.find((p) => p.name === name) || null;
+  }
+  function toDispUnitForEdit(amount, unit, product) {
+    if (product?.packagingType === "galets" && product?.unitWeight > 0 && unit === "g") {
+      const v = amount != null ? Math.round(amount / product.unitWeight) : "";
+      return { value: v, unit: t("unit_galets") };
+    }
+    if (unit === "g") {
+      const v = amount != null ? parseFloat((amount / 1000).toFixed(3)) : "";
+      return { value: v, unit: "kg" };
+    }
+    if (unit === "mL") {
+      const v = amount != null ? parseFloat((amount / 1000).toFixed(3)) : "";
+      return { value: v, unit: "L" };
+    }
+    return { value: amount ?? "", unit };
+  }
+  function toBaseAmtForEdit(value, dispUnit, baseUnit, product) {
+    const v = parseFloat(value);
+    if (isNaN(v)) return null;
+    if (product?.packagingType === "galets" && product?.unitWeight > 0 && baseUnit === "g") {
+      return Math.round(v) * product.unitWeight;
+    }
+    if (baseUnit === "g") return v * 1000;
+    if (baseUnit === "mL") return v * 1000;
+    return v;
+  }
+  function candidatesForEditAction(action, currentName) {
+    const rel = action === "chlore" ? ["chlore", "chlore-stabilise"] : [action];
+    const real = (products || []).filter((p) => rel.includes(p.action) && (p.stockPercent ?? 100) > 0);
+    const generic = DEFAULT_PRODUCTS.filter((p) => rel.includes(p.action));
+    const list = [...real, ...generic];
+    if (currentName && !list.some((p) => p.name === currentName)) {
+      list.unshift(findAnyProdForEdit(currentName) || { name: currentName });
+    }
+    return list;
+  }
+  const applicationSteps = application?.steps || [];
+  const [treatmentEdits, setTreatmentEdits] = useState(() => {
+    const map = {};
+    applicationSteps.forEach((s, i) => {
+      if (s.skipped || !s.appliedAt) return;
+      const prod = findAnyProdForEdit(s.productName);
+      const { value, unit } = toDispUnitForEdit(s.appliedAmount, s.doseUnit || "g", prod);
+      const d = new Date(s.appliedAt);
+      map[i] = {
+        productName: s.productName,
+        dispValue: value === "" || value == null ? "" : String(value),
+        dispUnit: unit,
+        time: `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`,
+      };
+    });
+    return map;
+  });
+  function buildUpdatedApplicationSteps() {
+    return applicationSteps.map((s, i) => {
+      const ev = treatmentEdits[i];
+      if (!ev) return s;
+      const baseUnit = s.doseUnit || "g";
+      const prod = findAnyProdForEdit(ev.productName);
+      const amount = toBaseAmtForEdit(ev.dispValue, ev.dispUnit, baseUnit, prod);
+      let appliedAt = s.appliedAt;
+      if (ev.time) {
+        const [h, m] = ev.time.split(":").map(Number);
+        const d = new Date(s.appliedAt);
+        d.setHours(h, m, 0, 0);
+        appliedAt = d.toISOString();
+      }
+      return { ...s, productName: ev.productName, appliedAmount: amount, appliedAt };
+    });
+  }
   const [date, setDate] = useState(
     measure ? new Date(measure.date).toISOString().slice(0, 16) : todayLocalDatetime()
   );
@@ -10596,6 +11933,13 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
     }
     setCclError(null);
 
+    // v1.66.0 — Mise à jour du traitement appliqué (produit/quantité/heure),
+    // en plus de la mesure elle-même, si une application existe pour cette
+    // mesure. Corrige le stock en delta côté parent (editHistoricalApplication).
+    if (application && onSaveApplication) {
+      onSaveApplication(application.id, buildUpdatedApplicationSteps());
+    }
+
     onSave({
       ...(isEditing ? { id: measure.id } : {}),
       ...(isPrefilled && measure?.importedFromPdf ? { importedFromPdf: true } : {}),
@@ -10654,7 +11998,7 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
         type="datetime-local"
         value={date}
         onChange={(e) => setDate(e.target.value)}
-        style={{ ...styles.input, fontWeight: 600, color: "#0a6ebd" }}
+        style={{ ...styles.input, fontWeight: 600, color: "var(--brand-primary)" }}
       />
 
       {isPremium ? (
@@ -10760,18 +12104,18 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
 
           {/* Hint 30 secondes + compteur */}
           {!analyzing && analyzeTimer === null && (
-            <div style={{ fontSize: 11, color: "#6a7d90", marginTop: 6, textAlign: "center", fontStyle: "italic" }}>
+            <div style={{ fontSize: 11, color: "var(--brand-text-muted)", marginTop: 6, textAlign: "center", fontStyle: "italic" }}>
               {t("ai_timer_hint")}
             </div>
           )}
           {analyzing && (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 8, fontSize: 13, color: "#0a6ebd", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 8, fontSize: 13, color: "var(--brand-primary)", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
               <Loader2 size={14} className="spin" />
               {analyzeTimer}s
             </div>
           )}
           {!analyzing && analyzeTimer !== null && (
-            <div style={{ fontSize: 12, color: "#6a7d90", marginTop: 6, textAlign: "center" }}>
+            <div style={{ fontSize: 12, color: "var(--brand-text-muted)", marginTop: 6, textAlign: "center" }}>
               ⏱ {analyzeTimer}s
             </div>
           )}
@@ -10790,16 +12134,16 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
       {analyzeReliability && (
         <div style={{ marginTop: 10, padding: "10px 12px", background: "#f5f8fc", borderRadius: 10, border: "1px solid #d0e4f5" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#0d2b4e" }}>{t("ai_reliability")} :</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "var(--brand-text-strong)" }}>{t("ai_reliability")} :</span>
             <span style={{ fontSize: 16, letterSpacing: 2 }}>
               {Array.from({ length: 5 }, (_, i) => (
                 <span key={i} style={{ color: i < analyzeReliability.score ? "#f5a623" : "#d0d8e0" }}>★</span>
               ))}
             </span>
-            <span style={{ fontSize: 11, color: "#6a7d90" }}>{analyzeReliability.score}/5</span>
+            <span style={{ fontSize: 11, color: "var(--brand-text-muted)" }}>{analyzeReliability.score}/5</span>
           </div>
           {analyzeReliability.reason && (
-            <div style={{ fontSize: 11, color: "#4a6480", lineHeight: 1.5 }}>{analyzeReliability.reason}</div>
+            <div style={{ fontSize: 11, color: "var(--brand-text-secondary)", lineHeight: 1.5 }}>{analyzeReliability.reason}</div>
           )}
         </div>
       )}
@@ -10830,7 +12174,7 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
       </div>
 
       {tclForcedInfo && (
-        <div style={{ marginTop: 8, padding: "8px 12px", background: "#eaf4fb", border: "1px solid #b0d8f0", borderRadius: 8, fontSize: 12, color: "#0a6ebd", display: "flex", alignItems: "center", gap: 6 }}>
+        <div style={{ marginTop: 8, padding: "8px 12px", background: "#eaf4fb", border: "1px solid #b0d8f0", borderRadius: 8, fontSize: 12, color: "var(--brand-primary)", display: "flex", alignItems: "center", gap: 6 }}>
           <AlertTriangle size={14} /> {tclForcedInfo}
         </div>
       )}
@@ -10887,6 +12231,69 @@ function AddMeasureModal({ measure, onClose, onSave, isPremium, onWantPremium, a
         </div>
       )}
 
+      {/* v1.66.0 — Édition du traitement appliqué (produit/quantité/heure),
+          en plus de la mesure. Uniquement en édition d'une mesure ayant une
+          application avec au moins une étape non ignorée. */}
+      {isEditing && applicationSteps.length > 0 && (
+        <div style={{ marginTop: 4, marginBottom: 4 }}>
+          <label style={styles.fieldLabel}>{t("edit_treatment_section_title")}</label>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {applicationSteps.map((s, i) => {
+              const ev = treatmentEdits[i];
+              if (!ev) {
+                // Étape ignorée ou non appliquée : lecture seule, non modifiable.
+                return (
+                  <div key={i} style={{ fontSize: 12.5, color: "#9ab0c4", padding: "4px 0" }}>
+                    {s.productName || s.title} — {t("treatment_skipped")}
+                  </div>
+                );
+              }
+              const candidates = candidatesForEditAction(s.action, ev.productName);
+              return (
+                <div key={i} style={{ border: "1.5px solid #d0e4f5", borderRadius: 10, padding: 10 }}>
+                  <select
+                    value={ev.productName}
+                    onChange={(e) => {
+                      const newName = e.target.value;
+                      const oldProd = findAnyProdForEdit(ev.productName);
+                      const newProd = findAnyProdForEdit(newName);
+                      const baseUnit = s.doseUnit || "g";
+                      const baseAmount = toBaseAmtForEdit(ev.dispValue, ev.dispUnit, baseUnit, oldProd);
+                      const { value, unit } = toDispUnitForEdit(baseAmount, baseUnit, newProd);
+                      setTreatmentEdits((prev) => ({
+                        ...prev,
+                        [i]: { ...prev[i], productName: newName, dispValue: value === "" || value == null ? "" : String(value), dispUnit: unit },
+                      }));
+                    }}
+                    style={{ width: "100%", boxSizing: "border-box", fontSize: 14, fontWeight: 600, color: "var(--brand-text-strong)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 12px", outline: "none", background: "#fff", marginBottom: 8 }}
+                  >
+                    {candidates.map((p) => (
+                      <option key={p.id || p.name} value={p.name}>{p.name}</option>
+                    ))}
+                  </select>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <input
+                      type="number"
+                      value={ev.dispValue}
+                      onChange={(e) => setTreatmentEdits((prev) => ({ ...prev, [i]: { ...prev[i], dispValue: e.target.value } }))}
+                      style={{ flex: 1, fontSize: 18, fontWeight: 700, color: "var(--brand-text-strong)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "8px 10px", textAlign: "center", outline: "none" }}
+                      step={ev.dispUnit === t("unit_galets") ? "1" : "0.01"}
+                    />
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "var(--brand-text-secondary)", minWidth: 32 }}>{ev.dispUnit}</div>
+                    <input
+                      type="time"
+                      value={ev.time}
+                      onChange={(e) => setTreatmentEdits((prev) => ({ ...prev, [i]: { ...prev[i], time: e.target.value } }))}
+                      style={{ fontSize: 14, fontWeight: 700, color: "var(--brand-primary)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "8px 10px", outline: "none" }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <button style={styles.primaryBtn} onClick={handleSave}>
         {isEditing ? t("save_changes") : t("save_measure")}
       </button>
@@ -10932,20 +12339,20 @@ function PlanStatusCard({ plan, onResume, lang }) {
       borderRadius: 12, padding: "12px 14px", marginTop: 8,
     }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: "#0d2b4e" }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: "var(--brand-text-strong)" }}>
           {t("wizard_partial")} — {doneSteps}/{totalSteps}
         </span>
         <button
-          style={{ background: "#0a6ebd", color: "#fff", border: "none", borderRadius: 8, padding: "5px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+          style={{ background: "var(--brand-primary)", color: "#fff", border: "none", borderRadius: 8, padding: "5px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
           onClick={onResume}
         >
           {t("wizard_resume")}
         </button>
       </div>
       {currentStep && (
-        <div style={{ fontSize: 13, color: "#0d2b4e" }}>
+        <div style={{ fontSize: 13, color: "var(--brand-text-strong)" }}>
           <span style={{ fontWeight: 600 }}>{t("wizard_next_step")} : {currentStep.productName || currentStep.title}</span>
-          <div style={{ fontSize: 12, color: isReady ? "#1a8fd1" : "#4a6480", marginTop: 2, fontWeight: isReady ? 700 : 400 }}>
+          <div style={{ fontSize: 12, color: isReady ? "#1a8fd1" : "var(--brand-text-secondary)", marginTop: 2, fontWeight: isReady ? 700 : 400 }}>
             {remaining !== null
               ? isReady
                 ? t("countdown_done")
@@ -10968,6 +12375,44 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   const [prevAmount, setPrevAmount] = React.useState("");
   const [prevTime, setPrevTime] = React.useState("");
   const [selectedProduct, setSelectedProduct] = React.useState(null);
+  // v1.61.0 — Quand aucun produit n'est en stock dans la catégorie : saisie
+  // libre, avec un choix d'unité (kg ou unités) non lié à une fiche produit.
+  const [freeUnitMode, setFreeUnitMode] = React.useState("kg");
+
+  // v1.61.0 — Produits candidats pour l'action d'un step (ou action liée,
+  // ex. "chlore"/"chlore-stabilise" servent tous deux à remonter le chlore
+  // libre), filtrés sur le stock réel et triés : le plus entamé puis le
+  // plus ancien en premier (on privilégie de terminer un produit avant
+  // d'en entamer un nouveau).
+  function getSortedCandidates(stepAction) {
+    if (!manageStock || !products) return [];
+    const relatedActions = stepAction === "chlore" ? ["chlore", "chlore-stabilise"] : [stepAction];
+    const candidates = products.filter((p) => relatedActions.includes(p.action) && (p.stockPercent ?? 100) > 0);
+    return [...candidates].sort((a, b) => {
+      const stockDiff = (a.stockPercent ?? 100) - (b.stockPercent ?? 100);
+      if (stockDiff !== 0) return stockDiff;
+      const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return aDate - bDate;
+    });
+  }
+
+  // v1.63.2 — Quand aucun produit de l'utilisateur n'est en stock pour cette
+  // action, on propose les produits génériques (DEFAULT_PRODUCTS, catalogue
+  // de référence utilisé par ailleurs pour les calculs de dose de repli) au
+  // lieu d'une saisie libre sans nom. Non liés au stock réel : jamais
+  // décomptés (saveApplication ne décrémente que les produits présents dans
+  // "products", donc un nom générique n'y matche jamais).
+  function getGenericCandidates(stepAction) {
+    const relatedActions = stepAction === "chlore" ? ["chlore", "chlore-stabilise"] : [stepAction];
+    return DEFAULT_PRODUCTS.filter((p) => relatedActions.includes(p.action));
+  }
+
+  // Résout un nom de produit en objet, en cherchant d'abord dans les produits
+  // réels de l'utilisateur, puis dans le catalogue générique (fallback).
+  function findAnyProduct(name) {
+    return (products || []).find((p) => p.name === name) || DEFAULT_PRODUCTS.find((p) => p.name === name) || null;
+  }
 
   useEffect(() => {
     const iv = setInterval(() => setNow(Date.now()), 1000);
@@ -10980,18 +12425,38 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
       if (step) {
         const amount = step.computedDoseAmount ?? step.appliedAmount;
         const unit = step.doseUnit || "g";
-        const { value } = toDisplayUnit(amount, unit);
+        // v1.61.0 — Pré-sélection du produit à utiliser : le plus entamé
+        // puis le plus ancien parmi les produits en stock de l'action (ou
+        // action liée). Si aucun candidat réel, on retombe sur le premier
+        // produit générique correspondant (v1.63.2), puis sur le
+        // productName du step (produit par défaut / conseillé par l'algorithme).
+        const sorted = getSortedCandidates(step.action);
+        const generic = getGenericCandidates(step.action);
+        const defaultProductName = sorted.length > 0 ? sorted[0].name
+          : generic.length > 0 ? generic[0].name
+          : step.productName;
+        const defaultProductObj = sorted.length > 0 ? sorted[0]
+          : generic.length > 0 ? generic[0]
+          : products?.find((p) => p.name === step.productName);
+        const { value } = toDisplayUnit(amount, unit, defaultProductObj);
         setEditAmount(value != null && value !== "" ? String(value) : "");
         // Heure par défaut = maintenant en format HH:MM
         const d = new Date();
         setEditTime(`${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`);
-        setSelectedProduct(step.productName);
+        setSelectedProduct(defaultProductName);
+        setFreeUnitMode("kg");
         setEditingPrev(false);
       }
     }
   }, [plan?.currentStepIdx]);
 
-  function toDisplayUnit(amount, unit) {
+  function toDisplayUnit(amount, unit, product) {
+    // v1.61.0 — Produit conditionné en galets/sticks : affichage en nombre
+    // d'unités (arrondi), converti depuis la dose calculée en grammes.
+    if (product?.packagingType === "galets" && product?.unitWeight > 0 && unit === "g") {
+      const v = amount != null ? Math.round(amount / product.unitWeight) : "";
+      return { value: v, displayUnit: t("unit_galets") };
+    }
     // Toujours afficher en kg ou L (jamais g ou mL)
     if (unit === "g") {
       const v = amount != null ? parseFloat((amount / 1000).toFixed(3)) : "";
@@ -11004,9 +12469,13 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
     return { value: amount ?? "", displayUnit: unit };
   }
 
-  function toBaseUnit(value, displayUnit, baseUnit) {
+  function toBaseUnit(value, displayUnit, baseUnit, product) {
     const v = parseFloat(value);
     if (isNaN(v)) return null;
+    // v1.61.0 — Conversion inverse nombre de galets → grammes.
+    if (product?.packagingType === "galets" && product?.unitWeight > 0 && baseUnit === "g") {
+      return Math.round(v) * product.unitWeight;
+    }
     // displayUnit est toujours kg ou L (jamais g ou mL)
     if (baseUnit === "g") return v * 1000; // kg → g
     if (baseUnit === "mL") return v * 1000; // L → mL
@@ -11030,22 +12499,49 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
 
   const totalSteps = plan.steps.length;
   const doneCount = plan.steps.filter((s) => s.appliedAt || s.skipped).length;
+  const isMaintenance = step.mode === "entretien";
   const baseUnit = step.doseUnit || "g";
-  const { displayUnit } = toDisplayUnit(step.computedDoseAmount || step.appliedAmount, baseUnit);
+  // v1.61.0 — Candidats produits pour cette étape (triés, filtrés sur stock
+  // réel) et produit effectivement sélectionné (dropdown ou défaut trié).
+  const sortedCandidates = getSortedCandidates(step.action);
+  const genericCandidates = getGenericCandidates(step.action);
+  const selectedProductObj = findAnyProduct(selectedProduct || step.productName);
+  const { displayUnit } = toDisplayUnit(step.computedDoseAmount || step.appliedAmount, baseUnit, selectedProductObj);
   const scheduled = step.scheduledAt ? new Date(step.scheduledAt).getTime() : null;
   const remaining = scheduled ? scheduled - now : null;
   const isReady = remaining === null || remaining <= 0;
   const prod = products?.find((p) => p.name === step.productName);
-  const stockEmpty = manageStock && prod && (prod.stockPercent ?? 100) <= 0;
+  const stockEmpty = !isMaintenance && manageStock && prod && (prod.stockPercent ?? 100) <= 0;
 
   function handleApply() {
+    if (isMaintenance) {
+      // Carte informative : rien à saisir, ferme et termine le plan.
+      onApplyStep(currentIdx, null, new Date().toISOString(), null);
+      return;
+    }
+    if (manageStock && sortedCandidates.length === 0 && genericCandidates.length === 0) {
+      // v1.61.0 — Aucun produit en stock ni générique pour cette action :
+      // dernier repli, saisie libre kg/unités, sans conversion ni lien à
+      // une fiche produit.
+      const v = parseFloat(editAmount);
+      const amount = isNaN(v) ? null : (freeUnitMode === "kg" ? v * 1000 : v);
+      let appliedAt = new Date().toISOString();
+      if (editTime) {
+        const [h, m] = editTime.split(":").map(Number);
+        const d = new Date();
+        d.setHours(h, m, 0, 0);
+        appliedAt = d.toISOString();
+      }
+      onApplyStep(currentIdx, amount, appliedAt, null);
+      return;
+    }
     // Utiliser l'unité du produit sélectionné si différent du produit conseillé
     const actualProd = selectedProduct && selectedProduct !== step.productName
-      ? products?.find(p => p.name === selectedProduct)
-      : null;
+      ? findAnyProduct(selectedProduct)
+      : selectedProductObj;
     const actualBaseUnit = actualProd?.doseUnit || baseUnit;
-    const { displayUnit: actualDisplayUnit } = toDisplayUnit(null, actualBaseUnit);
-    const amount = toBaseUnit(editAmount, actualProd ? actualDisplayUnit : displayUnit, actualBaseUnit);
+    const { displayUnit: actualDisplayUnit } = toDisplayUnit(null, actualBaseUnit, actualProd);
+    const amount = toBaseUnit(editAmount, actualProd ? actualDisplayUnit : displayUnit, actualBaseUnit, actualProd);
     let appliedAt = new Date().toISOString();
     if (editTime) {
       const [h, m] = editTime.split(":").map(Number);
@@ -11063,17 +12559,19 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
       display: "flex", alignItems: "flex-end", justifyContent: "center",
     }}>
       <div style={{
-        background: "#fff", borderRadius: "20px 20px 0 0",
+        background: isMaintenance ? "#fff" : "#fff7f2",
+        borderTop: isMaintenance ? "5px solid var(--brand-primary)" : "5px solid #c4502f",
+        borderRadius: "20px 20px 0 0",
         width: "100%", maxWidth: 480,
         padding: "20px 18px 32px", boxSizing: "border-box",
         maxHeight: "92dvh", overflowY: "auto",
       }}>
         {/* En-tête */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-          <span style={{ fontSize: 11, color: "#6a7d90", fontWeight: 600 }}>
+          <span style={{ fontSize: 11, color: "var(--brand-text-muted)", fontWeight: 600 }}>
             {t("wizard_step")} {currentIdx + 1} {t("wizard_of")} {totalSteps}
           </span>
-          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#6a7d90", padding: 4 }}>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--brand-text-muted)", padding: 4 }}>
             <X size={20} />
           </button>
         </div>
@@ -11085,18 +12583,18 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
               flex: 1, height: 4, borderRadius: 4,
               background: s.appliedAt && !s.skipped ? "#1a8fd1"
                 : s.skipped ? "#d0e4f5"
-                : i === currentIdx ? "#0a6ebd"
+                : i === currentIdx ? "var(--brand-primary)"
                 : "#e0ecf5",
             }} />
           ))}
         </div>
 
         {/* Titre étape */}
-        <div style={{ fontSize: 18, fontWeight: 800, color: "#0d2b4e", marginBottom: 4 }}>
+        <div style={{ fontSize: 18, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 4 }}>
           {step.productName || step.title}
         </div>
         {step.title && step.productName && step.title !== step.productName && (
-          <div style={{ fontSize: 13, color: "#4a6480", marginBottom: 8 }}>{step.title}</div>
+          <div style={{ fontSize: 13, color: "var(--brand-text-secondary)", marginBottom: 8 }}>{step.title}</div>
         )}
 
         {/* Countdown / horaire */}
@@ -11106,12 +12604,14 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
             marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between",
           }}>
             <div>
-              <div style={{ fontSize: 11, color: "#6a7d90", fontWeight: 600 }}>{t("wizard_scheduled")}</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: "#0a6ebd", fontVariantNumeric: "tabular-nums" }}>
+              <div style={{ fontSize: 11, color: "var(--brand-text-muted)", fontWeight: 600 }}>
+                {t(step.action === "chlore" ? "wizard_earliest" : "wizard_scheduled")}
+              </div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: "var(--brand-primary)", fontVariantNumeric: "tabular-nums" }}>
                 {formatCountdown(remaining)}
               </div>
             </div>
-            <div style={{ textAlign: "right", fontSize: 12, color: "#4a6480" }}>
+            <div style={{ textAlign: "right", fontSize: 12, color: "var(--brand-text-secondary)" }}>
               {t("wizard_at")} {new Date(step.scheduledAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
             </div>
           </div>
@@ -11122,6 +12622,11 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
             marginBottom: 14, fontSize: 13, fontWeight: 700, color: "#1a8fd1",
           }}>
             ✓ {t("countdown_done")}
+          </div>
+        )}
+        {step.timingTip && (
+          <div style={{ background: "#eef6fc", borderRadius: 8, padding: "8px 14px", marginBottom: 12, fontSize: 12.5, color: "#3a5a78" }}>
+            🌙 {step.timingTip}
           </div>
         )}
 
@@ -11143,21 +12648,18 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
         )}
 
         {/* Sélecteur de produit alternatif (si gestion stock activée).
-            v1.56.0 — Filtré par action du step : la liste ne proposait avant
-            aucun tri, et sans produit configuré pour l'action (ex. tac-),
-            le <select> retombait silencieusement sur le 1er produit de la
-            liste (ex. bandelettes de test) faute d'option correspondant à
-            step.productName. */}
-        {manageStock && products && (() => {
-          const sameActionProducts = products.filter(p => p.action === step.action);
-          if (sameActionProducts.length === 0) return null;
+            v1.61.0 — Filtré sur le stock réel (>0%) et trié : le plus entamé
+            puis le plus ancien en premier (proposé par défaut). Le
+            sélecteur ne s'affiche que s'il y a un choix réel à faire (2+
+            produits en stock) ; avec 0 ou 1 candidat, pas de sélecteur. */}
+        {!isMaintenance && manageStock && products && sortedCandidates.length > 1 && (() => {
           const currentValue = selectedProduct || step.productName;
-          const selectValue = sameActionProducts.some(p => p.name === currentValue)
+          const selectValue = sortedCandidates.some(p => p.name === currentValue)
             ? currentValue
-            : sameActionProducts[0].name;
+            : sortedCandidates[0].name;
           return (
             <div style={{ marginBottom: 12 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: "#4a6480", display: "block", marginBottom: 6 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "var(--brand-text-secondary)", display: "block", marginBottom: 6 }}>
                 {t("product_col")}
               </label>
               <select
@@ -11165,19 +12667,16 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
                 onChange={(e) => {
                   const newProd = e.target.value;
                   setSelectedProduct(newProd);
-                  if (newProd !== step.productName) {
-                    setEditAmount("");
-                  } else {
-                    const amount = step.computedDoseAmount ?? step.appliedAmount;
-                    const { value } = toDisplayUnit(amount, step.doseUnit || "g");
-                    setEditAmount(value != null && value !== "" ? String(value) : "");
-                  }
+                  const newProdObj = products.find(p => p.name === newProd);
+                  const amount = step.computedDoseAmount ?? step.appliedAmount;
+                  const { value } = toDisplayUnit(amount, step.doseUnit || "g", newProdObj);
+                  setEditAmount(value != null && value !== "" ? String(value) : "");
                 }}
-                style={{ width: "100%", boxSizing: "border-box", fontSize: 14, fontWeight: 600, color: "#0d2b4e", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 12px", outline: "none", background: "#fff" }}
+                style={{ width: "100%", boxSizing: "border-box", fontSize: 14, fontWeight: 600, color: "var(--brand-text-strong)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 12px", outline: "none", background: "#fff" }}
               >
-                {sameActionProducts.map(p => (
+                {sortedCandidates.map(p => (
                   <option key={p.id || p.name} value={p.name}>
-                    {p.name}{p.name === step.productName ? " ✓" : ""}
+                    {p.name}{p.name === sortedCandidates[0].name ? " ✓" : ""}
                   </option>
                 ))}
               </select>
@@ -11185,10 +12684,66 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
           );
         })()}
 
-        {/* Quantité */}
-        {baseUnit && (
+        {/* v1.63.2 — Sélecteur de produit générique (DEFAULT_PRODUCTS), quand
+            l'utilisateur n'a aucun produit réel en stock pour cette action.
+            Remplace l'ancienne saisie libre sans nom : le nom générique est
+            enregistré dans l'historique/le rapport, sans jamais décompter de
+            stock (aucun produit "products" ne porte ce nom). */}
+        {!isMaintenance && manageStock && sortedCandidates.length === 0 && genericCandidates.length > 0 && (() => {
+          const currentValue = selectedProduct || step.productName;
+          const selectValue = genericCandidates.some(p => p.name === currentValue)
+            ? currentValue
+            : genericCandidates[0].name;
+          return (
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 12, color: "#c0392b", marginBottom: 8 }}>{t("no_stock_generic_hint")}</div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "var(--brand-text-secondary)", display: "block", marginBottom: 6 }}>
+                {t("product_col")}
+              </label>
+              <select
+                value={selectValue}
+                onChange={(e) => {
+                  const newProd = e.target.value;
+                  setSelectedProduct(newProd);
+                  const newProdObj = findAnyProduct(newProd);
+                  const amount = step.computedDoseAmount ?? step.appliedAmount;
+                  const { value } = toDisplayUnit(amount, step.doseUnit || "g", newProdObj);
+                  setEditAmount(value != null && value !== "" ? String(value) : "");
+                }}
+                style={{ width: "100%", boxSizing: "border-box", fontSize: 14, fontWeight: 600, color: "var(--brand-text-strong)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 12px", outline: "none", background: "#fff" }}
+              >
+                {genericCandidates.map(p => (
+                  <option key={p.id || p.name} value={p.name}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+          );
+        })()}
+
+        {/* Quantité — masquée pour la carte entretien (rien à saisir).
+            Dernier repli : aucun produit réel NI générique pour cette action
+            (cas très rare, catalogue générique ne couvre pas l'action). */}
+        {!isMaintenance && manageStock && sortedCandidates.length === 0 && genericCandidates.length === 0 && (
+          <div style={{ marginBottom: 6 }}>
+            <div style={{ fontSize: 12, color: "#c0392b", marginBottom: 8 }}>{t("no_stock_category_hint")}</div>
+            <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+              {["kg", "unites"].map((m) => (
+                <button key={m} type="button" onClick={() => setFreeUnitMode(m)}
+                  style={{
+                    flex: 1, padding: "6px 0", borderRadius: 8, cursor: "pointer",
+                    border: freeUnitMode === m ? "2px solid var(--brand-primary)" : "1.5px solid #d0e4f5",
+                    background: freeUnitMode === m ? "#eaf4fb" : "#fff",
+                    color: "var(--brand-text-strong)", fontWeight: 700, fontSize: 13,
+                  }}>
+                  {t(m === "kg" ? "quantity_unit_mode_kg" : "quantity_unit_mode_units")}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        {!isMaintenance && baseUnit && (
           <div style={{ marginBottom: 12 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: "#4a6480", display: "block", marginBottom: 6 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--brand-text-secondary)", display: "block", marginBottom: 6 }}>
               {t("quantity_applied")}
             </label>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -11196,31 +12751,40 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
                 type="number"
                 value={editAmount ?? ""}
                 onChange={(e) => setEditAmount(e.target.value)}
-                style={{ flex: 1, fontSize: 22, fontWeight: 700, color: "#0d2b4e", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 12px", textAlign: "center", outline: "none" }}
-                step="0.01"
+                style={{ flex: 1, fontSize: 22, fontWeight: 700, color: "var(--brand-text-strong)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 12px", textAlign: "center", outline: "none" }}
+                step={(manageStock && sortedCandidates.length === 0 && genericCandidates.length === 0 && freeUnitMode === "unites") || selectedProductObj?.packagingType === "galets" ? "1" : "0.01"}
               />
-              <div style={{ fontSize: 16, fontWeight: 700, color: "#4a6480", minWidth: 32 }}>{displayUnit}</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: "var(--brand-text-secondary)", minWidth: 32 }}>
+                {manageStock && sortedCandidates.length === 0 && genericCandidates.length === 0
+                  ? t(freeUnitMode === "kg" ? "quantity_unit_mode_kg" : "quantity_unit_mode_units")
+                  : displayUnit}
+              </div>
             </div>
+          </div>
+        )}
+        {isMaintenance && step.doseText && (
+          <div style={{ background: "#eaf4fb", borderRadius: 10, padding: "12px 14px", marginBottom: 12, fontSize: 14, fontWeight: 700, color: "var(--brand-primary)" }}>
+            {step.doseText}
           </div>
         )}
 
         {/* Heure d'application */}
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: "#4a6480", display: "block", marginBottom: 6 }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: "var(--brand-text-secondary)", display: "block", marginBottom: 6 }}>
             {t("wizard_apply_time")}
           </label>
           <input
             type="time"
             value={editTime}
             onChange={(e) => setEditTime(e.target.value)}
-            style={{ width: "100%", boxSizing: "border-box", fontSize: 18, fontWeight: 700, color: "#0a6ebd", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 12px", outline: "none" }}
+            style={{ width: "100%", boxSizing: "border-box", fontSize: 18, fontWeight: 700, color: "var(--brand-primary)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 12px", outline: "none" }}
           />
         </div>
 
         {/* Boutons */}
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <button
-            style={{ display:"flex",alignItems:"center",justifyContent:"center",gap:8,width:"100%",padding:"14px 0",borderRadius:12,border:"none",background:"#0a6ebd",color:"#fff",fontWeight:700,fontSize:16,cursor:"pointer" }}
+            style={{ display:"flex",alignItems:"center",justifyContent:"center",gap:8,width:"100%",padding:"14px 0",borderRadius:12,border:"none",background:"var(--brand-primary)",color:"#fff",fontWeight:700,fontSize:16,cursor:"pointer" }}
             onClick={handleApply}
           >
             <CheckCircle2 size={18} /> {t("wizard_done")}
@@ -11236,7 +12800,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
           {/* Modifier l'étape précédente */}
           {currentIdx > 0 && plan.steps[currentIdx - 1]?.appliedAt && !editingPrev && (
             <button
-              style={{ background: "none", border: "1px solid #d0e4f5", borderRadius: 8, color: "#4a6480", fontSize: 12, cursor: "pointer", padding: "7px 12px", display: "flex", alignItems: "center", gap: 5 }}
+              style={{ background: "none", border: "1px solid #d0e4f5", borderRadius: 8, color: "var(--brand-text-secondary)", fontSize: 12, cursor: "pointer", padding: "7px 12px", display: "flex", alignItems: "center", gap: 5 }}
               onClick={() => {
                 const prev = plan.steps[currentIdx - 1];
                 const prevUnit = prev.doseUnit || "g";
@@ -11258,31 +12822,31 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
           const prevUnit = prev.doseUnit || "g";
           const { displayUnit: du } = toDisplayUnit(prev.appliedAmount, prevUnit);
           return (
-            <div style={{ marginTop: 14, padding: "12px 14px", background: "#f0f6fb", borderRadius: 12, border: "1px solid #d0e4f5" }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#0d2b4e", marginBottom: 10 }}>
+            <div style={{ marginTop: 14, padding: "12px 14px", background: "var(--brand-bg-tint)", borderRadius: 12, border: "1px solid #d0e4f5" }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "var(--brand-text-strong)", marginBottom: 10 }}>
                 ← {prev.productName || prev.title}
               </div>
-              <label style={{ fontSize: 11, fontWeight: 600, color: "#4a6480", display: "block", marginBottom: 4 }}>{t("quantity_applied")}</label>
+              <label style={{ fontSize: 11, fontWeight: 600, color: "var(--brand-text-secondary)", display: "block", marginBottom: 4 }}>{t("quantity_applied")}</label>
               <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10 }}>
                 <input
                   type="number"
                   value={prevAmount}
                   onChange={(e) => setPrevAmount(e.target.value)}
-                  style={{ flex: 1, fontSize: 18, fontWeight: 700, color: "#0d2b4e", border: "1.5px solid #d0e4f5", borderRadius: 8, padding: "8px 10px", textAlign: "center", outline: "none" }}
+                  style={{ flex: 1, fontSize: 18, fontWeight: 700, color: "var(--brand-text-strong)", border: "1.5px solid #d0e4f5", borderRadius: 8, padding: "8px 10px", textAlign: "center", outline: "none" }}
                   step="0.01"
                 />
-                <span style={{ fontSize: 14, fontWeight: 700, color: "#4a6480" }}>{du}</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: "var(--brand-text-secondary)" }}>{du}</span>
               </div>
-              <label style={{ fontSize: 11, fontWeight: 600, color: "#4a6480", display: "block", marginBottom: 4 }}>{t("wizard_apply_time")}</label>
+              <label style={{ fontSize: 11, fontWeight: 600, color: "var(--brand-text-secondary)", display: "block", marginBottom: 4 }}>{t("wizard_apply_time")}</label>
               <input
                 type="time"
                 value={prevTime}
                 onChange={(e) => setPrevTime(e.target.value)}
-                style={{ width: "100%", boxSizing: "border-box", fontSize: 16, fontWeight: 700, color: "#0a6ebd", border: "1.5px solid #d0e4f5", borderRadius: 8, padding: "8px 10px", outline: "none", marginBottom: 10 }}
+                style={{ width: "100%", boxSizing: "border-box", fontSize: 16, fontWeight: 700, color: "var(--brand-primary)", border: "1.5px solid #d0e4f5", borderRadius: 8, padding: "8px 10px", outline: "none", marginBottom: 10 }}
               />
               <div style={{ display: "flex", gap: 8 }}>
                 <button
-                  style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: "none", background: "#0a6ebd", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}
+                  style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}
                   onClick={() => {
                     const baseU = prev.doseUnit || "g";
                     const { displayUnit: du2 } = toDisplayUnit(prev.appliedAmount, baseU);
@@ -11301,7 +12865,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
                   {t("save")}
                 </button>
                 <button
-                  style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: "1px solid #d0e4f5", background: "#fff", color: "#4a6480", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
+                  style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: "1px solid #d0e4f5", background: "#fff", color: "var(--brand-text-secondary)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
                   onClick={() => setEditingPrev(false)}
                 >
                   {t("cancel")}
@@ -11314,12 +12878,12 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
         {/* Aperçu des étapes suivantes */}
         {plan.steps.slice(currentIdx + 1).some((s) => !s.skipped && !s.appliedAt) && (
           <div style={{ marginTop: 16, borderTop: "1px solid #eaf4fb", paddingTop: 12 }}>
-            <div style={{ fontSize: 11, color: "#6a7d90", fontWeight: 600, marginBottom: 8 }}>ÉTAPES SUIVANTES</div>
+            <div style={{ fontSize: 11, color: "var(--brand-text-muted)", fontWeight: 600, marginBottom: 8 }}>ÉTAPES SUIVANTES</div>
             {plan.steps.slice(currentIdx + 1).filter((s) => !s.skipped && !s.appliedAt).map((s, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", borderBottom: "1px solid #f0f6fb" }}>
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", borderBottom: "1px solid var(--brand-bg-tint)" }}>
                 <Clock size={13} color="#b0c8e0" />
-                <span style={{ fontSize: 12, color: "#4a6480", flex: 1 }}>{s.productName || s.title}</span>
-                <span style={{ fontSize: 11, color: "#6a7d90" }}>
+                <span style={{ fontSize: 12, color: "var(--brand-text-secondary)", flex: 1 }}>{s.productName || s.title}</span>
+                <span style={{ fontSize: 11, color: "var(--brand-text-muted)" }}>
                   {s.scheduledAt ? new Date(s.scheduledAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
                 </span>
               </div>
@@ -11328,6 +12892,102 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
         )}
       </div>
     </div>
+  );
+}
+
+// v1.63.0 — Application manuelle d'un produit hors plan de traitement (ex.
+// entretien périodique au galet). Tous les produits en stock sont proposés,
+// sans filtre par action. Champ quantité adaptatif kg/galets comme le Wizard.
+function ManualApplyModal({ products, onClose, onSave, lang }) {
+  const t = useT(lang || "fr");
+  const realCandidates = (products || [])
+    .filter((p) => p.action !== "outil-mesure" && (p.stockPercent ?? 100) > 0)
+    .sort((a, b) => a.name.localeCompare(b.name));
+  // v1.64.0 — Aucun produit réel en stock : on propose le catalogue générique
+  // (DEFAULT_PRODUCTS), comme dans le wizard de plan de traitement. Jamais
+  // décompté du stock réel (saveManualApplication ne matche que par id, un
+  // produit générique n'en partage aucun avec "products").
+  const isGeneric = realCandidates.length === 0;
+  const candidates = isGeneric
+    ? DEFAULT_PRODUCTS.filter((p) => p.action !== "outil-mesure").sort((a, b) => a.name.localeCompare(b.name))
+    : realCandidates;
+
+  const [selectedName, setSelectedName] = useState(candidates[0]?.name || "");
+  const selected = candidates.find((p) => p.name === selectedName) || null;
+  const isGalets = selected?.packagingType === "galets" && selected?.unitWeight > 0;
+  const [amount, setAmount] = useState("");
+  const [time, setTime] = useState(() => {
+    const d = new Date();
+    return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
+  });
+
+  function handleSubmit() {
+    if (!selected) return;
+    const v = parseFloat(amount);
+    if (isNaN(v) || v <= 0) return;
+    const doseUnit = selected.doseUnit || "g";
+    const finalAmount = isGalets ? Math.round(v) * selected.unitWeight : v * 1000;
+    let appliedAt = new Date().toISOString();
+    if (time) {
+      const [h, m] = time.split(":").map(Number);
+      const d = new Date();
+      d.setHours(h, m, 0, 0);
+      appliedAt = d.toISOString();
+    }
+    onSave(selected, finalAmount, doseUnit, appliedAt);
+  }
+
+  return (
+    <ModalShell onClose={onClose} title={t("apply_product_manual")}>
+      {candidates.length === 0 ? (
+        <p style={styles.helpText}>{t("no_stock_category_hint")}</p>
+      ) : (
+        <>
+          {isGeneric && (
+            <div style={{ fontSize: 12, color: "#c0392b", marginBottom: 8 }}>{t("no_stock_generic_hint")}</div>
+          )}
+          <label style={styles.fieldLabel}>{t("product_col")}</label>
+          <select
+            value={selectedName}
+            onChange={(e) => { setSelectedName(e.target.value); setAmount(""); }}
+            style={{ width: "100%", boxSizing: "border-box", fontSize: 14, fontWeight: 600, color: "var(--brand-text-strong)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 12px", outline: "none", background: "#fff", marginBottom: 14 }}
+          >
+            {candidates.map((p) => (
+              <option key={p.id || p.name} value={p.name}>{p.name}</option>
+            ))}
+          </select>
+
+          <label style={styles.fieldLabel}>{t("quantity_applied")}</label>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 14 }}>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              style={{ flex: 1, fontSize: 22, fontWeight: 700, color: "var(--brand-text-strong)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 12px", textAlign: "center", outline: "none" }}
+              step={isGalets ? "1" : "0.01"}
+            />
+            <div style={{ fontSize: 16, fontWeight: 700, color: "var(--brand-text-secondary)", minWidth: 32 }}>
+              {isGalets ? t("unit_galets") : "kg"}
+            </div>
+          </div>
+
+          <label style={styles.fieldLabel}>{t("wizard_apply_time")}</label>
+          <input
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            style={{ width: "100%", boxSizing: "border-box", fontSize: 18, fontWeight: 700, color: "var(--brand-primary)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 12px", outline: "none", marginBottom: 16 }}
+          />
+
+          <button
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", padding: "14px 0", borderRadius: 12, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 16, cursor: "pointer" }}
+            onClick={handleSubmit}
+          >
+            <CheckCircle2 size={18} /> {t("wizard_done")}
+          </button>
+        </>
+      )}
+    </ModalShell>
   );
 }
 
@@ -11412,15 +13072,15 @@ function ValidateApplicationModal({ measure, recs, existingApplication, onClose,
                 alignItems: "center",
                 gap: 12,
                 cursor: "pointer",
-                border: selected[i] ? "2px solid #0a6ebd" : "1.5px solid #d0e4f5",
+                border: selected[i] ? "2px solid var(--brand-primary)" : "1.5px solid #d0e4f5",
                 background: selected[i] ? "#e8f4fd" : "#f8fafd",
                 textAlign: "left",
               }}
             >
               <div style={{
                 width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-                border: selected[i] ? "2px solid #0a6ebd" : "2px solid #b0c4d8",
-                background: selected[i] ? "#0a6ebd" : "transparent",
+                border: selected[i] ? "2px solid var(--brand-primary)" : "2px solid #b0c4d8",
+                background: selected[i] ? "var(--brand-primary)" : "transparent",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>
                 {selected[i] && <CheckCircle2 size={14} color="#fff" />}
@@ -11428,7 +13088,7 @@ function ValidateApplicationModal({ measure, recs, existingApplication, onClose,
               <div style={{ flex: 1 }}>
                 <div style={styles.applyStepTitle}>{r.title}</div>
                 <div style={styles.applyStepProduct}>{r.productName}</div>
-                {(r.doseText || r.missingTip) && <div style={{ fontSize: 12, color: "#4a6480", marginTop: 2 }}>{r.doseText || r.missingTip}</div>}
+                {(r.doseText || r.missingTip) && <div style={{ fontSize: 12, color: "var(--brand-text-secondary)", marginTop: 2 }}>{r.doseText || r.missingTip}</div>}
               </div>
             </button>
           ))}
@@ -11495,7 +13155,7 @@ function ValidateApplicationModal({ measure, recs, existingApplication, onClose,
         <button style={styles.primaryBtn} onClick={handleSave}>
           {t("validate_btn")}
         </button>
-        <button style={{ ...styles.primaryBtn, background: "#f0f6fb", color: "#0a6ebd", border: "1px solid #d0e4f5" }}
+        <button style={{ ...styles.primaryBtn, background: "var(--brand-bg-tint)", color: "var(--brand-primary)", border: "1px solid #d0e4f5" }}
           onClick={() => setStep("select")}>
           {t("back_btn")}
         </button>
@@ -11505,20 +13165,21 @@ function ValidateApplicationModal({ measure, recs, existingApplication, onClose,
 }
 
 // ---------- Produits ----------
-function ProductsView({ products, onEdit, onAddNew, onDelete, onResetAll, isPremium, onWantPremium, onWantSettings, poolName, manageStock, lang }) {
+function ProductsView({ products, onEdit, onAddNew, onDelete, onResetAll, isPremium, onWantPremium, onWantSettings, onWantProductsToBuy, poolName, manageStock, lang }) {
   const t = useT(lang);
 
   // Version gratuite : écran paywall uniquement
   if (!isPremium) {
     return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "60px 24px", gap: 16, textAlign: "center" }}>
+        {/* v1.71.0 — Écran de vente Premium : reste en bleu, non thémé, même en mode gratuit (aperçu de ce qu'on achète) */}
         <div style={{ width: 56, height: 56, borderRadius: 16, background: "#f0f6fb", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Lock size={26} color="#0a6ebd" />
+          <Lock size={26} color="#1ca7d1" />
         </div>
         <div style={{ fontSize: 17, fontWeight: 700, color: "#0d2b4e" }}>{t("my_products")}</div>
         <div style={{ fontSize: 14, color: "#4a6480", lineHeight: 1.5, maxWidth: 300 }}>{t("products_locked")}</div>
         <button
-          style={{ marginTop: 8, padding: "13px 28px", borderRadius: 12, border: "none", background: "#0a6ebd", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" }}
+          style={{ marginTop: 8, padding: "13px 28px", borderRadius: 12, border: "none", background: "#1ca7d1", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" }}
           onClick={onWantPremium}
         >
           <Crown size={15} style={{ marginRight: 7, verticalAlign: "middle" }} />
@@ -11557,6 +13218,23 @@ function ProductsView({ products, onEdit, onAddNew, onDelete, onResetAll, isPrem
         <>
           <p style={styles.helpText}>{t("products_formula")}</p>
 
+          <button
+            type="button"
+            onClick={onWantProductsToBuy}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              width: "100%", boxSizing: "border-box", background: "#fff7f2",
+              border: "1px solid #f3d9c8", borderRadius: 12, padding: "12px 14px",
+              marginBottom: 14, cursor: "pointer", textAlign: "left",
+            }}
+          >
+            <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 700, color: "#c4502f" }}>
+              <AlertTriangle size={16} />
+              {t("products_to_buy")}
+            </span>
+            <ChevronRight size={16} color="#c4502f" />
+          </button>
+
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {products
               .filter((p) => !(p.isDefault && (p.stockPercent ?? 100) <= 0))
@@ -11566,7 +13244,7 @@ function ProductsView({ products, onEdit, onAddNew, onDelete, onResetAll, isPrem
                   <img src={p.photo} alt="" style={styles.productThumb} />
                 ) : (
                   <div style={styles.productThumbPlaceholder}>
-                    <Beaker size={16} color="#7ab8e8" />
+                    <Beaker size={16} color="var(--brand-icon-light)" />
                   </div>
                 )}
                 <div style={{ flex: 1, textAlign: "left" }}>
@@ -11603,10 +13281,10 @@ function ProductsView({ products, onEdit, onAddNew, onDelete, onResetAll, isPrem
                     return (
                       <div style={{ marginTop: 6 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
-                          <span style={{ fontSize: 11, color: low ? "#c0392b" : "#4a6480", fontWeight: 600 }}>
+                          <span style={{ fontSize: 11, color: low ? "#c0392b" : "var(--brand-text-secondary)", fontWeight: 600 }}>
                             {t("stock_label")} {pct} %
                           </span>
-                          <span style={{ fontSize: 11, color: low ? "#c0392b" : "#6a7d90" }}>
+                          <span style={{ fontSize: 11, color: low ? "#c0392b" : "var(--brand-text-muted)" }}>
                             ≈ {displayVal} {cUnit} {t("stock_remaining")}
                           </span>
                         </div>
@@ -11623,7 +13301,7 @@ function ProductsView({ products, onEdit, onAddNew, onDelete, onResetAll, isPrem
                     );
                   })()}
                 </div>
-                <ChevronRight size={16} color="#6a7d90" />
+                <ChevronRight size={16} color="var(--brand-text-muted)" />
               </button>
             ))}
             {products.length === 0 && (
@@ -11635,6 +13313,171 @@ function ProductsView({ products, onEdit, onAddNew, onDelete, onResetAll, isPrem
             <button style={styles.dangerLinkBtn} onClick={handleResetAll}>
               <Trash2 size={14} /> {t("delete_all_products")}
             </button>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// v1.62.0 — "Mes produits à acheter" : agrège deux critères indépendants
+// (stock bas, et stock insuffisant pour couvrir le plan de traitement en
+// cours ou les recommandations calculées sur la dernière mesure) sur le
+// bassin actuellement affiché. Entièrement recalculé à l'ouverture, pas de
+// données stockées séparément.
+function remainingInDoseUnit(prod, doseUnit) {
+  if (!prod?.containerAmount) return null;
+  const cUnit = prod.containerUnit || "kg";
+  let remaining = prod.containerAmount * ((prod.stockPercent ?? 100) / 100); // en containerUnit
+  if (cUnit === "kg" && doseUnit === "g") remaining *= 1000;
+  if (cUnit === "L" && doseUnit === "mL") remaining *= 1000;
+  return remaining;
+}
+
+function ProductsToBuyView({ products, plan, latest, volume, effectiveTargets, activeParamKeys, lang, manageStock, poolName, treatmentType, onBack, onEditProduct, onQuickAddProduct }) {
+  const t = useT(lang || "fr");
+  const [addedIds, setAddedIds] = useState([]);
+
+  // v1.68.0 — Produits génériques (DEFAULT_PRODUCTS) pertinents pour le type
+  // de traitement du bassin, et absents de la liste de produits réels de
+  // l'utilisateur (aucun produit existant ne couvre déjà cette action).
+  const genericRows = useMemo(() => {
+    const relevantActions = getRelevantActionsForTreatment(treatmentType);
+    const ownedActions = new Set((products || []).map((p) => p.action));
+    return DEFAULT_PRODUCTS.filter(
+      (dp) => relevantActions.includes(dp.action) && !ownedActions.has(dp.action) && !addedIds.includes(dp.id)
+    );
+  }, [products, treatmentType, addedIds]);
+
+  function handleQuickAdd(dp) {
+    onQuickAddProduct(dp);
+    setAddedIds((prev) => [...prev, dp.id]);
+  }
+
+  const rows = useMemo(() => {
+    if (!manageStock || !products) return [];
+    const reasonsByProduct = new Map(); // id -> Set(reason)
+    const addReason = (prod, reason) => {
+      if (!prod) return;
+      const set = reasonsByProduct.get(prod.id) || new Set();
+      set.add(reason);
+      reasonsByProduct.set(prod.id, set);
+    };
+
+    // Critère 1 : stock bas (≤10%) — couvre correctif ET entretien, pas de
+    // calcul séparé sur unitWeight (sans portée pour un produit d'entretien).
+    products.forEach((p) => {
+      if (p.action !== "outil-mesure" && (p.stockPercent ?? 100) <= 10) {
+        addReason(p, "low_stock");
+      }
+    });
+
+    // Critère 2 : insuffisant pour couvrir le plan en cours (ou, à défaut,
+    // les recommandations calculées sur la dernière mesure sans plan démarré).
+    let pendingSteps = [];
+    if (plan) {
+      pendingSteps = plan.steps.filter((s) => !s.appliedAt && !s.skipped && s.mode !== "entretien");
+    } else if (latest) {
+      pendingSteps = computeRecommendations(latest, volume, products, effectiveTargets, activeParamKeys, null);
+    }
+    pendingSteps.forEach((step) => {
+      if (!step.productName || step.computedDoseAmount == null || !step.doseUnit) return;
+      const prod = products.find((p) => p.name === step.productName);
+      if (!prod) return;
+      const remaining = remainingInDoseUnit(prod, step.doseUnit);
+      if (remaining != null && remaining < step.computedDoseAmount) {
+        addReason(prod, "insufficient_plan");
+      }
+    });
+
+    return [...reasonsByProduct.entries()]
+      .map(([id, reasons]) => ({ product: products.find((p) => p.id === id), reasons: [...reasons] }))
+      .filter((r) => !!r.product)
+      .sort((a, b) => (a.product.stockPercent ?? 100) - (b.product.stockPercent ?? 100));
+  }, [products, plan, latest, volume, effectiveTargets, activeParamKeys, manageStock]);
+
+  return (
+    <div>
+      {poolName && <div style={styles.poolNameTag}>{poolName}</div>}
+      <div style={styles.sectionRow}>
+        <button
+          type="button"
+          onClick={onBack}
+          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--brand-primary)", fontWeight: 700, fontSize: 13, padding: 0, display: "flex", alignItems: "center", gap: 4 }}
+        >
+          {t("back_btn")}
+        </button>
+      </div>
+      <div style={styles.sectionRow}>
+        <span style={styles.sectionLabel}>{t("products_to_buy")}</span>
+      </div>
+
+      {!manageStock ? (
+        <div style={styles.stockNotManagedBox}>
+          <span>{t("stock_not_managed")}</span>
+        </div>
+      ) : (
+        <>
+          {rows.length === 0 ? (
+            <p style={styles.emptyText}>{t("products_to_buy_empty")}</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {rows.map(({ product: p, reasons }) => (
+                <button key={p.id} style={styles.productRow} onClick={() => onEditProduct(p)}>
+                  {p.photo ? (
+                    <img src={p.photo} alt="" style={styles.productThumb} />
+                  ) : (
+                    <div style={styles.productThumbPlaceholder}>
+                      <Beaker size={16} color="var(--brand-icon-light)" />
+                    </div>
+                  )}
+                  <div style={{ flex: 1, textAlign: "left" }}>
+                    <div style={styles.productName}>{p.name}</div>
+                    <div style={{ fontSize: 11, color: "#c0392b", fontWeight: 600, marginTop: 3 }}>
+                      {t("stock_label")} {p.stockPercent ?? 100} %
+                    </div>
+                    <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
+                      {reasons.map((r) => (
+                        <span key={r} style={{ fontSize: 10.5, fontWeight: 700, color: "#c4502f", background: "#fff0e8", border: "1px solid #f3d9c8", borderRadius: 99, padding: "3px 8px" }}>
+                          {t(r === "low_stock" ? "reason_low_stock" : "reason_insufficient_plan")}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <ChevronRight size={16} color="var(--brand-text-muted)" />
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* v1.68.0 — Produits génériques recommandés pour le type de
+              traitement du bassin, absents de la liste de l'utilisateur. */}
+          {genericRows.length > 0 && (
+            <div style={{ marginTop: 20 }}>
+              <div style={styles.sectionRow}>
+                <span style={styles.sectionLabel}>{t("generic_products_section")}</span>
+              </div>
+              <p style={styles.helpTextSmall}>{t("generic_products_hint")}</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {genericRows.map((dp) => (
+                  <div key={dp.id} style={{ ...styles.productRow, cursor: "default" }}>
+                    <div style={styles.productThumbPlaceholder}>
+                      <Beaker size={16} color="var(--brand-icon-light)" />
+                    </div>
+                    <div style={{ flex: 1, textAlign: "left" }}>
+                      <div style={styles.productName}>{dp.nameKey ? t(dp.nameKey) : dp.name}</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleQuickAdd(dp)}
+                      style={{ display: "flex", alignItems: "center", gap: 4, background: "var(--brand-primary)", color: "#fff", border: "none", borderRadius: 8, padding: "7px 12px", fontSize: 12.5, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
+                    >
+                      <Plus size={14} /> {t("add_generic_product")}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </>
       )}
@@ -11669,6 +13512,14 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
   const [stockPercent, setStockPercent] = useState(product?.stockPercent ?? null);
   const [containerAmount, setContainerAmount] = useState(product?.containerAmount ?? 1);
   const [containerUnit, setContainerUnit] = useState(product?.containerUnit ?? "kg");
+  // v1.61.0 — Conditionnement galets/sticks : poids unitaire (pour convertir
+  // la dose calculée en nombre d'unités dans le Wizard) et ratio d'entretien
+  // continu du fabricant (informatif, distinct de la dose de traitement).
+  const [packagingType, setPackagingType] = useState(product?.packagingType || "vrac");
+  const [unitWeight, setUnitWeight] = useState(product?.unitWeight ?? "");
+  const [maintenanceUnits, setMaintenanceUnits] = useState(product?.maintenanceRatio?.units ?? "");
+  const [maintenanceVolumePer, setMaintenanceVolumePer] = useState(product?.maintenanceRatio?.volumePer ?? "");
+  const [maintenanceDays, setMaintenanceDays] = useState(product?.maintenanceRatio?.days ?? "");
   const [photoBusy, setPhotoBusy] = useState(false);
   const [aiAnalyzing, setAiAnalyzing] = useState(false);
   const [aiError, setAiError] = useState(null);
@@ -11689,6 +13540,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
   const [detectedBarcode, setDetectedBarcode] = useState(null);
   const [detectedSubstance, setDetectedSubstance] = useState(null);
   const fileInputRef = useRef(null);
+  const galleryInputRef = useRef(null);
   const formErrorRef = useRef(null);
 
   async function handlePhotoChange(e) {
@@ -11740,6 +13592,15 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
       if (suggDoseAmount != null && suggDoseUnit === "kg") { suggDoseAmount *= 1000; suggDoseUnit = "g"; }
       if (suggDoseAmount != null && suggDoseUnit === "L") { suggDoseAmount *= 1000; suggDoseUnit = "mL"; }
       if (suggDoseUnit) setDoseUnit(suggDoseUnit);
+      // v1.61.2 — Sur demande explicite d'Arnaud : les 3 champs de dosage
+      // sont désormais pré-remplis directement par l'IA (plus seulement en
+      // placeholder à retaper — règle v1.46.0 assouplie en connaissance de
+      // cause). Restent entièrement modifiables par l'utilisateur avant
+      // enregistrement.
+      if (suggDoseAmount != null) setDoseAmount(suggDoseAmount);
+      if (result.effectAmount != null) setEffectAmount(result.effectAmount);
+      if (result.effectPer != null) setEffectPer(result.effectPer);
+      if (result.waitHours != null) setWaitHours(result.waitHours);
       setAiSuggestion({
         doseAmount: suggDoseAmount,
         effectAmount: result.effectAmount ?? null,
@@ -11751,6 +13612,16 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
         productImageUrl: result.productImageUrl || null,
       });
       if (result.containerUnit) setContainerUnit(result.containerUnit);
+      // v1.61.0 — Conditionnement/poids unitaire/ratio d'entretien : ce sont
+      // des informations d'emballage (comme containerUnit ci-dessus), pas
+      // des valeurs de dosage — appliquées directement, pas en simple
+      // suggestion à retaper (la règle anti-surdosage v1.46.0 ne concerne
+      // que doseAmount/effectAmount/effectPer).
+      if (result.packagingType) setPackagingType(result.packagingType);
+      if (result.unitWeight != null) setUnitWeight(result.unitWeight);
+      if (result.maintenanceUnits != null) setMaintenanceUnits(result.maintenanceUnits);
+      if (result.maintenanceVolumePer != null) setMaintenanceVolumePer(result.maintenanceVolumePer);
+      if (result.maintenanceDays != null) setMaintenanceDays(result.maintenanceDays);
       if (result.note) setAiNote(result.note);
       setDetectedBarcode(result.barcode || null);
       setDetectedSubstance(result.activeSubstance || null);
@@ -11839,6 +13710,16 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
       stockPercent: isTool ? null : newStock,
       containerAmount: isTool ? null : (parseFloat(containerAmount) || 1),
       containerUnit: isTool ? null : (containerUnit || "kg"),
+      // v1.61.0 — Conditionnement galets/sticks. maintenanceRatio reste null
+      // tant que les 3 valeurs (nb unités / volume / jours) ne sont pas
+      // toutes renseignées — un ratio partiel n'est pas exploitable pour
+      // afficher la carte "entretien continu".
+      packagingType: isTool ? null : packagingType,
+      unitWeight: (isTool || packagingType !== "galets") ? null : (parseFloat(unitWeight) || null),
+      maintenanceRatio: (isTool || packagingType !== "galets" || !maintenanceUnits || !maintenanceVolumePer)
+        ? null
+        : { units: parseFloat(maintenanceUnits), volumePer: parseFloat(maintenanceVolumePer), days: parseFloat(maintenanceDays) || null },
+      createdAt: product?.createdAt || new Date().toISOString(),
     });
 
     // v1.48.0 — Écriture base commune, en tâche de fond (fire-and-forget) :
@@ -11944,16 +13825,27 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
           )}
 
           {analysisPhotos.length < 4 && (
-            <button
-              type="button"
-              style={{ ...styles.photoCaptureBtn, marginTop: analysisPhotos.length ? 8 : 0 }}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <Camera size={17} />
-              {photoBusy ? "..." : analysisPhotos.length ? t("other_photo") : t("camera_btn")}
-            </button>
+            <div style={{ ...styles.photoCaptureBtnRow, marginTop: analysisPhotos.length ? 8 : 0 }}>
+              <button
+                type="button"
+                style={styles.photoCaptureBtnHalf}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Camera size={17} />
+                {photoBusy ? t("loading") : analysisPhotos.length ? t("other_photo") : t("camera_btn")}
+              </button>
+              <button
+                type="button"
+                style={styles.photoCaptureBtnHalf}
+                onClick={() => galleryInputRef.current?.click()}
+              >
+                <ImageOff size={17} />
+                {photoBusy ? t("loading") : analysisPhotos.length ? t("other_gallery") : t("gallery_btn")}
+              </button>
+            </div>
           )}
-          <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoChange} style={styles.hiddenFileInput} />
+          <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoChange} style={styles.hiddenFileInput} />
+          <input ref={galleryInputRef} type="file" accept="image/*" onChange={handlePhotoChange} style={styles.hiddenFileInput} />
 
           {analysisPhotos.length > 0 && aiEnabled && apiKey && (
             <button
@@ -11967,7 +13859,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
             </button>
           )}
           {analysisPhotos.length > 0 && !aiEnabled && (
-            <div style={{ fontSize: 11.5, color: "#6a7d90", marginTop: 8, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginTop: 8, lineHeight: 1.5 }}>
               {t("product_ai_hint")}
             </div>
           )}
@@ -11988,7 +13880,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
                     <div style={{ display: "flex", gap: 6 }}>
                       <button
                         type="button"
-                        style={{ padding: "5px 10px", borderRadius: 8, border: "1px solid #0a6ebd", background: "#0a6ebd", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+                        style={{ padding: "5px 10px", borderRadius: 8, border: "1px solid var(--brand-primary)", background: "var(--brand-primary)", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
                         onClick={() => setCommonMatch({ matchType: "alias", productId: c.productId })}
                       >
                         {t("common_product_same")}
@@ -11998,7 +13890,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
                 ))}
                 <button
                   type="button"
-                  style={{ padding: "5px 10px", borderRadius: 8, border: "1px solid #90c4e8", background: "transparent", color: "#0a6ebd", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+                  style={{ padding: "5px 10px", borderRadius: 8, border: "1px solid #90c4e8", background: "transparent", color: "var(--brand-primary)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
                   onClick={() => setCommonMatch({ matchType: "none" })}
                 >
                   {t("common_product_different")}
@@ -12046,7 +13938,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
                     onChange={(e) => setDoseAmount(e.target.value)}
                     placeholder={aiSuggestion?.doseAmount != null ? String(aiSuggestion.doseAmount) : ""}
                   />
-                  <span style={{ fontSize: 13, color: "#6a7d90", minWidth: 20 }}>{doseUnit}</span>
+                  <span style={{ fontSize: 13, color: "var(--brand-text-muted)", minWidth: 20 }}>{doseUnit}</span>
                 </div>
               </div>
               {/* v1.50.0 — Séquestrant/floculant : dose fixe recommandée par
@@ -12064,7 +13956,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
                       onChange={(e) => setEffectAmount(e.target.value)}
                       placeholder={aiSuggestion?.effectAmount != null ? String(aiSuggestion.effectAmount) : ""}
                     />
-                    <span style={{ fontSize: 13, color: "#6a7d90", minWidth: 30 }}>
+                    <span style={{ fontSize: 13, color: "var(--brand-text-muted)", minWidth: 30 }}>
                       {action === "ph-" || action === "ph+" ? "pH" : "mg/L"}
                     </span>
                   </div>
@@ -12117,6 +14009,45 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
             onChange={(e) => setContainerAmount(e.target.value)}
             placeholder={aiSuggestion?.containerAmount != null ? String(aiSuggestion.containerAmount) : "1"} min="0.01" step="0.1" />
 
+          {/* v1.61.0 — Conditionnement : vrac/granulés (comportement historique,
+              quantité en kg) ou galets/sticks (quantité comptée en unités dans
+              le Wizard, via le poids unitaire ci-dessous). */}
+          {!isFixedDose && !isPhysicsDose && (
+            <>
+              <label style={styles.fieldLabel}>{t("packaging_type")}</label>
+              <div style={styles.segmentedControl}>
+                {["vrac", "galets"].map((pt) => (
+                  <button key={pt} type="button" onClick={() => setPackagingType(pt)}
+                    style={{ ...styles.segmentedBtn, ...(packagingType === pt ? styles.segmentedBtnActive : {}) }}>
+                    {t(pt === "vrac" ? "packaging_vrac" : "packaging_galets")}
+                  </button>
+                ))}
+              </div>
+
+              {packagingType === "galets" && (
+                <>
+                  <label style={styles.fieldLabel}>{t("unit_weight_label")}</label>
+                  <input type="number" style={styles.input} value={unitWeight}
+                    onChange={(e) => setUnitWeight(e.target.value)}
+                    placeholder="250" min="1" step="1" />
+
+                  <label style={styles.fieldLabel}>{t("maintenance_ratio_label")}</label>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <input type="number" style={{ ...styles.input, flex: 1 }} value={maintenanceUnits}
+                      onChange={(e) => setMaintenanceUnits(e.target.value)}
+                      placeholder={t("maintenance_units_label")} min="0" step="1" />
+                    <input type="number" style={{ ...styles.input, flex: 1 }} value={maintenanceVolumePer}
+                      onChange={(e) => setMaintenanceVolumePer(e.target.value)}
+                      placeholder={t("maintenance_volume_label")} min="0" step="1" />
+                    <input type="number" style={{ ...styles.input, flex: 1 }} value={maintenanceDays}
+                      onChange={(e) => setMaintenanceDays(e.target.value)}
+                      placeholder={t("maintenance_days_label")} min="0" step="1" />
+                  </div>
+                </>
+              )}
+            </>
+          )}
+
           <label style={styles.fieldLabel}>{t("current_stock")}</label>
           {stockPercent === null ? (
             <div style={styles.stockInitRow}>
@@ -12131,7 +14062,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
             <div style={styles.stockSliderWrap}>
               <input type="range" min="0" max="100" value={stockPercent}
                 onChange={(e) => setStockPercent(Number(e.target.value))} style={{ flex: 1 }} />
-              <span style={{ ...styles.stockPercentLabel, color: stockPercent <= 20 ? "#c0392b" : "#0d2b4e", fontWeight: 700 }}>
+              <span style={{ ...styles.stockPercentLabel, color: stockPercent <= 20 ? "#c0392b" : "var(--brand-text-strong)", fontWeight: 700 }}>
                 {stockPercent} %
               </span>
             </div>
@@ -12209,8 +14140,8 @@ function AccountDataRequestScreen({ lang, authUser, onClose, onSubmit }) {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 3150, background: "rgba(60,20,20,0.94)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", boxShadow: "0 8px 32px #00000033" }}>
-        <div style={{ fontSize: 17, fontWeight: 800, color: "#0d2b4e", marginBottom: 8, textAlign: "center" }}>{t("data_request_title")}</div>
-        <div style={{ fontSize: 13, color: "#4a6480", marginBottom: 18, lineHeight: 1.5, textAlign: "center" }}>{t("data_request_desc")}</div>
+        <div style={{ fontSize: 17, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 8, textAlign: "center" }}>{t("data_request_title")}</div>
+        <div style={{ fontSize: 13, color: "var(--brand-text-secondary)", marginBottom: 18, lineHeight: 1.5, textAlign: "center" }}>{t("data_request_desc")}</div>
 
         {status !== "sent" && (
           <>
@@ -12220,7 +14151,7 @@ function AccountDataRequestScreen({ lang, authUser, onClose, onSubmit }) {
                   key={opt.value}
                   style={{
                     display: "flex", alignItems: "center", gap: 10, padding: "12px 14px",
-                    borderRadius: 12, border: action === opt.value ? "1.5px solid #0a6ebd" : "1.5px solid #e6ebe9",
+                    borderRadius: 12, border: action === opt.value ? "1.5px solid var(--brand-primary)" : "1.5px solid #e6ebe9",
                     background: action === opt.value ? "#eaf4fc" : "#fff", cursor: "pointer",
                   }}
                 >
@@ -12231,7 +14162,7 @@ function AccountDataRequestScreen({ lang, authUser, onClose, onSubmit }) {
                     checked={action === opt.value}
                     onChange={() => setAction(opt.value)}
                   />
-                  <span style={{ fontSize: 13.5, color: "#0d2b4e", fontWeight: 600 }}>{opt.label}</span>
+                  <span style={{ fontSize: 13.5, color: "var(--brand-text-strong)", fontWeight: 600 }}>{opt.label}</span>
                 </label>
               ))}
             </div>
@@ -12243,7 +14174,7 @@ function AccountDataRequestScreen({ lang, authUser, onClose, onSubmit }) {
             <button
               onClick={handleSubmit}
               disabled={status === "sending"}
-              style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "#0a6ebd", color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: status === "sending" ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 10 }}
+              style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: status === "sending" ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 10 }}
             >
               {status === "sending" ? <Loader2 size={16} className="spin" /> : null}
               {status === "sending" ? t("data_request_sending") : t("data_request_submit")}
@@ -12251,7 +14182,7 @@ function AccountDataRequestScreen({ lang, authUser, onClose, onSubmit }) {
             <button
               onClick={onClose}
               disabled={status === "sending"}
-              style={{ width: "100%", padding: "11px 0", borderRadius: 12, border: "none", background: "none", color: "#6a7d90", fontWeight: 600, fontSize: 13.5, cursor: "pointer" }}
+              style={{ width: "100%", padding: "11px 0", borderRadius: 12, border: "none", background: "none", color: "var(--brand-text-muted)", fontWeight: 600, fontSize: 13.5, cursor: "pointer" }}
             >
               {t("cancel")}
             </button>
@@ -12260,10 +14191,10 @@ function AccountDataRequestScreen({ lang, authUser, onClose, onSubmit }) {
 
         {status === "sent" && (
           <>
-            <div style={{ fontSize: 13.5, color: "#0d2b4e", marginBottom: 20, textAlign: "center", lineHeight: 1.5 }}>{t("data_request_sent")}</div>
+            <div style={{ fontSize: 13.5, color: "var(--brand-text-strong)", marginBottom: 20, textAlign: "center", lineHeight: 1.5 }}>{t("data_request_sent")}</div>
             <button
               onClick={onClose}
-              style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "1.5px solid #0a6ebd", background: "#fff", color: "#0a6ebd", fontWeight: 700, fontSize: 14.5, cursor: "pointer" }}
+              style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "1.5px solid var(--brand-primary)", background: "#fff", color: "var(--brand-primary)", fontWeight: 700, fontSize: 14.5, cursor: "pointer" }}
             >
               {t("close")}
             </button>
@@ -12274,16 +14205,50 @@ function AccountDataRequestScreen({ lang, authUser, onClose, onSubmit }) {
   );
 }
 
-function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, viewContext, onDeleteAllMeasures: onDeleteAllMeasuresRaw, orphanedCount, onRepairOrphanedData, poolMeasureCount, onGenerateReport, onWantPremiumForReport, onWantPremium, isPremium, setIsPremium, aiEnabled, setAiEnabled, calibrationContribution, setCalibrationContribution, lang, setLang, authUser, onSignOut, onSignIn, onDeleteAccount, dataConsent, onRevokeDataConsent, cguAcceptedDate }) {
+function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, viewContext, onDeleteAllMeasures: onDeleteAllMeasuresRaw, orphanedCount, onRepairOrphanedData, poolMeasureCount, onGenerateReport, onWantPremiumForReport, onWantPremium, isPremium, setIsPremium, onWantDowngrade, onReplayOnboarding, aiEnabled, setAiEnabled, calibrationContribution, setCalibrationContribution, lang, setLang, authUser, onSignOut, onSignIn, onDeleteAccount, dataConsent, onRevokeDataConsent, cguAcceptedDate, myPseudo }) {
   const [editingPool, setEditingPool] = useState(null);
-  const [showLegalModal, setShowLegalModal] = useState(false);
-  const t = useT(lang);
   const [showLangPicker, setShowLangPicker] = useState(false);
   const [pendingLang, setPendingLang] = useState(lang);
   const treatmentTypes = getTreatmentTypes(lang);
   const filtrationTypes = getFiltrationTypes(lang);
   const activePool = pools.find((p) => p.id === activePoolId) || pools[0];
   const [repairing, setRepairing] = useState(false);
+  // v1.60.0 — Pseudo déplacé ici depuis SecondaryUsersSection (désormais
+  // DelegationSection) : demande explicite de le regrouper dans "Mon compte".
+  const [pseudoInput, setPseudoInput] = useState(myPseudo || "");
+  const [pseudoBusy, setPseudoBusy] = useState(false);
+  const [pseudoMsg, setPseudoMsg] = useState(null);
+  const t = useT(lang);
+
+  useEffect(() => { setPseudoInput(myPseudo || ""); }, [myPseudo]);
+
+  async function handleSavePseudo() {
+    if (!authUser || !pseudoInput.trim()) return;
+    setPseudoBusy(true);
+    setPseudoMsg(null);
+    try {
+      const idToken = await authUser.getIdToken();
+      const res = await fetch(`${PROXY_BASE_URL}/set-pseudo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ pseudo: pseudoInput.trim() }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 409) {
+        setPseudoMsg({ type: "error", text: t("pseudo_taken_suggestion", { suggestion: data.suggestion || "?" }) });
+        return;
+      }
+      if (!res.ok) {
+        setPseudoMsg({ type: "error", text: data.error || t("pseudo_error") });
+        return;
+      }
+      setPseudoMsg({ type: "ok", text: t("pseudo_saved") });
+    } catch (e) {
+      setPseudoMsg({ type: "error", text: t("pseudo_error") });
+    } finally {
+      setPseudoBusy(false);
+    }
+  }
 
   async function handleRepair() {
     const ok = window.confirm(t("repair_orphaned_confirm", { count: orphanedCount }));
@@ -12343,14 +14308,14 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
                   style={{
                     ...styles.langPickerItem,
                     background: pendingLang === opt.value ? "#e8f4fd" : "transparent",
-                    color: pendingLang === opt.value ? "#0a6ebd" : "#0d2b4e",
+                    color: pendingLang === opt.value ? "var(--brand-primary)" : "var(--brand-text-strong)",
                     fontWeight: pendingLang === opt.value ? 700 : 500,
                   }}
                   onClick={() => setPendingLang(opt.value)}
                 >
                   <span>{opt.label}</span>
                   {pendingLang === opt.value && (
-                    <CheckCircle2 size={18} color="#0a6ebd" />
+                    <CheckCircle2 size={18} color="var(--brand-primary)" />
                   )}
                 </button>
               ))}
@@ -12368,16 +14333,34 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
         </div>
       )}
 
+      {/* --- Section Aide (v1.72.0) --- */}
+      <div style={styles.sectionRow}>
+        <span style={styles.sectionLabel}>{t("help_section")}</span>
+      </div>
+      <button
+        type="button"
+        onClick={onReplayOnboarding}
+        style={{
+          display: "flex", alignItems: "center", gap: 8, width: "100%",
+          padding: "12px 14px", borderRadius: 12, border: "1px solid var(--border, #e2e8ef)",
+          background: "#fff", color: "var(--brand-primary)", fontWeight: 600, fontSize: 13.5,
+          cursor: "pointer", marginBottom: 14,
+        }}
+      >
+        <Sparkles size={16} />
+        {t("settings_replay_onboarding")}
+      </button>
+
       {/* --- Section Compte --- */}
       <div style={styles.sectionRow}>
         <span style={styles.sectionLabel}>{t("account_section")}</span>
       </div>
       {authUser ? (
-        <div style={{ background: "#f0f6fb", borderRadius: 12, padding: "14px", marginBottom: 14 }}>
+        <div style={{ background: "var(--brand-bg-tint)", borderRadius: 12, padding: "14px", marginBottom: 14 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#0d2b4e" }}>{authUser.displayName || authUser.email}</div>
-              {authUser.displayName && <div style={{ fontSize: 11.5, color: "#6a7d90", marginTop: 2 }}>{authUser.email}</div>}
+              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--brand-text-strong)" }}>{authUser.displayName || authUser.email}</div>
+              {authUser.displayName && <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginTop: 2 }}>{authUser.email}</div>}
             </div>
             <button
               style={{ padding: "8px 14px", borderRadius: 10, border: "1.5px solid #d0e4f5", background: "#fff", color: "#c0392b", fontWeight: 600, fontSize: 12, cursor: "pointer", flexShrink: 0 }}
@@ -12388,14 +14371,43 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
           </div>
         </div>
       ) : (
-        <div style={{ background: "#f0f6fb", borderRadius: 12, padding: "12px 14px", marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-          <div style={{ fontSize: 13, color: "#6a7d90" }}>{t("not_signed_in")}</div>
+        <div style={{ background: "var(--brand-bg-tint)", borderRadius: 12, padding: "12px 14px", marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          <div style={{ fontSize: 13, color: "var(--brand-text-muted)" }}>{t("not_signed_in")}</div>
           <button
-            style={{ padding: "8px 14px", borderRadius: 10, border: "none", background: "#0a6ebd", color: "#fff", fontWeight: 600, fontSize: 12, cursor: "pointer" }}
+            style={{ padding: "8px 14px", borderRadius: 10, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 600, fontSize: 12, cursor: "pointer" }}
             onClick={onSignIn}
           >
             {t("sign_in")}
           </button>
+        </div>
+      )}
+
+      {authUser && (
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--brand-text-strong)", marginBottom: 8 }}>{t("pseudo_label")}</div>
+          <div style={{ display: "flex", gap: 8, marginBottom: 4 }}>
+            <input
+              type="text"
+              style={{ ...styles.input, flex: 1 }}
+              value={pseudoInput}
+              onChange={(e) => setPseudoInput(e.target.value)}
+              placeholder={t("pseudo_placeholder")}
+              maxLength={24}
+            />
+            <button
+              style={{ padding: "0 16px", borderRadius: 10, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer", flexShrink: 0 }}
+              onClick={handleSavePseudo}
+              disabled={pseudoBusy || !pseudoInput.trim()}
+            >
+              {pseudoBusy ? "..." : t("pseudo_save")}
+            </button>
+          </div>
+          <div style={{ fontSize: 11, color: "#8a9aa8", marginBottom: pseudoMsg ? 4 : 0 }}>{t("pseudo_invalid")}</div>
+          {pseudoMsg && (
+            <div style={{ fontSize: 12, color: pseudoMsg.type === "error" ? "#c0392b" : "#1a7a4a", marginTop: 2 }}>
+              {pseudoMsg.text}
+            </div>
+          )}
         </div>
       )}
 
@@ -12405,12 +14417,12 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
 
       <div style={styles.testPremiumCard}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <Crown size={18} color={isPremium ? "#a8721a" : "#9aa9a5"} />
+          <Crown size={18} color={isPremium ? "#a8721a" : "var(--brand-primary)"} />
           <div>
-            <div style={{ fontWeight: 700, fontSize: 13.5, color: "#0d2b4e" }}>
+            <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--brand-text-strong)" }}>
               {isPremium ? t("unlimited_active") : t("free_mode")}
             </div>
-            <div style={{ fontSize: 11.5, color: "#6a7d90" }}>
+            <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)" }}>
               {t("premium_test")}
             </div>
           </div>
@@ -12421,7 +14433,9 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
             if (val) {
               onWantPremium();
             } else {
-              setIsPremium(false);
+              // v1.70.0 — Ne coupe plus isPremium directement : passe par un
+              // écran de confirmation qui rappelle ce qui sera perdu.
+              onWantDowngrade();
             }
           }}
         />
@@ -12446,24 +14460,24 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
             key={p.id}
             style={{
               ...styles.poolListRow,
-              borderColor: p.id === activePoolId ? "#0a6ebd" : "#e6ebe9",
+              borderColor: p.id === activePoolId ? "var(--brand-primary)" : "#e6ebe9",
             }}
           >
             <button style={styles.poolListMain} onClick={() => onSwitchPool(p.id)}>
               {p.photo ? (
                 <img src={p.photo} alt="" style={styles.poolSwitcherThumb} />
               ) : (
-                <Droplets size={16} color={p.id === activePoolId ? "#0a6ebd" : "#7ab8e8"} />
+                <Droplets size={16} color={p.id === activePoolId ? "var(--brand-primary)" : "var(--brand-icon-light)"} />
               )}
               <div style={{ flex: 1, textAlign: "left" }}>
-                <div style={{ fontWeight: 700, fontSize: 13.5, color: "#0d2b4e" }}>{p.name}</div>
-                <div style={{ fontSize: 11.5, color: "#6a7d90" }}>{p.location} · {p.volume} m³</div>
+                <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--brand-text-strong)" }}>{p.name}</div>
+                <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)" }}>{p.location} · {p.volume} m³</div>
               </div>
               {p.id === activePoolId && <CheckCircle2 size={16} color="#1a8fd1" />}
             </button>
             {!viewContext && (
               <button
-                style={{ background: "none", border: "none", color: "#0a6ebd", fontSize: 12, fontWeight: 600, cursor: "pointer", padding: "0 8px", flexShrink: 0 }}
+                style={{ background: "none", border: "none", color: "var(--brand-primary)", fontSize: 12, fontWeight: 600, cursor: "pointer", padding: "0 8px", flexShrink: 0 }}
                 onClick={() => setEditingPool(p)}
               >
                 <Settings2 size={14} />
@@ -12479,10 +14493,10 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
       </div>
 
       {isPremium && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#f0f6fb", borderRadius: 12, padding: "12px 14px", marginBottom: 8, marginTop: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--brand-bg-tint)", borderRadius: 12, padding: "12px 14px", marginBottom: 8, marginTop: 8 }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: "#0d2b4e" }}>{t("manage_stock_label")}</div>
-            <div style={{ fontSize: 11, color: "#6a7d90", marginTop: 2 }}>{t("manage_stock_desc")}</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--brand-text-strong)" }}>{t("manage_stock_label")}</div>
+            <div style={{ fontSize: 11, color: "var(--brand-text-muted)", marginTop: 2 }}>{t("manage_stock_desc")}</div>
           </div>
           <ToggleSwitch
             checked={!!activePool?.manageStock}
@@ -12496,10 +14510,10 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
       </div>
 
       {/* Toggle activer l'analyse IA — réservé premium */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#f0f6fb", borderRadius: 12, padding: "12px 14px", marginBottom: 8 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--brand-bg-tint)", borderRadius: 12, padding: "12px 14px", marginBottom: 8 }}>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: "#0d2b4e" }}>{t("ai_toggle_label")}</div>
-          <div style={{ fontSize: 11, color: "#6a7d90", marginTop: 2 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "var(--brand-text-strong)" }}>{t("ai_toggle_label")}</div>
+          <div style={{ fontSize: 11, color: "var(--brand-text-muted)", marginTop: 2 }}>
             {isPremium ? t("ai_toggle_desc") : t("analyze_locked")}
           </div>
         </div>
@@ -12521,10 +14535,10 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
       </div>
 
       {/* v1.36.0 — Lot B : opt-out contribution calibration (CGU clause 11) */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#f0f6fb", borderRadius: 12, padding: "12px 14px", marginBottom: 8 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--brand-bg-tint)", borderRadius: 12, padding: "12px 14px", marginBottom: 8 }}>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: "#0d2b4e" }}>{t("calibration_toggle_label")}</div>
-          <div style={{ fontSize: 11, color: "#6a7d90", marginTop: 2 }}>{t("calibration_toggle_desc")}</div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "var(--brand-text-strong)" }}>{t("calibration_toggle_label")}</div>
+          <div style={{ fontSize: 11, color: "var(--brand-text-muted)", marginTop: 2 }}>{t("calibration_toggle_desc")}</div>
         </div>
         <ToggleSwitch
           checked={calibrationContribution}
@@ -12540,20 +14554,8 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
 
 
 
-      {/* Mentions légales */}
-      <div style={styles.sectionRow}>
-        <span style={styles.sectionLabel}>{t("legal_notices")}</span>
-      </div>
-      <div style={{ background: "#f5f8fc", borderRadius: 10, padding: "10px 14px", marginBottom: 12, fontSize: 12, color: "#4a6480" }}>
-        <div>{t("cgu_version_label")} : <strong>CGU {CGU_VERSION}</strong></div>
-        {cguAcceptedDate && <div>{t("cgu_accepted_on")} : {new Date(cguAcceptedDate).toLocaleDateString()}</div>}
-      </div>
-      <button
-        style={{ width: "100%", padding: "10px 0", borderRadius: 10, border: "none", background: "#0a6ebd", color: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer", marginBottom: 16 }}
-        onClick={() => setShowLegalModal(true)}
-      >
-        {t("legal_notices")}
-      </button>
+      {/* v1.60.0 — Bloc CGU/Mentions légales déplacé dans DangerZoneSection,
+          juste au-dessus de la zone sensible (demande explicite). */}
 
       {/* Révocation consentement données */}
       {dataConsent && (
@@ -12573,43 +14575,6 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
       {/* v1.59.1 — Zone sensible (suppression mesures/compte) déplacée dans
           DangerZoneSection, rendue en bas de page après SecondaryUsersSection. */}
 
-      {showLegalModal && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 500, background: "rgba(10,30,60,0.55)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
-          <div style={{ background: "#fff", borderRadius: "20px 20px 0 0", width: "100%", maxWidth: 480, padding: "20px 18px 32px", boxSizing: "border-box", maxHeight: "90dvh", display: "flex", flexDirection: "column" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <span style={{ fontSize: 15, fontWeight: 800, color: "#0d2b4e" }}>{t("legal_notices")} — CGU {CGU_VERSION}</span>
-              <button onClick={() => setShowLegalModal(false)} style={{ background: "none", border: "none", cursor: "pointer" }}><X size={20} /></button>
-            </div>
-            <div style={{ flex: 1, overflowY: "auto", fontSize: 12, color: "#2d4a6e", lineHeight: 1.7, background: "#f5f8fc", borderRadius: 10, padding: "12px 14px" }}>
-              {/* Éditeur */}
-              <div style={{ fontWeight: 700, color: "#0d2b4e", marginBottom: 2 }}>{t("lcen_editor")}</div>
-              <div style={{ marginBottom: 12 }}>{t("lcen_editor_val")}</div>
-              <div style={{ fontWeight: 700, color: "#0d2b4e", marginBottom: 2 }}>{t("lcen_contact")}</div>
-              <div style={{ marginBottom: 12 }}><a href={`mailto:${t("lcen_contact_val")}`} style={{ color: "#0a6ebd" }}>{t("lcen_contact_val")}</a></div>
-              {/* Hébergement */}
-              <div style={{ fontWeight: 700, color: "#0d2b4e", marginBottom: 2 }}>{t("lcen_host")}</div>
-              <div style={{ whiteSpace: "pre-wrap", marginBottom: 12 }}>{t("lcen_host_val")}</div>
-              {/* CGU */}
-              <div style={{ fontWeight: 700, color: "#0d2b4e", marginTop: 8, marginBottom: 4 }}>{t("lcen_cgu_title")} — CGU {CGU_VERSION}</div>
-              <div style={{ marginBottom: 10, fontSize: 11, color: "#4a6480" }}>
-                {[
-                  { title: t("lcen_ai_title"), body: t("lcen_ai_val") },
-                  { title: t("lcen_photos_title"), body: t("lcen_photos_val") },
-                  { title: t("lcen_gdpr"), body: t("lcen_gdpr_val") },
-                  { title: t("lcen_calibration_title"), body: t("lcen_calibration_val") },
-                  { title: t("lcen_photocontrib_title"), body: t("lcen_photocontrib_val") },
-                ].map((s, i) => (
-                  <div key={i} style={{ marginBottom: 10 }}>
-                    <div style={{ fontWeight: 700, color: "#0d2b4e", marginBottom: 2 }}>{i+1}. {s.title}</div>
-                    <div style={{ lineHeight: 1.6 }}>{s.body}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {editingPool && (
         <AddPoolModal
           onClose={() => setEditingPool(null)}
@@ -12625,8 +14590,42 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
 // v1.59.1 — Zone sensible (suppression mesures/compte) extraite de SettingsView
 // pour être rendue après SecondaryUsersSection : demande explicite de la
 // positionner tout en bas de la page Réglages (loin des actions courantes).
-function DangerZoneSection({ lang, activePoolName, poolMeasureCount, onDeleteAllMeasures, authUser, onDeleteAccount }) {
+// v1.85.0 — Extrait de DangerZoneSection pour être réutilisable depuis l'écran
+// de validation CGU obligatoire (needsCguAcceptance) : jusqu'ici ce texte
+// n'était consultable que depuis Réglages, donc invisible au moment où on
+// demandait justement de l'accepter.
+function CguLegalContent({ lang }) {
   const t = useT(lang);
+  return (
+    <>
+      <div style={{ fontWeight: 700, color: "var(--brand-text-strong)", marginBottom: 2 }}>{t("lcen_editor")}</div>
+      <div style={{ marginBottom: 12 }}>{t("lcen_editor_val")}</div>
+      <div style={{ fontWeight: 700, color: "var(--brand-text-strong)", marginBottom: 2 }}>{t("lcen_contact")}</div>
+      <div style={{ marginBottom: 12 }}><a href={`mailto:${t("lcen_contact_val")}`} style={{ color: "var(--brand-primary)" }}>{t("lcen_contact_val")}</a></div>
+      <div style={{ fontWeight: 700, color: "var(--brand-text-strong)", marginBottom: 2 }}>{t("lcen_host")}</div>
+      <div style={{ whiteSpace: "pre-wrap", marginBottom: 12 }}>{t("lcen_host_val")}</div>
+      <div style={{ fontWeight: 700, color: "var(--brand-text-strong)", marginTop: 8, marginBottom: 4 }}>{t("lcen_cgu_title")} — CGU {CGU_VERSION}</div>
+      <div style={{ marginBottom: 10, fontSize: 11, color: "var(--brand-text-secondary)" }}>
+        {[
+          { title: t("lcen_ai_title"), body: t("lcen_ai_val") },
+          { title: t("lcen_photos_title"), body: t("lcen_photos_val") },
+          { title: t("lcen_gdpr"), body: t("lcen_gdpr_val") },
+          { title: t("lcen_calibration_title"), body: t("lcen_calibration_val") },
+          { title: t("lcen_photocontrib_title"), body: t("lcen_photocontrib_val") },
+        ].map((s, i) => (
+          <div key={i} style={{ marginBottom: 10 }}>
+            <div style={{ fontWeight: 700, color: "var(--brand-text-strong)", marginBottom: 2 }}>{i+1}. {s.title}</div>
+            <div style={{ lineHeight: 1.6 }}>{s.body}</div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function DangerZoneSection({ lang, activePoolName, poolMeasureCount, onDeleteAllMeasures, authUser, onDeleteAccount, cguAcceptedDate }) {
+  const t = useT(lang);
+  const [showLegalModal, setShowLegalModal] = useState(false);
 
   function handleDeleteAllMeasures() {
     if (!poolMeasureCount) return;
@@ -12636,6 +14635,36 @@ function DangerZoneSection({ lang, activePoolName, poolMeasureCount, onDeleteAll
 
   return (
     <div style={{ marginTop: 24 }}>
+      {/* v1.60.0 — CGU/Mentions légales, déplacées ici juste au-dessus de la
+          zone sensible (demande explicite : regrouper les infos "sérieuses"). */}
+      <div style={styles.sectionRow}>
+        <span style={styles.sectionLabel}>{t("legal_notices")}</span>
+      </div>
+      <div style={{ background: "#f5f8fc", borderRadius: 10, padding: "10px 14px", marginBottom: 12, fontSize: 12, color: "var(--brand-text-secondary)" }}>
+        <div>{t("cgu_version_label")} : <strong>CGU {CGU_VERSION}</strong></div>
+        {cguAcceptedDate && <div>{t("cgu_accepted_on")} : {new Date(cguAcceptedDate).toLocaleDateString()}</div>}
+      </div>
+      <button
+        style={{ width: "100%", padding: "10px 0", borderRadius: 10, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer", marginBottom: 20 }}
+        onClick={() => setShowLegalModal(true)}
+      >
+        {t("legal_notices")}
+      </button>
+
+      {showLegalModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 500, background: "rgba(10,30,60,0.55)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+          <div style={{ background: "#fff", borderRadius: "20px 20px 0 0", width: "100%", maxWidth: 480, padding: "20px 18px 32px", boxSizing: "border-box", maxHeight: "90dvh", display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <span style={{ fontSize: 15, fontWeight: 800, color: "var(--brand-text-strong)" }}>{t("legal_notices")} — CGU {CGU_VERSION}</span>
+              <button onClick={() => setShowLegalModal(false)} style={{ background: "none", border: "none", cursor: "pointer" }}><X size={20} /></button>
+            </div>
+            <div style={{ flex: 1, overflowY: "auto", fontSize: 12, color: "#2d4a6e", lineHeight: 1.7, background: "#f5f8fc", borderRadius: 10, padding: "12px 14px" }}>
+              <CguLegalContent lang={lang} />
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={styles.sectionRow}>
         <span style={styles.sectionLabel}>{t("sensitive_zone")}</span>
       </div>
@@ -12668,7 +14697,7 @@ function ToggleSwitch({ checked, onChange }) {
         height: 26,
         borderRadius: 99,
         border: "none",
-        background: checked ? "#0a6ebd" : "#d8e2df",
+        background: checked ? "var(--brand-primary)" : "#d8e2df",
         position: "relative",
         cursor: "pointer",
         flexShrink: 0,
@@ -12698,7 +14727,7 @@ function DeleteReauthModal({ onClose, onConfirm, busy, error, lang }) {
   const [password, setPassword] = useState("");
   return (
     <ModalShell onClose={onClose} title={t("delete_account")}>
-      <p style={{ fontSize: 13, color: "#4a6480", lineHeight: 1.5, marginTop: 0 }}>
+      <p style={{ fontSize: 13, color: "var(--brand-text-secondary)", lineHeight: 1.5, marginTop: 0 }}>
         {t("reauth_required")}
       </p>
       <FieldLabel required>{t("password")}</FieldLabel>
@@ -12723,12 +14752,83 @@ function DeleteReauthModal({ onClose, onConfirm, busy, error, lang }) {
       </button>
       <button
         type="button"
-        style={{ width: "100%", padding: "11px 0", background: "none", border: "none", color: "#6a7d90", fontSize: 13, cursor: "pointer", marginTop: 8 }}
+        style={{ width: "100%", padding: "11px 0", background: "none", border: "none", color: "var(--brand-text-muted)", fontSize: 13, cursor: "pointer", marginTop: 8 }}
         onClick={onClose}
       >
         {t("cancel")}
       </button>
     </ModalShell>
+  );
+}
+
+// v1.72.0 — Wizard d'accueil, affiché une seule fois après la création du
+// premier bassin (et rejouable depuis Réglages via "Revoir la présentation").
+// "Passer" est disponible à chaque étape ; les deux issues (Passer / dernière
+// étape) appellent onDone, qui marque l'onboarding comme vu côté appelant.
+function OnboardingWizard({ onDone, lang }) {
+  const t = useT(lang || "fr");
+  const [step, setStep] = useState(0);
+  const steps = [
+    { icon: <Droplets size={28} color="#fff" />, iconBg: "rgba(255,255,255,0.18)",
+      title: t("onboarding_step1_title"), text: t("onboarding_step1_text"), dark: true },
+    { icon: <Camera size={26} color="var(--brand-primary)" />, iconBg: "var(--brand-bg-tint)",
+      title: t("onboarding_step2_title"), text: t("onboarding_step2_text") },
+    { icon: <CheckCircle2 size={26} color="#1a8fd1" />, iconBg: "#e1f5ee",
+      title: t("onboarding_step3_title"), text: t("onboarding_step3_text"), legend: true },
+    { icon: <Sparkles size={26} color="#a8721a" />, iconBg: "#fdf6e6",
+      title: t("onboarding_step4_title"), text: t("onboarding_step4_text"), last: true },
+  ];
+  const s = steps[step];
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 1900, background: "rgba(13,43,78,0.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div style={{ width: "100%", maxWidth: 360, background: "#fff", borderRadius: 20, overflow: "hidden" }}>
+        <div style={{
+          padding: s.dark ? "32px 24px 28px" : "28px 24px 8px",
+          textAlign: "center",
+          background: s.dark ? "linear-gradient(135deg, var(--brand-primary), var(--brand-primary-dark))" : "transparent",
+          color: s.dark ? "#fff" : "#0d2b4e",
+        }}>
+          <div style={{ width: 56, height: 56, borderRadius: 16, background: s.iconBg, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+            {s.icon}
+          </div>
+          <div style={{ fontWeight: 700, fontSize: s.dark ? 19 : 17, marginBottom: 8 }}>{s.title}</div>
+          <div style={{ fontSize: 13.5, opacity: s.dark ? 0.85 : 1, color: s.dark ? "#fff" : "#4a6480", lineHeight: 1.5, whiteSpace: "pre-line" }}>{s.text}</div>
+          {s.legend && (
+            <div style={{ display: "flex", justifyContent: "center", gap: 16, fontSize: 12, marginTop: 14, color: "#4a6480" }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#1a8fd1", display: "inline-block" }} />
+                {t("in_range")}
+              </span>
+              <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#c4502f", display: "inline-block" }} />
+                {t("onboarding_step3_legend_bad")}
+              </span>
+            </div>
+          )}
+        </div>
+        <div style={{ padding: "20px 24px 24px" }}>
+          <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 20 }}>
+            {steps.map((_, i) => (
+              <div key={i} style={{ width: 20, height: 4, borderRadius: 2, background: i === step ? "var(--brand-primary)" : "#e2e8ef" }} />
+            ))}
+          </div>
+          <button
+            style={styles.primaryBtn}
+            onClick={() => (s.last ? onDone() : setStep((v) => v + 1))}
+          >
+            {s.last ? t("onboarding_start") : t("onboarding_next")}
+          </button>
+          {!s.last && (
+            <button
+              style={{ width: "100%", padding: "10px 0", marginTop: 4, border: "none", background: "transparent", color: "#6a7d90", fontSize: 13, cursor: "pointer" }}
+              onClick={onDone}
+            >
+              {t("onboarding_skip")}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -12754,6 +14854,8 @@ function PaywallModal({ onClose, onActivate, lang, source }) {
   return (
     <ModalShell onClose={onClose} title={t("paywall_title")}>
       {hasContext && (
+        // v1.71.0 — Reste en bleu littéral : le mur Premium n'est jamais thémé
+        // en vert, même consulté depuis le mode gratuit (aperçu de l'achat).
         <p style={{ fontSize: 13.5, color: "#4a6480", margin: "0 0 4px", lineHeight: 1.4 }}>
           {contextText}
         </p>
@@ -12771,13 +14873,201 @@ function PaywallModal({ onClose, onActivate, lang, source }) {
           </div>
         ))}
       </div>
-      <button style={styles.primaryBtn} onClick={onActivate}>
+      <button style={{ ...styles.primaryBtn, background: "#1ca7d1" }} onClick={onActivate}>
         {t("paywall_btn")}
       </button>
       <p style={{ ...styles.helpText, textAlign: "center" }}>
         {t("paywall_test_note")}
       </p>
     </ModalShell>
+  );
+}
+
+// v1.70.0 — Confirmation avant désactivation du Premium : rappelle ce que
+// l'utilisateur perd (mêmes 7 points que le mur Premium, pour rester
+// cohérent) avant de valider. "Annuler" reste l'option la plus visible
+// (bouton principal), la désactivation est un bouton secondaire — on ne
+// pousse pas vers la sortie.
+function PremiumDowngradeConfirmModal({ onClose, onConfirm, lang }) {
+  const t = useT(lang || "fr");
+  const perks = [
+    t("paywall_perk1"),
+    t("paywall_perk2"),
+    t("paywall_perk3"),
+    t("paywall_perk4"),
+    t("paywall_perk5"),
+    t("paywall_perk6"),
+    t("paywall_perk7"),
+  ];
+  return (
+    <ModalShell onClose={onClose} title={t("premium_downgrade_confirm_title")}>
+      <p style={{ fontSize: 13.5, color: "var(--brand-text-secondary)", margin: "0 0 12px", lineHeight: 1.4 }}>
+        {t("premium_downgrade_confirm_desc")}
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 9, margin: "0 2px 20px" }}>
+        {perks.map((perk, i) => (
+          <div key={i} style={styles.paywallPerk}>
+            <Lock size={14} color="#8095a8" />
+            <span>{perk}</span>
+          </div>
+        ))}
+      </div>
+      <button style={styles.primaryBtn} onClick={onClose}>
+        {t("premium_downgrade_cancel_btn")}
+      </button>
+      <button
+        style={{
+          width: "100%", padding: "13px 0", marginTop: 10, borderRadius: 12,
+          border: "1.5px solid #d6dde3", background: "#fff", color: "#3f5a73",
+          fontWeight: 600, fontSize: 13.5, cursor: "pointer",
+        }}
+        onClick={onConfirm}
+      >
+        {t("premium_downgrade_confirm_btn")}
+      </button>
+    </ModalShell>
+  );
+}
+
+// v1.69.0 — Écran plein cadre joué à l'activation du Premium : bulles
+// montantes qui révèlent l'écran "Premium activé" (1,5s), puis un reflet
+// lumineux qui redescend pour sceller la transition (1,5s). L'activation
+// réelle (isPremium, stock, etc.) est déjà faite avant l'affichage de cet
+// overlay — il ne fait que masquer/habiller la transition visuellement.
+// v1.70.0 — Fix : le clip-path qui révélait le fond masquait aussi les
+// bulles pendant l'essentiel de l'animation (seule la portion déjà "révélée"
+// du cadre était visible), donnant l'impression d'une simple barre qui
+// montait et redescendait au lieu de bulles distinctes. Le fond est
+// désormais visible dès le départ (fondu rapide en 220ms) et les bulles
+// montent librement sur toute la durée de l'overlay (3s au total, inchangé).
+// v1.70.0 — variant "downgrade" : même effet, rejoué à la désactivation du
+// v1.71.0 — Palette gratuit/verrouillé et gratuit/downgrade suivent
+// désormais le thème global (var CSS pilotées par effectiveIsPremium),
+// remplacé par du vert à la demande d'Arnaud (cf v1.71.0).
+function PremiumRevealOverlay({ onDone, lang, variant = "activate" }) {
+  const t = useT(lang || "fr");
+  const reduceMotion = typeof window !== "undefined" && window.matchMedia
+    ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    : false;
+  const [phase, setPhase] = useState("enter"); // "enter" -> "rise" -> "shimmer"
+
+  const bubbles = useMemo(() => {
+    if (reduceMotion) return [];
+    return Array.from({ length: 26 }, (_, i) => ({
+      id: i,
+      left: Math.random() * 100,
+      size: 8 + Math.random() * 22,
+      delay: Math.random() * 900,
+      duration: 1050 + Math.random() * 750,
+    }));
+  }, [reduceMotion]);
+
+  useEffect(() => {
+    if (reduceMotion) {
+      const doneTimer = setTimeout(onDone, 500);
+      return () => clearTimeout(doneTimer);
+    }
+    // Un tick après le montage pour que le fondu d'entrée (opacity 0 -> 1)
+    // soit bien animé par le navigateur plutôt qu'appliqué instantanément.
+    const enterTimer = setTimeout(() => setPhase("rise"), 20);
+    const shimmerTimer = setTimeout(() => setPhase("shimmer"), 1500);
+    const doneTimer = setTimeout(onDone, 3000);
+    return () => { clearTimeout(enterTimer); clearTimeout(shimmerTimer); clearTimeout(doneTimer); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // v1.74.0 — 4 variants possibles désormais : "activate"/"downgrade" (mon
+  // propre abonnement) et "context-premium"/"context-free" (changement de
+  // bassin qui bascule le contexte effectif, ex. bassin délégué Premium).
+  // toPremium détermine à lui seul le sens de la transition (couleur de
+  // départ = couleur du contexte quitté, couleur d'arrivée = celle rejointe).
+  const toPremium = variant === "activate" || variant === "context-premium";
+  const BLUE_GRADIENT = "linear-gradient(135deg, #1ca7d1, #0c7a9e)";
+  const GREEN_GRADIENT = "linear-gradient(135deg, #4a9b82, #2a6553)";
+  const fromGradient = toPremium ? GREEN_GRADIENT : BLUE_GRADIENT;
+  const toGradient = toPremium ? BLUE_GRADIENT : GREEN_GRADIENT;
+  const titleKeys = {
+    activate: "premium_reveal_title",
+    downgrade: "premium_downgrade_title",
+    "context-premium": "context_switch_premium_title",
+    "context-free": "context_switch_free_title",
+  };
+  const subKeys = {
+    activate: "premium_reveal_sub",
+    downgrade: "premium_downgrade_sub",
+    "context-premium": "context_switch_premium_sub",
+    "context-free": "context_switch_free_sub",
+  };
+  const titleKey = titleKeys[variant] || titleKeys.activate;
+  const subKey = subKeys[variant] || subKeys.activate;
+
+  return (
+    <div
+      onClick={onDone}
+      style={{
+        position: "fixed", inset: 0, zIndex: 2000, overflow: "hidden",
+        background: fromGradient,
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        cursor: "pointer",
+        opacity: reduceMotion ? 1 : (phase === "enter" ? 0 : 1),
+        transition: reduceMotion ? "none" : "opacity 220ms ease-out",
+      }}
+    >
+      {/* v1.73.0 — Calque de la couleur d'arrivée, fondu au-dessus du calque
+          de départ sur la quasi-totalité des 3s, pour un vrai morph visible
+          plutôt qu'un changement de couleur instantané. */}
+      <div
+        style={{
+          position: "absolute", inset: 0,
+          background: toGradient,
+          opacity: reduceMotion ? 1 : (phase === "enter" ? 0 : 1),
+          transition: reduceMotion ? "none" : "opacity 2600ms ease-in-out",
+          pointerEvents: "none",
+        }}
+      />
+      <style>{`
+        @keyframes premiumBubbleRise {
+          0% { transform: translateY(0) scale(1); opacity: 0.9; }
+          100% { transform: translateY(-110vh) scale(1.15); opacity: 0; }
+        }
+        @keyframes premiumShimmerSweep {
+          0% { top: -80px; opacity: 1; }
+          85% { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
+        }
+      `}</style>
+
+      {!reduceMotion && bubbles.map((b) => (
+        <div
+          key={b.id}
+          style={{
+            position: "absolute", bottom: -20, left: `${b.left}%`,
+            width: b.size, height: b.size, borderRadius: "50%",
+            background: "rgba(255,255,255,0.55)",
+            boxShadow: "inset -2px -2px 4px rgba(0,0,0,0.08), inset 2px 2px 3px rgba(255,255,255,0.6)",
+            animation: `premiumBubbleRise ${b.duration}ms cubic-bezier(.3,.6,.4,1) ${b.delay}ms forwards`,
+            pointerEvents: "none",
+          }}
+        />
+      ))}
+
+      {!reduceMotion && phase === "shimmer" && (
+        <div
+          style={{
+            position: "absolute", left: 0, right: 0, height: 70,
+            background: "linear-gradient(180deg, rgba(255,255,255,0.5), rgba(255,255,255,0))",
+            animation: "premiumShimmerSweep 1500ms ease-in-out forwards",
+            pointerEvents: "none",
+          }}
+        />
+      )}
+
+      <div style={{ position: "relative", textAlign: "center", color: "#fff", padding: 24 }}>
+        <Crown size={48} color={toPremium ? "#f5d999" : "#e4ebf1"} style={{ marginBottom: 14 }} />
+        <div style={{ fontSize: 21, fontWeight: 800, marginBottom: 6 }}>{t(titleKey)}</div>
+        <div style={{ fontSize: 13.5, opacity: 0.85 }}>{t(subKey)}</div>
+      </div>
+    </div>
   );
 }
 
@@ -12889,7 +15179,7 @@ function LocationAutocomplete({ value, onChange, lang, placeholder }) {
           style={{
             display: "flex", alignItems: "center", justifyContent: "center",
             width: 44, borderRadius: 11, border: "1.5px solid #d0e4f5",
-            background: "#fafcfb", color: "#0a6ebd", cursor: gpsLoading ? "default" : "pointer",
+            background: "#fafcfb", color: "var(--brand-primary)", cursor: gpsLoading ? "default" : "pointer",
             flexShrink: 0,
           }}
         >
@@ -12903,7 +15193,7 @@ function LocationAutocomplete({ value, onChange, lang, placeholder }) {
           boxShadow: "0 6px 18px rgba(10,50,90,0.14)", zIndex: 50, overflow: "hidden",
         }}>
           {searching && (
-            <div style={{ padding: "10px 12px", fontSize: 12.5, color: "#6a7d90", display: "flex", alignItems: "center", gap: 6 }}>
+            <div style={{ padding: "10px 12px", fontSize: 12.5, color: "var(--brand-text-muted)", display: "flex", alignItems: "center", gap: 6 }}>
               <Loader2 size={13} className="spin" /> {t("location_searching")}
             </div>
           )}
@@ -12911,7 +15201,7 @@ function LocationAutocomplete({ value, onChange, lang, placeholder }) {
             <div style={{ padding: "10px 12px", fontSize: 12.5, color: "#b23b3b" }}>{t("location_search_error")}</div>
           )}
           {!searching && !searchError && results.length === 0 && (
-            <div style={{ padding: "10px 12px", fontSize: 12.5, color: "#6a7d90" }}>{t("location_no_results")}</div>
+            <div style={{ padding: "10px 12px", fontSize: 12.5, color: "var(--brand-text-muted)" }}>{t("location_no_results")}</div>
           )}
           {!searching && results.map((r, i) => (
             <div
@@ -12919,12 +15209,12 @@ function LocationAutocomplete({ value, onChange, lang, placeholder }) {
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => handleSelect(r)}
               style={{
-                padding: "10px 12px", fontSize: 13.5, color: "#0d2b4e", cursor: "pointer",
+                padding: "10px 12px", fontSize: 13.5, color: "var(--brand-text-strong)", cursor: "pointer",
                 borderTop: i > 0 ? "1px solid #eef3f6" : "none",
                 display: "flex", alignItems: "center", gap: 7,
               }}
             >
-              <MapPin size={13} color="#0a6ebd" />
+              <MapPin size={13} color="var(--brand-primary)" />
               {r.label}
             </div>
           ))}
@@ -13000,9 +15290,18 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced }) {
   const filtrationOptions = filtrationTypes.map(ft => ({ value: ft.value, label: ft.label }));
 
   return (
-    <ModalShell onClose={onClose} title={isEdit ? t("edit_pool") : forced ? t("first_pool_title") : t("add_pool_title")} forced={forced}>
+    <ModalShell
+      onClose={onClose}
+      title={isEdit ? t("edit_pool") : forced ? t("first_pool_title") : t("add_pool_title")}
+      forced={forced}
+      footer={
+        <button style={styles.primaryBtn} onClick={handleSave}>
+          {isEdit ? t("save") : t("create_pool")}
+        </button>
+      }
+    >
       {forced && (
-        <div style={{ fontSize: 13, color: "#4a6480", marginBottom: 16, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 13, color: "var(--brand-text-secondary)", marginBottom: 16, lineHeight: 1.5 }}>
           {t("first_pool_intro")}
         </div>
       )}
@@ -13081,10 +15380,6 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced }) {
         onChange={e => setReportEmail(e.target.value)}
         placeholder={t("pool_email_placeholder")}
       />
-
-      <button style={styles.primaryBtn} onClick={handleSave}>
-        {isEdit ? t("save") : t("create_pool")}
-      </button>
     </ModalShell>
   );
 }
@@ -13165,6 +15460,19 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
     { key: "temp",   color: "#e0578a", label: t("temp_col"),                                 axis: "right" },
   ];
 
+  // v1.66.2 — Sélection des paramètres affichés sur le graphique du rapport
+  // (aperçu HTML et PDF), même mécanisme de puces que le graphique de
+  // l'onglet Historique. Tous actifs par défaut.
+  const [activeReportParams, setActiveReportParams] = useState(() => chartParams.map((cp) => cp.key));
+  const allReportKeys = chartParams.map((cp) => cp.key);
+  const allReportActive = allReportKeys.every((k) => activeReportParams.includes(k));
+  function toggleReportParam(key) {
+    setActiveReportParams((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
+  }
+  function toggleAllReportParams() {
+    setActiveReportParams(allReportActive ? [] : allReportKeys);
+  }
+
   const rows = useMemo(() => {
     const repTargets = getEffectiveTargets(pool?.treatmentType || "chlore");
     const repParams = getActiveParams(pool?.treatmentType || "chlore");
@@ -13174,6 +15482,22 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
       return { measure: m, recs, application };
     });
   }, [sortedMeasures, pool, products, applications]);
+
+  // v1.63.0 — Journal fusionné pour le tableau détaillé du rapport : mesures
+  // (rows, inchangé — toujours utilisé pour le graphique et les photos) +
+  // applications manuelles hors plan.
+  // v1.63.1 — Tri décroissant (le plus récent en premier), sur demande d'Arnaud.
+  const journalRows = useMemo(() => {
+    const manualItems = (applications || [])
+      .filter((a) => a.type === "manual")
+      .map((a) => ({ manual: true, app: a }));
+    const measureItems = rows.map((r) => ({ manual: false, ...r }));
+    return [...measureItems, ...manualItems].sort((a, b) => {
+      const da = a.manual ? new Date(a.app.appliedAt) : new Date(a.measure.date);
+      const db = b.manual ? new Date(b.app.appliedAt) : new Date(b.measure.date);
+      return db - da;
+    });
+  }, [rows, applications]);
 
   // v1.40.0 — Fix : la section photos du rapport n'affichait plus rien pour les
   // mesures synchronisées cloud, car measure.photos/poolPhotos sont vides
@@ -13273,8 +15597,12 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
     // ── Graphique simplifié ──
     if (chartData.length >= 2) {
       sectionTitle(t("params_evolution"));
-      const gH = 45, gW = cW;
-      const gX = mL, gY = y;
+      const gH = 45;
+      const gAxisW = 9; // v1.66.2 — marge réservée aux libellés d'échelle gauche/droite
+      const topPad = showValues ? 4 : 0; // v1.68.0 — place pour les valeurs au-dessus des points
+      const gW = cW - gAxisW * 2;
+      const gX = mL + gAxisW, gY = y + topPad;
+      const leftAxisMax = 10, rightAxisMax = 110;
 
       // Fond graphique
       pdf.setFillColor(250,252,251);
@@ -13282,27 +15610,36 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
       pdf.setDrawColor(200,210,220); pdf.setLineWidth(0.15);
       pdf.rect(gX, gY, gW, gH);
 
-      // Grille horizontale (5 lignes)
+      // Grille horizontale (5 lignes) + libellés d'échelle gauche/droite
       pdf.setDrawColor(220,228,234); pdf.setLineWidth(0.1);
       for (let i = 1; i <= 4; i++) {
         const gy = gY + (gH / 5) * i;
         pdf.line(gX, gy, gX + gW, gy);
       }
+      pdf.setFontSize(6); pdf.setFont("helvetica", "normal"); pdf.setTextColor(100,112,124);
+      for (let i = 0; i <= 5; i++) {
+        const ty = gY + (gH / 5) * i;
+        const leftVal = Math.round(leftAxisMax - (leftAxisMax / 5) * i);
+        const rightVal = Math.round(rightAxisMax - (rightAxisMax / 5) * i);
+        pdf.text(String(leftVal), gX - 1.5, ty + 1, { align: "right" });
+        pdf.text(String(rightVal), gX + gW + 1.5, ty + 1, { align: "left" });
+      }
+      pdf.setTextColor(0,0,0);
 
       const timestamps = chartData.map(d => d.timestamp);
       const tMin = Math.min(...timestamps), tMax = Math.max(...timestamps);
       const tRange = tMax - tMin || 1;
 
       // Dessiner chaque paramètre
-      chartParams.forEach(cp => {
+      chartParams.filter((cp) => activeReportParams.includes(cp.key)).forEach(cp => {
         const pts = chartData.map((d, i) => {
           const v = d[cp.key];
           return v == null ? null : { x: i, t: d.timestamp, v };
         }).filter(Boolean);
         if (pts.length < 1) return;
 
-        // Normalise selon axe (left: 0-8, right: 0-100)
-        const vMax = cp.axis === "left" ? 10 : 110;
+        // Normalise selon axe (left: 0-10, right: 0-110)
+        const vMax = cp.axis === "left" ? leftAxisMax : rightAxisMax;
         const [r,g,b] = hexToRgb(cp.color);
         pdf.setDrawColor(r,g,b); pdf.setLineWidth(0.5);
 
@@ -13315,15 +15652,23 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           // Point
           pdf.setFillColor(r,g,b);
           pdf.circle(px, clampedPy, 0.8, "F");
+          // v1.68.0 — Valeur au-dessus du point, si "Afficher les valeurs" est coché.
+          if (showValues) {
+            pdf.setFontSize(5);
+            pdf.setTextColor(r, g, b);
+            const labelY = Math.max(clampedPy - 1.4, gY - topPad + 2.5);
+            pdf.text(String(pt.v), px, labelY, { align: "center" });
+          }
           prev = { px, py: clampedPy };
         });
       });
+      pdf.setTextColor(0,0,0);
 
       // Légende
       y = gY + gH + 2;
       let lx = mL;
       pdf.setFontSize(6.5); pdf.setFont("helvetica","normal");
-      chartParams.forEach(cp => {
+      chartParams.filter((cp) => activeReportParams.includes(cp.key)).forEach(cp => {
         const hasData = chartData.some(d => d[cp.key] != null);
         if (!hasData) return;
         const [r,g,b] = hexToRgb(cp.color);
@@ -13389,7 +15734,62 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
     const paramStartX = mL;
     const prodStartX  = paramCols.reduce((s,c) => s + c.w, mL);
 
-    sortedMeasures.forEach((m, i) => {
+    // v1.63.1 — Journal fusionné (mesures + entretiens manuels), trié
+    // décroissant (le plus récent en premier) — même logique que journalRows
+    // côté aperçu écran, reconstruite ici car generatePdfBlob n'a pas accès
+    // au useMemo du composant.
+    const manualEntries = (applications || [])
+      .filter((a) => a.type === "manual")
+      .map((a) => ({ manual: true, app: a }));
+    const measureEntries = sortedMeasures.map((m) => ({ manual: false, m }));
+    const journalEntries = [...measureEntries, ...manualEntries].sort((a, b) => {
+      const da = a.manual ? new Date(a.app.appliedAt) : new Date(a.m.date);
+      const db = b.manual ? new Date(b.app.appliedAt) : new Date(b.m.date);
+      return db - da;
+    });
+
+    journalEntries.forEach((entry, i) => {
+      if (entry.manual) {
+        const a = entry.app;
+        const prod = products.find(p => p.name === a.productName);
+        const blockH = rowH;
+
+        checkPage(blockH);
+        if (i % 2 === 0) { pdf.setFillColor(247,250,254); pdf.rect(mL, y, cW, blockH, "F"); }
+
+        const d = new Date(a.appliedAt);
+        const dateStr = `${d.getDate().toString().padStart(2,"0")}/${(d.getMonth()+1).toString().padStart(2,"0")} ${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`;
+
+        // Cellule fusionnée (paramCols) : date + libellé entretien manuel
+        pdf.setTextColor(30,30,30);
+        pdf.text(`${dateStr} · 🔧 ${t("reason_manual_maintenance")}`, paramStartX + 0.8, y + 3.8, { maxWidth: (prodStartX - paramStartX) - 1.5 });
+
+        const stockVal = (() => {
+          if (!manageStock || !prod) return "—";
+          const qty = Math.round((prod.stockPercent ?? 100) / 100 * (prod.containerAmount ?? 1) * 10) / 10;
+          return formatDose(qty, prod.containerUnit || "kg");
+        })();
+
+        const prodVals = {
+          prod:    a.productName || "—",
+          advised: "—",
+          qty:     formatDose(a.appliedAmount, a.doseUnit || "g"),
+          stock:   stockVal,
+        };
+
+        x = prodStartX;
+        prodCols.forEach(c => {
+          pdf.text(String(prodVals[c.key] ?? '—'), x+0.8, y + 3.8, { maxWidth: c.w - 1.5 });
+          x += c.w;
+        });
+
+        pdf.setDrawColor(200,212,228); pdf.setLineWidth(0.15);
+        pdf.line(mL, y+blockH, mL+cW, y+blockH);
+        y += blockH;
+        return;
+      }
+
+      const m = entry.m;
       const app   = applications.find(a => a.measureId === m.id);
       const appliedSteps = app?.steps?.filter(s => !s.skipped) || [];
       const repTargets = getEffectiveTargets(pool?.treatmentType || "chlore");
@@ -13574,6 +15974,52 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
       y += 5;
     }
 
+    // ── Photos des mesures ── (v1.68.0, triées par date décroissante)
+    const photoRows = [...rows].reverse();
+    const hasAnyReportPhotos = photoRows.some(({ measure }) => {
+      const fetched = fetchedPhotosByMeasureId[measure.id];
+      const analysisPhotos = measure.photos?.length ? measure.photos : (measure.photo ? [measure.photo] : (fetched?.photos || []));
+      const poolPhotos = measure.poolPhotos?.length ? measure.poolPhotos : (fetched?.poolPhotos || []);
+      return (analysisPhotos.length + poolPhotos.length) > 0;
+    });
+
+    if (hasAnyReportPhotos) {
+      sectionTitle(t("photos_section"));
+      const thumbSize = 24, gap = 3;
+      const perRow = Math.max(1, Math.floor((cW + gap) / (thumbSize + gap)));
+
+      photoRows.forEach(({ measure }) => {
+        const fetched = fetchedPhotosByMeasureId[measure.id];
+        const analysisPhotos = measure.photos?.length ? measure.photos : (measure.photo ? [measure.photo] : (fetched?.photos || []));
+        const poolPhotos = measure.poolPhotos?.length ? measure.poolPhotos : (fetched?.poolPhotos || []);
+        const allPhotos = [...analysisPhotos, ...poolPhotos];
+        if (!allPhotos.length) return;
+
+        const rowsNeeded = Math.ceil(allPhotos.length / perRow);
+        const blockH = 5 + rowsNeeded * (thumbSize + gap);
+        checkPage(blockH);
+
+        pdf.setFontSize(7.5); pdf.setFont("helvetica","bold"); pdf.setTextColor(45,74,110);
+        pdf.text(formatDate(measure.date), mL, y + 3);
+        pdf.setTextColor(0,0,0);
+        y += 5;
+
+        let px = mL, col = 0;
+        allPhotos.forEach((src) => {
+          try {
+            pdf.addImage(src, "JPEG", px, y, thumbSize, thumbSize, undefined, "FAST");
+          } catch(e) { /* photo invalide, on ignore */ }
+          pdf.setDrawColor(208,228,245); pdf.setLineWidth(0.15);
+          pdf.rect(px, y, thumbSize, thumbSize);
+          col++;
+          if (col >= perRow) { col = 0; px = mL; y += thumbSize + gap; }
+          else { px += thumbSize + gap; }
+        });
+        if (col !== 0) y += thumbSize + gap;
+        y += 3;
+      });
+    }
+
     // Footer toutes pages
     const pageCount = pdf.internal.getNumberOfPages();
     for (let p = 1; p <= pageCount; p++) {
@@ -13642,7 +16088,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
         </button>
         <button
           className="no-print"
-          style={{ ...styles.reportPrintBtn, background: pdfLoading ? "#6a7d90" : "#0d7a3e", opacity: pdfLoading ? 0.7 : 1 }}
+          style={{ ...styles.reportPrintBtn, background: pdfLoading ? "var(--brand-text-muted)" : "#0d7a3e", opacity: pdfLoading ? 0.7 : 1 }}
           onClick={handleSharePdf}
           disabled={pdfLoading}
         >
@@ -13677,7 +16123,40 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
         </div>
 
         <div style={styles.reportSectionTitle}>{t("params_evolution")}</div>
-        <label className="no-print" style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#4a6480", marginBottom: 8, cursor: "pointer", userSelect: "none" }}>
+        <div className="no-print" style={styles.chipsRow}>
+          <button
+            onClick={toggleAllReportParams}
+            style={{
+              ...styles.chip,
+              ...styles.chipAll,
+              background: allReportActive ? "var(--brand-primary)" : "#f1f4f3",
+              borderColor: allReportActive ? "var(--brand-primary)" : "#d0e4f5",
+              color: allReportActive ? "#ffffff" : "#2d4a6e",
+            }}
+          >
+            {allReportActive ? t("hide_all_params") : t("show_all_params")}
+          </button>
+          {chartParams.map((cp) => (
+            <button
+              key={cp.key}
+              onClick={() => toggleReportParam(cp.key)}
+              style={{
+                ...styles.chip,
+                background: activeReportParams.includes(cp.key) ? cp.color + "22" : "#f1f4f3",
+                borderColor: activeReportParams.includes(cp.key) ? cp.color : "#d0e4f5",
+                color: activeReportParams.includes(cp.key) ? cp.color : "var(--brand-text-muted)",
+              }}
+            >
+              {cp.label}
+              <span style={styles.chipAxisTag}>{cp.axis === "left" ? "ᴜ" : "ᴅ"}</span>
+            </button>
+          ))}
+        </div>
+        <p className="no-print" style={styles.axisLegend}>
+          <span style={styles.axisLegendItem}>{t("axis_legend_u")}</span>
+          <span style={styles.axisLegendItem}>{t("axis_legend_d")}</span>
+        </p>
+        <label className="no-print" style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--brand-text-secondary)", marginBottom: 8, cursor: "pointer", userSelect: "none" }}>
           <input type="checkbox" checked={showValues} onChange={(e) => setShowValues(e.target.checked)} />
           <span>{t("show_values")}</span>
         </label>
@@ -13713,7 +16192,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                 tick={{ fontSize: 12, fill: "#2d4a6e" }}
                 width={30}
               />
-              {chartParams.map((cp) => (
+              {chartParams.filter((cp) => activeReportParams.includes(cp.key)).map((cp) => (
                 <Line
                   key={cp.key}
                   yAxisId={cp.axis}
@@ -13735,7 +16214,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
             </ResponsiveContainer>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "8px 16px", marginTop: 8, padding: "0 8px" }}>
-            {chartParams.filter(cp => chartData.some(d => d[cp.key] != null)).map((cp) => (
+            {chartParams.filter(cp => activeReportParams.includes(cp.key) && chartData.some(d => d[cp.key] != null)).map((cp) => (
               <div key={cp.key} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: "#2d4a6e" }}>
                 <svg width="16" height="4"><line x1="0" y1="2" x2="16" y2="2" stroke={cp.color} strokeWidth="2"/><circle cx="8" cy="2" r="2" fill={cp.color}/></svg>
                 {cp.label}
@@ -13749,7 +16228,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
         )}
 
         <div style={styles.reportSectionTitle}>{t("detailed_history")}</div>
-        {rows.length === 0 ? (
+        {journalRows.length === 0 ? (
           <p style={styles.helpTextSmall}>{t("no_measures_report")}</p>
         ) : (
           <table style={{ ...styles.reportTable, fontSize: 11 }}>
@@ -13775,7 +16254,32 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
               </tr>
             </thead>
             <tbody>
-              {rows.flatMap(({ measure, recs, application }, i) => {
+              {journalRows.flatMap((item, i) => {
+                // v1.63.0 — Ligne d'entretien manuel : une seule ligne, les
+                // colonnes de mesure (Date + 11 paramètres) sont fusionnées
+                // en une seule cellule (même principe que la ligne "note"
+                // plus bas), le reste (produit/dose/heure) rempli normalement.
+                if (item.manual) {
+                  const a = item.app;
+                  const prod = products.find((p) => p.name === a.productName);
+                  return [(
+                    <tr key={`manual-${a.id}`} style={{ background: i % 2 === 0 ? "#f8fafd" : "#ffffff" }}>
+                      <td colSpan={12} style={{ ...styles.reportTdCell, fontWeight: 600, color: "var(--brand-text-strong)" }}>
+                        {formatDate(a.appliedAt)} · <span style={{ fontStyle: "italic", color: "#c4502f" }}>🔧 {t("reason_manual_maintenance")}</span>
+                      </td>
+                      <td style={styles.reportTdCell}>{a.productName}</td>
+                      <td style={{ ...styles.reportTdCell, color: "var(--brand-text-secondary)" }}>—</td>
+                      <td style={{ ...styles.reportTdCell, fontWeight: 700, color: "var(--brand-primary)" }}>{formatDose(a.appliedAmount, a.doseUnit || "g")}</td>
+                      <td style={{ ...styles.reportTdCell, color: "var(--brand-text-secondary)" }}>
+                        {new Date(a.appliedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </td>
+                      {manageStock && <td style={{ ...styles.reportTdCell, color: prod && (prod.stockPercent ?? 100) <= 20 ? "#c0392b" : "var(--brand-text-secondary)", fontWeight: 600 }}>
+                        {prod ? formatDose(Math.round((prod.stockPercent ?? 100) / 100 * (prod.containerAmount ?? 1) * 10) / 10, prod.containerUnit || "kg") : "—"}
+                      </td>}
+                    </tr>
+                  )];
+                }
+                const { measure, recs, application } = item;
                 const applied = application?.steps?.filter(s => !s.skipped) || [];
                 const useSteps = applied.length > 0;
                 const rowCount = useSteps ? Math.max(1, applied.length) : Math.max(1, recs.length);
@@ -13791,7 +16295,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                     <tr key={`${i}-${j}`} style={{ background: i % 2 === 0 ? "#f8fafd" : "#ffffff" }}>
                       {j === 0 && (
                         <>
-                          <td style={{ ...styles.reportTdCell, fontWeight: 600, color: "#0d2b4e" }} rowSpan={totalRowSpan}>{formatDate(measure.date)}</td>
+                          <td style={{ ...styles.reportTdCell, fontWeight: 600, color: "var(--brand-text-strong)" }} rowSpan={totalRowSpan}>{formatDate(measure.date)}</td>
                           <td style={styles.reportTdCell} rowSpan={totalRowSpan}>{measure.pH ?? "—"}</td>
                           <td style={styles.reportTdCell} rowSpan={totalRowSpan}>{measure.fCl != null && measure.fCl !== "" ? `${measure.fCl}` : "—"}</td>
                           <td style={styles.reportTdCell} rowSpan={totalRowSpan}>{measure.tCl != null && measure.tCl !== "" ? `${measure.tCl}` : "—"}</td>
@@ -13807,21 +16311,21 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                       )}
                       <td style={styles.reportTdCell}>
                         {step ? (step.skipped ? <span style={{ color: "#9ab0c4" }}>⊘ {step.productName}</span> : step.productName)
-                          : rec ? <span style={{ color: "#6a7d90", fontStyle: "italic" }}>{rec.productName}</span>
+                          : rec ? <span style={{ color: "var(--brand-text-muted)", fontStyle: "italic" }}>{rec.productName}</span>
                           : "—"}
                       </td>
-                      <td style={{ ...styles.reportTdCell, color: "#4a6480" }}>
+                      <td style={{ ...styles.reportTdCell, color: "var(--brand-text-secondary)" }}>
                         {step && !step.skipped ? formatDose(step.computedDoseAmount ?? step.appliedAmount, step.doseUnit || "g")
                           : rec ? formatDose(rec.computedDoseAmount, rec.doseUnit || "g")
                           : "—"}
                       </td>
-                      <td style={{ ...styles.reportTdCell, fontWeight: 700, color: step?.skipped ? "#9ab0c4" : "#0a6ebd" }}>
+                      <td style={{ ...styles.reportTdCell, fontWeight: 700, color: step?.skipped ? "#9ab0c4" : "var(--brand-primary)" }}>
                         {step && !step.skipped ? formatDose(step.appliedAmount, step.doseUnit || "g") : "—"}
                       </td>
-                      <td style={{ ...styles.reportTdCell, color: "#4a6480" }}>
+                      <td style={{ ...styles.reportTdCell, color: "var(--brand-text-secondary)" }}>
                         {step?.appliedAt ? new Date(step.appliedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}
                       </td>
-                      {manageStock && <td style={{ ...styles.reportTdCell, color: prod && (prod.stockPercent ?? 100) <= 20 ? "#c0392b" : "#4a6480", fontWeight: 600 }}>
+                      {manageStock && <td style={{ ...styles.reportTdCell, color: prod && (prod.stockPercent ?? 100) <= 20 ? "#c0392b" : "var(--brand-text-secondary)", fontWeight: 600 }}>
                         {prod ? formatDose(Math.round((prod.stockPercent ?? 100) / 100 * (prod.containerAmount ?? 1) * 10) / 10, prod.containerUnit || "kg") : "—"}
                       </td>}
                     </tr>
@@ -13830,8 +16334,8 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
 
                 // Ligne note fusionnée
                 const noteRow = hasNote ? (
-                  <tr key={`${i}-note`} style={{ background: i % 2 === 0 ? "#f0f6fb" : "#f8fafd" }}>
-                    <td colSpan={prodColSpan} style={{ ...styles.reportTdCell, fontStyle: "italic", color: "#4a6480", fontSize: 11, paddingLeft: 10 }}>
+                  <tr key={`${i}-note`} style={{ background: i % 2 === 0 ? "var(--brand-bg-tint)" : "#f8fafd" }}>
+                    <td colSpan={prodColSpan} style={{ ...styles.reportTdCell, fontStyle: "italic", color: "var(--brand-text-secondary)", fontSize: 11, paddingLeft: 10 }}>
                       📝 {measure.note}
                     </td>
                   </tr>
@@ -13844,8 +16348,8 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
         )}
 
         {/* Légende des abréviations et cibles */}
-        <div style={{ marginTop: 16, padding: "10px 14px", background: "#f0f6fb", borderRadius: 10, border: "1px solid #d0e4f5" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#0d2b4e", marginBottom: 6 }}>{t("legend_title")}</div>
+        <div style={{ marginTop: 16, padding: "10px 14px", background: "var(--brand-bg-tint)", borderRadius: 10, border: "1px solid #d0e4f5" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--brand-text-strong)", marginBottom: 6 }}>{t("legend_title")}</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 16px" }}>
             {[
               { abbr: "pH",   label: t("param_ph_long"),   target: "7.2 – 7.4",       unit: "" },
@@ -13860,10 +16364,10 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
               { abbr: "Fe",   label: t("param_fe_long"),   target: "0 – 0.1",          unit: "mg/L" },
               { abbr: "°C",   label: t("param_temp_long"), target: "24 – 30",          unit: "°C" },
             ].map(({ abbr, label, target, unit }) => (
-              <div key={abbr} style={{ fontSize: 10, color: "#4a6480", minWidth: 180 }}>
-                <span style={{ fontWeight: 700, color: "#0a6ebd" }}>{abbr}</span>
+              <div key={abbr} style={{ fontSize: 10, color: "var(--brand-text-secondary)", minWidth: 180 }}>
+                <span style={{ fontWeight: 700, color: "var(--brand-primary)" }}>{abbr}</span>
                 {" = "}{label}
-                <span style={{ color: "#6a7d90" }}> · cible : {target}{unit ? " " + unit : ""}</span>
+                <span style={{ color: "var(--brand-text-muted)" }}> · cible : {target}{unit ? " " + unit : ""}</span>
               </div>
             ))}
           </div>
@@ -13890,7 +16394,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                       <td style={styles.diagHistTd}>
                         {d.suggestion}
                         {d.confidence_reason && (
-                          <div style={{ fontSize: 10.5, color: "#6a7d90", marginTop: 4, fontStyle: "italic" }}>
+                          <div style={{ fontSize: 10.5, color: "var(--brand-text-muted)", marginTop: 4, fontStyle: "italic" }}>
                             {d.confidence_reason}
                           </div>
                         )}
@@ -13907,7 +16411,10 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
         {rows.some(({ measure }) => (measure.photoCount || measure.poolPhotoCount || measure.photos?.length || measure.photo || measure.poolPhotos?.length)) && (
           <div style={{ marginTop: 24 }}>
             <div style={styles.reportSectionTitle}>{t("photos_section")}</div>
-            {rows.map(({ measure }, i) => {
+            {/* v1.68.0 — Photos triées par date décroissante (le plus récent
+                en premier), sur demande d'Arnaud. "rows" reste croissant
+                (utilisé pour le graphique) : on inverse juste ici, en copie. */}
+            {[...rows].reverse().map(({ measure }, i) => {
               const fetched = fetchedPhotosByMeasureId[measure.id];
               const analysisPhotos = measure.photos?.length ? measure.photos : (measure.photo ? [measure.photo] : (fetched?.photos || []));
               const poolPhotos = measure.poolPhotos?.length ? measure.poolPhotos : (fetched?.poolPhotos || []);
@@ -13915,7 +16422,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
               if (!allPhotos.length) return null;
               return (
                 <div key={i} style={{ marginBottom: 16 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "#4a6480", marginBottom: 6 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "var(--brand-text-secondary)", marginBottom: 6 }}>
                     {formatDate(measure.date)}
                   </div>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -13944,7 +16451,7 @@ function FieldLabel({ children, required, style }) {
 }
 
 // ---------- Modal shell ----------
-function ModalShell({ children, onClose, title, rightAction, forced }) {
+function ModalShell({ children, onClose, title, rightAction, forced, footer }) {
   return (
     <div style={styles.modalOverlay} onClick={forced ? undefined : onClose}>
       <div style={styles.modalSheet} onClick={(e) => e.stopPropagation()}>
@@ -13960,6 +16467,11 @@ function ModalShell({ children, onClose, title, rightAction, forced }) {
           </div>
         </div>
         <div style={styles.modalBody}>{children}</div>
+        {/* v1.81.0 — Footer collant optionnel : reste visible en bas de la
+            fenêtre modale même si le contenu dépasse la hauteur de l'écran,
+            au lieu de compter sur un défilement sans indication visuelle
+            (le bouton "Enregistrer" pouvait passer inaperçu, hors champ). */}
+        {footer && <div style={styles.modalStickyFooter}>{footer}</div>}
       </div>
     </div>
   );
@@ -13996,7 +16508,7 @@ const styles = {
     justifyContent: "space-between",
     alignItems: "center",
     padding: "14px 16px",
-    background: "#064a8a",
+    background: "var(--brand-primary-dark)",
     zIndex: 5,
   },
   reportCloseBtn: {
@@ -14036,7 +16548,7 @@ const styles = {
     margin: "0 auto",
     padding: "24px 20px 60px",
     fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-    color: "#0d2b4e",
+    color: "var(--brand-text-strong)",
   },
   reportHeader: {
     display: "flex",
@@ -14044,24 +16556,24 @@ const styles = {
     gap: 12,
     paddingBottom: 16,
     marginBottom: 18,
-    borderBottom: "2px solid #0a6ebd",
+    borderBottom: "2px solid var(--brand-primary)",
   },
   reportHeaderIcon: {
     width: 36,
     height: 36,
     borderRadius: 9,
-    background: "#0a6ebd",
+    background: "var(--brand-primary)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
   },
-  reportTitle: { fontSize: 18, fontWeight: 800, color: "#0d2b4e" },
-  reportSubtitle: { fontSize: 12.5, color: "#6a7d90", marginTop: 2 },
+  reportTitle: { fontSize: 18, fontWeight: 800, color: "var(--brand-text-strong)" },
+  reportSubtitle: { fontSize: 12.5, color: "var(--brand-text-muted)", marginTop: 2 },
   reportSectionTitle: {
     fontSize: 14,
     fontWeight: 800,
-    color: "#0a6ebd",
+    color: "var(--brand-primary)",
     textTransform: "uppercase",
     letterSpacing: 0.4,
     marginTop: 26,
@@ -14075,7 +16587,7 @@ const styles = {
     boxSizing: "border-box",
   },
   reportRow: { marginBottom: 18 },
-  reportRowDate: { fontSize: 14, fontWeight: 700, color: "#0d2b4e", marginBottom: 8 },
+  reportRowDate: { fontSize: 14, fontWeight: 700, color: "var(--brand-text-strong)", marginBottom: 8 },
   reportTable: { width: "100%", borderCollapse: "collapse", marginBottom: 10 },
   diagHistTable: { width: "100%", borderCollapse: "collapse", marginTop: 10, tableLayout: "fixed" },
   diagHistTh: {
@@ -14083,7 +16595,7 @@ const styles = {
     textAlign: "left",
     fontSize: 10,
     fontWeight: 700,
-    color: "#6a7d90",
+    color: "var(--brand-text-muted)",
     textTransform: "uppercase",
     borderBottom: "2px solid #e2d9f3",
   },
@@ -14100,7 +16612,7 @@ const styles = {
     textAlign: "left",
     fontSize: 10,
     fontWeight: 700,
-    color: "#6a7d90",
+    color: "var(--brand-text-muted)",
     textTransform: "uppercase",
     borderBottom: "2px solid #d0e4f5",
     whiteSpace: "nowrap",
@@ -14118,16 +16630,16 @@ const styles = {
     textAlign: "left",
     verticalAlign: "top",
   },
-  reportTableCellLabel: { fontSize: 10.5, color: "#6a7d90", textTransform: "uppercase" },
-  reportTableCellValue: { fontSize: 13, fontWeight: 700, color: "#0d2b4e", marginTop: 1 },
+  reportTableCellLabel: { fontSize: 10.5, color: "var(--brand-text-muted)", textTransform: "uppercase" },
+  reportTableCellValue: { fontSize: 13, fontWeight: 700, color: "var(--brand-text-strong)", marginTop: 1 },
   reportSubLabel: {
     fontSize: 11.5,
     fontWeight: 700,
-    color: "#6a7d90",
+    color: "var(--brand-text-muted)",
     textTransform: "uppercase",
     marginBottom: 5,
   },
-  reportConseilText: { fontSize: 12.5, color: "#6a7d90", fontStyle: "italic" },
+  reportConseilText: { fontSize: 12.5, color: "var(--brand-text-muted)", fontStyle: "italic" },
   reportConseilList: { margin: 0, paddingLeft: 18 },
   reportConseilItem: { fontSize: 12.5, color: "#2d4a6e", lineHeight: 1.6 },
   reportAppliedTag: { color: "#1a8fd1", fontWeight: 600 },
@@ -14136,12 +16648,12 @@ const styles = {
   app: {
     fontFamily:
       "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-    background: "#f0f6fb",
+    background: "var(--brand-bg-tint)",
     maxWidth: "100vw",
     margin: "0 auto",
     display: "flex",
     flexDirection: "column",
-    color: "#0d2b4e",
+    color: "var(--brand-text-strong)",
     height: "100dvh",
     overflow: "hidden",
   },
@@ -14150,7 +16662,7 @@ const styles = {
     alignItems: "center",
     gap: 12,
     padding: "20px 18px 16px",
-    background: "linear-gradient(135deg, #0a6ebd, #064a8a)",
+    background: "linear-gradient(135deg, var(--brand-primary), var(--brand-primary-dark))",
   },
   headerIcon: {
     width: 38,
@@ -14176,7 +16688,7 @@ const styles = {
     gap: 4,
   },
   headerTitle: { color: "#ffffff", fontSize: 17, fontWeight: 700, letterSpacing: -0.2 },
-  headerSub: { color: "#a8d4f0", fontSize: 12.5, marginTop: 1 },
+  headerSub: { color: "var(--brand-header-sub)", fontSize: 12.5, marginTop: 1 },
   premiumBadge: {
     display: "flex",
     alignItems: "center",
@@ -14209,7 +16721,7 @@ const styles = {
   poolSwitcherTitle: {
     fontSize: 11.5,
     fontWeight: 800,
-    color: "#6a7d90",
+    color: "var(--brand-text-muted)",
     textTransform: "uppercase",
     letterSpacing: 0.4,
     padding: "6px 10px 8px",
@@ -14248,7 +16760,7 @@ const styles = {
     padding: "10px 0",
     borderRadius: 11,
     border: "none",
-    background: "#0a6ebd",
+    background: "var(--brand-primary)",
     color: "#fff",
     fontWeight: 700,
     fontSize: 13,
@@ -14258,7 +16770,7 @@ const styles = {
     display: "inline-block",
     fontSize: 11.5,
     fontWeight: 700,
-    color: "#0a6ebd",
+    color: "var(--brand-primary)",
     background: "#e9f6f1",
     padding: "4px 10px",
     borderRadius: 99,
@@ -14305,7 +16817,7 @@ const styles = {
     margin: "4px 2px 10px",
   },
   sectionLabel: { fontSize: 13, fontWeight: 700, color: "#2d4a6e", textTransform: "uppercase", letterSpacing: 0.4 },
-  sectionDate: { fontSize: 12.5, color: "#6a7d90" },
+  sectionDate: { fontSize: 12.5, color: "var(--brand-text-muted)" },
   grid: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
@@ -14322,8 +16834,8 @@ const styles = {
   paramTop: { display: "flex", alignItems: "center", justifyContent: "space-between" },
   paramLabel: { fontSize: 12, color: "#5d6e6a", fontWeight: 600 },
   paramDot: { width: 8, height: 8, borderRadius: 99 },
-  paramValue: { fontSize: 24, fontWeight: 800, marginTop: 4, color: "#0d2b4e" },
-  paramUnit: { fontSize: 12, fontWeight: 600, color: "#6a7d90", marginLeft: 3 },
+  paramValue: { fontSize: 24, fontWeight: 800, marginTop: 4, color: "var(--brand-text-strong)" },
+  paramUnit: { fontSize: 12, fontWeight: 600, color: "var(--brand-text-muted)", marginLeft: 3 },
   paramStatus: { fontSize: 12, fontWeight: 700, marginTop: 2 },
   paramRange: { fontSize: 11, color: "#9aa9a5", marginTop: 2 },
   addMeasureBtn: {
@@ -14335,7 +16847,7 @@ const styles = {
     padding: "11px 0",
     borderRadius: 12,
     border: "none",
-    background: "#0a6ebd",
+    background: "var(--brand-primary)",
     color: "#fff",
     fontWeight: 700,
     fontSize: 13.5,
@@ -14350,9 +16862,12 @@ const styles = {
     gap: 7,
     padding: "11px 0",
     borderRadius: 12,
-    border: "1.5px solid #f0d9a8",
-    background: "#fdf6e6",
-    color: "#a8721a",
+    // v1.71.0 — Suit désormais le thème gratuit/premium global (var CSS)
+    // au lieu d'une palette fixe, pour rester cohérent avec le reste de
+    // l'app quand la teinte change.
+    border: "1.5px solid var(--brand-bg-tint)",
+    background: "var(--brand-bg-tint)",
+    color: "var(--brand-text-secondary)",
     fontWeight: 700,
     fontSize: 13.5,
     marginBottom: 22,
@@ -14400,7 +16915,7 @@ const styles = {
     marginTop: 4,
     borderRadius: 12,
     border: "none",
-    background: "#0a6ebd",
+    background: "var(--brand-primary)",
     color: "#fff",
     fontWeight: 700,
     fontSize: 13.5,
@@ -14415,7 +16930,7 @@ const styles = {
     padding: "9px 0",
     borderRadius: 10,
     border: "none",
-    background: "#0a6ebd",
+    background: "var(--brand-primary)",
     color: "#fff",
     fontWeight: 600,
     fontSize: 12.5,
@@ -14430,13 +16945,22 @@ const styles = {
     borderRadius: 12,
     padding: "11px 14px",
     fontSize: 12.5,
-    color: "#0a6ebd",
+    color: "var(--brand-primary)",
     fontWeight: 600,
     marginTop: 4,
   },
   recoCard: {
     background: "#fff7f2",
     border: "1px solid #f3d9c8",
+    borderRadius: 14,
+    padding: "13px 14px",
+  },
+  // v1.66.1 — Variante neutre pour les cartes purement informatives (rien à
+  // appliquer, ex. chlore/dureté trop haut) : évite le style "à traiter"
+  // rouge/orange qui suggère à tort une action en attente.
+  recoCardInfo: {
+    background: "#eaf4fb",
+    border: "1px solid #c8e0f5",
     borderRadius: 14,
     padding: "13px 14px",
   },
@@ -14455,6 +16979,20 @@ const styles = {
     flexShrink: 0,
   },
   recoParam: { fontSize: 13.5, fontWeight: 700, color: "#8a3a1f" },
+  recoStepBadgeInfo: {
+    width: 20,
+    height: 20,
+    borderRadius: 99,
+    background: "#5a8bb0",
+    color: "#ffffff",
+    fontSize: 11,
+    fontWeight: 800,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  recoParamInfo: { fontSize: 13.5, fontWeight: 700, color: "var(--brand-text-strong)" },
   recoTiming: {
     display: "flex",
     alignItems: "center",
@@ -14484,7 +17022,7 @@ const styles = {
   recoProduct: {
     fontSize: 13,
     fontWeight: 600,
-    color: "#0d2b4e",
+    color: "var(--brand-text-strong)",
     marginBottom: 2,
     display: "flex",
     alignItems: "center",
@@ -14509,10 +17047,25 @@ const styles = {
     gap: 5,
     fontSize: 12,
     fontWeight: 600,
-    color: "#0a6ebd",
+    color: "var(--brand-primary)",
     marginTop: 7,
   },
-  recoNote: { fontSize: 11.5, color: "#6a7d90", marginTop: 6, lineHeight: 1.4 },
+  // v1.66.1 — Ligne "recontrôle recommandé" des cartes informatives, en
+  // remplacement du badge "À débuter après" (non pertinent sans action).
+  recoInfoTiming: {
+    display: "flex",
+    alignItems: "center",
+    gap: 5,
+    fontSize: 11.5,
+    fontWeight: 700,
+    color: "#2d6a9a",
+    background: "#dcedf9",
+    border: "1px solid #b8d8ef",
+    borderRadius: 8,
+    padding: "5px 8px",
+    marginTop: 7,
+  },
+  recoNote: { fontSize: 11.5, color: "var(--brand-text-muted)", marginTop: 6, lineHeight: 1.4 },
   emptyState: {
     display: "flex",
     flexDirection: "column",
@@ -14522,7 +17075,7 @@ const styles = {
     gap: 8,
   },
   emptyTitle: { fontSize: 16, fontWeight: 700, marginTop: 6 },
-  emptyText: { fontSize: 13.5, color: "#6a7d90", lineHeight: 1.5, maxWidth: 280 },
+  emptyText: { fontSize: 13.5, color: "var(--brand-text-muted)", lineHeight: 1.5, maxWidth: 280 },
   dangerLinkBtn: {
     display: "flex",
     alignItems: "center",
@@ -14546,8 +17099,8 @@ const styles = {
     padding: "12px 14px",
     borderRadius: 12,
     border: "1.5px solid #d0e4f5",
-    background: "#f0f6fb",
-    color: "#0d2b4e",
+    background: "var(--brand-bg-tint)",
+    color: "var(--brand-text-strong)",
     fontSize: 14,
     fontWeight: 600,
     cursor: "pointer",
@@ -14573,7 +17126,7 @@ const styles = {
   langPickerTitle: {
     fontSize: 16,
     fontWeight: 700,
-    color: "#0d2b4e",
+    color: "var(--brand-text-strong)",
     marginBottom: 14,
     textAlign: "center",
   },
@@ -14613,7 +17166,7 @@ const styles = {
     padding: "13px 0",
     borderRadius: 13,
     border: "none",
-    background: "#0a6ebd",
+    background: "var(--brand-primary)",
     color: "#ffffff",
     fontWeight: 700,
     fontSize: 14.5,
@@ -14658,7 +17211,7 @@ const styles = {
     height: 28,
     borderRadius: 99,
     border: "none",
-    background: "#0a6ebd",
+    background: "var(--brand-primary)",
     color: "#fff",
     display: "flex",
     alignItems: "center",
@@ -14681,7 +17234,7 @@ const styles = {
     border: "none",
     cursor: "pointer",
   },
-  measureDate: { fontSize: 13.5, fontWeight: 600, color: "#0d2b4e" },
+  measureDate: { fontSize: 13.5, fontWeight: 600, color: "var(--brand-text-strong)" },
   measureDetails: { padding: "0 14px 14px" },
   measureChips: { display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 6 },
   measureChip: {
@@ -14692,7 +17245,7 @@ const styles = {
     border: "1px solid",
     background: "#fafcfb",
   },
-  measureNote: { fontSize: 12, color: "#6a7d90", marginBottom: 8, fontStyle: "italic" },
+  measureNote: { fontSize: 12, color: "var(--brand-text-muted)", marginBottom: 8, fontStyle: "italic" },
   deleteBtn: {
     display: "flex",
     alignItems: "center",
@@ -14709,7 +17262,7 @@ const styles = {
     alignItems: "center",
     gap: 5,
     fontSize: 12,
-    color: "#0a6ebd",
+    color: "var(--brand-primary)",
     background: "transparent",
     border: "none",
     padding: 0,
@@ -14721,13 +17274,13 @@ const styles = {
     gap: 4,
     fontSize: 12,
     fontWeight: 600,
-    color: "#0a6ebd",
+    color: "var(--brand-primary)",
     background: "transparent",
     border: "none",
     padding: 0,
     cursor: "pointer",
   },
-  helpText: { fontSize: 12, color: "#6a7d90", lineHeight: 1.5, margin: "4px 2px 14px" },
+  helpText: { fontSize: 12, color: "var(--brand-text-muted)", lineHeight: 1.5, margin: "4px 2px 14px" },
   productRow: {
     display: "flex",
     alignItems: "center",
@@ -14739,8 +17292,8 @@ const styles = {
     cursor: "pointer",
     textAlign: "left",
   },
-  productName: { fontSize: 14, fontWeight: 700, color: "#0d2b4e" },
-  productMeta: { fontSize: 11.5, color: "#6a7d90", marginTop: 2 },
+  productName: { fontSize: 14, fontWeight: 700, color: "var(--brand-text-strong)" },
+  productMeta: { fontSize: 11.5, color: "var(--brand-text-muted)", marginTop: 2 },
   productThumb: {
     width: 40,
     height: 40,
@@ -14773,7 +17326,7 @@ const styles = {
     fontSize: 9.5,
     color: "#b0bec8",
     padding: "3px 0 1px",
-    background: "#f0f6fb",
+    background: "var(--brand-bg-tint)",
     letterSpacing: 0.3,
     maxWidth: 480,
     margin: "0 auto",
@@ -14816,7 +17369,7 @@ const styles = {
     top: 0,
     background: "#ffffff",
   },
-  modalTitle: { fontSize: 16, fontWeight: 800, color: "#0d2b4e" },
+  modalTitle: { fontSize: 16, fontWeight: 800, color: "var(--brand-text-strong)" },
   modalCloseBtn: {
     width: 30,
     height: 30,
@@ -14842,6 +17395,14 @@ const styles = {
     color: "#c4502f",
   },
   modalBody: { padding: "8px 18px 0" },
+  modalStickyFooter: {
+    position: "sticky",
+    bottom: 0,
+    background: "#ffffff",
+    padding: "12px 18px 18px",
+    borderTop: "1px solid #eef1f0",
+    marginTop: 12,
+  },
   fieldLabel: {
     display: "block",
     fontSize: 12,
@@ -14856,8 +17417,8 @@ const styles = {
     padding: "12px 14px",
     border: "1px solid #e6ebe9",
   },
-  applyStepTitle: { fontSize: 13.5, fontWeight: 700, color: "#0d2b4e", marginBottom: 2 },
-  applyStepProduct: { fontSize: 12.5, color: "#6a7d90", marginBottom: 8 },
+  applyStepTitle: { fontSize: 13.5, fontWeight: 700, color: "var(--brand-text-strong)", marginBottom: 2 },
+  applyStepProduct: { fontSize: 12.5, color: "var(--brand-text-muted)", marginBottom: 8 },
   unitTag: {
     display: "flex",
     alignItems: "center",
@@ -14876,10 +17437,10 @@ const styles = {
     gap: 9,
     marginTop: 16,
     fontSize: 13.5,
-    color: "#0d2b4e",
+    color: "var(--brand-text-strong)",
     fontWeight: 500,
   },
-  helpTextSmall: { fontSize: 12.5, color: "#6a7d90", lineHeight: 1.5 },
+  helpTextSmall: { fontSize: 12.5, color: "var(--brand-text-muted)", lineHeight: 1.5 },
   segmentedControl: {
     display: "flex",
     background: "#edf4fb",
@@ -14894,7 +17455,7 @@ const styles = {
     border: "none",
     borderRadius: 10,
     background: "transparent",
-    color: "#4a6480",
+    color: "var(--brand-text-secondary)",
     fontSize: 13,
     fontWeight: 600,
     cursor: "pointer",
@@ -14902,7 +17463,7 @@ const styles = {
   },
   segmentedBtnActive: {
     background: "#ffffff",
-    color: "#0a6ebd",
+    color: "var(--brand-primary)",
     boxShadow: "0 1px 4px rgba(10,30,28,.14)",
   },
   apiKeyRow: {
@@ -14919,8 +17480,8 @@ const styles = {
     justifyContent: "center",
     borderRadius: 9,
     border: "1px solid #d0e4f5",
-    background: "#f0f6fb",
-    color: "#4a6480",
+    background: "var(--brand-bg-tint)",
+    color: "var(--brand-text-secondary)",
     cursor: "pointer",
   },
   aiSection: {
@@ -14967,7 +17528,7 @@ const styles = {
     borderRadius: 10,
     border: "1px solid #e2d9f3",
     fontSize: 13.5,
-    color: "#0d2b4e",
+    color: "var(--brand-text-strong)",
     lineHeight: 1.65,
     whiteSpace: "pre-wrap",
   },
@@ -14998,7 +17559,7 @@ const styles = {
     cursor: "pointer",
   },
   treatmentOptionActive: {
-    border: "1.5px solid #0a6ebd",
+    border: "1.5px solid var(--brand-primary)",
     background: "#eaf5fd",
   },
   treatmentOptionTop: {
@@ -15010,11 +17571,11 @@ const styles = {
   treatmentOptionLabel: {
     fontSize: 14,
     fontWeight: 700,
-    color: "#0d2b4e",
+    color: "var(--brand-text-strong)",
   },
   treatmentOptionDesc: {
     fontSize: 12,
-    color: "#6a7d90",
+    color: "var(--brand-text-muted)",
     lineHeight: 1.4,
   },
   treatmentOptionParams: {
@@ -15028,23 +17589,23 @@ const styles = {
     borderRadius: 10,
     border: "1.5px solid #d0e4f5",
     background: "#ffffff",
-    color: "#4a6480",
+    color: "var(--brand-text-secondary)",
     fontSize: 13,
     fontWeight: 600,
     cursor: "pointer",
     textAlign: "center",
   },
   filtrationOptionActive: {
-    border: "1.5px solid #0a6ebd",
+    border: "1.5px solid var(--brand-primary)",
     background: "#eaf5fd",
-    color: "#0a6ebd",
+    color: "var(--brand-primary)",
   },
   stripHint: {
     fontSize: 12.5,
-    color: "#6a7d90",
+    color: "var(--brand-text-muted)",
     lineHeight: 1.5,
     padding: "8px 12px",
-    background: "#f0f6fb",
+    background: "var(--brand-bg-tint)",
     borderRadius: 9,
     border: "1px solid #e6ebe9",
     marginBottom: 4,
@@ -15058,7 +17619,7 @@ const styles = {
     fontSize: 14,
     fontFamily: "inherit",
     background: "#fafcfb",
-    color: "#0d2b4e",
+    color: "var(--brand-text-strong)",
     outline: "none",
   },
   photoCaptureBtnRow: {
@@ -15074,8 +17635,8 @@ const styles = {
     padding: "13px 0",
     borderRadius: 12,
     border: "1.5px dashed #90c4e8",
-    background: "#f0f6fb",
-    color: "#0a6ebd",
+    background: "var(--brand-bg-tint)",
+    color: "var(--brand-primary)",
     fontWeight: 600,
     fontSize: 13,
     cursor: "pointer",
@@ -15091,7 +17652,7 @@ const styles = {
     borderRadius: 12,
     border: "1.5px dashed #90c4e8",
     background: "#f5f9f8",
-    color: "#0a6ebd",
+    color: "var(--brand-primary)",
     fontWeight: 600,
     fontSize: 13.5,
     cursor: "pointer",
@@ -15118,7 +17679,7 @@ const styles = {
     borderRadius: 10,
     border: "1.5px solid #90c4e8",
     background: "#e8f4fd",
-    color: "#0a6ebd",
+    color: "var(--brand-primary)",
     fontWeight: 600,
     fontSize: 13,
     cursor: "pointer",
@@ -15132,7 +17693,7 @@ const styles = {
     borderRadius: 10,
     background: "#e8f4fd",
     border: "1px solid #90c4e8",
-    color: "#0d2b4e",
+    color: "var(--brand-text-strong)",
     fontSize: 13,
     lineHeight: 1.5,
     marginBottom: 10,
@@ -15180,14 +17741,14 @@ const styles = {
     background: "#e8f4fd",
     border: "1px solid #90c4e8",
     fontSize: 13.5,
-    color: "#0d2b4e",
+    color: "var(--brand-text-strong)",
   },
   confirmYesBtn: {
     flex: 1,
     padding: "9px 0",
     borderRadius: 9,
     border: "none",
-    background: "#0a6ebd",
+    background: "var(--brand-primary)",
     color: "#fff",
     fontWeight: 700,
     fontSize: 13,
@@ -15203,7 +17764,7 @@ const styles = {
     borderRadius: 9,
     border: "1px solid #90c4e8",
     background: "#fff",
-    color: "#0a6ebd",
+    color: "var(--brand-primary)",
     fontWeight: 600,
     fontSize: 13,
     cursor: "pointer",
@@ -15212,7 +17773,7 @@ const styles = {
     marginBottom: 10,
     padding: "9px 13px",
     borderRadius: 10,
-    background: "#f0f6fb",
+    background: "var(--brand-bg-tint)",
     border: "1px solid #d0e4f5",
   },
   latestNoteText: {
@@ -15230,8 +17791,8 @@ const styles = {
     padding: "10px 0",
     borderRadius: 10,
     border: "1.5px solid #d0e4f5",
-    background: "#f0f6fb",
-    color: "#0a6ebd",
+    background: "var(--brand-bg-tint)",
+    color: "var(--brand-primary)",
     fontWeight: 600,
     fontSize: 13,
     cursor: "pointer",
@@ -15259,7 +17820,7 @@ const styles = {
   stockNotManagedBox: {
     padding: "12px 14px",
     borderRadius: 10,
-    background: "#f0f6fb",
+    background: "var(--brand-bg-tint)",
     border: "1px solid #d0e4f5",
     fontSize: 13,
     color: "#2d4a6e",
@@ -15271,7 +17832,7 @@ const styles = {
   stockActivateLink: {
     background: "none",
     border: "none",
-    color: "#0a6ebd",
+    color: "var(--brand-primary)",
     fontWeight: 700,
     fontSize: 13,
     cursor: "pointer",
@@ -15284,17 +17845,17 @@ const styles = {
     alignItems: "center",
     padding: "6px 10px",
     borderRadius: 8,
-    background: "#f0f6fb",
+    background: "var(--brand-bg-tint)",
     border: "1px solid #d0e4f5",
   },
   consumptionDate: {
     fontSize: 12,
-    color: "#4a6480",
+    color: "var(--brand-text-secondary)",
   },
   consumptionAmt: {
     fontSize: 12,
     fontWeight: 700,
-    color: "#0a6ebd",
+    color: "var(--brand-primary)",
   },
   photoLockedBtn: {
     display: "flex",
@@ -15304,9 +17865,10 @@ const styles = {
     width: "100%",
     padding: "13px 0",
     borderRadius: 12,
-    border: "1.5px solid #f0d9a8",
-    background: "#fdf6e6",
-    color: "#a8721a",
+    // v1.71.0 — Suit désormais le thème gratuit/premium global (var CSS).
+    border: "1.5px solid var(--brand-bg-tint)",
+    background: "var(--brand-bg-tint)",
+    color: "var(--brand-text-secondary)",
     fontWeight: 600,
     fontSize: 13.5,
     cursor: "pointer",
@@ -15352,8 +17914,8 @@ const styles = {
     padding: "14px 0 6px",
     textAlign: "center",
   },
-  paywallPrice: { fontSize: 22, fontWeight: 800, color: "#0d2b4e", marginTop: 6 },
-  paywallPriceSub: { fontSize: 12.5, color: "#6a7d90" },
+  paywallPrice: { fontSize: 22, fontWeight: 800, color: "#0d2b4e", marginTop: 6 }, // v1.71.0 — usage exclusif PaywallModal : reste bleu, non thémé
+  paywallPriceSub: { fontSize: 12.5, color: "#6a7d90" }, // v1.71.0 — idem
   paywallPerk: {
     display: "flex",
     alignItems: "center",
@@ -15371,15 +17933,15 @@ const styles = {
     <defs>
       <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="#1a8fd1"/>
-        <stop offset="100%" stop-color="#064a8a"/>
+        <stop offset="100%" stop-color="var(--brand-primary-dark)"/>
       </linearGradient>
       <clipPath id="rnd"><rect width="512" height="512" rx="115"/></clipPath>
     </defs>
     <!-- fond dégradé bleu -->
     <rect width="512" height="512" rx="115" fill="url(#bg)"/>
     <!-- vague de fond -->
-    <path d="M0 340 Q128 290 256 330 Q384 370 512 310 L512 512 L0 512Z" fill="#0a6ebd" opacity="0.55" clip-path="url(#rnd)"/>
-    <path d="M0 380 Q128 340 256 375 Q384 410 512 360 L512 512 L0 512Z" fill="#064a8a" opacity="0.6" clip-path="url(#rnd)"/>
+    <path d="M0 340 Q128 290 256 330 Q384 370 512 310 L512 512 L0 512Z" fill="var(--brand-primary)" opacity="0.55" clip-path="url(#rnd)"/>
+    <path d="M0 380 Q128 340 256 375 Q384 410 512 360 L512 512 L0 512Z" fill="var(--brand-primary-dark)" opacity="0.6" clip-path="url(#rnd)"/>
     <!-- goutte principale -->
     <path d="M256 110 C256 110 176 222 176 286 C176 330 212 366 256 366 C300 366 336 330 336 286 C336 222 256 110 256 110Z" fill="white" opacity="0.95"/>
     <!-- reflet interne goutte -->
@@ -15395,11 +17957,11 @@ const styles = {
   });
   const meta = document.querySelector('meta[name="theme-color"]') || document.createElement("meta");
   meta.name = "theme-color";
-  meta.content = "#064a8a";
+  meta.content = "var(--brand-primary-dark)";
   if (!meta.parentNode) document.head.appendChild(meta);
 })();
 
 const __root = ReactDOM.createRoot(document.getElementById("root"));
-__root.render(React.createElement(PoolApp));
+__root.render(React.createElement(PoolGenAIApp));
 const __loader = document.getElementById("boot-loader");
 if (__loader) __loader.remove();

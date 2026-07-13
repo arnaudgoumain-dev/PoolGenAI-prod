@@ -57,6 +57,11 @@ const MAX_SECONDARY_USERS = 2;
 // compte invité lui-même est premium (son propre abonnement, jamais celui
 // hérité d'un propriétaire — voir handleRespondInvitation).
 const MAX_INVITED_POOLS_FREE = 2;
+// v1.60.0 — Demande de révocation initiée par l'invité, confirmée par le
+// propriétaire via un lien envoyé par email (voir /request-revoke-own-access,
+// /revocation-info, /respond-revocation). Délai plus long que les invitations
+// (7 jours) car le propriétaire n'est pas forcément pressé de réagir.
+const REVOCATION_TOKEN_TTL_HOURS = 24 * 7;
 // v1.55.0 — Pseudo (brique 3) : 2-24 caractères, lettres/chiffres/espaces/
 // tirets/apostrophes (accents inclus), pas d'emoji ni caractères de contrôle.
 const PSEUDO_REGEX = /^[\p{L}\p{N} '-]{2,24}$/u;
@@ -1450,9 +1455,11 @@ async function handleAccountDataRequest(request, env, origin) {
 
 // ==========================================================================
 // v1.55.0 — Utilisateurs secondaires (brique 2 : routes Worker)
-// Les 3 routes ci-dessous sont les seules à écrire dans secondaryUsers/
-// linkedAccounts/invitations (voir firestore.rules : write:false côté client,
-// écriture réservée au compte de service via ces routes).
+// Les routes ci-dessous sont les seules à écrire dans secondaryUsers/
+// linkedAccounts/invitations/revocationRequests (voir firestore.rules :
+// write:false côté client, écriture réservée au compte de service via ces
+// routes). Depuis v1.60.0 : /request-revoke-own-access, /revocation-info,
+// /respond-revocation (demande de révocation initiée par l'invité).
 // ==========================================================================
 
 // ---------- Resend : email d'invitation ----------
@@ -1488,6 +1495,28 @@ async function sendSecondaryRevokedEmail(env, toEmail, primaryEmail, poolName) {
     method: "POST",
     headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({ from: RESEND_FROM, to: toEmail, subject: "PoolGenAI — Accès révoqué", html }),
+  });
+  if (!response.ok) throw new Error(`Échec d'envoi Resend : ${await response.text()}`);
+}
+
+// ---------- Resend : email de demande de révocation (invité -> propriétaire) ----------
+// v1.60.0 — L'invité ne peut pas révoquer son propre accès (écriture réservée
+// au Worker) : cet email porte un lien que le PROPRIÉTAIRE doit confirmer.
+async function sendRevocationRequestEmail(env, toEmail, secondaryDisplayName, poolName, token) {
+  const link = `${VERIFICATION_LINK_BASE}?respondRevocation=${token}`;
+  const html = `
+    <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+      <h2>Demande de révocation — PoolGenAI</h2>
+      <p><strong>${secondaryDisplayName}</strong> a demandé la révocation de son accès au bassin <strong>${poolName}</strong> sur PoolGenAI.</p>
+      <p><a href="${link}" style="background:#0ea5e9;color:#fff;padding:12px 20px;border-radius:6px;text-decoration:none;">Voir la demande</a></p>
+      <p>Ce lien expire dans ${Math.round(REVOCATION_TOKEN_TTL_HOURS / 24)} jours.</p>
+      <p style="color:#888;font-size:12px;">Si tu n'es pas concerné par cette demande, ignore cet email.</p>
+    </div>
+  `;
+  const response = await fetch(RESEND_API_URL, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ from: RESEND_FROM, to: toEmail, subject: "PoolGenAI — Demande de révocation", html }),
   });
   if (!response.ok) throw new Error(`Échec d'envoi Resend : ${await response.text()}`);
 }
@@ -1649,6 +1678,7 @@ async function handleRespondInvitation(request, env, origin) {
     await firestoreSetDoc(env, `users/${secondaryUid}/linkedAccounts`, invitation.primaryUid, {
       primaryEmail: invitation.primaryEmail,
       poolId: invitation.poolId,
+      status: "active",
       addedAt: now,
     });
     await firestorePatchDoc(env, "invitations", token, { status: "accepted" });
@@ -1702,6 +1732,13 @@ async function handleRevokeSecondaryAccess(request, env, origin) {
       status: "revoked",
       revokedAt: new Date(),
     });
+    // v1.60.0 — Fix : le doc réciproque linkedAccounts (côté invité) n'était
+    // jamais mis à jour, alors que le client le filtre par status==="active"
+    // pour construire le switcher et la liste "bassins où je suis invité".
+    await firestorePatchDoc(env, `users/${secondaryUid}/linkedAccounts`, primaryUid, {
+      status: "revoked",
+      revokedAt: new Date(),
+    });
   } catch (e) {
     return jsonError(`Échec de la révocation : ${e.message}`, 500, origin);
   }
@@ -1717,6 +1754,178 @@ async function handleRevokeSecondaryAccess(request, env, origin) {
   }
 
   return jsonResponse({ status: "revoked" }, 200, origin);
+}
+
+// ---------- Route : POST /request-revoke-own-access ----------
+// v1.60.0 — Permet à un utilisateur secondaire de demander la révocation de
+// son propre accès (il ne peut pas se révoquer lui-même, écriture réservée
+// au Worker) : crée une demande + envoie un email au propriétaire avec un
+// lien de confirmation, sur le même modèle que l'invitation initiale.
+async function handleRequestRevokeOwnAccess(request, env, origin) {
+  const authHeader = request.headers.get("Authorization") || "";
+  const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (!idToken) return jsonError("Authentification requise", 401, origin);
+
+  let payload;
+  try {
+    payload = await verifyFirebaseIdToken(idToken);
+  } catch (e) {
+    return jsonError(`Token invalide : ${e.message}`, 401, origin);
+  }
+  const secondaryUid = payload.sub;
+  const secondaryEmail = payload.email || "";
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return jsonError("Corps de requête invalide", 400, origin);
+  }
+  const { primaryUid } = body;
+  if (!primaryUid) return jsonError("primaryUid manquant", 400, origin);
+
+  let link, secondaryConfig, primaryConfig;
+  try {
+    link = await firestoreGetDoc(env, `users/${secondaryUid}/linkedAccounts`, primaryUid);
+    secondaryConfig = await firestoreGetDoc(env, `users/${secondaryUid}/config`, "main");
+    primaryConfig = await firestoreGetDoc(env, `users/${primaryUid}/config`, "main");
+  } catch (e) {
+    return jsonError(`Erreur serveur : ${e.message}`, 500, origin);
+  }
+  if (!link || link.status !== "active") {
+    return jsonError("Accès introuvable ou déjà révoqué", 404, origin);
+  }
+
+  const pool = (primaryConfig?.pools || []).find((p) => p.id === link.poolId);
+  const poolName = pool?.name || "";
+  const secondaryDisplayName = secondaryConfig?.pseudo || secondaryEmail;
+
+  const token = generateVerificationToken();
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + REVOCATION_TOKEN_TTL_HOURS * 3600 * 1000);
+
+  try {
+    await firestoreCreateDoc(env, "revocationRequests", token, {
+      primaryUid,
+      primaryEmail: link.primaryEmail || "",
+      secondaryUid,
+      secondaryEmail,
+      secondaryPseudo: secondaryDisplayName,
+      poolId: link.poolId || "",
+      poolName,
+      createdAt: now,
+      expiresAt,
+      status: "pending",
+    });
+    await sendRevocationRequestEmail(env, link.primaryEmail, secondaryDisplayName, poolName, token);
+  } catch (e) {
+    return jsonError(`Échec de la demande : ${e.message}`, 500, origin);
+  }
+
+  return jsonResponse({ success: true }, 200, origin);
+}
+
+// ---------- Route : GET /revocation-info?token=... ----------
+// v1.60.0 — Aperçu avant confirmation (écran côté propriétaire), même
+// modèle de confiance que /invitation-info : pas d'authentification, le
+// token fait office de secret.
+async function handleRevocationRequestInfo(request, env, origin) {
+  const url = new URL(request.url);
+  const token = url.searchParams.get("token");
+  if (!token) return jsonError("token manquant", 400, origin);
+
+  let reqDoc;
+  try {
+    reqDoc = await firestoreGetDoc(env, "revocationRequests", token);
+  } catch (e) {
+    return jsonError(`Erreur serveur : ${e.message}`, 500, origin);
+  }
+  if (!reqDoc) return jsonResponse({ status: "invalid" }, 404, origin);
+  if (reqDoc.status !== "pending") {
+    return jsonResponse({ status: reqDoc.status }, 200, origin);
+  }
+  if (reqDoc.expiresAt && reqDoc.expiresAt.getTime() < Date.now()) {
+    return jsonResponse({ status: "expired" }, 410, origin);
+  }
+  return jsonResponse(
+    {
+      status: "pending",
+      secondaryPseudo: reqDoc.secondaryPseudo || reqDoc.secondaryEmail,
+      poolName: reqDoc.poolName || "",
+    },
+    200,
+    origin
+  );
+}
+
+// ---------- Route : POST /respond-revocation ----------
+// v1.60.0 — Confirmation par le PROPRIÉTAIRE d'une demande de révocation
+// initiée par l'invité (miroir de /respond-invitation, mais ici c'est le
+// principal qui confirme, pas le secondaire). Un seul geste possible :
+// accepter (pas de "refuser" — l'invité reste invité si le propriétaire
+// ignore l'email, rien à faire côté serveur dans ce cas).
+async function handleRespondRevocation(request, env, origin) {
+  const authHeader = request.headers.get("Authorization") || "";
+  const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (!idToken) return jsonError("Authentification requise", 401, origin);
+
+  let payload;
+  try {
+    payload = await verifyFirebaseIdToken(idToken);
+  } catch (e) {
+    return jsonError(`Token invalide : ${e.message}`, 401, origin);
+  }
+  const callerUid = payload.sub;
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return jsonError("Corps de requête invalide", 400, origin);
+  }
+  const { token } = body;
+  if (!token) return jsonError("token manquant", 400, origin);
+
+  let reqDoc;
+  try {
+    reqDoc = await firestoreGetDoc(env, "revocationRequests", token);
+  } catch (e) {
+    return jsonError(`Erreur serveur : ${e.message}`, 500, origin);
+  }
+  if (!reqDoc) return jsonResponse({ status: "invalid" }, 404, origin);
+  if (reqDoc.status !== "pending") {
+    return jsonResponse({ status: reqDoc.status }, 200, origin);
+  }
+  if (reqDoc.expiresAt && reqDoc.expiresAt.getTime() < Date.now()) {
+    return jsonResponse({ status: "expired" }, 410, origin);
+  }
+  if (reqDoc.primaryUid !== callerUid) {
+    return jsonError("Cette demande ne concerne pas ton compte", 403, origin);
+  }
+
+  try {
+    await firestorePatchDoc(env, `users/${reqDoc.primaryUid}/secondaryUsers`, reqDoc.secondaryUid, {
+      status: "revoked",
+      revokedAt: new Date(),
+    });
+    await firestorePatchDoc(env, `users/${reqDoc.secondaryUid}/linkedAccounts`, reqDoc.primaryUid, {
+      status: "revoked",
+      revokedAt: new Date(),
+    });
+    await firestorePatchDoc(env, "revocationRequests", token, { status: "done" });
+  } catch (e) {
+    return jsonError(`Échec de la révocation : ${e.message}`, 500, origin);
+  }
+
+  try {
+    if (reqDoc.secondaryEmail) {
+      await sendSecondaryRevokedEmail(env, reqDoc.secondaryEmail, payload.email || "", reqDoc.poolName || "");
+    }
+  } catch (e) {
+    console.error(`Échec d'envoi email de révocation : ${e.message}`);
+  }
+
+  return jsonResponse({ status: "done", poolName: reqDoc.poolName || "" }, 200, origin);
 }
 
 // ---------- Route : POST /set-pseudo ----------
@@ -2010,6 +2219,9 @@ export default {
       if (url.pathname === "/invitation-info") {
         return handleInvitationInfo(request, env, origin);
       }
+      if (url.pathname === "/revocation-info") {
+        return handleRevocationRequestInfo(request, env, origin);
+      }
       return new Response("Not found", { status: 404 });
     }
 
@@ -2052,6 +2264,12 @@ export default {
     }
     if (url.pathname === "/revoke-secondary-access") {
       return handleRevokeSecondaryAccess(request, env, origin);
+    }
+    if (url.pathname === "/request-revoke-own-access") {
+      return handleRequestRevokeOwnAccess(request, env, origin);
+    }
+    if (url.pathname === "/respond-revocation") {
+      return handleRespondRevocation(request, env, origin);
     }
     if (url.pathname === "/set-pseudo") {
       return handleSetPseudo(request, env, origin);

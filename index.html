@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-192.png" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="PoolApp" />
+<meta name="apple-mobile-web-app-title" content="PoolGenAI" />
 
 <style>
   html, body {
@@ -281,15 +281,56 @@
   import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, getDocs, addDoc, onSnapshot, writeBatch, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getAnalytics, logEvent, setUserId, setUserProperties } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCZNXi1UPt6B69EVhd8nbTbh3YzM89Yo1s",
-    authDomain: "poolapp-ago.firebaseapp.com",
-    projectId: "poolapp-ago",
-    storageBucket: "poolapp-ago.firebasestorage.app",
-    messagingSenderId: "781764586143",
-    appId: "1:781764586143:web:23bda828e4907607f1d0aa",
-    measurementId: "G-0T8XX2SYTS"
+  // v1.79.0 — Séparation dev/test/prod : la config Firebase est choisie selon
+  // le hostname. PROD (app.poolgenai.com) → poolapp-ago, TEST (test.poolgenai.com)
+  // → poolgenai-test, DEV (tout le reste, dont localhost) → poolgenai-dev.
+  // v1.84.0 — Les 3 projets Firebase existent désormais, plus de fallback prod.
+  const FIREBASE_CONFIGS = {
+    prod: {
+      apiKey: "AIzaSyCZNXi1UPt6B69EVhd8nbTbh3YzM89Yo1s",
+      authDomain: "poolapp-ago.firebaseapp.com",
+      projectId: "poolapp-ago",
+      storageBucket: "poolapp-ago.firebasestorage.app",
+      messagingSenderId: "781764586143",
+      appId: "1:781764586143:web:23bda828e4907607f1d0aa",
+      measurementId: "G-0T8XX2SYTS",
+    },
+    test: {
+      apiKey: "AIzaSyDWSRu-Iaq4mG8ssrBUioktSprXSLSMnYo",
+      authDomain: "poolgenai-test.firebaseapp.com",
+      projectId: "poolgenai-test",
+      storageBucket: "poolgenai-test.firebasestorage.app",
+      messagingSenderId: "29427727408",
+      appId: "1:29427727408:web:14cb19e2a28cbde6b0c1f5",
+      measurementId: "G-084K0BMJDD",
+    },
+    dev: {
+      apiKey: "AIzaSyA9_XUwBQME0ywvWvLjBI_-5TFZ_HbNqrI",
+      authDomain: "poolgenai-dev.firebaseapp.com",
+      projectId: "poolgenai-dev",
+      storageBucket: "poolgenai-dev.firebasestorage.app",
+      messagingSenderId: "1059394562193",
+      appId: "1:1059394562193:web:bc7fccac63b244ca4c3730",
+      measurementId: "G-YW3CZW6QMQ",
+    },
   };
+
+  function detectEnv() {
+    const h = window.location.hostname;
+    if (h === "app.poolgenai.com") return "prod";
+    if (h === "test.poolgenai.com") return "test";
+    return "dev"; // localhost et tout hostname non reconnu
+  }
+
+  const __env = detectEnv();
+  // Filet de sécurité : si la config de l'environnement détecté n'est pas
+  // encore renseignée (apiKey null), on retombe sur prod plutôt que de
+  // planter au chargement — évite de casser test/dev tant que les projets
+  // Firebase ne sont pas créés.
+  const firebaseConfig = FIREBASE_CONFIGS[__env]?.apiKey
+    ? FIREBASE_CONFIGS[__env]
+    : FIREBASE_CONFIGS.prod;
+  window.__poolgenaiEnv = __env;
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
@@ -354,7 +395,19 @@
   // directement à accounts.google.com via postMessage, sans passer par ce domaine
   // intermédiaire : on récupère un access_token, qu'on échange ensuite contre une
   // session Firebase via signInWithCredential.
-  const GOOGLE_WEB_CLIENT_ID = "781764586143-pb34a19vgc6sgj1aqq50a93npap12k0r.apps.googleusercontent.com";
+  // v1.85.0 — BUG : ce Client ID était unique et codé en dur sur celui de PROD
+  // (préfixe 781764586143 = messagingSenderId de poolapp-ago), utilisé pour TOUS
+  // les environnements. Résultat : Firebase Auth de test/dev rejetait toujours la
+  // connexion Google ("access_token audience is not for this project"), quel que
+  // soit le réglage des origines JavaScript autorisées côté GCP — ce n'était
+  // structurellement pas le bon client. Un Client ID par environnement, sélectionné
+  // via __env (déjà calculé plus haut pour FIREBASE_CONFIGS).
+  const GOOGLE_WEB_CLIENT_IDS = {
+    prod: "781764586143-pb34a19vgc6sgj1aqq50a93npap12k0r.apps.googleusercontent.com",
+    test: "29427727408-gs9bu3mfbqt1eb4usclem214sf1t6bdo.apps.googleusercontent.com",
+    dev: "1059394562193-8qliq2i8jf2tjehoabej6rgffibpb974.apps.googleusercontent.com",
+  };
+  const GOOGLE_WEB_CLIENT_ID = GOOGLE_WEB_CLIENT_IDS[__env] || GOOGLE_WEB_CLIENT_IDS.prod;
 
   window._fbSignInWithPopup = async (auth, provider) => {
     if (!window.google?.accounts?.oauth2) {
@@ -403,7 +456,7 @@
 
 <!-- Composant principal : on attend que Firebase soit prêt avant de charger l'app -->
 <script>
-  function loadPoolApp() {
+  function loadPoolGenAIApp() {
     fetch("PoolGenAI.jsx")
       .then((res) => {
         if (!res.ok) throw new Error("Impossible de charger PoolGenAI.jsx (HTTP " + res.status + ")");
@@ -427,7 +480,7 @@
   var _fbWait = 0;
   function waitForFirebase() {
     if (window._fbAuth || _fbWait > 100) {
-      loadPoolApp();
+      loadPoolGenAIApp();
     } else {
       _fbWait++;
       setTimeout(waitForFirebase, 50);

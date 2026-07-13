@@ -100,12 +100,13 @@ service cloud.firestore {
       allow read, create, update: if isActiveOwner(uid) || isActiveSecondary(uid);
       allow delete: if isOwner(uid) || isActiveSecondary(uid);
     }
-    // v1.53.0 — Utilisateurs secondaires : les 3 collections qui portent la
-    // relation elle-même. Écriture strictement réservée au Worker (compte de
-    // service, hors périmètre de ces règles, même logique que
-    // calibrationModels/commonProducts) — le client ne fait jamais un
-    // setDoc direct dessus, toujours via /invite-secondary-user,
-    // /respond-invitation, /revoke-secondary-access.
+    // v1.53.0 — Utilisateurs secondaires : les collections qui portent la
+    // relation elle-même (+ revocationRequests depuis v1.60.0). Écriture
+    // strictement réservée au Worker (compte de service, hors périmètre de
+    // ces règles, même logique que calibrationModels/commonProducts) — le
+    // client ne fait jamais un setDoc direct dessus, toujours via
+    // /invite-secondary-user, /respond-invitation, /revoke-secondary-access,
+    // /request-revoke-own-access, /respond-revocation.
     // Lecture : le principal peut lister ses secondaires (réglages), le
     // secondaire peut lire son propre lien miroir pour savoir à quels
     // comptes il a accès.
@@ -122,6 +123,14 @@ service cloud.firestore {
     // invitation passe par /respond-invitation avec le token en paramètre,
     // pas par une lecture directe du document.
     match /invitations/{token} {
+      allow read, write: if false;
+    }
+    // v1.60.0 — Demande de révocation initiée par l'invité, confirmée par le
+    // propriétaire via lien email. Même raison qu'invitations : jamais lu ni
+    // écrit directement par le client, tout passe par le Worker (compte de
+    // service) via /request-revoke-own-access, /revocation-info,
+    // /respond-revocation.
+    match /revocationRequests/{token} {
       allow read, write: if false;
     }
     // v1.55.0 — Unicité des pseudos (brique 3). Index racine pseudo normalisé
@@ -162,8 +171,15 @@ service cloud.firestore {
       // sans ça, un secondaire ne peut pas suivre le plan de traitement en
       // cours sur le bassin qu'on lui a confié). .get(..., {}) évite une
       // erreur d'évaluation si le champ est absent (nouveau compte).
+      // v1.76.0 — Le client peut désormais écrire isPremium=FALSE (jamais
+      // true) : ça permet au toggle de test de vraiment désactiver Premium
+      // côté serveur (au lieu de rester local et de se faire réécraser par le
+      // prochain snapshot Firestore si un true traînait en base). Aucune
+      // ouverture de faille : la direction "passer à true" reste strictement
+      // bloquée, seule "revenir à false" est permise.
       allow update: if (isActiveOwner(uid) &&
-          request.resource.data.get('isPremium', false) == resource.data.get('isPremium', false)) ||
+          (request.resource.data.get('isPremium', false) == resource.data.get('isPremium', false) ||
+           request.resource.data.get('isPremium', false) == false)) ||
         (isActiveSecondary(uid) &&
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['products', 'activePlan', 'updatedAt']) &&
           request.resource.data.get('activePlan', {}).diff(resource.data.get('activePlan', {})).affectedKeys().hasOnly([secondaryLink(uid).data.poolId]));
