@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.88.0";
+const APP_VERSION = "1.92.0";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 
 const TRANSLATIONS = {
@@ -332,7 +332,7 @@ const TRANSLATIONS = {
     api_key_desc: "Ta clé est stockée localement. Pour Anthropic, saisis une clé sk-ant-... ou l'URL de ton proxy Cloudflare Worker (recommandé).",
     premium_section: "VERSION",
     premium_label: "Version illimitée",
-    premium_test: "Interrupteur de test — pas de vrai paiement ici",
+    premium_test: "Abonnement mensuel ou annuel",
     premium_desc: "En version gratuite : 1 bassin (+ 2 bassins invités), 1 mesure par jour. En illimité : bassins et invitations sans limite, mesures sans limite, photos sur mesures et produits.",
     delete_measures: "Supprimer toutes les mesures de ce bassin",
     sensitive_zone: "ZONE SENSIBLE",
@@ -576,7 +576,20 @@ const TRANSLATIONS = {
     paywall_perk5: "Historique illimité + rapport PDF",
     paywall_perk6: "Gestion du stock de produits",
     paywall_perk7: "Bassins et invitations sans limite",
-    paywall_test_note: "Ceci est une version de test. Aucun paiement réel n'est effectué.",
+    paywall_test_note: "Paiement sécurisé via Stripe. Résiliable à tout moment.",
+    paywall_price_monthly: "2,99 € / mois",
+    paywall_price_yearly: "24,99 € / an",
+    paywall_price_yearly_hint: "ou 24,99 € / an",
+    paywall_plan_monthly: "Mensuel",
+    paywall_plan_yearly: "Annuel",
+    paywall_plan_yearly_badge: "-30%",
+    manage_subscription_btn: "Gérer mon abonnement",
+    checkout_error: "Impossible de démarrer le paiement. Réessaie.",
+    portal_error: "Impossible d'ouvrir la gestion de l'abonnement. Réessaie.",
+    stripe_activation_checking: "Confirmation de ton paiement en cours…",
+    stripe_activation_delay_title: "Ça prend plus de temps que prévu",
+    stripe_activation_delay_desc: "Ton paiement a été reçu, mais l'activation tarde un peu. Réessaie de recharger l'app dans une minute.",
+    stripe_activation_continue_btn: "Continuer",
     premium_reveal_title: "Premium activé",
     premium_reveal_sub: "Bassins, invitations et mesures sans limite",
     premium_downgrade_title: "Retour à la version gratuite",
@@ -1037,7 +1050,7 @@ const TRANSLATIONS = {
     api_key_desc: "Your key is stored locally. For Anthropic, enter a sk-ant-... key or your Cloudflare Worker proxy URL (recommended).",
     premium_section: "VERSION",
     premium_label: "Unlimited version",
-    premium_test: "Test toggle — no real payment here",
+    premium_test: "Monthly or yearly subscription",
     premium_desc: "Free: 1 pool (+ 2 invited pools), 1 reading per day. Unlimited: no limit on pools or invitations, unlimited readings, photos on readings and products.",
     delete_measures: "Delete all readings for this pool",
     sensitive_zone: "SENSITIVE ZONE",
@@ -1276,7 +1289,20 @@ const TRANSLATIONS = {
     paywall_perk5: "Unlimited history + PDF report",
     paywall_perk6: "Product stock management",
     paywall_perk7: "Unlimited pools and invitations",
-    paywall_test_note: "This is a test version. No real payment is made.",
+    paywall_test_note: "Secure payment via Stripe. Cancel anytime.",
+    paywall_price_monthly: "€2.99 / month",
+    paywall_price_yearly: "€24.99 / year",
+    paywall_price_yearly_hint: "or €24.99 / year",
+    paywall_plan_monthly: "Monthly",
+    paywall_plan_yearly: "Yearly",
+    paywall_plan_yearly_badge: "-30%",
+    manage_subscription_btn: "Manage subscription",
+    checkout_error: "Couldn't start checkout. Try again.",
+    portal_error: "Couldn't open subscription management. Try again.",
+    stripe_activation_checking: "Confirming your payment…",
+    stripe_activation_delay_title: "This is taking longer than usual",
+    stripe_activation_delay_desc: "Your payment was received, but activation is taking a bit longer. Try reloading the app in a minute.",
+    stripe_activation_continue_btn: "Continue",
     premium_reveal_title: "Premium activated",
     premium_reveal_sub: "Unlimited pools, invitations and readings",
     premium_downgrade_title: "Back to the free version",
@@ -1733,7 +1759,7 @@ const TRANSLATIONS = {
     api_key_desc: "Dein Schlüssel wird lokal gespeichert.",
     premium_section: "VERSION",
     premium_label: "Unbegrenzte Version",
-    premium_test: "Testschalter — keine echte Zahlung",
+    premium_test: "Monatliches oder jährliches Abo",
     premium_desc: "Kostenlos: 1 Becken (+ 2 eingeladene Becken), 1 Messung pro Tag. Unbegrenzt: unbegrenzte Becken und Einladungen, unbegrenzte Messungen, Fotos, Produkte.",
     delete_measures: "Alle Messungen für dieses Becken löschen",
     sensitive_zone: "KRITISCHER BEREICH",
@@ -1975,7 +2001,20 @@ const TRANSLATIONS = {
     paywall_perk5: "Unbegrenzte Historie + PDF-Bericht",
     paywall_perk6: "Produktlagerverwaltung",
     paywall_perk7: "Unbegrenzte Becken und Einladungen",
-    paywall_test_note: "Dies ist eine Testversion. Es wird keine echte Zahlung vorgenommen.",
+    paywall_test_note: "Sichere Zahlung über Stripe. Jederzeit kündbar.",
+    paywall_price_monthly: "2,99 € / Monat",
+    paywall_price_yearly: "24,99 € / Jahr",
+    paywall_price_yearly_hint: "oder 24,99 € / Jahr",
+    paywall_plan_monthly: "Monatlich",
+    paywall_plan_yearly: "Jährlich",
+    paywall_plan_yearly_badge: "-30%",
+    manage_subscription_btn: "Abo verwalten",
+    checkout_error: "Bezahlung konnte nicht gestartet werden. Versuche es erneut.",
+    portal_error: "Abo-Verwaltung konnte nicht geöffnet werden. Versuche es erneut.",
+    stripe_activation_checking: "Zahlung wird bestätigt…",
+    stripe_activation_delay_title: "Das dauert länger als gewöhnlich",
+    stripe_activation_delay_desc: "Deine Zahlung ist eingegangen, die Aktivierung dauert aber etwas länger. Lade die App in einer Minute neu.",
+    stripe_activation_continue_btn: "Weiter",
     premium_reveal_title: "Premium aktiviert",
     premium_reveal_sub: "Unbegrenzte Pools, Einladungen und Messungen",
     premium_downgrade_title: "Zurück zur kostenlosen Version",
@@ -2431,7 +2470,7 @@ const TRANSLATIONS = {
     api_key_desc: "La tua chiave è memorizzata localmente.",
     premium_section: "VERSIONE",
     premium_label: "Versione illimitata",
-    premium_test: "Interruttore di test — nessun pagamento reale",
+    premium_test: "Abbonamento mensile o annuale",
     premium_desc: "Gratuito: 1 vasca (+ 2 vasche invitate), 1 misurazione al giorno. Illimitato: vasche e inviti illimitati, misurazioni illimitate, foto, prodotti.",
     delete_measures: "Elimina tutte le misurazioni per questa vasca",
     sensitive_zone: "ZONA SENSIBILE",
@@ -2670,7 +2709,20 @@ const TRANSLATIONS = {
     paywall_perk5: "Storico illimitato + report PDF",
     paywall_perk6: "Gestione stock prodotti",
     paywall_perk7: "Vasche e inviti illimitati",
-    paywall_test_note: "Questa è una versione di test. Nessun pagamento reale viene effettuato.",
+    paywall_test_note: "Pagamento sicuro tramite Stripe. Annullabile in qualsiasi momento.",
+    paywall_price_monthly: "2,99 € / mese",
+    paywall_price_yearly: "24,99 € / anno",
+    paywall_price_yearly_hint: "o 24,99 € / anno",
+    paywall_plan_monthly: "Mensile",
+    paywall_plan_yearly: "Annuale",
+    paywall_plan_yearly_badge: "-30%",
+    manage_subscription_btn: "Gestisci abbonamento",
+    checkout_error: "Impossibile avviare il pagamento. Riprova.",
+    portal_error: "Impossibile aprire la gestione dell'abbonamento. Riprova.",
+    stripe_activation_checking: "Conferma del pagamento in corso…",
+    stripe_activation_delay_title: "Sta impiegando più tempo del previsto",
+    stripe_activation_delay_desc: "Il pagamento è stato ricevuto, ma l'attivazione richiede un po' più di tempo. Riprova a ricaricare l'app tra un minuto.",
+    stripe_activation_continue_btn: "Continua",
     premium_reveal_title: "Premium attivato",
     premium_reveal_sub: "Piscine, inviti e misurazioni senza limiti",
     premium_downgrade_title: "Ritorno alla versione gratuita",
@@ -3126,7 +3178,7 @@ const TRANSLATIONS = {
     api_key_desc: "Tu clave se almacena localmente.",
     premium_section: "VERSIÓN",
     premium_label: "Versión ilimitada",
-    premium_test: "Interruptor de prueba — sin pago real",
+    premium_test: "Suscripción mensual o anual",
     premium_desc: "Gratuito: 1 piscina (+ 2 piscinas invitadas), 1 medición por día. Ilimitado: piscinas e invitaciones ilimitadas, mediciones ilimitadas, fotos, productos.",
     delete_measures: "Eliminar todas las mediciones de esta piscina",
     sensitive_zone: "ZONA SENSIBLE",
@@ -3365,7 +3417,20 @@ const TRANSLATIONS = {
     paywall_perk5: "Historial ilimitado + informe PDF",
     paywall_perk6: "Gestión de stock de productos",
     paywall_perk7: "Piscinas e invitaciones ilimitadas",
-    paywall_test_note: "Esta es una versión de prueba. No se realiza ningún pago real.",
+    paywall_test_note: "Pago seguro a través de Stripe. Cancelable en cualquier momento.",
+    paywall_price_monthly: "2,99 € / mes",
+    paywall_price_yearly: "24,99 € / año",
+    paywall_price_yearly_hint: "o 24,99 € / año",
+    paywall_plan_monthly: "Mensual",
+    paywall_plan_yearly: "Anual",
+    paywall_plan_yearly_badge: "-30%",
+    manage_subscription_btn: "Gestionar suscripción",
+    checkout_error: "No se pudo iniciar el pago. Inténtalo de nuevo.",
+    portal_error: "No se pudo abrir la gestión de la suscripción. Inténtalo de nuevo.",
+    stripe_activation_checking: "Confirmando tu pago…",
+    stripe_activation_delay_title: "Esto está tardando más de lo habitual",
+    stripe_activation_delay_desc: "Tu pago se ha recibido, pero la activación tarda un poco más. Intenta recargar la app en un minuto.",
+    stripe_activation_continue_btn: "Continuar",
     premium_reveal_title: "Premium activado",
     premium_reveal_sub: "Piscinas, invitaciones y mediciones sin límite",
     premium_downgrade_title: "Volver a la versión gratuita",
@@ -3821,7 +3886,7 @@ const TRANSLATIONS = {
     api_key_desc: "Sua chave é armazenada localmente.",
     premium_section: "VERSÃO",
     premium_label: "Versão ilimitada",
-    premium_test: "Interruptor de teste — sem pagamento real",
+    premium_test: "Assinatura mensal ou anual",
     premium_desc: "Gratuito: 1 piscina (+ 2 piscinas convidadas), 1 medição por dia. Ilimitado: piscinas e convites ilimitados, medições ilimitadas, fotos, produtos.",
     delete_measures: "Excluir todas as medições desta piscina",
     sensitive_zone: "ZONA SENSÍVEL",
@@ -4057,7 +4122,20 @@ const TRANSLATIONS = {
     paywall_perk5: "Histórico ilimitado + relatório PDF",
     paywall_perk6: "Gestão de stock de produtos",
     paywall_perk7: "Piscinas e convites ilimitados",
-    paywall_test_note: "Esta é uma versão de teste. Nenhum pagamento real é efetuado.",
+    paywall_test_note: "Pagamento seguro via Stripe. Cancelável a qualquer momento.",
+    paywall_price_monthly: "2,99 € / mês",
+    paywall_price_yearly: "24,99 € / ano",
+    paywall_price_yearly_hint: "ou 24,99 € / ano",
+    paywall_plan_monthly: "Mensal",
+    paywall_plan_yearly: "Anual",
+    paywall_plan_yearly_badge: "-30%",
+    manage_subscription_btn: "Gerir assinatura",
+    checkout_error: "Não foi possível iniciar o pagamento. Tenta novamente.",
+    portal_error: "Não foi possível abrir a gestão da assinatura. Tenta novamente.",
+    stripe_activation_checking: "A confirmar o teu pagamento…",
+    stripe_activation_delay_title: "Está a demorar mais do que o habitual",
+    stripe_activation_delay_desc: "O teu pagamento foi recebido, mas a ativação está a demorar um pouco mais. Tenta recarregar a app daqui a um minuto.",
+    stripe_activation_continue_btn: "Continuar",
     premium_reveal_title: "Premium ativado",
     premium_reveal_sub: "Piscinas, convites e medições sem limite",
     premium_downgrade_title: "Voltar à versão gratuita",
@@ -5448,7 +5526,11 @@ const FB = {
   sendVerification: async (user) => {
     if (!user) return;
     const idToken = await user.getIdToken();
-    const res = await fetch("https://poolgenai-proxy.support-poolgenai.workers.dev/send-verification-email", {
+    // v1.89.0 — Fix : cette route était codée en dur vers le Worker PROD,
+    // donc jamais atteinte correctement depuis TEST/DEV (idToken rejeté par
+    // vérification d'audience, aucun mail n'était jamais envoyé). Suit
+    // maintenant l'environnement courant comme le reste des appels au proxy.
+    const res = await fetch(`${PROXY_BASE_URL}/send-verification-email`, {
       method: "POST",
       headers: { "Authorization": `Bearer ${idToken}` },
     });
@@ -5647,7 +5729,8 @@ const FB = {
       ? await window._fbAuth.currentUser.getIdToken()
       : null;
     if (!idToken) throw new Error("Non authentifié");
-    const res = await fetch("https://poolgenai-proxy.support-poolgenai.workers.dev/account-data-request", {
+    // v1.89.0 — Fix : même bug que sendVerification, codé en dur vers PROD.
+    const res = await fetch(`${PROXY_BASE_URL}/account-data-request`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
       body: JSON.stringify({ action, uid, email }),
@@ -6219,7 +6302,10 @@ function PoolGenAIApp() {
     const token = new URLSearchParams(window.location.search).get("token");
     if (!token) return;
     setVerifyLinkStatus("verifying");
-    fetch("https://poolgenai-proxy.support-poolgenai.workers.dev/verify-email", {
+    // v1.89.0 — Fix : le token de vérification vit dans Firestore de
+    // l'environnement courant (test/dev/prod), pas toujours prod — sinon
+    // toujours "invalide" pour les comptes créés sur test/dev.
+    fetch(`${PROXY_BASE_URL}/verify-email`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token }),
@@ -6515,16 +6601,132 @@ function PoolGenAIApp() {
   const [showPaywall, setShowPaywall] = useState(false);
   // v1.69.0 — Écran plein cadre joué à l'activation du Premium (effet
   // effervescent), avant que l'app ne se ré-affiche déjà débloquée.
-  // v1.70.0 — Rejoué aussi à la désactivation (revealVariant "downgrade"),
-  // après confirmation explicite (showDowngradeConfirm).
+  // v1.90.0 — L'activation réelle passe maintenant par Stripe Checkout
+  // (redirection hors app) : ce reveal n'est plus déclenché directement
+  // depuis onActivate, mais automatiquement dès que isPremium passe de
+  // false à true pendant qu'on attend une confirmation (awaitingStripeActivation).
+  // Idem pour la désactivation (variant "downgrade") : plus de confirmation
+  // locale (PremiumDowngradeConfirmModal, abandonné — l'annulation réelle
+  // se fait désormais dans le portail Stripe), le reveal se déclenche tout
+  // seul dès que isPremium passe de true à false (webhook Stripe).
   const [showPremiumReveal, setShowPremiumReveal] = useState(false);
   const [revealVariant, setRevealVariant] = useState("activate");
-  const [showDowngradeConfirm, setShowDowngradeConfirm] = useState(false);
   const [paywallSource, setPaywallSource] = useState(null);
   function openPaywall(source) {
     track("paywall_shown", { source: source || "unknown" });
     setPaywallSource(source || null);
     setShowPaywall(true);
+  }
+
+  // v1.90.0 — Phase C Stripe : démarrage du Checkout (mensuel/annuel) et
+  // ouverture du portail de gestion d'abonnement. Les deux routes exigent
+  // un ID token Firebase (Authorization: Bearer) et renvoient { url } vers
+  // lequel on redirige la page entière (page Stripe hébergée, pas un modal).
+  const [checkoutBusy, setCheckoutBusy] = useState(false);
+  const [checkoutError, setCheckoutError] = useState(null);
+  const [portalBusy, setPortalBusy] = useState(false);
+  const [portalError, setPortalError] = useState(null);
+  const [awaitingStripeActivation, setAwaitingStripeActivation] = useState(false);
+  const [stripeActivationTimedOut, setStripeActivationTimedOut] = useState(false);
+  const awaitingStripeActivationRef = useRef(false);
+
+  // v1.92.0 — Fix : si l'utilisateur fait "retour arrière" depuis la page
+  // Stripe Checkout ou le portail Stripe, la plupart des navigateurs
+  // restaurent la PWA depuis le bfcache (état JS gelé tel qu'avant la
+  // redirection) plutôt que de recharger la page. checkoutBusy/portalBusy
+  // restaient alors bloqués à true pour toujours (on ne les remettait jamais
+  // à false avant la redirection, volontairement, puisque la page était
+  // censée quitter l'app) — ce qui verrouillait le modal d'abonnement.
+  // event.persisted === true est le signal fiable d'une restauration bfcache.
+  useEffect(() => {
+    function onPageShow(e) {
+      if (e.persisted) {
+        setCheckoutBusy(false);
+        setPortalBusy(false);
+      }
+    }
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
+
+  // ── Retour de Stripe Checkout (?stripe=success|cancel) ──
+  // v1.90.0 — success : on attend la confirmation isPremium (webhook Stripe
+  // + snapshot Firestore) avant d'afficher le reveal, plutôt que de faire
+  // confiance au seul retour de navigation (le paiement peut encore être
+  // en cours de traitement côté Stripe/webhook à cet instant précis).
+  // Fix : ces 2 effets référencent des states déclarés juste au-dessus —
+  // ils doivent rester après cette déclaration (une 1ère version placée
+  // plus haut dans le composant provoquait un ReferenceError/TDZ au chargement,
+  // "Cannot access 'awaitingStripeActivation' before initialization").
+  useEffect(() => {
+    const stripeParam = new URLSearchParams(window.location.search).get("stripe");
+    if (!stripeParam) return;
+    if (stripeParam === "success") {
+      awaitingStripeActivationRef.current = true;
+      setAwaitingStripeActivation(true);
+    } else if (stripeParam === "cancel") {
+      track("upgrade_checkout_cancelled");
+    }
+    const cleanUrl = window.location.origin + window.location.pathname;
+    window.history.replaceState({}, "", cleanUrl);
+  }, []);
+
+  // Si la confirmation traîne (webhook lent), affiche un message après 15s
+  // plutôt que de laisser l'écran d'attente tourner indéfiniment.
+  useEffect(() => {
+    if (!awaitingStripeActivation) { setStripeActivationTimedOut(false); return; }
+    const id = setTimeout(() => setStripeActivationTimedOut(true), 15000);
+    return () => clearTimeout(id);
+  }, [awaitingStripeActivation]);
+
+  async function handleStartCheckout(plan) {
+    if (!authUser) return;
+    setCheckoutError(null);
+    setCheckoutBusy(true);
+    track("upgrade_checkout_started", { plan });
+    try {
+      const idToken = await authUser.getIdToken();
+      const res = await fetch(`${PROXY_BASE_URL}/stripe/create-checkout-session`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ plan }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.url) {
+        setCheckoutError(data.error || t("checkout_error"));
+        setCheckoutBusy(false);
+        return;
+      }
+      window.location.href = data.url;
+      // Pas de setCheckoutBusy(false) ici : la page quitte l'app.
+    } catch (e) {
+      setCheckoutError(t("checkout_error"));
+      setCheckoutBusy(false);
+    }
+  }
+
+  async function handleOpenPortal() {
+    if (!authUser) return;
+    setPortalError(null);
+    setPortalBusy(true);
+    track("manage_subscription_opened");
+    try {
+      const idToken = await authUser.getIdToken();
+      const res = await fetch(`${PROXY_BASE_URL}/stripe/create-portal-session`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.url) {
+        setPortalError(data.error || t("portal_error"));
+        setPortalBusy(false);
+        return;
+      }
+      window.location.href = data.url;
+    } catch (e) {
+      setPortalError(t("portal_error"));
+      setPortalBusy(false);
+    }
   }
   const [showAddPool, setShowAddPool] = useState(false);
   const [lang, setLang] = useState("fr");
@@ -6579,7 +6781,7 @@ function PoolGenAIApp() {
   const [validatingSelectedRecs, setValidatingSelectedRecs] = useState(null);
   const [showReport, setShowReport] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState(null);
-  const [apiKey, setApiKey] = useState("https://poolgenai-proxy.support-poolgenai.workers.dev");
+  const [apiKey, setApiKey] = useState(PROXY_BASE_URL); // v1.89.0 — cohérent avec l'environnement dès le premier rendu
   const [apiProvider, setApiProvider] = useState("anthropic"); // "anthropic" | "openai"
   const [aiEnabled, setAiEnabled] = useState(false);
   // v1.36.0 — Lot B : opt-out de la contribution aux données de calibration
@@ -6978,6 +7180,47 @@ function PoolGenAIApp() {
     return () => unsub();
   }, [authUser?.uid]);
 
+  // v1.90.0 — Déclenche le reveal plein écran directement à partir des
+  // vraies transitions isPremium (webhook Stripe → Firestore → ce
+  // snapshot), plutôt que depuis un clic local : l'activation comme la
+  // désactivation se décident maintenant côté Stripe (Checkout, portail),
+  // hors de l'app. "activate" ne se joue que si on l'attendait vraiment
+  // (retour de Checkout, awaitingStripeActivationRef) pour ne pas se
+  // déclencher sur un simple rechargement d'un compte déjà premium.
+  const prevIsPremiumRef = useRef(isPremium);
+  useEffect(() => {
+    const prev = prevIsPremiumRef.current;
+    if (prev === false && isPremium === true && awaitingStripeActivationRef.current) {
+      awaitingStripeActivationRef.current = false;
+      setAwaitingStripeActivation(false);
+      setRevealVariant("activate");
+      setShowPremiumReveal(true);
+      track("upgrade_activated", { via: "stripe" });
+      setApiKey(PROXY_BASE_URL); // v1.89.0 — suit l'environnement courant, pas figé sur PROD.
+      // v1.91.0 — À chaque activation premium confirmée par Stripe, l'analyse
+      // IA est réactivée par défaut (même logique que manageStock ci-dessous).
+      // Choix assumé : un downgrade puis un re-upgrade repasse aiEnabled à
+      // true, sans mémoriser un choix de désactivation antérieur.
+      setAiEnabled(true);
+      // v1.29.7 — À l'activation, la gestion de stock s'active par défaut sur le
+      // bassin actif ; on garde les produits (nom, dosage) mais on remet leur
+      // pourcentage de stock à 0 pour forcer une saisie réelle.
+      if (activePool) {
+        updatePool(activePool.id, { manageStock: true });
+        setProducts((prevProducts) =>
+          prevProducts.map((p) =>
+            (p.poolId || "default") === activePool.id ? { ...p, stockPercent: 0 } : p
+          )
+        );
+      }
+    } else if (prev === true && isPremium === false) {
+      setRevealVariant("downgrade");
+      setShowPremiumReveal(true);
+      track("premium_deactivated", { via: "stripe" });
+    }
+    prevIsPremiumRef.current = isPremium;
+  }, [isPremium]);
+
   function syncConfig(partial, errorKey) {
     if (!dataUid || !FB.ready() || teardownRef.current) return;
     syncPendingRef.current = { ...syncPendingRef.current, ...partial };
@@ -7352,10 +7595,11 @@ function PoolGenAIApp() {
       } catch (e) {}
       try {
         const ak = await window.storage.get(STORAGE_KEYS.apiKey);
-        // Toujours forcer l'URL proxy officielle — ignore toute valeur stockée en IndexedDB
-        const FORCED_PROXY = "https://poolgenai-proxy.support-poolgenai.workers.dev";
-        setApiKey(FORCED_PROXY);
-        window.storage.set(STORAGE_KEYS.apiKey, JSON.stringify(FORCED_PROXY)).catch(() => {});
+        // v1.89.0 — Fix : forçait PROD sur les 3 environnements. Force
+        // maintenant l'URL officielle DE L'ENVIRONNEMENT COURANT (ignore
+        // toujours toute valeur stockée en IndexedDB, même logique qu'avant).
+        setApiKey(PROXY_BASE_URL);
+        window.storage.set(STORAGE_KEYS.apiKey, JSON.stringify(PROXY_BASE_URL)).catch(() => {});
         const aie = await window.storage.get(STORAGE_KEYS.aiEnabled);
         if (aie?.value === "true") setAiEnabled(true);
       } catch (e) {}
@@ -8345,6 +8589,34 @@ function PoolGenAIApp() {
         </div>
       </div>
     )}
+    {awaitingStripeActivation && (
+      <div style={{ position: "fixed", inset: 0, zIndex: 3200, background: "rgba(10,30,60,0.94)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+        <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px var(--brand-primary)33" }}>
+          {!stripeActivationTimedOut ? (
+            <>
+              <Loader2 size={34} className="spin" style={{ marginBottom: 10, color: "var(--brand-primary)" }} />
+              <div style={{ fontSize: 14, color: "var(--brand-text-secondary)" }}>{t("stripe_activation_checking")}</div>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: 34, marginBottom: 10 }}>⏳</div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 8 }}>
+                {t("stripe_activation_delay_title")}
+              </div>
+              <div style={{ fontSize: 13.5, color: "var(--brand-text-secondary)", marginBottom: 18, lineHeight: 1.5 }}>
+                {t("stripe_activation_delay_desc")}
+              </div>
+              <button
+                onClick={() => { awaitingStripeActivationRef.current = false; setAwaitingStripeActivation(false); }}
+                style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: "pointer" }}
+              >
+                {t("stripe_activation_continue_btn")}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    )}
     {authUser && inviteLinkStatus && (
       <div style={{ position: "fixed", inset: 0, zIndex: 3200, background: "rgba(10,30,60,0.94)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
         <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px var(--brand-primary)33" }}>
@@ -8822,7 +9094,9 @@ function PoolGenAIApp() {
             onWantPremium={() => openPaywall()}
             isPremium={isPremium}
             setIsPremium={setIsPremium}
-            onWantDowngrade={() => setShowDowngradeConfirm(true)}
+            onWantManageSubscription={handleOpenPortal}
+            portalBusy={portalBusy}
+            portalError={portalError}
             onReplayOnboarding={() => setShowOnboarding(true)}
             aiEnabled={aiEnabled}
             setAiEnabled={setAiEnabled}
@@ -8950,51 +9224,10 @@ function PoolGenAIApp() {
         <PaywallModal
           lang={lang}
           source={paywallSource}
-          onClose={() => setShowPaywall(false)}
-          onActivate={() => {
-            track("upgrade_activated");
-            setIsPremium(true);
-            setApiKey("https://poolgenai-proxy.support-poolgenai.workers.dev");
-            // v1.29.7 — À l'activation du mode illimité (test), la gestion de stock
-            // s'active par défaut sur le bassin actif, mais la liste des produits EN
-            // STOCK part vide : on garde les produits (nom, dosage — nécessaires au
-            // calcul des quantités du plan de traitement), on remet juste leur
-            // pourcentage de stock à 0. Force une saisie réelle du stock au lieu de
-            // partir sur les 100% par défaut des produits pré-remplis.
-            if (activePool) {
-              updatePool(activePool.id, { manageStock: true });
-              setProducts((prev) =>
-                prev.map((p) =>
-                  (p.poolId || "default") === activePool.id ? { ...p, stockPercent: 0 } : p
-                )
-              );
-            }
-            // v1.69.0 — L'activation réelle est déjà faite ci-dessus (donc pas
-            // de flash/incohérence si l'utilisateur ferme l'overlay tôt) ;
-            // l'overlay masque juste la transition le temps de l'effet.
-            setShowPaywall(false);
-            setRevealVariant("activate");
-            setShowPremiumReveal(true);
-          }}
-        />
-      )}
-
-      {showDowngradeConfirm && (
-        <PremiumDowngradeConfirmModal
-          lang={lang}
-          onClose={() => setShowDowngradeConfirm(false)}
-          onConfirm={() => {
-            track("downgrade_confirmed");
-            setIsPremium(false);
-            // v1.76.0 — Écrit réellement false côté serveur (autorisé par la
-            // règle Firestore, direction sûre) : sans ça, si un true traînait
-            // en base d'un test antérieur, le prochain snapshot onConfig
-            // réaffirmait indéfiniment true, rendant le toggle local impuissant.
-            syncOwnConfig({ isPremium: false });
-            setShowDowngradeConfirm(false);
-            setRevealVariant("downgrade");
-            setShowPremiumReveal(true);
-          }}
+          busy={checkoutBusy}
+          error={checkoutError}
+          onClose={() => { if (!checkoutBusy) { setShowPaywall(false); setCheckoutError(null); } }}
+          onActivate={(plan) => handleStartCheckout(plan)}
         />
       )}
 
@@ -14205,7 +14438,7 @@ function AccountDataRequestScreen({ lang, authUser, onClose, onSubmit }) {
   );
 }
 
-function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, viewContext, onDeleteAllMeasures: onDeleteAllMeasuresRaw, orphanedCount, onRepairOrphanedData, poolMeasureCount, onGenerateReport, onWantPremiumForReport, onWantPremium, isPremium, setIsPremium, onWantDowngrade, onReplayOnboarding, aiEnabled, setAiEnabled, calibrationContribution, setCalibrationContribution, lang, setLang, authUser, onSignOut, onSignIn, onDeleteAccount, dataConsent, onRevokeDataConsent, cguAcceptedDate, myPseudo }) {
+function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, viewContext, onDeleteAllMeasures: onDeleteAllMeasuresRaw, orphanedCount, onRepairOrphanedData, poolMeasureCount, onGenerateReport, onWantPremiumForReport, onWantPremium, isPremium, setIsPremium, onWantManageSubscription, portalBusy, portalError, onReplayOnboarding, aiEnabled, setAiEnabled, calibrationContribution, setCalibrationContribution, lang, setLang, authUser, onSignOut, onSignIn, onDeleteAccount, dataConsent, onRevokeDataConsent, cguAcceptedDate, myPseudo }) {
   const [editingPool, setEditingPool] = useState(null);
   const [showLangPicker, setShowLangPicker] = useState(false);
   const [pendingLang, setPendingLang] = useState(lang);
@@ -14427,19 +14660,25 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
             </div>
           </div>
         </div>
-        <ToggleSwitch
-          checked={isPremium}
-          onChange={(val) => {
-            if (val) {
-              onWantPremium();
-            } else {
-              // v1.70.0 — Ne coupe plus isPremium directement : passe par un
-              // écran de confirmation qui rappelle ce qui sera perdu.
-              onWantDowngrade();
-            }
-          }}
-        />
+        {/* v1.90.0 — L'annulation réelle d'un abonnement Stripe se fait dans le
+            portail Stripe (bouton "Gérer mon abonnement"), plus via un toggle
+            local qui ne coupait qu'un champ Firestore côté client. */}
+        {isPremium ? (
+          <button
+            type="button"
+            onClick={onWantManageSubscription}
+            disabled={portalBusy}
+            style={{ padding: "8px 14px", borderRadius: 10, border: "1.5px solid var(--brand-primary)", background: "#fff", color: "var(--brand-primary)", fontWeight: 600, fontSize: 12.5, cursor: portalBusy ? "default" : "pointer", whiteSpace: "nowrap", opacity: portalBusy ? 0.6 : 1 }}
+          >
+            {portalBusy ? "…" : t("manage_subscription_btn")}
+          </button>
+        ) : (
+          <ToggleSwitch checked={false} onChange={() => onWantPremium()} />
+        )}
       </div>
+      {portalError && (
+        <div style={{ fontSize: 12, color: "#c0392b", marginTop: -8, marginBottom: 10 }}>{portalError}</div>
+      )}
 
       <p style={styles.helpText}>
 {t("premium_desc")}
@@ -14832,8 +15071,9 @@ function OnboardingWizard({ onDone, lang }) {
   );
 }
 
-function PaywallModal({ onClose, onActivate, lang, source }) {
+function PaywallModal({ onClose, onActivate, lang, source, busy, error }) {
   const t = useT(lang || "fr");
+  const [plan, setPlan] = useState("monthly"); // v1.90.0 — mensuel présélectionné
   const perks = [
     t("paywall_perk1"),
     t("paywall_perk2"),
@@ -14862,8 +15102,28 @@ function PaywallModal({ onClose, onActivate, lang, source }) {
       )}
       <div style={styles.paywallHero}>
         <Crown size={30} color="#a8721a" />
-        <div style={styles.paywallPrice}>2,99 € / mois</div>
-        <div style={styles.paywallPriceSub}>ou 19,99 € / an</div>
+        <div style={styles.paywallPrice}>
+          {plan === "yearly" ? t("paywall_price_yearly") : t("paywall_price_monthly")}
+        </div>
+        {plan === "monthly" && (
+          <div style={styles.paywallPriceSub}>{t("paywall_price_yearly_hint")}</div>
+        )}
+      </div>
+      {/* v1.90.0 — Sélecteur mensuel/annuel : détermine le price ID envoyé à
+          /stripe/create-checkout-session (voir handleStartCheckout). */}
+      <div style={styles.segmentedControl}>
+        {["monthly", "yearly"].map((p) => (
+          <button
+            key={p}
+            type="button"
+            onClick={() => setPlan(p)}
+            disabled={busy}
+            style={{ ...styles.segmentedBtn, ...(plan === p ? styles.segmentedBtnActive : {}) }}
+          >
+            {t(p === "monthly" ? "paywall_plan_monthly" : "paywall_plan_yearly")}
+            {p === "yearly" && <span style={{ marginLeft: 5, opacity: 0.8 }}>{t("paywall_plan_yearly_badge")}</span>}
+          </button>
+        ))}
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 9, margin: "16px 2px" }}>
         {perks.map((perk, i) => (
@@ -14873,8 +15133,17 @@ function PaywallModal({ onClose, onActivate, lang, source }) {
           </div>
         ))}
       </div>
-      <button style={{ ...styles.primaryBtn, background: "#1ca7d1" }} onClick={onActivate}>
-        {t("paywall_btn")}
+      {error && (
+        <div style={{ fontSize: 12.5, color: "#c0392b", background: "#fdf0ef", border: "1px solid #f3c9c4", borderRadius: 10, padding: "8px 12px", marginBottom: 12, textAlign: "left" }}>
+          {error}
+        </div>
+      )}
+      <button
+        style={{ ...styles.primaryBtn, background: "#1ca7d1", opacity: busy ? 0.7 : 1, cursor: busy ? "default" : "pointer" }}
+        onClick={() => !busy && onActivate(plan)}
+        disabled={busy}
+      >
+        {busy ? "…" : t("paywall_btn")}
       </button>
       <p style={{ ...styles.helpText, textAlign: "center" }}>
         {t("paywall_test_note")}
