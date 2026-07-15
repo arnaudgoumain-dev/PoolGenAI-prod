@@ -1,4 +1,5 @@
 {
+  "id": "com.poolgenai.app",
   "name": "PoolGenAI - Suivi piscine",
   "short_name": "PoolGenAI",
   "description": "Suivi chimique et plan de traitement pour bassins de piscine",
@@ -32,6 +33,50 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshots/screenshot-dashboard-narrow.png",
+      "sizes": "800x1408",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Tableau de bord — dernière mesure et plan de traitement"
+    },
+    {
+      "src": "screenshots/screenshot-plan-traitement-narrow.png",
+      "sizes": "800x1408",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Plan de traitement étape par étape"
+    },
+    {
+      "src": "screenshots/screenshot-historique-narrow.png",
+      "sizes": "800x1408",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Historique et évolution des paramètres"
+    },
+    {
+      "src": "screenshots/screenshot-produits-narrow.png",
+      "sizes": "800x1408",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Suivi des produits et du stock"
+    },
+    {
+      "src": "screenshots/screenshot-dashboard-wide.png",
+      "sizes": "2560x1600",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Tableau de bord sur grand écran"
+    },
+    {
+      "src": "screenshots/screenshot-rapport-wide.png",
+      "sizes": "2560x1600",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Rapport détaillé d'évolution des paramètres"
     }
   ]
 }
