@@ -9,6 +9,12 @@
   "background_color": "#f5f8f7",
   "theme_color": "#0b3f3a",
   "orientation": "portrait",
+  "dir": "ltr",
+  "categories": ["productivity", "lifestyle", "utilities"],
+  "display_override": ["standalone", "minimal-ui"],
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
   "icons": [
     {
       "src": "icon-192.png",
