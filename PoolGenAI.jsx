@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.92.0";
+const APP_VERSION = "1.93.0";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 
 const TRANSLATIONS = {
@@ -600,12 +600,18 @@ const TRANSLATIONS = {
     premium_downgrade_cancel_btn: "Annuler et continuer Premium",
     onboarding_step1_title: "Bienvenue sur PoolGenAI",
     onboarding_step1_text: "Suis la chimie de ta piscine facilement : mesures, dosages, plan de traitement personnalisé.",
-    onboarding_step2_title: "Deux façons de mesurer",
-    onboarding_step2_text: "Photo de ton dispositif de mesure (bandelette ou photomètre) : l'app analyse et remplit les champs automatiquement.\n\nOu saisie manuelle des valeurs, à tout moment.",
+    onboarding_step2_title: "Une photo suffit",
+    onboarding_step2_text: "Prends en photo ta bandelette ou l'écran de ton photomètre. L'IA lit les couleurs et remplit les champs à ta place — plus besoin de comparer à l'œil.",
     onboarding_step3_title: "Des résultats clairs",
-    onboarding_step3_text: "Chaque paramètre est comparé à sa cible. L'app te propose alors les doses à appliquer.",
-    onboarding_step4_title: "Prêt à commencer",
-    onboarding_step4_text: "Ajoute ta première mesure quand tu veux.\n\nBassins illimités, rapport PDF et plus : découvre Premium plus tard dans Réglages.",
+    onboarding_step3_text: "Chaque paramètre est comparé à sa cible : pH, chlore, TAC, stabilisant... Un code couleur simple te dit en un coup d'œil ce qui va, et ce qui doit être corrigé.",
+    onboarding_step4_title: "Un plan priorisé",
+    onboarding_step4_text: "L'app détermine l'ordre des traitements à appliquer et les délais à respecter entre chaque étape, pour ne pas gâcher un traitement en enchaînant trop vite.",
+    onboarding_step5_title: "Applique en confiance",
+    onboarding_step5_text: "La dose exacte est calculée pour le volume de ton bassin et le produit que tu utilises. Coche l'étape une fois faite, l'app passe à la suivante.",
+    onboarding_step6_title: "Suis l'évolution",
+    onboarding_step6_text: "Visualise tes mesures dans le temps pour repérer les tendances et anticiper les dérives avant qu'elles ne deviennent un problème.",
+    onboarding_step7_title: "Gère ton stock",
+    onboarding_step7_text: "Suis les quantités restantes de chaque produit et reçois une alerte avant la rupture.\n\nAjoute ta première mesure quand tu veux. Bassins illimités, rapport PDF et plus : découvre Premium plus tard dans Réglages.",
     onboarding_step3_legend_bad: "Trop haut ou trop bas",
     onboarding_next: "Suivant",
     onboarding_skip: "Passer",
@@ -1313,12 +1319,18 @@ const TRANSLATIONS = {
     premium_downgrade_cancel_btn: "Cancel and keep Premium",
     onboarding_step1_title: "Welcome to PoolGenAI",
     onboarding_step1_text: "Track your pool's chemistry with ease: readings, dosing, and a personalized treatment plan.",
-    onboarding_step2_title: "Two ways to measure",
-    onboarding_step2_text: "Photo of your measuring device (test strip or photometer): the app analyzes it and fills in the fields automatically.\n\nOr enter the values manually, anytime.",
+    onboarding_step2_title: "One photo is enough",
+    onboarding_step2_text: "Take a photo of your test strip or photometer screen. The AI reads the colors and fills in the fields for you — no more eyeballing a comparison chart.",
     onboarding_step3_title: "Clear results",
-    onboarding_step3_text: "Each parameter is compared to its target. The app then suggests the doses to apply.",
-    onboarding_step4_title: "Ready to start",
-    onboarding_step4_text: "Add your first reading whenever you like.\n\nUnlimited pools, PDF reports and more: discover Premium later in Settings.",
+    onboarding_step3_text: "Each parameter is compared to its target: pH, chlorine, TAC, stabilizer... A simple color code tells you at a glance what's fine, and what needs correcting.",
+    onboarding_step4_title: "A prioritized plan",
+    onboarding_step4_text: "The app works out the order to apply treatments and the wait time between each step, so you don't waste a treatment by rushing the next one.",
+    onboarding_step5_title: "Apply with confidence",
+    onboarding_step5_text: "The exact dose is calculated for your pool's volume and the product you're using. Check off the step once it's done, and the app moves to the next one.",
+    onboarding_step6_title: "Track the trend",
+    onboarding_step6_text: "See your readings over time to spot trends and catch drift before it becomes a problem.",
+    onboarding_step7_title: "Manage your stock",
+    onboarding_step7_text: "Track how much of each product you have left and get an alert before you run out.\n\nAdd your first reading whenever you like. Unlimited pools, PDF reports and more: discover Premium later in Settings.",
     onboarding_step3_legend_bad: "Too high or too low",
     onboarding_next: "Next",
     onboarding_skip: "Skip",
@@ -2025,12 +2037,18 @@ const TRANSLATIONS = {
     premium_downgrade_cancel_btn: "Abbrechen und Premium behalten",
     onboarding_step1_title: "Willkommen bei PoolGenAI",
     onboarding_step1_text: "Behalte die Chemie deines Pools im Blick: Messungen, Dosierung und ein persönlicher Behandlungsplan.",
-    onboarding_step2_title: "Zwei Messmethoden",
-    onboarding_step2_text: "Foto deines Messgeräts (Teststreifen oder Photometer): Die App analysiert es und füllt die Felder automatisch aus.\n\nOder gib die Werte jederzeit manuell ein.",
+    onboarding_step2_title: "Ein Foto genügt",
+    onboarding_step2_text: "Fotografiere deinen Teststreifen oder das Display deines Photometers. Die KI liest die Farben und füllt die Felder für dich aus — kein Vergleichen von Hand mehr.",
     onboarding_step3_title: "Klare Ergebnisse",
-    onboarding_step3_text: "Jeder Parameter wird mit seinem Zielwert verglichen. Die App schlägt dir dann die passende Dosierung vor.",
-    onboarding_step4_title: "Bereit loszulegen",
-    onboarding_step4_text: "Füge deine erste Messung hinzu, wann immer du möchtest.\n\nUnbegrenzte Pools, PDF-Berichte und mehr: entdecke Premium später in den Einstellungen.",
+    onboarding_step3_text: "Jeder Parameter wird mit seinem Zielwert verglichen: pH, Chlor, TAC, Stabilisator... Eine einfache Farbcodierung zeigt dir auf einen Blick, was passt und was korrigiert werden muss.",
+    onboarding_step4_title: "Ein priorisierter Plan",
+    onboarding_step4_text: "Die App legt die Reihenfolge der Behandlungen und die Wartezeiten zwischen den Schritten fest, damit du keine Behandlung durch zu schnelles Vorgehen verschwendest.",
+    onboarding_step5_title: "Sicher anwenden",
+    onboarding_step5_text: "Die genaue Dosis wird für das Volumen deines Pools und das verwendete Produkt berechnet. Hake den Schritt ab, sobald er erledigt ist, und die App geht zum nächsten über.",
+    onboarding_step6_title: "Verfolge den Verlauf",
+    onboarding_step6_text: "Sieh dir deine Messungen im Zeitverlauf an, um Trends zu erkennen und Abweichungen zu bemerken, bevor sie zum Problem werden.",
+    onboarding_step7_title: "Behalte deinen Bestand im Blick",
+    onboarding_step7_text: "Verfolge die verbleibenden Mengen jedes Produkts und erhalte eine Warnung, bevor der Vorrat zur Neige geht.\n\nFüge deine erste Messung hinzu, wann immer du möchtest. Unbegrenzte Pools, PDF-Berichte und mehr: entdecke Premium später in den Einstellungen.",
     onboarding_step3_legend_bad: "Zu hoch oder zu niedrig",
     onboarding_next: "Weiter",
     onboarding_skip: "Überspringen",
@@ -2733,12 +2751,18 @@ const TRANSLATIONS = {
     premium_downgrade_cancel_btn: "Annulla e mantieni Premium",
     onboarding_step1_title: "Benvenuto su PoolGenAI",
     onboarding_step1_text: "Tieni sotto controllo la chimica della tua piscina: misurazioni, dosaggi e un piano di trattamento personalizzato.",
-    onboarding_step2_title: "Due modi per misurare",
-    onboarding_step2_text: "Foto del tuo dispositivo di misurazione (striscia reattiva o fotometro): l'app lo analizza e compila i campi automaticamente.\n\nOppure inserisci i valori manualmente, in qualsiasi momento.",
+    onboarding_step2_title: "Basta una foto",
+    onboarding_step2_text: "Fotografa la tua striscia reattiva o lo schermo del fotometro. L'IA legge i colori e compila i campi al posto tuo — niente più confronti a occhio.",
     onboarding_step3_title: "Risultati chiari",
-    onboarding_step3_text: "Ogni parametro viene confrontato con il suo obiettivo. L'app ti suggerisce quindi le dosi da applicare.",
-    onboarding_step4_title: "Pronto per iniziare",
-    onboarding_step4_text: "Aggiungi la tua prima misurazione quando vuoi.\n\nPiscine illimitate, report PDF e altro: scopri Premium più avanti nelle Impostazioni.",
+    onboarding_step3_text: "Ogni parametro viene confrontato con il suo obiettivo: pH, cloro, TAC, stabilizzante... Un semplice codice colore ti dice a colpo d'occhio cosa va bene e cosa va corretto.",
+    onboarding_step4_title: "Un piano con priorità",
+    onboarding_step4_text: "L'app stabilisce l'ordine dei trattamenti da applicare e i tempi di attesa tra una fase e l'altra, così da non sprecare un trattamento andando troppo di fretta.",
+    onboarding_step5_title: "Applica con fiducia",
+    onboarding_step5_text: "La dose esatta viene calcolata in base al volume della tua piscina e al prodotto che usi. Spunta la fase una volta completata, l'app passa alla successiva.",
+    onboarding_step6_title: "Segui l'andamento",
+    onboarding_step6_text: "Visualizza le tue misurazioni nel tempo per individuare le tendenze e anticipare gli squilibri prima che diventino un problema.",
+    onboarding_step7_title: "Gestisci le scorte",
+    onboarding_step7_text: "Tieni traccia delle quantità rimanenti di ogni prodotto e ricevi un avviso prima che finisca.\n\nAggiungi la tua prima misurazione quando vuoi. Piscine illimitate, report PDF e altro: scopri Premium più avanti nelle Impostazioni.",
     onboarding_step3_legend_bad: "Troppo alto o troppo basso",
     onboarding_next: "Avanti",
     onboarding_skip: "Salta",
@@ -3441,12 +3465,18 @@ const TRANSLATIONS = {
     premium_downgrade_cancel_btn: "Cancelar y mantener Premium",
     onboarding_step1_title: "Bienvenido a PoolGenAI",
     onboarding_step1_text: "Controla la química de tu piscina fácilmente: mediciones, dosis y un plan de tratamiento personalizado.",
-    onboarding_step2_title: "Dos formas de medir",
-    onboarding_step2_text: "Foto de tu dispositivo de medición (tira reactiva o fotómetro): la app lo analiza y rellena los campos automáticamente.\n\nO introduce los valores manualmente, cuando quieras.",
+    onboarding_step2_title: "Con una foto basta",
+    onboarding_step2_text: "Haz una foto de tu tira reactiva o de la pantalla de tu fotómetro. La IA lee los colores y rellena los campos por ti — se acabó comparar a ojo.",
     onboarding_step3_title: "Resultados claros",
-    onboarding_step3_text: "Cada parámetro se compara con su objetivo. La app te sugiere entonces las dosis a aplicar.",
-    onboarding_step4_title: "Listo para empezar",
-    onboarding_step4_text: "Añade tu primera medición cuando quieras.\n\nPiscinas ilimitadas, informes en PDF y más: descubre Premium más tarde en Ajustes.",
+    onboarding_step3_text: "Cada parámetro se compara con su objetivo: pH, cloro, TAC, estabilizante... Un código de color sencillo te dice de un vistazo qué está bien y qué hay que corregir.",
+    onboarding_step4_title: "Un plan priorizado",
+    onboarding_step4_text: "La app determina el orden de los tratamientos a aplicar y los tiempos de espera entre cada paso, para que no desperdicies un tratamiento por ir demasiado rápido.",
+    onboarding_step5_title: "Aplica con confianza",
+    onboarding_step5_text: "La dosis exacta se calcula según el volumen de tu piscina y el producto que uses. Marca el paso una vez hecho, y la app pasa al siguiente.",
+    onboarding_step6_title: "Sigue la evolución",
+    onboarding_step6_text: "Visualiza tus mediciones a lo largo del tiempo para detectar tendencias y anticipar desviaciones antes de que se conviertan en un problema.",
+    onboarding_step7_title: "Gestiona tu stock",
+    onboarding_step7_text: "Controla las cantidades restantes de cada producto y recibe una alerta antes de que se agote.\n\nAñade tu primera medición cuando quieras. Piscinas ilimitadas, informes en PDF y más: descubre Premium más tarde en Ajustes.",
     onboarding_step3_legend_bad: "Demasiado alto o demasiado bajo",
     onboarding_next: "Siguiente",
     onboarding_skip: "Omitir",
@@ -4146,12 +4176,18 @@ const TRANSLATIONS = {
     premium_downgrade_cancel_btn: "Cancelar e manter Premium",
     onboarding_step1_title: "Bem-vindo ao PoolGenAI",
     onboarding_step1_text: "Acompanha a química da tua piscina com facilidade: medições, dosagens e um plano de tratamento personalizado.",
-    onboarding_step2_title: "Duas formas de medir",
-    onboarding_step2_text: "Foto do teu dispositivo de medição (tira reagente ou fotómetro): a app analisa e preenche os campos automaticamente.\n\nOu introduz os valores manualmente, a qualquer momento.",
+    onboarding_step2_title: "Basta uma foto",
+    onboarding_step2_text: "Tira uma foto da tua tira reagente ou do ecrã do fotómetro. A IA lê as cores e preenche os campos por ti — acabou-se comparar a olho.",
     onboarding_step3_title: "Resultados claros",
-    onboarding_step3_text: "Cada parâmetro é comparado com o seu objetivo. A app sugere então as doses a aplicar.",
-    onboarding_step4_title: "Pronto para começar",
-    onboarding_step4_text: "Adiciona a tua primeira medição quando quiseres.\n\nPiscinas ilimitadas, relatório PDF e mais: descobre o Premium mais tarde em Definições.",
+    onboarding_step3_text: "Cada parâmetro é comparado com o seu objetivo: pH, cloro, TAC, estabilizante... Um código de cores simples diz-te num relance o que está bem e o que precisa de correção.",
+    onboarding_step4_title: "Um plano priorizado",
+    onboarding_step4_text: "A app determina a ordem dos tratamentos a aplicar e os tempos de espera entre cada etapa, para não desperdiçares um tratamento por avançares depressa demais.",
+    onboarding_step5_title: "Aplica com confiança",
+    onboarding_step5_text: "A dose exata é calculada para o volume da tua piscina e o produto que usas. Marca a etapa como feita, e a app avança para a seguinte.",
+    onboarding_step6_title: "Acompanha a evolução",
+    onboarding_step6_text: "Visualiza as tuas medições ao longo do tempo para identificar tendências e antecipar desvios antes que se tornem um problema.",
+    onboarding_step7_title: "Gere o teu stock",
+    onboarding_step7_text: "Acompanha as quantidades restantes de cada produto e recebe um alerta antes de esgotar.\n\nAdiciona a tua primeira medição quando quiseres. Piscinas ilimitadas, relatório PDF e mais: descobre o Premium mais tarde em Definições.",
     onboarding_step3_legend_bad: "Demasiado alto ou demasiado baixo",
     onboarding_next: "Seguinte",
     onboarding_skip: "Saltar",
@@ -15000,55 +15036,67 @@ function DeleteReauthModal({ onClose, onConfirm, busy, error, lang }) {
   );
 }
 
-// v1.72.0 — Wizard d'accueil, affiché une seule fois après la création du
+// v1.93.0 — Wizard d'accueil, affiché une seule fois après la création du
 // premier bassin (et rejouable depuis Réglages via "Revoir la présentation").
+// Depuis v1.93.0 : carrousel avec les vraies captures d'écran de l'app (issues
+// du dossier screenshots/ utilisé aussi par le manifest PWA) au lieu d'icônes
+// stylisées — 1 écran de bienvenue + 6 captures, une par fonctionnalité clé.
 // "Passer" est disponible à chaque étape ; les deux issues (Passer / dernière
 // étape) appellent onDone, qui marque l'onboarding comme vu côté appelant.
 function OnboardingWizard({ onDone, lang }) {
   const t = useT(lang || "fr");
   const [step, setStep] = useState(0);
   const steps = [
-    { icon: <Droplets size={28} color="#fff" />, iconBg: "rgba(255,255,255,0.18)",
-      title: t("onboarding_step1_title"), text: t("onboarding_step1_text"), dark: true },
-    { icon: <Camera size={26} color="var(--brand-primary)" />, iconBg: "var(--brand-bg-tint)",
+    { title: t("onboarding_step1_title"), text: t("onboarding_step1_text"), dark: true },
+    { img: "screenshots/screenshot-analyse-ia-narrow.png",
       title: t("onboarding_step2_title"), text: t("onboarding_step2_text") },
-    { icon: <CheckCircle2 size={26} color="#1a8fd1" />, iconBg: "#e1f5ee",
-      title: t("onboarding_step3_title"), text: t("onboarding_step3_text"), legend: true },
-    { icon: <Sparkles size={26} color="#a8721a" />, iconBg: "#fdf6e6",
-      title: t("onboarding_step4_title"), text: t("onboarding_step4_text"), last: true },
+    { img: "screenshots/screenshot-dashboard-narrow.png",
+      title: t("onboarding_step3_title"), text: t("onboarding_step3_text") },
+    { img: "screenshots/screenshot-diagnostic-plan-narrow.png",
+      title: t("onboarding_step4_title"), text: t("onboarding_step4_text") },
+    { img: "screenshots/screenshot-etape-traitement-narrow.png",
+      title: t("onboarding_step5_title"), text: t("onboarding_step5_text") },
+    { img: "screenshots/screenshot-historique-narrow.png",
+      title: t("onboarding_step6_title"), text: t("onboarding_step6_text") },
+    { img: "screenshots/screenshot-produits-narrow.png",
+      title: t("onboarding_step7_title"), text: t("onboarding_step7_text"), last: true },
   ];
   const s = steps[step];
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 1900, background: "rgba(13,43,78,0.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <div style={{ width: "100%", maxWidth: 360, background: "#fff", borderRadius: 20, overflow: "hidden" }}>
-        <div style={{
-          padding: s.dark ? "32px 24px 28px" : "28px 24px 8px",
-          textAlign: "center",
-          background: s.dark ? "linear-gradient(135deg, var(--brand-primary), var(--brand-primary-dark))" : "transparent",
-          color: s.dark ? "#fff" : "#0d2b4e",
-        }}>
-          <div style={{ width: 56, height: 56, borderRadius: 16, background: s.iconBg, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-            {s.icon}
-          </div>
-          <div style={{ fontWeight: 700, fontSize: s.dark ? 19 : 17, marginBottom: 8 }}>{s.title}</div>
-          <div style={{ fontSize: 13.5, opacity: s.dark ? 0.85 : 1, color: s.dark ? "#fff" : "#4a6480", lineHeight: 1.5, whiteSpace: "pre-line" }}>{s.text}</div>
-          {s.legend && (
-            <div style={{ display: "flex", justifyContent: "center", gap: 16, fontSize: 12, marginTop: 14, color: "#4a6480" }}>
-              <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#1a8fd1", display: "inline-block" }} />
-                {t("in_range")}
-              </span>
-              <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#c4502f", display: "inline-block" }} />
-                {t("onboarding_step3_legend_bad")}
-              </span>
+        {s.dark ? (
+          <div style={{
+            padding: "32px 24px 28px",
+            textAlign: "center",
+            background: "linear-gradient(135deg, var(--brand-primary), var(--brand-primary-dark))",
+            color: "#fff",
+          }}>
+            <div style={{ width: 56, height: 56, borderRadius: 16, background: "rgba(255,255,255,0.18)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+              <Droplets size={28} color="#fff" />
             </div>
-          )}
-        </div>
+            <div style={{ fontWeight: 700, fontSize: 19, marginBottom: 8 }}>{s.title}</div>
+            <div style={{ fontSize: 13.5, opacity: 0.85, lineHeight: 1.5, whiteSpace: "pre-line" }}>{s.text}</div>
+          </div>
+        ) : (
+          <>
+            <div style={{ background: "#eef2f6", padding: 12 }}>
+              <img
+                src={s.img}
+                alt={s.title}
+                style={{ display: "block", width: "100%", maxHeight: 380, objectFit: "contain", borderRadius: 12 }}
+              />
+            </div>
+            <div style={{ padding: "20px 24px 4px", textAlign: "center" }}>
+              <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 8, color: "#0d2b4e" }}>{s.title}</div>
+              <div style={{ fontSize: 13.5, color: "#4a6480", lineHeight: 1.5, whiteSpace: "pre-line" }}>{s.text}</div>
+            </div>
+          </>
+        )}
         <div style={{ padding: "20px 24px 24px" }}>
-          <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 20 }}>
+          <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 20, flexWrap: "wrap" }}>
             {steps.map((_, i) => (
-              <div key={i} style={{ width: 20, height: 4, borderRadius: 2, background: i === step ? "var(--brand-primary)" : "#e2e8ef" }} />
+              <div key={i} style={{ width: 16, height: 4, borderRadius: 2, background: i === step ? "var(--brand-primary)" : "#e2e8ef" }} />
             ))}
           </div>
           <button
