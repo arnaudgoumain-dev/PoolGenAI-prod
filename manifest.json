@@ -43,18 +43,32 @@
   ],
   "screenshots": [
     {
+      "src": "screenshots/screenshot-analyse-ia-narrow.png",
+      "sizes": "1600x2816",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Analyse IA de la mesure — lecture automatique des bandelettes et photomètre"
+    },
+    {
+      "src": "screenshots/screenshot-etape-traitement-narrow.png",
+      "sizes": "1600x2816",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Application guidée d'un traitement avec dose calculée automatiquement"
+    },
+    {
+      "src": "screenshots/screenshot-diagnostic-plan-narrow.png",
+      "sizes": "1600x2816",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Diagnostic complet et plan de traitement priorisé"
+    },
+    {
       "src": "screenshots/screenshot-dashboard-narrow.png",
       "sizes": "800x1408",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Tableau de bord — dernière mesure et plan de traitement"
-    },
-    {
-      "src": "screenshots/screenshot-plan-traitement-narrow.png",
-      "sizes": "800x1408",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Plan de traitement étape par étape"
     },
     {
       "src": "screenshots/screenshot-historique-narrow.png",
