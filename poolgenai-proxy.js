@@ -39,7 +39,7 @@
  */
 
 const ANTHROPIC_API = "https://api.anthropic.com";
-const FIREBASE_PROJECT_ID = "poolapp-ago";
+const FIREBASE_PROJECT_ID = "poolgenai-prod";
 const GOOGLE_JWK_URL =
   "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com";
 
@@ -47,11 +47,20 @@ const FIRESTORE_BASE = `https://firestore.googleapis.com/v1/projects/${FIREBASE_
 const IDENTITY_TOOLKIT_URL = "https://identitytoolkit.googleapis.com/v1/accounts:update";
 const RESEND_API_URL = "https://api.resend.com/emails";
 
-const VERIFICATION_LINK_BASE = "https://arnaudgoumain-dev.github.io/PoolApp/";
+const VERIFICATION_LINK_BASE = "https://app.poolgenai.com/";
 const VERIFICATION_TOKEN_TTL_HOURS = 24;
 // v1.55.0 — Utilisateurs secondaires (brique 2)
 const INVITATION_TOKEN_TTL_HOURS = 24;
-const MAX_SECONDARY_USERS = 2;
+// v1.95.0 — Avant cette version, MAX_SECONDARY_USERS plafonnait le nombre
+// total d'invités sur l'ENSEMBLE du compte propriétaire, tous bassins
+// confondus, et ce même pour un compte gratuit (aucune vérification
+// isPremium du propriétaire n'existait). Nouvelle règle : un compte gratuit
+// ne peut inviter personne (0), un compte Premium peut inviter jusqu'à 2
+// personnes PAR BASSIN (donc jusqu'à 6 au total sur les 3 bassins max
+// autorisés en Premium). Voir handleInviteSecondaryUser et
+// handleRespondInvitation.
+const MAX_SECONDARY_USERS_PER_POOL = 2;
+const MAX_POOLS_PREMIUM = 3;
 // v1.59.3 — Limite du nombre de bassins sur lesquels un compte gratuit peut
 // avoir le statut invité (tous propriétaires confondus). Aucune limite si le
 // compte invité lui-même est premium (son propre abonnement, jamais celui
@@ -90,9 +99,7 @@ const MIN_VALUE_SPREAD = {
   phos: 50, copper: 0.1, iron: 0.05, temp: 4, brome: 2, o2: 5, sel: 1000,
 };
 
-// À adapter avec l'origine réelle de ton PWA
 const ALLOWED_ORIGINS = [
-  "https://arnaudgoumain-dev.github.io",
   "https://app.poolgenai.com",
 ];
 
@@ -104,6 +111,13 @@ const ALLOWED_ORIGINS = [
 // account uniquement — voir firestore.rules) plutôt que Workers KV, pour ne
 // pas ajouter de binding/ressource Cloudflare supplémentaire à provisionner.
 const DAILY_LIMIT_PER_UID = 300;
+
+// v1.89.0 — Stripe (Phase B). Mêmes clés de test sur TEST et DEV (voir env
+// STRIPE_SECRET_KEY / STRIPE_WEBHOOK_SECRET / STRIPE_PRICE_MONTHLY /
+// STRIPE_PRICE_YEARLY, à définir en Secrets Cloudflare, identiques sur les
+// deux Workers). PROD utilisera les clés live le jour de la bascule.
+const STRIPE_API = "https://api.stripe.com/v1";
+const STRIPE_WEBHOOK_TOLERANCE_SECONDS = 300; // anti-rejeu
 
 function corsHeaders(origin) {
   const allowed =
@@ -524,6 +538,82 @@ async function firestoreDeleteDoc(env, collection, documentId) {
     const errText = await response.text();
     throw new Error(`Échec de suppression Firestore : ${errText}`);
   }
+}
+
+// ---------- Stripe : encodage form-urlencoded avec clés imbriquées ----------
+// L'API Stripe attend du x-www-form-urlencoded, pas du JSON. Les objets/tableaux
+// imbriqués se codent en notation crochets : line_items[0][price]=xxx.
+function flattenStripeParams(obj, prefix, out) {
+  for (const [key, value] of Object.entries(obj)) {
+    const paramKey = prefix ? `${prefix}[${key}]` : key;
+    if (value === undefined || value === null) continue;
+    if (Array.isArray(value)) {
+      value.forEach((item, i) => flattenStripeParams({ [i]: item }, prefix ? `${prefix}[${key}]` : key, out));
+    } else if (typeof value === "object") {
+      flattenStripeParams(value, paramKey, out);
+    } else {
+      out.set(paramKey, String(value));
+    }
+  }
+  return out;
+}
+
+async function stripeApiRequest(env, path, params) {
+  const body = flattenStripeParams(params, "", new URLSearchParams());
+  const response = await fetch(`${STRIPE_API}${path}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: body.toString(),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(`Erreur Stripe (${path}) : ${data.error?.message || response.status}`);
+  }
+  return data;
+}
+
+// ---------- Stripe : vérification de signature webhook (HMAC SHA-256) ----------
+async function verifyStripeSignature(rawBody, sigHeader, secret) {
+  if (!sigHeader) throw new Error("Header stripe-signature manquant");
+  const parts = Object.fromEntries(
+    sigHeader.split(",").map((p) => {
+      const [k, v] = p.split("=");
+      return [k, v];
+    })
+  );
+  const timestamp = parts.t;
+  const signature = parts.v1;
+  if (!timestamp || !signature) throw new Error("Signature malformée");
+
+  const now = Math.floor(Date.now() / 1000);
+  if (Math.abs(now - parseInt(timestamp, 10)) > STRIPE_WEBHOOK_TOLERANCE_SECONDS) {
+    throw new Error("Signature expirée (rejeu possible)");
+  }
+
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const signedPayload = `${timestamp}.${rawBody}`;
+  const sigBuffer = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(signedPayload));
+  const expectedHex = Array.from(new Uint8Array(sigBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+
+  if (expectedHex !== signature) throw new Error("Signature invalide");
+}
+
+// ---------- Stripe : détermine le plan (monthly/yearly) depuis un price ID ----------
+function planFromPriceId(env, priceId) {
+  if (priceId === env.STRIPE_PRICE_MONTHLY) return "monthly";
+  if (priceId === env.STRIPE_PRICE_YEARLY) return "yearly";
+  return null;
 }
 
 // ---------- Firestore : liste des IDs de documents expirés (structured query) ----------
@@ -1559,10 +1649,20 @@ async function handleInviteSecondaryUser(request, env, origin) {
   const pool = (config?.pools || []).find((p) => p.id === poolId);
   if (!pool) return jsonError("Bassin introuvable", 404, origin);
 
-  const activeSecondaries = existingSecondaries.filter((s) => s.status === "active");
-  if (activeSecondaries.length >= MAX_SECONDARY_USERS) {
-    return jsonError(`Nombre maximum de comptes secondaires atteint (${MAX_SECONDARY_USERS})`, 409, origin);
+  // v1.95.0 — Un compte gratuit ne peut inviter personne. Avant cette
+  // version, aucune vérification isPremium n'existait ici : un compte
+  // gratuit pouvait inviter jusqu'à MAX_SECONDARY_USERS personnes.
+  if (!config?.isPremium) {
+    return jsonError("Les invitations sont réservées à la version Premium", 403, origin, "invite_requires_premium");
   }
+
+  // v1.95.0 — Limite désormais posée PAR BASSIN (poolId), et non plus sur
+  // l'ensemble du compte tous bassins confondus.
+  const activeSecondariesForPool = existingSecondaries.filter((s) => s.status === "active" && s.poolId === poolId);
+  if (activeSecondariesForPool.length >= MAX_SECONDARY_USERS_PER_POOL) {
+    return jsonError(`Nombre maximum d'invités atteint pour ce bassin (${MAX_SECONDARY_USERS_PER_POOL})`, 409, origin);
+  }
+  const activeSecondaries = existingSecondaries.filter((s) => s.status === "active");
   if (activeSecondaries.some((s) => (s.email || "").toLowerCase() === invitedEmail.toLowerCase())) {
     return jsonError("Cette personne a déjà accès à un bassin", 409, origin);
   }
@@ -1648,10 +1748,23 @@ async function handleRespondInvitation(request, env, origin) {
 
   // action === "accept"
   try {
+    // v1.95.0 — Re-vérifie le statut Premium du propriétaire au moment de
+    // l'acceptation (pas seulement à l'envoi de l'invitation) : si le
+    // propriétaire est repassé gratuit entre-temps, l'invitation ne peut
+    // plus être acceptée.
+    const primaryConfig = await firestoreGetDoc(env, `users/${invitation.primaryUid}/config`, "main");
+    if (!primaryConfig?.isPremium) {
+      return jsonError("Ce compte n'est plus en version Premium, l'invitation ne peut pas être acceptée", 403, origin, "invite_requires_premium");
+    }
+
     const existingSecondaries = await firestoreListAllDocs(env, `users/${invitation.primaryUid}/secondaryUsers`);
-    const activeSecondaries = existingSecondaries.filter((s) => s.status === "active" && s.id !== secondaryUid);
-    if (activeSecondaries.length >= MAX_SECONDARY_USERS) {
-      return jsonError(`Nombre maximum de comptes secondaires atteint (${MAX_SECONDARY_USERS})`, 409, origin);
+    // v1.95.0 — Limite par bassin (poolId de l'invitation), plus sur
+    // l'ensemble du compte.
+    const activeSecondariesForPool = existingSecondaries.filter(
+      (s) => s.status === "active" && s.id !== secondaryUid && s.poolId === invitation.poolId
+    );
+    if (activeSecondariesForPool.length >= MAX_SECONDARY_USERS_PER_POOL) {
+      return jsonError(`Nombre maximum d'invités atteint pour ce bassin (${MAX_SECONDARY_USERS_PER_POOL})`, 409, origin);
     }
 
     // v1.59.3 — Limite du nombre de bassins invités pour un compte gratuit
@@ -2146,6 +2259,21 @@ async function handleAnthropicProxy(request, env, origin) {
     return jsonError(`Token invalide : ${e.message}`, 401, origin);
   }
 
+  // v1.93.0 — Contrôle premium côté serveur. Le verrouillage de l'IA aux
+  // comptes premium n'existait jusqu'ici que côté client (bouton masqué) :
+  // un compte gratuit authentifié pouvait appeler cette route directement
+  // et contourner totalement le paywall. On vérifie donc ici isPremium
+  // dans Firestore avant d'autoriser l'appel à l'API Anthropic.
+  let userConfig;
+  try {
+    userConfig = await firestoreGetDoc(env, `users/${uid}/config`, "main");
+  } catch (e) {
+    return jsonError(`Erreur serveur : ${e.message}`, 500, origin);
+  }
+  if (!userConfig?.isPremium) {
+    return jsonError("Analyse IA réservée aux comptes premium", 403, origin);
+  }
+
   // v1.41.0 — Rate-limiting par UID, voir checkAndIncrementRateLimit.
   try {
     const rateCheck = await checkAndIncrementRateLimit(env, uid);
@@ -2191,6 +2319,188 @@ async function handleAnthropicProxy(request, env, origin) {
     status: upstream.status,
     headers: responseHeaders,
   });
+}
+
+// ---------- POST /stripe/create-checkout-session ----------
+async function handleStripeCreateCheckoutSession(request, env, origin) {
+  const authHeader = request.headers.get("Authorization") || "";
+  const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (!idToken) return jsonError("Authentification requise", 401, origin);
+
+  let uid;
+  try {
+    const payload = await verifyFirebaseIdToken(idToken);
+    uid = payload.sub;
+  } catch (e) {
+    return jsonError(`Token invalide : ${e.message}`, 401, origin);
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return jsonError("Corps de requête invalide", 400, origin);
+  }
+
+  const priceId = body.plan === "yearly" ? env.STRIPE_PRICE_YEARLY : env.STRIPE_PRICE_MONTHLY;
+  if (!priceId) return jsonError("Plan invalide", 400, origin);
+
+  let existingCustomerId = null;
+  try {
+    const config = await firestoreGetDoc(env, `users/${uid}/config`, "main");
+    existingCustomerId = config?.subscription?.stripeCustomerId || null;
+  } catch (e) {
+    console.error(`Lecture config échouée pour ${uid} : ${e.message}`);
+  }
+
+  const params = {
+    mode: "subscription",
+    line_items: [{ price: priceId, quantity: 1 }],
+    client_reference_id: uid,
+    success_url: `${origin}/?stripe=success`,
+    cancel_url: `${origin}/?stripe=cancel`,
+    // v1.89.0 — metadata portée par l'abonnement lui-même (pas seulement la
+    // session) : les events customer.subscription.* n'ont pas client_reference_id,
+    // mais héritent de subscription_data.metadata. C'est notre lien uid <-> abonnement.
+    subscription_data: { metadata: { uid } },
+  };
+  if (existingCustomerId) {
+    params.customer = existingCustomerId;
+  }
+
+  try {
+    const session = await stripeApiRequest(env, "/checkout/sessions", params);
+    return jsonResponse({ url: session.url }, 200, origin);
+  } catch (e) {
+    console.error(`Création session Checkout échouée pour ${uid} : ${e.message}`);
+    return jsonError("Impossible de créer la session de paiement", 500, origin);
+  }
+}
+
+// ---------- POST /stripe/create-portal-session ----------
+async function handleStripeCreatePortalSession(request, env, origin) {
+  const authHeader = request.headers.get("Authorization") || "";
+  const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (!idToken) return jsonError("Authentification requise", 401, origin);
+
+  let uid;
+  try {
+    const payload = await verifyFirebaseIdToken(idToken);
+    uid = payload.sub;
+  } catch (e) {
+    return jsonError(`Token invalide : ${e.message}`, 401, origin);
+  }
+
+  let customerId;
+  try {
+    const config = await firestoreGetDoc(env, `users/${uid}/config`, "main");
+    customerId = config?.subscription?.stripeCustomerId;
+  } catch (e) {
+    return jsonError("Impossible de lire l'abonnement", 500, origin);
+  }
+  if (!customerId) return jsonError("Aucun abonnement actif", 400, origin);
+
+  try {
+    const portalSession = await stripeApiRequest(env, "/billing_portal/sessions", {
+      customer: customerId,
+      return_url: `${origin}/`,
+    });
+    return jsonResponse({ url: portalSession.url }, 200, origin);
+  } catch (e) {
+    console.error(`Création session Portal échouée pour ${uid} : ${e.message}`);
+    return jsonError("Impossible d'ouvrir la gestion d'abonnement", 500, origin);
+  }
+}
+
+// ---------- POST /stripe/webhook ----------
+async function handleStripeWebhook(request, env, origin) {
+  const rawBody = await request.text();
+  const sigHeader = request.headers.get("stripe-signature");
+
+  try {
+    await verifyStripeSignature(rawBody, sigHeader, env.STRIPE_WEBHOOK_SECRET);
+  } catch (e) {
+    console.error(`Signature webhook Stripe invalide : ${e.message}`);
+    return new Response("Signature invalide", { status: 400 });
+  }
+
+  const event = JSON.parse(rawBody);
+
+  // Idempotence : firestoreCreateDoc échoue si le document existe déjà.
+  try {
+    await firestoreCreateDoc(env, "stripeEvents", event.id, {
+      type: event.type,
+      processedAt: new Date(),
+    });
+  } catch (e) {
+    // Déjà traité : on répond 200 tout de suite pour que Stripe arrête de réessayer.
+    return jsonResponse({ received: true, alreadyProcessed: true }, 200, "");
+  }
+
+  try {
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object;
+      const uid = session.client_reference_id;
+      if (uid && session.customer) {
+        await firestorePatchDoc(env, `users/${uid}/config`, "main", {
+          subscription: { stripeCustomerId: session.customer },
+        });
+        // Filet de secours pour les futurs events sans metadata.uid exploitable.
+        await firestoreSetDoc(env, "stripeCustomers", session.customer, { uid });
+      }
+    }
+
+    if (
+      event.type === "customer.subscription.created" ||
+      event.type === "customer.subscription.updated" ||
+      event.type === "customer.subscription.deleted"
+    ) {
+      const sub = event.data.object;
+      let uid = sub.metadata?.uid;
+      if (!uid) {
+        const mapping = await firestoreGetDoc(env, "stripeCustomers", sub.customer);
+        uid = mapping?.uid;
+      }
+      if (uid) {
+        // v1.89.1 — Coupure immédiate sur past_due/canceled/unpaid, pas de
+        // délai de grâce (décidé le 260714). Écrit EN PREMIER et séparément
+        // du détail "subscription" ci-dessous : c'est le champ qui compte
+        // vraiment pour l'app, il ne doit jamais échouer à cause d'un souci
+        // sur un champ secondaire (cf. bug current_period_end du 260714, où
+        // une Date invalide faisait planter tout le patch, isPremium inclus).
+        const isPremium = sub.status === "active";
+        await firestorePatchDoc(env, `users/${uid}/config`, "main", { isPremium });
+
+        try {
+          const priceId = sub.items?.data?.[0]?.price?.id;
+          const plan = planFromPriceId(env, priceId);
+          // v1.89.1 — API 2026-06-24.dahlia : current_period_end n'existe plus
+          // sur l'abonnement lui-même, déplacé dans items.data[0]. Fallback sur
+          // sub.current_period_end au cas où (compat versions API antérieures).
+          const rawPeriodEnd = sub.items?.data?.[0]?.current_period_end ?? sub.current_period_end;
+          const currentPeriodEnd = typeof rawPeriodEnd === "number" ? new Date(rawPeriodEnd * 1000) : null;
+          await firestorePatchDoc(env, `users/${uid}/config`, "main", {
+            subscription: {
+              status: sub.status,
+              plan: plan || null,
+              stripeCustomerId: sub.customer,
+              currentPeriodEnd,
+            },
+          });
+        } catch (e) {
+          console.error(`Écriture détail subscription échouée pour ${uid} (isPremium=${isPremium} déjà écrit) : ${e.message}`);
+        }
+      } else {
+        console.error(`Abonnement Stripe ${sub.id} sans uid retrouvable (customer ${sub.customer})`);
+      }
+    }
+  } catch (e) {
+    console.error(`Traitement event Stripe ${event.type} échoué : ${e.message}`);
+    // On retourne quand même 200 : l'event est déjà marqué traité (stripeEvents),
+    // un échec ici ne doit pas déclencher un rejeu Stripe.
+  }
+
+  return jsonResponse({ received: true }, 200, "");
 }
 
 export default {
@@ -2276,6 +2586,15 @@ export default {
     }
     if (url.pathname === "/cancel-invitation") {
       return handleCancelInvitation(request, env, origin);
+    }
+    if (url.pathname === "/stripe/create-checkout-session") {
+      return handleStripeCreateCheckoutSession(request, env, origin);
+    }
+    if (url.pathname === "/stripe/create-portal-session") {
+      return handleStripeCreatePortalSession(request, env, origin);
+    }
+    if (url.pathname === "/stripe/webhook") {
+      return handleStripeWebhook(request, env, origin);
     }
 
     return new Response("Not found", { status: 404 });

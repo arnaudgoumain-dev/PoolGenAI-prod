@@ -38,6 +38,39 @@ service cloud.firestore {
     function isActiveSecondaryForPool(primaryUid, poolId) {
       return isActiveSecondary(primaryUid) && secondaryLink(primaryUid).data.poolId == poolId;
     }
+    // v1.95.0 — Compte le nombre de bassins ACTIFS (non désactivés en soft
+    // delete) dans le tableau "pools" de config/main, pour plafonner à 1
+    // (gratuit) ou 3 (Premium). Le langage des Security Rules n'a ni boucle
+    // ni fonction filter/map générique (une seule instruction return, pas de
+    // récursion) : on somme donc manuellement jusqu'à 15 index, un plafond
+    // large qu'aucun compte réel n'atteindra jamais même après de nombreuses
+    // créations/suppressions de bassins. Un tableau plus grand que 15 est de
+    // toute façon rejeté séparément par le contrôle pools.size() <= 15 posé
+    // directement dans les règles create/update de config/main ci-dessous.
+    function activePoolCount(pools) {
+      return (pools.size() > 0  && pools[0].get('disabled', false)  != true ? 1 : 0)
+           + (pools.size() > 1  && pools[1].get('disabled', false)  != true ? 1 : 0)
+           + (pools.size() > 2  && pools[2].get('disabled', false)  != true ? 1 : 0)
+           + (pools.size() > 3  && pools[3].get('disabled', false)  != true ? 1 : 0)
+           + (pools.size() > 4  && pools[4].get('disabled', false)  != true ? 1 : 0)
+           + (pools.size() > 5  && pools[5].get('disabled', false)  != true ? 1 : 0)
+           + (pools.size() > 6  && pools[6].get('disabled', false)  != true ? 1 : 0)
+           + (pools.size() > 7  && pools[7].get('disabled', false)  != true ? 1 : 0)
+           + (pools.size() > 8  && pools[8].get('disabled', false)  != true ? 1 : 0)
+           + (pools.size() > 9  && pools[9].get('disabled', false)  != true ? 1 : 0)
+           + (pools.size() > 10 && pools[10].get('disabled', false) != true ? 1 : 0)
+           + (pools.size() > 11 && pools[11].get('disabled', false) != true ? 1 : 0)
+           + (pools.size() > 12 && pools[12].get('disabled', false) != true ? 1 : 0)
+           + (pools.size() > 13 && pools[13].get('disabled', false) != true ? 1 : 0)
+           + (pools.size() > 14 && pools[14].get('disabled', false) != true ? 1 : 0);
+    }
+    // Plafond du nombre de bassins actifs selon le statut Premium (basé sur
+    // resource.data, la valeur DÉJÀ en base — isPremium n'étant modifiable
+    // par le client que vers false, resource.data reste la source fiable du
+    // vrai statut d'abonnement, jamais falsifiable par le client lui-même).
+    function maxActivePools(currentIsPremium) {
+      return currentIsPremium ? 3 : 1;
+    }
     // Statut de suspension : lecture par le propriétaire uniquement (pour afficher
     // l'écran "Compte suspendu"), écriture strictement interdite au client.
     match /suspended/{uid} {
@@ -152,8 +185,15 @@ service cloud.firestore {
     // utilisateur légitime.
     match /users/{uid}/config/main {
       allow read: if isOwner(uid) || isActiveSecondary(uid);
+      // v1.95.0 — Un tout premier document créé par un compte gratuit ne
+      // peut contenir plus d'1 bassin actif. En pratique un nouveau compte
+      // n'a jamais isPremium=true à la création (bloqué juste après par la
+      // condition existante), donc maxActivePools(false) == 1 s'applique
+      // toujours ici.
       allow create: if isActiveOwner(uid) &&
-        request.resource.data.get('isPremium', false) == false;
+        request.resource.data.get('isPremium', false) == false &&
+        request.resource.data.get('pools', []).size() <= 15 &&
+        activePoolCount(request.resource.data.get('pools', [])) <= maxActivePools(false);
       // v1.53.0 — Un secondaire actif peut modifier le champ "products"
       // (stock partagé) mais rien d'autre : ni "pools" (pas de création/
       // suppression de bassin), ni "isPremium", "lang", "aiEnabled",
@@ -177,9 +217,16 @@ service cloud.firestore {
       // prochain snapshot Firestore si un true traînait en base). Aucune
       // ouverture de faille : la direction "passer à true" reste strictement
       // bloquée, seule "revenir à false" est permise.
+      // v1.95.0 — Plafond du nombre de bassins actifs : 1 en gratuit, 3 en
+      // Premium (resource.data.isPremium = statut réel avant cette écriture,
+      // jamais falsifiable par le client). S'applique uniquement à la
+      // branche propriétaire : un secondaire ne peut de toute façon pas
+      // toucher "pools" (voir hasOnly ci-dessous).
       allow update: if (isActiveOwner(uid) &&
           (request.resource.data.get('isPremium', false) == resource.data.get('isPremium', false) ||
-           request.resource.data.get('isPremium', false) == false)) ||
+           request.resource.data.get('isPremium', false) == false) &&
+          request.resource.data.get('pools', []).size() <= 15 &&
+          activePoolCount(request.resource.data.get('pools', [])) <= maxActivePools(resource.data.get('isPremium', false))) ||
         (isActiveSecondary(uid) &&
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['products', 'activePlan', 'updatedAt']) &&
           request.resource.data.get('activePlan', {}).diff(resource.data.get('activePlan', {})).affectedKeys().hasOnly([secondaryLink(uid).data.poolId]));
