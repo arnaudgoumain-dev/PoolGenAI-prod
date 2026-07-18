@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.95.2";
+const APP_VERSION = "1.96.0";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -5410,6 +5410,20 @@ function detectPoolGenAIEnv() {
 }
 const PROXY_BASE_URL = PROXY_URLS[detectPoolGenAIEnv()] || PROXY_URLS.prod;
 
+// v1.96.0 — Publication Android (TWA via PWABuilder) : document.referrer ne
+// commence par "android-app://" que lorsque la PWA est chargée depuis le
+// conteneur natif installé via Play Store (jamais dans un navigateur
+// classique, mobile ou desktop). Sert à basculer PaywallModal/le portail
+// d'abonnement sur Play Billing plutôt que Stripe (voir handleStartCheckout,
+// handleOpenPortal). IDs produits identiques à ceux créés dans Play Console
+// (voir poolgenai-proxy.js, mêmes constantes côté Worker).
+function isTWAEnvironment() {
+  return typeof document !== "undefined" && !!document.referrer && document.referrer.startsWith("android-app://");
+}
+const ANDROID_PACKAGE_NAME = "com.poolgenai.app.twa";
+const PLAY_BILLING_PRODUCT_MONTHLY = "premium_monthly";
+const PLAY_BILLING_PRODUCT_YEARLY = "premium_annual";
+
 async function lookupCommonProduct({ idToken, barcode, name, activeSubstance }) {
   const res = await fetch(`${PROXY_BASE_URL}/product-lookup`, {
     method: "POST",
@@ -6743,8 +6757,79 @@ function PoolGenAIApp() {
     return () => clearTimeout(id);
   }, [awaitingStripeActivation]);
 
+  // v1.96.0 — Achat via Digital Goods API + Payment Request API (environnement
+  // TWA uniquement, voir isTWAEnvironment). Contrairement à Stripe, pas de
+  // redirection hors app : l'achat se fait dans un dialogue natif Play Store,
+  // et /playbilling/verify-purchase confirme/active isPremium en un aller-retour
+  // direct (pas de webhook asynchrone à attendre côté client). On réutilise
+  // ensuite awaitingStripeActivation/awaitingStripeActivationRef (nom conservé
+  // tel quel malgré Play Billing : c'est un mécanisme générique d'attente de
+  // confirmation isPremium, pas spécifique à Stripe) pour déclencher le reveal
+  // dès que le snapshot Firestore confirme isPremium=true.
+  async function handlePlayBillingCheckout(plan) {
+    if (!authUser) return;
+    setCheckoutError(null);
+    setCheckoutBusy(true);
+    track("upgrade_checkout_started", { plan, via: "play_billing" });
+    try {
+      if (!window.getDigitalGoodsService) {
+        throw new Error("Digital Goods API indisponible");
+      }
+      const digitalGoodsService = await window.getDigitalGoodsService("https://play.google.com/billing");
+      const productId = plan === "yearly" ? PLAY_BILLING_PRODUCT_YEARLY : PLAY_BILLING_PRODUCT_MONTHLY;
+      const details = await digitalGoodsService.getDetails([productId]);
+      if (!details.length) throw new Error(`Produit Play Billing introuvable : ${productId}`);
+
+      const paymentMethodData = [{
+        supportedMethods: "https://play.google.com/billing",
+        data: { sku: productId },
+      }];
+      const paymentDetails = {
+        total: {
+          label: "Total",
+          amount: { currency: details[0].price.currency, value: details[0].price.value },
+        },
+      };
+      const paymentRequest = new PaymentRequest(paymentMethodData, paymentDetails);
+      const paymentResponse = await paymentRequest.show();
+      const purchaseToken = paymentResponse.details?.purchaseToken || paymentResponse.details?.token;
+      if (!purchaseToken) throw new Error("Achat Play Billing sans purchaseToken");
+
+      const idToken = await authUser.getIdToken();
+      const res = await fetch(`${PROXY_BASE_URL}/playbilling/verify-purchase`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ purchaseToken }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        await paymentResponse.complete("fail").catch(() => {});
+        setCheckoutError(data.error || t("checkout_error"));
+        setCheckoutBusy(false);
+        return;
+      }
+      await paymentResponse.complete("success");
+
+      awaitingStripeActivationRef.current = true;
+      setAwaitingStripeActivation(true);
+      setShowPaywall(false);
+      setCheckoutBusy(false);
+    } catch (e) {
+      console.error("Achat Play Billing échoué :", e);
+      setCheckoutError(t("checkout_error"));
+      setCheckoutBusy(false);
+    }
+  }
+
   async function handleStartCheckout(plan) {
     if (!authUser) return;
+    // v1.96.0 — TWA (app Android publiée sur Play Store) : Play Billing
+    // obligatoire côté Google pour les achats de biens numériques faits DANS
+    // l'app (voir règlement Paiements Google Play). Stripe reste utilisé tel
+    // quel pour toute utilisation hors TWA (web, iOS, etc.).
+    if (isTWAEnvironment()) {
+      return handlePlayBillingCheckout(plan);
+    }
     setCheckoutError(null);
     setCheckoutBusy(true);
     track("upgrade_checkout_started", { plan });
@@ -6771,6 +6856,14 @@ function PoolGenAIApp() {
 
   async function handleOpenPortal() {
     if (!authUser) return;
+    // v1.96.0 — En TWA, la gestion d'abonnement (résiliation, changement de
+    // plan) se fait dans l'écran natif Play Store, pas dans un portail Stripe
+    // (l'abonnement n'existe même pas côté Stripe pour ces utilisateurs-là).
+    if (isTWAEnvironment()) {
+      track("manage_subscription_opened", { via: "play_billing" });
+      window.location.href = `https://play.google.com/store/account/subscriptions?package=${ANDROID_PACKAGE_NAME}`;
+      return;
+    }
     setPortalError(null);
     setPortalBusy(true);
     track("manage_subscription_opened");
