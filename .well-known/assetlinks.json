@@ -1,0 +1,10 @@
+﻿[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.poolgenai.app.twa",
+    "sha256_cert_fingerprints": [
+      "2D:0F:6B:57:D5:8F:11:62:D0:7E:91:D7:C0:AE:9F:76:3E:4A:F2:6A:DB:C0:CD:73:23:21:39:04:D6:41:A8:55"
+    ]
+  }
+}]
