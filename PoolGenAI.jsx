@@ -5,11 +5,11 @@ const {
 const {
   Plus, Trash2, Droplets, X, ChevronRight, ChevronDown, Settings2, AlertTriangle, CheckCircle2,
   History, Beaker, Camera, Lock, Crown, ImageOff, Sparkles, Loader2, Clock, FileText, Download,
-  Eye, EyeOff, Share2, MapPin, LocateFixed
+  Eye, EyeOff, Share2, MapPin, LocateFixed, Info
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.96.2";
+const APP_VERSION = "1.96.4";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -6888,6 +6888,14 @@ function PoolGenAIApp() {
   const [showAddPool, setShowAddPool] = useState(false);
   const [lang, setLang] = useState("fr");
   const [isPremium, setIsPremium] = useState(false);
+  // v1.96.4 — Suivi séparé de "ma config de compte a été reçue au moins une
+  // fois" et de la valeur brute de config/main.premiumDefaultsApplied (true |
+  // false | undefined). Sert à l'effet dédié plus bas qui décide, une seule
+  // fois et indépendamment de la source de l'activation (Stripe, Play
+  // Billing, ou une édition manuelle Firestore), si aiEnabled/manageStock
+  // doivent être (ré)appliqués par défaut. Voir cet effet pour le détail.
+  const [accountConfigReceived, setAccountConfigReceived] = useState(false);
+  const premiumDefaultsAppliedRef = useRef(undefined);
   const [myPseudo, setMyPseudo] = useState(""); // v1.55.0 — pseudo de mon compte (vide = fallback email)
   const [applications, setApplications] = useState([]);
   const [validatingMeasure, setValidatingMeasure] = useState(null);
@@ -7320,6 +7328,11 @@ function PoolGenAIApp() {
       const realIsPremium = !!config.isPremium;
       setIsPremium((prev) => (prev === realIsPremium ? prev : realIsPremium));
       window.storage.set(STORAGE_KEYS.premium, JSON.stringify(realIsPremium)).catch(() => {});
+      // v1.96.4 — Valeur brute (true | false | undefined), lue à chaque
+      // snapshot : voir l'effet dédié à premiumDefaultsApplied plus bas pour
+      // la logique complète (migration comprise).
+      premiumDefaultsAppliedRef.current = config.premiumDefaultsApplied;
+      setAccountConfigReceived(true);
       if (config.lang) {
         setLang((prev) => (prev === config.lang ? prev : config.lang));
         window.storage.set("app_lang", JSON.stringify(config.lang)).catch(() => {});
@@ -7365,29 +7378,75 @@ function PoolGenAIApp() {
       setShowPremiumReveal(true);
       track("upgrade_activated", { via: "stripe" });
       setApiKey(PROXY_BASE_URL); // v1.89.0 — suit l'environnement courant, pas figé sur PROD.
-      // v1.91.0 — À chaque activation premium confirmée par Stripe, l'analyse
-      // IA est réactivée par défaut (même logique que manageStock ci-dessous).
-      // Choix assumé : un downgrade puis un re-upgrade repasse aiEnabled à
-      // true, sans mémoriser un choix de désactivation antérieur.
-      setAiEnabled(true);
-      // v1.29.7 — À l'activation, la gestion de stock s'active par défaut sur le
-      // bassin actif ; on garde les produits (nom, dosage) mais on remet leur
-      // pourcentage de stock à 0 pour forcer une saisie réelle.
-      if (activePool) {
-        updatePool(activePool.id, { manageStock: true });
-        setProducts((prevProducts) =>
-          prevProducts.map((p) =>
-            (p.poolId || "default") === activePool.id ? { ...p, stockPercent: 0 } : p
-          )
-        );
-      }
     } else if (prev === true && isPremium === false) {
       setRevealVariant("downgrade");
       setShowPremiumReveal(true);
       track("premium_deactivated", { via: "stripe" });
+      // v1.96.4 — Remet le flag à false (local + Firestore) : un futur
+      // re-upgrade, quelle que soit sa source, devra réappliquer les valeurs
+      // par défaut (aiEnabled, manageStock) — choix assumé depuis v1.91.0 :
+      // un downgrade ne fige jamais un choix de désactivation antérieur.
+      premiumDefaultsAppliedRef.current = false;
+      syncOwnConfig({ premiumDefaultsApplied: false });
     }
     prevIsPremiumRef.current = isPremium;
   }, [isPremium]);
+
+  // v1.96.4 — Fix : application des valeurs par défaut premium (aiEnabled,
+  // manageStock sur le bassin actif) découplée de la source de l'activation.
+  // Avant ce correctif, elle ne se déclenchait que si isPremium passait à
+  // true PENDANT un retour de paiement attendu (awaitingStripeActivationRef)
+  // — un isPremium=true posé autrement (ex. édition manuelle Firestore pour
+  // du support/debug) ne déclenchait jamais cette activation, laissant
+  // aiEnabled/manageStock à false malgré un compte réellement premium (bug
+  // constaté en session : bouton d'analyse IA invisible malgré isPremium
+  // correct). Le champ persistant config/main.premiumDefaultsApplied fait
+  // foi désormais, peu importe la source de l'activation.
+  //
+  // Migration : un compte déjà premium AVANT ce correctif n'a jamais eu ce
+  // champ (undefined). Pour ne pas remettre son stock à 0% au premier
+  // chargement après déploiement, une activation n'est considérée "à
+  // traiter" sur un champ undefined QUE SI aiEnabled ET manageStock (bassin
+  // actif) sont TOUS LES DEUX encore à false — signe qu'aucune activation
+  // réelle n'a jamais eu lieu (le cas précis d'un isPremium posé
+  // manuellement sans configurer le reste). Si l'un des deux est déjà à
+  // true, le compte est traité comme légitimement déjà configuré : on se
+  // contente de poser le flag, sans rien réinitialiser. Un champ
+  // explicitement `false` (posé par la branche downgrade ci-dessus) déclenche
+  // en revanche une réapplication inconditionnelle.
+  //
+  // Attend accountConfigReceived (mon config/main a été lu au moins une
+  // fois) ET activePool (le bassin doit exister pour recevoir manageStock) :
+  // sans cette double garde, une évaluation prématurée — avant que
+  // aiEnabled/pools n'aient fini de se charger localement ou depuis
+  // Firestore — pourrait poser le flag à true à tort et bloquer
+  // définitivement la vraie application des valeurs par défaut.
+  // Dépendances : pools/activePoolId (pas activePool directement) — activePool
+  // est un useMemo déclaré plus loin dans ce composant ; le référencer dans
+  // ce tableau de dépendances (évalué de façon synchrone au moment du rendu,
+  // contrairement au corps du callback ci-dessous, différé) provoquerait un
+  // ReferenceError/TDZ. pools/activePoolId sont déclarés tôt et suffisent :
+  // ce sont eux qui font varier activePool.
+  useEffect(() => {
+    if (!accountConfigReceived || !isPremium || !activePool) return;
+    const flag = premiumDefaultsAppliedRef.current; // true | false | undefined
+    if (flag === true) return;
+    const alreadyLegit = flag === undefined && (aiEnabled || !!activePool.manageStock);
+    if (!alreadyLegit) {
+      setAiEnabled(true);
+      // v1.29.7 — À l'activation, la gestion de stock s'active par défaut sur
+      // le bassin actif ; on garde les produits (nom, dosage) mais on remet
+      // leur pourcentage de stock à 0 pour forcer une saisie réelle.
+      updatePool(activePool.id, { manageStock: true });
+      setProducts((prevProducts) =>
+        prevProducts.map((p) =>
+          (p.poolId || "default") === activePool.id ? { ...p, stockPercent: 0 } : p
+        )
+      );
+    }
+    premiumDefaultsAppliedRef.current = true;
+    syncOwnConfig({ premiumDefaultsApplied: true });
+  }, [isPremium, accountConfigReceived, aiEnabled, pools, activePoolId]);
 
   function syncConfig(partial, errorKey) {
     if (!dataUid || !FB.ready() || teardownRef.current) return;
@@ -10427,7 +10486,9 @@ function RecoCard({ reco, isLast, manageStock, products, lang }) {
     <div style={isInfo ? styles.recoCardInfo : styles.recoCard}>
       <div style={{ ...styles.recoTop, justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={isInfo ? styles.recoStepBadgeInfo : styles.recoStepBadge}>{reco.stepNumber}</div>
+          <div style={isInfo ? styles.recoStepBadgeInfo : styles.recoStepBadge}>
+            {isInfo ? <Info size={12} /> : reco.stepNumber}
+          </div>
           <span style={isInfo ? styles.recoParamInfo : styles.recoParam}>{reco.title}</span>
         </div>
       </div>
@@ -11032,14 +11093,27 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
     : _("reco_order_intro_default");
 
   let cumulativeHours = 0;
-  const result = steps.map((step, i) => {
+  let actionCounter = 0;
+  const result = steps.map((step) => {
     const startsAfter = cumulativeHours;
     cumulativeHours += step.waitHours || 0;
     // v1.61.0 — Tous les steps issus de ce calcul sont des actions de
     // traitement correctif ponctuel (par opposition à la carte "entretien
     // continu", ajoutée séparément au moment de l'application d'un step
     // galets dans le Wizard — voir applyWizardStep).
-    return { ...step, stepNumber: i + 1, startsAfterHours: startsAfter, mode: "correctif" };
+    // v1.96.3 — Fix : les cartes purement informatives (noAction: true, ex.
+    // "chlore-excess", "hard-info" — rien à appliquer) ne sont pas de vraies
+    // actions et ne doivent donc pas consommer un numéro dans la séquence
+    // du plan. Seule une step actionnable incrémente le compteur ; une
+    // carte info reste affichée mais avec stepNumber: null (pas de chiffre
+    // dans son badge, voir RecoCard).
+    if (!step.noAction) actionCounter += 1;
+    return {
+      ...step,
+      stepNumber: step.noAction ? null : actionCounter,
+      startsAfterHours: startsAfter,
+      mode: "correctif",
+    };
   });
   result.orderExplanation = orderExplanation;
   return result;
