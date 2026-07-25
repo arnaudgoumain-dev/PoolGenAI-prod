@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.96.0";
+const APP_VERSION = "1.96.1";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -7547,7 +7547,23 @@ function PoolGenAIApp() {
         track("login", { method: user.providerData?.[0]?.providerId || "unknown" });
         try {
           const data = await FB.getUser(user.uid);
-          if (data?.isPremium !== undefined) setIsPremium(data.isPremium);
+          // v1.96.1 — FIX : isPremium ne doit JAMAIS être initialisé depuis le
+          // document racine users/{uid}. Ce champ n'y est écrit qu'une fois à
+          // l'inscription (toujours false) et n'est plus jamais mis à jour par
+          // la suite : ni Stripe ni Play Billing n'écrivent isPremium ici, ils
+          // ne patchent que users/{uid}/config/main (voir Worker, handleStripeWebhook
+          // et handlePlayBillingVerifyPurchase/RTDN). Avant ce correctif, si
+          // isPremium=true était présent sur ce document racine (ex: modification
+          // manuelle en base) alors que users/{uid}/config/main ne l'avait pas,
+          // l'état local restait bloqué sur cette valeur du document racine — le
+          // listener onConfig (qui lit config/main) ne le corrige QUE si le champ
+          // y est explicitement présent (voir plus bas : "if (config.isPremium
+          // !== undefined) setIsPremium(...)"). Résultat : le bouton d'analyse IA
+          // apparaissait côté client (isPremium local = true) alors que le Worker
+          // rejetait la requête (403, isPremium absent de config/main) — désync
+          // invisible pour l'utilisateur. users/{uid}/config/main (via onConfig)
+          // reste désormais la SEULE source de vérité pour isPremium côté client,
+          // cohérente avec ce que vérifie le Worker.
           // v1.83.0 — Le cloud (Firestore users/{uid}) fait foi pour l'acceptation
           // CGU, plus le cache local seul : un compte Google n'a jamais eu ce champ
           // écrit (handleGoogle ne collecte aucun consentement) et un compte email
