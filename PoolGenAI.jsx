@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.96.1";
+const APP_VERSION = "1.96.2";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -7305,10 +7305,21 @@ function PoolGenAIApp() {
   useEffect(() => {
     if (!authUser?.uid || !FB.ready()) return;
     const unsub = FB.onConfig(authUser.uid, (config) => {
-      if (config.isPremium !== undefined) {
-        setIsPremium((prev) => (prev === config.isPremium ? prev : config.isPremium));
-        window.storage.set(STORAGE_KEYS.premium, JSON.stringify(config.isPremium)).catch(() => {});
-      }
+      // v1.96.2 — FIX : synchronisation désormais INCONDITIONNELLE (plus de
+      // garde "!== undefined"). Avant ce correctif, si users/{uid}/config/main
+      // n'avait jamais eu de champ isPremium écrit (cas normal pour un compte
+      // qui n'a jamais eu d'événement Stripe/Play Billing), ce bloc ne
+      // s'exécutait JAMAIS — et une valeur isPremium=true mise en cache
+      // localement (IndexedDB, voir STORAGE_KEYS.premium) par le passé (bug
+      // v1.96.1 sur le document racine, ou tout autre incident) restait
+      // bloquée indéfiniment sur l'appareil, sans que ce listener temps réel
+      // puisse jamais la corriger. Absence de champ = traité comme false
+      // (!!config.isPremium), pour que config/main soit une source de vérité
+      // qui s'applique VRAIMENT à chaque snapshot, cohérente avec ce que
+      // vérifie déjà le Worker (userConfig?.isPremium).
+      const realIsPremium = !!config.isPremium;
+      setIsPremium((prev) => (prev === realIsPremium ? prev : realIsPremium));
+      window.storage.set(STORAGE_KEYS.premium, JSON.stringify(realIsPremium)).catch(() => {});
       if (config.lang) {
         setLang((prev) => (prev === config.lang ? prev : config.lang));
         window.storage.set("app_lang", JSON.stringify(config.lang)).catch(() => {});
