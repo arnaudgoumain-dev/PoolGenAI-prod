@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.96.4";
+const APP_VERSION = "1.98.1";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -184,8 +184,9 @@ const TRANSLATIONS = {
     new_measure_title: "Nouvelle mesure",
     edit_measure_title: "Modifier la mesure",
     date_time: "Date et heure",
-    photo_hint: "Prends en photo l'écran de ton photomètre avec les valeurs lisibles, ou place ta bandelette imbibée à côté de la légende du tube et photographie les deux ensemble.",
+    photo_hint: "Bandelette : trempe-la puis photographie-la à côté des échelles de couleurs imprimées sur le tube, bien visibles et lisibles sur la photo — c'est ce qui permet d'interpréter chaque tampon. Photomètre : prends en photo l'écran avec les valeurs lisibles.",
     photo_hint_bandelette: "Bandelette : prends 2 à 3 photos en tournant le tube pour exposer chaque échelle de couleur.",
+    strip_uncertain_params: "Lecture incertaine pour {params} — recommandé : mesure au photomètre.",
     photos_label: "Photos de la mesure",
     camera_btn: "Appareil photo",
     gallery_btn: "Bibliothèque",
@@ -916,8 +917,9 @@ const TRANSLATIONS = {
     new_measure_title: "New reading",
     edit_measure_title: "Edit reading",
     date_time: "Date and time",
-    photo_hint: "Take a photo of your photometer screen with readable values, or place your soaked test strip next to the tube legend and photograph both together.",
+    photo_hint: "Test strip: soak it, then photograph it next to the colour scales printed on the tube, clearly visible and readable in the photo — this is what lets the AI interpret each pad. Photometer: take a photo of the screen with readable values.",
     photo_hint_bandelette: "Test strip: take 2-3 photos while rotating the tube to expose every colour scale.",
+    strip_uncertain_params: "Uncertain reading for {params} — a photometer measurement is recommended.",
     photos_label: "Reading photos",
     camera_btn: "Camera",
     gallery_btn: "Library",
@@ -1636,8 +1638,9 @@ const TRANSLATIONS = {
     new_measure_title: "Neue Messung",
     edit_measure_title: "Messung bearbeiten",
     date_time: "Datum und Uhrzeit",
-    photo_hint: "Fotografiere den Photometerbildschirm mit lesbaren Werten oder lege deinen getränkten Teststreifen neben die Tubuslegende und fotografiere beide zusammen.",
+    photo_hint: "Teststreifen: tauche ihn ein und fotografiere ihn neben den auf der Tube aufgedruckten Farbskalen, gut sichtbar und lesbar auf dem Foto — nur so kann jeder Tupfer interpretiert werden. Photometer: fotografiere den Bildschirm mit lesbaren Werten.",
     photo_hint_bandelette: "Teststreifen: Mache 2-3 Fotos und drehe dabei die Tube, um jede Farbskala sichtbar zu machen.",
+    strip_uncertain_params: "Unsichere Messung für {params} — eine Photometer-Messung wird empfohlen.",
     photos_label: "Messfotos",
     camera_btn: "Kamera",
     gallery_btn: "Bibliothek",
@@ -2357,8 +2360,9 @@ const TRANSLATIONS = {
     new_measure_title: "Nuova misurazione",
     edit_measure_title: "Modifica misurazione",
     date_time: "Data e ora",
-    photo_hint: "Fotografa lo schermo del tuo fotometro con valori leggibili, o posiziona il tuo striscio bagnato accanto alla legenda del tubo e fotografali insieme.",
+    photo_hint: "Striscia reattiva: immergila e fotografala accanto alle scale di colore stampate sul tubo, ben visibili e leggibili nella foto — è ciò che permette di interpretare ogni tampone. Fotometro: fotografa lo schermo con valori leggibili.",
     photo_hint_bandelette: "Striscia reattiva: scatta 2-3 foto ruotando il tubo per esporre ogni scala di colore.",
+    strip_uncertain_params: "Lettura incerta per {params} — si consiglia una misurazione con fotometro.",
     photos_label: "Foto della misurazione",
     camera_btn: "Fotocamera",
     gallery_btn: "Libreria",
@@ -3075,8 +3079,9 @@ const TRANSLATIONS = {
     new_measure_title: "Nueva medición",
     edit_measure_title: "Editar medición",
     date_time: "Fecha y hora",
-    photo_hint: "Fotografía la pantalla de tu fotómetro con valores legibles, o coloca tu tira de prueba empapada junto a la leyenda del tubo y fotografíalos juntos.",
+    photo_hint: "Tira reactiva: sumérgela y fotografíala junto a las escalas de color impresas en el tubo, bien visibles y legibles en la foto — esto es lo que permite interpretar cada almohadilla. Fotómetro: fotografía la pantalla con valores legibles.",
     photo_hint_bandelette: "Tira reactiva: toma 2-3 fotos girando el tubo para exponer cada escala de color.",
+    strip_uncertain_params: "Lectura incierta para {params} — se recomienda una medición con fotómetro.",
     photos_label: "Fotos de la medición",
     camera_btn: "Cámara",
     gallery_btn: "Biblioteca",
@@ -3793,8 +3798,9 @@ const TRANSLATIONS = {
     new_measure_title: "Nova medição",
     edit_measure_title: "Editar medição",
     date_time: "Data e hora",
-    photo_hint: "Fotografe a tela do seu fotômetro com valores legíveis, ou coloque sua tira de teste embebida ao lado da legenda do tubo e fotografe ambos juntos.",
+    photo_hint: "Tira de teste: mergulhe-a e fotografe-a ao lado das escalas de cor impressas no tubo, bem visíveis e legíveis na foto — é isso que permite interpretar cada zona colorida. Fotômetro: fotografe a tela com valores legíveis.",
     photo_hint_bandelette: "Tira de teste: tire 2-3 fotos girando o tubo para expor cada escala de cor.",
+    strip_uncertain_params: "Leitura incerta para {params} — recomenda-se uma medição com fotômetro.",
     photos_label: "Fotos da medição",
     camera_btn: "Câmera",
     gallery_btn: "Biblioteca",
@@ -5146,6 +5152,99 @@ function sampleColorAndQuality(dataUrl, xNorm, yNorm, colorBoxSize = 8, qualityB
   });
 }
 
+// v1.97.6 — Conversion sRGB → CIE Lab (D65), formule standard, vanilla JS
+// (pas de bundler dans ce fichier, donc pas de librairie de couleur externe).
+// Utilisée pour le calcul déterministe de confiance/valeur bandelette
+// (voir computeDeterministicStripReading) — Lab est perceptuellement plus
+// fidèle qu'une distance RGB brute (cf. spec bandelettes, étape 4).
+function srgbToLab({ r, g, b }) {
+  const toLinear = (c) => {
+    c /= 255;
+    return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  };
+  const rl = toLinear(r), gl = toLinear(g), bl = toLinear(b);
+  const x = rl * 0.4124 + gl * 0.3576 + bl * 0.1805;
+  const y = rl * 0.2126 + gl * 0.7152 + bl * 0.0722;
+  const z = rl * 0.0193 + gl * 0.1192 + bl * 0.9505;
+  const xn = x / 0.95047, yn = y / 1.0, zn = z / 1.08883;
+  const f = (t) => (t > 0.008856 ? Math.cbrt(t) : (7.787 * t) + 16 / 116);
+  const fx = f(xn), fy = f(yn), fz = f(zn);
+  return { l: (116 * fy) - 16, a: 500 * (fx - fy), bLab: 200 * (fy - fz) };
+}
+
+// ΔE CIE76 — distance euclidienne simple en espace Lab (moins précise que
+// CIEDE2000 mais largement suffisante ici et beaucoup plus simple à écrire/
+// maintenir ; à revoir si la calibration future montre un besoin de finesse
+// supplémentaire).
+function deltaE76(colorA, colorB) {
+  const labA = srgbToLab(colorA);
+  const labB = srgbToLab(colorB);
+  const dl = labA.l - labB.l;
+  const da = labA.a - labB.a;
+  const db = labA.bLab - labB.bLab;
+  return Math.sqrt(dl * dl + da * da + db * db);
+}
+
+// v1.97.6 — Calcul déterministe de la valeur ET de la confiance d'un
+// paramètre bandelette, à partir de 3 points pixel réels (tampon + bornes
+// encadrantes) échantillonnés dans la photo — remplace la confiance et la
+// valeur AUTO-DÉCLARÉES par l'IA (subjectives) quand ces 3 coordonnées sont
+// fournies avec assez de confiance de localisation (cf. "tampon_point"/
+// "point" dans couleur_reconnue, jamais devinés par l'IA si incertaine).
+//
+// Principe : la valeur s'interpole au prorata des distances ΔE réelles
+// (tampon↔borne_inf et tampon↔borne_sup). La confiance reflète la
+// COLINÉARITÉ de la couleur du tampon avec les deux bornes (ratio proche de
+// 1 = le tampon est bien "sur la ligne" attendue entre les deux références ;
+// ratio élevé = dominante non corrigée, mauvais tampon segmenté, etc.),
+// plus un garde-fou si les bornes sont elles-mêmes peu discriminables sur
+// cette photo (dScale trop petit) ou si le tampon est trop loin des deux
+// bornes pour être une simple interpolation valide.
+//
+// Constantes provisoires — à recalibrer une fois assez de
+// stripConfidenceSamples avec trueValue disponibles (comparaison confiance
+// calculée vs erreur réelle mesurée au photomètre).
+const STRIP_MIN_SCALE_DELTA_E = 3;   // bornes quasi indiscernables en dessous de ce ΔE
+const STRIP_RATIO_PENALTY = 1.5;     // pénalité de confiance par unité de déviation de colinéarité
+const STRIP_OFFSCALE_RATIO = 1.5;    // au-delà, tampon trop loin des deux bornes pour être fiable
+
+async function computeDeterministicStripReading(dataUrl, tamponPoint, borneInf, borneSup) {
+  const [tamponColor, infColor, supColor] = await Promise.all([
+    sampleColorAt(dataUrl, tamponPoint[0], tamponPoint[1]),
+    sampleColorAt(dataUrl, borneInf.point[0], borneInf.point[1]),
+    sampleColorAt(dataUrl, borneSup.point[0], borneSup.point[1]),
+  ]);
+  const dInf = deltaE76(tamponColor, infColor);
+  const dSup = deltaE76(tamponColor, supColor);
+  const dScale = deltaE76(infColor, supColor);
+
+  if (dScale < STRIP_MIN_SCALE_DELTA_E) {
+    // Bornes trop proches colorimétriquement sur cette photo (mauvais
+    // éclairage, échelle décolorée...) pour discriminer quoi que ce soit —
+    // pas de valeur calculée, confiance plafonnée basse.
+    return { valeur: null, confiance: 15, dInf, dSup, dScale };
+  }
+
+  const valeur = borneInf.valeur + (borneSup.valeur - borneInf.valeur) * (dInf / (dInf + dSup));
+
+  const ratio = (dInf + dSup) / dScale;
+  const deviation = Math.max(0, ratio - 1);
+  let confiance = Math.round(100 * Math.max(0, 1 - deviation * STRIP_RATIO_PENALTY));
+
+  const minDist = Math.min(dInf, dSup);
+  if (minDist > dScale * STRIP_OFFSCALE_RATIO) {
+    confiance = Math.min(confiance, 20);
+  }
+
+  return {
+    valeur: Math.round(valeur * 100) / 100,
+    confiance,
+    dInf: Math.round(dInf * 10) / 10,
+    dSup: Math.round(dSup * 10) / 10,
+    dScale: Math.round(dScale * 10) / 10,
+  };
+}
+
 // ---------- Helpers géocodage (Nominatim / OpenStreetMap) ----------
 // Formate une adresse Nominatim en "Ville (dép)" pour la France, "Ville, Pays" à l'international
 function formatNominatimAddress(addr) {
@@ -5293,21 +5392,93 @@ async function callAIText({ apiKey, prompt, uid: callerUid }) {
   return (data.content || []).find((b) => b.type === "text")?.text || "";
 }
 
-async function analyzeStripPhoto({ apiKey, apiProvider, dataUrl, uid: callerUid }) {
+// v1.97.0 — Spec bandelettes (seuil de confiance + fiches modèle multi-marques).
+// Le prompt intègre désormais le registre des modèles connus (fiches, voir
+// FB.listStripModels) pour permettre à l'IA d'identifier le modèle exact et
+// de mapper chaque tampon à une valeur connue par correspondance d'index de
+// case colorée sur l'échelle photographiée — plutôt que de renvoyer une
+// estimation "à l'œil" sans référence structurée.
+// Coexistence demandée (session du 260726) : les anciens champs (confidence,
+// reliability, reliability_by_param, sample_points, reliability_reason, note)
+// restent produits à l'identique, le nouveau format (modele_id,
+// modele_confiance, parametres[]) s'ajoute en parallèle, sans rien retirer.
+// Migration/suppression de l'ancien format à traiter dans une session future.
+// v1.97.5 — Biais de lecture couleur (session du 260726) : ajout étape 2bis
+// (cohérence d'éclairage tampon/échelle — ombres et reflets localisés),
+// consigne d'isolement dans l'étape 4 (contraste simultané), étape 6
+// élargie de "calibration blanc" à "correction de dominante" (température
+// de couleur + ombre/reflet, pas seulement balance des blancs caméra).
+// Température de couleur, profils colorimétriques et étalonnage écran ne
+// nécessitaient pas d'ajout : déjà neutralisés par la comparaison relative
+// dans la même photo (étape 4bis) ou hors du champ de l'analyse (écran).
+// v1.98.0 — Calcul déterministe valeur+confiance (session du 260726) :
+// l'IA fournit désormais, quand elle est confiante de la localisation,
+// les coordonnées pixel du tampon et des 2 bornes encadrantes
+// ("tampon_point"/"point" dans couleur_reconnue). Ces coordonnées servent à
+// échantillonner les vraies couleurs (sampleColorAt), convertir en Lab et
+// calculer une distance ΔE76 réelle (voir srgbToLab/deltaE76/
+// computeDeterministicStripReading) — remplace la valeur interpolée ET la
+// confiance auto-déclarées (subjectives) par un calcul reproductible.
+// Repli automatique sur l'ancien comportement (confiance IA) si les
+// coordonnées manquent ou si l'échantillonnage échoue. Constantes de la
+// formule de confiance (STRIP_MIN_SCALE_DELTA_E, STRIP_RATIO_PENALTY,
+// STRIP_OFFSCALE_RATIO) provisoires — à recalibrer avec les
+// stripConfidenceSamples une fois assez de trueValue disponibles.
+async function analyzeStripPhoto({ apiKey, apiProvider, dataUrl, uid: callerUid, knownModels = [] }) {
+  const modelsJson = knownModels.length
+    ? JSON.stringify(knownModels)
+    : "[] (aucun modèle connu pour l'instant — identification à l'aveugle)";
+
   const prompt = `Tu es un expert en chimie de l'eau de piscine. Analyse cette photo qui montre soit :
 
 CAS 1 — PHOTOMÈTRE NUMÉRIQUE (WaterLink SpinTouch, PoolLab, LaMotte, Hanna, etc.)
-Lis directement les valeurs numériques affichées à l'écran.
+Lis directement les valeurs numériques affichées à l'écran. Les sections BANDELETTE ci-dessous (identification de modèle, confiance par paramètre, statut) ne s'appliquent qu'au CAS 2 ; pour un photomètre, "modele_id" est null et "parametres" est un tableau vide.
 
 CAS 2 — BANDELETTE DE TEST
-La bandelette a été trempée dans l'eau et présente des tampons colorés.
-Méthode de lecture :
-1. Le tube de bandelettes affiche une échelle de couleurs de référence pour chaque paramètre, avec les valeurs numériques associées à chaque couleur.
-2. Compare la couleur de chaque tampon de la bandelette avec l'échelle de référence visible sur le tube.
-3. Retourne la valeur numérique correspondant à la couleur la plus proche sur l'échelle.
-4. Si le tube de référence n'est pas visible sur la photo, indique confidence: "basse" et essaie quand même d'estimer.
+La bandelette a été trempée dans l'eau et présente des tampons colorés. Avant de donner une valeur pour chaque paramètre, applique cette méthode dans l'ordre et calcule un score de confiance (0-100) INDÉPENDANT pour chaque paramètre — jamais un score global unique appliqué à tous :
 
-Correspondances des abréviations courantes :
+1. IDENTIFICATION DU MODÈLE DE LANGUETTE
+   Modèles connus (fiches complètes, à utiliser en priorité si l'un correspond) :
+   ${modelsJson}
+   - Cherche un code produit visible sur le tube (OCR) et compare-le à "modele_id"/code des fiches ci-dessus.
+   - À défaut, reconnaît la marque/design du tube.
+   - À défaut, utilise nombre de tampons + palette générale (confiance d'identification plafonnée bas dans ce cas).
+   - Si un modèle de la liste correspond avec confiance suffisante : utilise SON "ordre_bas_vers_haut" et SES "echelles" (valeurs connues) pour mapper chaque tampon à une valeur, par correspondance d'index de case colorée sur l'échelle imprimée VISIBLE DANS CETTE PHOTO — jamais une échelle mémorisée d'une autre photo.
+   - Si aucun modèle ne correspond avec confiance suffisante : ne jamais appliquer une fiche au hasard. "modele_id": null, "modele_confiance" bas, et procède à une lecture directe des valeurs numériques imprimées sur l'échelle du tube visible dans la photo (comme avant v1.97.0), avec un statut par paramètre reflétant cette incertitude.
+
+2. CALIBRATION
+   L'échelle de référence imprimée sur le tube est-elle visible et lisible dans la photo (couleurs distinctes, pas de reflet/surexposition) ? Si non → confiance globale max 20%, statut "echelle_non_detectee" pour tous les paramètres concernés.
+
+2bis. COHÉRENCE D'ÉCLAIRAGE (tampon vs échelle de référence)
+   La comparaison couleur de l'étape 4 ne vaut que si le tampon et l'échelle de référence imprimée reçoivent le MÊME éclairage — sinon leurs teintes respectives ne sont plus comparables entre elles, quelle que soit la dominante globale de la photo (température de couleur, balance des blancs de l'appareil). Vérifie qu'aucune ombre ne traverse une partie de la languette sans traverser l'échelle (et inversement), et qu'aucun reflet coloré localisé (surface proche, vêtement, éclairage direct) ne touche l'un des deux sans l'autre. Incohérence détectée → réduis fortement la confiance des paramètres concernés, voire statut "echelle_non_detectee" si la différence d'éclairage est marquée.
+
+3. ORIENTATION DE LA LANGUETTE
+   - Identifie la zone de préhension (extrémité sans tampon), si ce type de zone existe pour ce modèle (voir "indices_orientation" de la fiche).
+   - Vérifie la signature colorimétrique des tampons extrêmes SI renseignée dans la fiche ("signature_extremites"). Ne jamais appliquer une signature d'un autre modèle par défaut.
+   - Recoupe les indices disponibles : concordance → confiance forte. Contradiction → confiance faible, plafonner ou t'abstenir. Un seul indice disponible → confiance modérée.
+   - Ne jamais déduire l'orientation depuis la seule position du premier tampon détecté dans l'image.
+
+4. CORRESPONDANCE COULEUR
+   Pour chaque tampon, calcule la distance colorimétrique (perçue, pas RGB brut) avec chaque case de l'échelle de référence PRÉSENTE DANS CETTE PHOTO — jamais une valeur de référence mémorisée ou théorique, uniquement celle réellement imprimée et visible ici : la comparaison relative dans la même photo neutralise déjà l'essentiel des dominantes globales (température de couleur, balance des blancs, compression, profil colorimétrique). Juge la couleur de chaque tampon et de chaque case de référence ISOLÉMENT de leur environnement immédiat (tampons voisins, fond, doigts) — un contraste simultané avec une couleur adjacente peut fausser la perception d'une teinte, y compris en vision par IA. Distance minimale élevée (couleur hors gamme) → confiance < 40. Deux cases adjacentes à distances proches (ambiguïté) → confiance réduite proportionnellement à l'écart.
+   INTERPOLATION OBLIGATOIRE : n'arrondis JAMAIS la valeur vers la case de référence la plus proche. Identifie les DEUX valeurs de référence qui encadrent la couleur du tampon (l'une en dessous, l'autre au-dessus dans l'échelle), calcule la distance colorimétrique à chacune des deux, et interpole LINÉAIREMENT la valeur au prorata de ces deux distances (ex : couleur à mi-chemin entre les cases 1 et 3 → valeur = 2, pas 1 ni 3). Seules les valeurs strictement en dehors de la plage de l'échelle (au-delà de la première ou de la dernière case) peuvent être plafonnées à la borne correspondante.
+
+4bis. COULEUR RECONNUE, DISTANCES ET COORDONNÉES (voir "couleur_reconnue" dans le format de sortie)
+   Pour chaque tampon, rapporte : la couleur mesurée du tampon (hex ou description RGB approximative), et pour les deux valeurs de référence encadrantes retenues à l'étape 4, leur valeur et leur distance colorimétrique respective.
+   En plus, SI tu es CONFIANT d'avoir localisé précisément le tampon ET les deux cases de référence encadrantes (même règle que pour "sample_points" : ne devine jamais des coordonnées approximatives, omets l'entrée sinon), fournis leurs coordonnées pixel : "tampon_point": [x, y] au niveau du paramètre, et "point": [x, y] dans chacun des objets "borne_inf"/"borne_sup" — x et y en fraction de l'image, 0 à 1, origine en haut à gauche. Ces coordonnées servent à un calcul de confiance déterministe (échantillonnage réel des pixels, hors de ce prompt) — leur précision compte davantage que pour une simple indication visuelle.
+
+5. QUALITÉ IMAGE LOCALE
+   Zone du tampon nette ? Pas de chevauchement avec un tampon adjacent ? Languette non pliée/froissée dans cette zone ? Chaque défaut détecté réduit la confiance du paramètre concerné de 15-20 points.
+
+6. CORRECTION DE DOMINANTE
+   Utilise une zone non imbibée de la languette (blanc de référence) pour estimer la dominante de la photo (température de couleur, ombre, reflet coloré) et corriger la comparaison couleur en conséquence, si cette zone est visible. Cette correction s'ajoute à la vérification de cohérence d'éclairage de l'étape 2bis — elle ne la remplace pas : une zone blanche cohérente ne compense pas une ombre localisée qui ne toucherait que le tampon ou que l'échelle.
+
+7. SEGMENTATION
+   Le nombre et l'espacement des tampons détectés doivent correspondre au nombre de paramètres attendus pour le modèle identifié ("nb_parametres" de la fiche). Si la segmentation n'y arrive pas → abstention totale pour les paramètres concernés (statut "confiance_insuffisante"), pas de lecture partielle inventée.
+
+8. STATUT PAR PARAMÈTRE
+   "déterminé" si la confiance calculée dépasse le seuil attendu pour ce paramètre, "confiance_insuffisante" si en dessous (mais lecture tentée), "echelle_non_detectee" si l'échelle de référence elle-même n'est pas exploitable dans la photo. Ne jamais surestimer la confiance par extrapolation depuis un paramètre voisin bien identifié.
+
+Correspondances des abréviations courantes (utilise ces clés courtes, identiques dans "parametres" et dans les champs numériques ci-dessous) :
 - FCL / Free Cl / Cl libre → fCl (chlore libre)
 - TCL / Total Cl / Cl total → tCl (chlore total)
 - CCL / Combined Cl / Chloramines → ccl (chlore combiné)
@@ -5323,24 +5494,28 @@ Correspondances des abréviations courantes :
 - O2 / Active O2 → o2
 
 Réponds UNIQUEMENT en JSON valide, sans texte avant ou après, sans markdown, sans commentaires :
-{"device": "photometre" ou "bandelette", "pH": nombre ou null, "fCl": nombre ou null, "tCl": nombre ou null, "ccl": nombre ou null, "tac": nombre ou null, "cya": nombre ou null, "hard": nombre ou null, "phos": nombre ou null, "copper": nombre ou null, "iron": nombre ou null, "temp": nombre ou null, "brome": nombre ou null, "o2": nombre ou null, "sel": nombre ou null, "confidence": "haute" ou "moyenne" ou "basse", "reliability": entier de 1 à 5 (1=très peu fiable, 5=très fiable), "reliability_by_param": {"pH": entier 1-5, "fCl": entier 1-5, ...} (une entrée par paramètre non-null uniquement, note la lisibilité de CE tampon précis — un reflet ou un angle défavorable sur un seul tampon doit baisser SA note sans affecter les autres), "sample_points": {"pH": {"pad": [x, y], "reference": [x, y], "padSizeFraction": nombre}, ...} (UNIQUEMENT si device est "bandelette" ; pour chaque paramètre où tu es CONFIANT d'avoir localisé précisément à la fois le tampon coloré ET la case de référence correspondante sur l'échelle imprimée du tube, donne leurs coordonnées en fraction de l'image, x et y entre 0 et 1, origine en haut à gauche ; omets complètement l'entrée pour un paramètre si tu n'es pas confiant sur la localisation exacte — ne devine jamais des coordonnées approximatives ; "padSizeFraction" est une estimation approximative de la largeur du tampon coloré exprimée en fraction de la largeur totale de l'image, 0 à 1, sert uniquement d'indicateur de qualité donc une estimation grossière suffit, contrairement à pad/reference qui doivent être précis — omets ce champ si tu ne peux pas l'estimer visuellement), "reliability_reason": "une phrase en français expliquant la note de fiabilité (qualité image, lisibilité échelle, etc.)", "note": "une phrase en français sur la lisibilité et la méthode utilisée"}
+{"device": "photometre" ou "bandelette", "pH": nombre ou null, "fCl": nombre ou null, "tCl": nombre ou null, "ccl": nombre ou null, "tac": nombre ou null, "cya": nombre ou null, "hard": nombre ou null, "phos": nombre ou null, "copper": nombre ou null, "iron": nombre ou null, "temp": nombre ou null, "brome": nombre ou null, "o2": nombre ou null, "sel": nombre ou null, "confidence": "haute" ou "moyenne" ou "basse", "reliability": entier de 1 à 5 (1=très peu fiable, 5=très fiable), "reliability_by_param": {"pH": entier 1-5, "fCl": entier 1-5, ...} (une entrée par paramètre non-null uniquement, note la lisibilité de CE tampon précis — un reflet ou un angle défavorable sur un seul tampon doit baisser SA note sans affecter les autres), "sample_points": {"pH": {"pad": [x, y], "reference": [x, y], "padSizeFraction": nombre}, ...} (UNIQUEMENT si device est "bandelette" ; pour chaque paramètre où tu es CONFIANT d'avoir localisé précisément à la fois le tampon coloré ET la case de référence correspondante sur l'échelle imprimée du tube, donne leurs coordonnées en fraction de l'image, x et y entre 0 et 1, origine en haut à gauche ; omets complètement l'entrée pour un paramètre si tu n'es pas confiant sur la localisation exacte — ne devine jamais des coordonnées approximatives ; "padSizeFraction" est une estimation approximative de la largeur du tampon coloré exprimée en fraction de la largeur totale de l'image, 0 à 1, sert uniquement d'indicateur de qualité donc une estimation grossière suffit, contrairement à pad/reference qui doivent être précis — omets ce champ si tu ne peux pas l'estimer visuellement), "reliability_reason": "une phrase en français expliquant la note de fiabilité (qualité image, lisibilité échelle, etc.)", "note": "une phrase en français sur la lisibilité et la méthode utilisée", "modele_id": "identifiant de la fiche utilisée (ex: mareva_mv3028) ou null si non identifié ou si device est photometre", "modele_confiance": entier 0-100 (confiance dans l'identification du modèle ; 0 si device est photometre), "parametres": [{"parametre": "pH", "valeur": nombre ou null, "confiance": entier 0-100, "statut": "déterminé" ou "confiance_insuffisante" ou "echelle_non_detectee"}, ...] (un objet par paramètre non-null dans les champs numériques ci-dessus ; tableau vide si device est photometre), "couleur_reconnue": {"pH": {"tampon_hex": "#rrggbb", "tampon_point": [x, y], "borne_inf": {"valeur": nombre, "hex": "#rrggbb", "distance": nombre, "point": [x, y]}, "borne_sup": {"valeur": nombre, "hex": "#rrggbb", "distance": nombre, "point": [x, y]}}, ...} (UNIQUEMENT si device est "bandelette" ; un objet par paramètre présent dans "parametres" ; "distance" est la distance colorimétrique perçue calculée à l'étape 4, mêmes unités que celles utilisées pour départager les cases ; omets l'entrée d'un paramètre si les bornes encadrantes n'ont pas pu être identifiées avec confiance ; champ temporaire (hex/distance), retiré une fois l'algorithme stabilisé — ne pas omettre tant qu'il est demandé ; "tampon_point"/"point" (x, y en fraction de l'image, 0 à 1, origine en haut à gauche) : UNIQUEMENT si localisation précise et confiante des 3 zones, jamais de coordonnées approximatives devinées — omets "tampon_point" ou l'un des "point" si la localisation exacte n'est pas certaine, sert au calcul de confiance déterministe, voir étape 4bis)}
 
 Règles strictes :
 - "device" indique lequel des deux CAS ci-dessus correspond à la photo analysée — jamais null, choisis le plus probable même en cas de doute
 - Pour un PHOTOMÈTRE : retourne les valeurs numériques exactes affichées à l'écran
-- Pour une BANDELETTE : retourne une ESTIMATION de la valeur basée sur la comparaison des couleurs avec l'échelle du tube — une valeur approchée est préférable à null
-- "reliability_by_param" : évalue CHAQUE tampon indépendamment (reflet, angle de vue, netteté de la zone précise), ne recopie pas la même note partout par défaut
+- Pour une BANDELETTE : retourne une ESTIMATION de la valeur basée sur la comparaison des couleurs avec l'échelle du tube — une valeur approchée est préférable à null, même si "statut" doit alors refléter honnêtement l'incertitude
+- "valeur" pour une BANDELETTE est TOUJOURS une interpolation linéaire entre les deux valeurs de référence encadrantes (voir section 4) — jamais l'une des deux valeurs de référence elle-même, sauf si la couleur du tampon coïncide exactement avec une case ou dépasse la plage de l'échelle
+- "reliability_by_param" et "parametres[].confiance" évaluent CHAQUE tampon indépendamment (reflet, angle de vue, netteté de la zone précise), ne recopie pas la même note partout par défaut
 - "sample_points" : uniquement des coordonnées précises et vérifiées, jamais d'estimation grossière — mieux vaut omettre un paramètre que donner des coordonnées fausses
 - "padSizeFraction" : seule exception à la règle ci-dessus — une estimation approximative est acceptée, contrairement aux coordonnées pad/reference
 - Les valeurs doivent être des nombres (pas des chaînes)
 - null uniquement si le paramètre est vraiment impossible à lire ou absent de la bandelette
+- "parametres" ne doit jamais contenir un paramètre absent du modèle identifié (respecte "nb_parametres" de la fiche le cas échéant)
 - JSON pur, rien d'autre`;
 
-  const text = await callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl: dataUrl, uid: callerUid, maxTokens: 1500 });
+  const text = await callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl: dataUrl, uid: callerUid, maxTokens: 1800 });
   const match = text.match(/\{[\s\S]*\}/);
   if (!match) throw new Error("Réponse IA non parseable : " + text.slice(0, 200));
   return JSON.parse(match[0]);
 }
+
+
 
 async function analyzeProductPhoto({ apiKey, apiProvider, dataUrls, uid: callerUid }) {
   const photos = Array.isArray(dataUrls) ? dataUrls : [dataUrls];
@@ -5465,6 +5640,20 @@ async function uploadCommonProductPhoto({ idToken, productId, photoBase64 }) {
     body: JSON.stringify({ productId, photoBase64 }),
   });
   if (!res.ok) throw new Error(`Échec d'upload photo base commune (${res.status})`);
+  return res.json();
+}
+
+// v1.97.0 — Spec bandelettes : signal envoyé au support quand une photo
+// bandelette n'a pu être rattachée à aucun modèle connu (voir handler côté
+// Worker, poolgenai-proxy.js, qui agrège les occurrences avant d'envoyer un
+// email). Best-effort, jamais bloquant pour l'utilisateur — voir appelant.
+async function signalUnrecognizedStripModel({ idToken, note }) {
+  const res = await fetch(`${PROXY_BASE_URL}/strip-model-signal`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+    body: JSON.stringify({ note: note || "" }),
+  });
+  if (!res.ok) throw new Error(`Échec du signal bandelette non reconnue (${res.status})`);
   return res.json();
 }
 
@@ -5904,6 +6093,53 @@ const FB = {
     const ref = window._fbDoc(window._fbDb, "calibrationModels", `${stripModel}_${param}`);
     const snap = await window._fbGetDoc(ref);
     return snap.exists() ? snap.data() : null;
+  },
+  // v1.97.4 — Échantillons de confiance bandelette (spec bandelettes) :
+  // collection RACINE, create-only, un document par paramètre analysé en
+  // mode bandelette (déterminé ou non). Contrairement à calibrationPoints,
+  // traçable (uid + measureId) à la demande explicite — permet de recontacter
+  // un testeur dont les photos posent problème. measureId est null pour une
+  // mesure pas encore enregistrée (l'id définitif n'existe qu'à la
+  // sauvegarde) ; analysisId regroupe alors les échantillons d'une même
+  // session d'analyse. Sert à ajuster les seuils par paramètre (config/
+  // stripConfidenceThresholds) à partir de vraies photos de testeurs.
+  addStripConfidenceSample: async (userUid, sample) => {
+    if (!window._fbDb || !window._fbSetDoc) return;
+    const ref = window._fbDoc(window._fbDb, "stripConfidenceSamples", uid());
+    await window._fbSetDoc(ref, { uid: userUid, capturedAt: new Date().toISOString(), ...sample });
+  },
+  // v1.97.0 — Spec bandelettes (seuil de confiance + fiches modèle) : registre
+  // des modèles de bandelette connus (ordre des tampons, échelles, indices
+  // d'orientation — voir section 10.2 de la spec). Collection en lecture
+  // seule côté client (même principe que calibrationModels) ; écriture
+  // réservée à un script d'admin one-shot (validation humaine obligatoire
+  // avant publication d'une fiche, jamais générée automatiquement par l'IA).
+  getStripModel: async (modeleId) => {
+    if (!window._fbDb || !window._fbGetDoc) return null;
+    const ref = window._fbDoc(window._fbDb, "stripModels", modeleId);
+    const snap = await window._fbGetDoc(ref);
+    return snap.exists() ? snap.data() : null;
+  },
+  // v1.97.0 — Registre complet, embarqué dans le prompt IA pour permettre
+  // l'identification du modèle + la lecture par correspondance d'index de
+  // case colorée (voir analyzeStripPhoto). Collection restant modeste en
+  // volume (quelques dizaines de modèles au plus), un listage complet à
+  // chaque analyse reste largement acceptable.
+  listStripModels: async () => {
+    if (!window._fbDb || !window._fbGetDocs) return [];
+    const col = window._fbCollection(window._fbDb, "stripModels");
+    const snap = await window._fbGetDocs(col);
+    return snap.docs.map((d) => ({ modele_id: d.id, ...d.data() }));
+  },
+  // v1.97.0 — Seuil de confiance minimum par paramètre (0-100), configurable
+  // sans redéploiement (document unique, modifiable depuis la console
+  // Firebase). Valeur de repli 70 si le document ou un paramètre précis est
+  // absent — cohérent avec le seuil initial demandé dans la spec.
+  getStripConfidenceThresholds: async () => {
+    if (!window._fbDb || !window._fbGetDoc) return {};
+    const ref = window._fbDoc(window._fbDb, "config", "stripConfidenceThresholds");
+    const snap = await window._fbGetDoc(ref);
+    return snap.exists() ? snap.data() : {};
   },
   // ── v1.55.0 — Utilisateurs secondaires (brique 3) ──
   // Comptes qui m'ont invité (moi = secondaire). doc.id = primaryUid.
@@ -12103,7 +12339,22 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
   const [analyzeNote, setAnalyzeNote] = useState(null);
   const [analyzeTimer, setAnalyzeTimer] = useState(null); // secondes écoulées | null
   const [analyzeReliability, setAnalyzeReliability] = useState(null); // { score: 1-5, reason: string }
+  // v1.97.0 — Spec bandelettes : paramètres dont la confiance (nouveau format
+  // 0-100, par paramètre) est sous le seuil configuré, ou dont le statut est
+  // "confiance_insuffisante"/"echelle_non_detectee" — aucune valeur numérique
+  // n'est alors affichée pour ces paramètres (voir boucle de fusion).
+  const [analyzeUncertainParams, setAnalyzeUncertainParams] = useState([]);
+  // v1.97.1 — Debug temporaire (demandé en session, à retirer une fois
+  // l'algorithme d'interpolation stabilisé) : couleur reconnue par tampon +
+  // bornes de référence encadrantes + distances, pour vérifier visuellement
+  // la qualité de l'interpolation. Affiché uniquement dans ce formulaire,
+  // jamais dans le rapport PDF ni ailleurs.
+  const [analyzeColorDebug, setAnalyzeColorDebug] = useState({});
   const analyzeTimerRef = React.useRef(null);
+  // v1.97.4 — Regroupe les échantillons de confiance (stripConfidenceSamples)
+  // d'une même session d'analyse quand la mesure n'est pas encore enregistrée
+  // (pas de measureId définitif dans ce cas — voir FB.addStripConfidenceSample).
+  const analyzeSessionIdRef = useRef(null);
   const [confirmAnalyze, setConfirmAnalyze] = useState(false);
   const fileInputRef = useRef(null);
   const galleryInputRef = useRef(null);
@@ -12179,6 +12430,8 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
     setAnalyzeError(null);
     setAnalyzeNote(null);
     setAnalyzeReliability(null);
+    setAnalyzeUncertainParams([]);
+    setAnalyzeColorDebug({});
     // Démarrer le timer
     setAnalyzeTimer(0);
     let elapsed = 0;
@@ -12187,11 +12440,27 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
       setAnalyzeTimer(elapsed);
     }, 1000);
     try {
+      // v1.97.0 — Spec bandelettes : registre des fiches modèle connues +
+      // seuils de confiance par paramètre, chargés une seule fois avant la
+      // boucle (pas de re-fetch par photo). Best-effort : un échec de lecture
+      // Firestore ne doit jamais bloquer l'analyse — repli sur [] / {} (donc
+      // seuil par défaut 70 pour tout paramètre absent du document).
+      let knownModels = [];
+      let confidenceThresholds = {};
+      try {
+        [knownModels, confidenceThresholds] = await Promise.all([
+          FB.listStripModels(),
+          FB.getStripConfidenceThresholds(),
+        ]);
+      } catch (e) {
+        // silencieux — l'analyse continue avec le seuil de repli 70
+      }
+
       // Analyse chaque photo et consolide les résultats en prenant la valeur la plus fiable par paramètre
       const allResults = [];
       const notes = [];
       for (const dataUrl of photos) {
-        const result = await analyzeStripPhoto({ apiKey, apiProvider, dataUrl, uid: authUid });
+        const result = await analyzeStripPhoto({ apiKey, apiProvider, dataUrl, uid: authUid, knownModels });
         allResults.push(result);
         if (result.note) notes.push(result.note);
       }
@@ -12232,8 +12501,26 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
       // valeur photomètre en parallèle) — candidats à une correction par
       // modèle de calibration communautaire une fois la boucle terminée.
       const bandeletteOnlyCandidates = [];
+      // v1.97.0 — Spec bandelettes : paramètres dont la lecture bandelette est
+      // sous le seuil de confiance (ou statut confiance_insuffisante/
+      // echelle_non_detectee). Pas de valeur affichée pour ces clés SAUF si la
+      // correction par modèle de calibration communautaire (bloc après la
+      // boucle) parvient à produire une valeur malgré tout — auquel cas la
+      // clé est retirée de cet ensemble plus bas.
+      const gatedKeys = new Set();
+      // v1.97.1 — Debug temporaire : couleur reconnue + bornes encadrantes par
+      // paramètre, capturées depuis le résultat effectivement retenu (best),
+      // pas depuis tous les candidats — cohérent avec la valeur affichée.
+      const colorDebug = {};
+      // v1.97.4 — Échantillons de confiance bandelette (voir
+      // FB.addStripConfidenceSample) : capturés pour CHAQUE paramètre où une
+      // lecture bandelette a été tentée, y compris quand une lecture
+      // photomètre parallèle existe (cas calibration — trueValue alors
+      // renseignée) ou quand le paramètre est gaté (confiance insuffisante) —
+      // ce sont justement ces cas qu'il faut pouvoir analyser plus tard.
+      const confidenceSamples = [];
 
-      numericKeys.forEach(k => {
+      for (const k of numericKeys) {
         // Score par tampon : priorité à reliability_by_param[k] (1-5, spécifique à ce
         // paramètre) ; à défaut (ancien format IA sans ce champ, ou clé absente),
         // repli sur reliability globale de la photo, puis sur confidence.
@@ -12247,14 +12534,144 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
             samplePoints: r.sample_points?.[k] || null,
             photoIdx: idx,
           }));
-        if (candidates.length === 0) return;
+        if (candidates.length === 0) continue;
         const photometerCandidates = candidates.filter(c => c.device === "photometre");
         const pool = photometerCandidates.length ? photometerCandidates : candidates;
         // Meilleur score du groupe retenu (photomètre si disponible, sinon bandelette) ;
         // première occurrence en cas d'égalité, jamais de moyenne.
         const maxScore = Math.max(...pool.map(c => c.score));
         const best = pool.find(c => c.score === maxScore);
-        merged[k] = Math.round(best.value * 100) / 100;
+
+        // v1.97.0 — Seuil de confiance par paramètre (ne s'applique qu'à une
+        // lecture bandelette — un photomètre affiche une valeur numérique
+        // directe, hors du champ de cette spec). "statutEntry" absent (ancien
+        // format IA sans "parametres", ou réponse dégradée) → comportement
+        // inchangé, pas de gating (coexistence demandée avec l'ancien format).
+        const statutEntry = best.device === "bandelette"
+          ? allResults[best.photoIdx]?.parametres?.find((p) => p.parametre === k) || null
+          : null;
+        const threshold = confidenceThresholds?.[k] ?? 70;
+
+        // v1.97.6 — Tentative de calcul déterministe (valeur ET confiance) à
+        // partir de coordonnées pixel réelles échantillonnées dans la photo,
+        // quand le meilleur candidat retenu est une lecture bandelette ET que
+        // l'IA a fourni les 3 coordonnées (tampon + 2 bornes) avec assez de
+        // confiance de localisation. Remplace la confiance/valeur
+        // auto-déclarées par l'IA (subjectives) — repli automatique dessus
+        // (voir isGated/effectiveValue plus bas) si coordonnées absentes ou
+        // si l'échantillonnage échoue (photo corrompue, coordonnées hors
+        // image...) : jamais bloquant.
+        let computed = null;
+        if (best.device === "bandelette") {
+          const crBest = allResults[best.photoIdx]?.couleur_reconnue?.[k];
+          if (crBest?.tampon_point && crBest?.borne_inf?.point && crBest?.borne_sup?.point &&
+              typeof crBest.borne_inf.valeur === "number" && typeof crBest.borne_sup.valeur === "number") {
+            try {
+              computed = await computeDeterministicStripReading(
+                photos[best.photoIdx],
+                crBest.tampon_point,
+                { point: crBest.borne_inf.point, valeur: crBest.borne_inf.valeur },
+                { point: crBest.borne_sup.point, valeur: crBest.borne_sup.valeur }
+              );
+            } catch (e) {
+              computed = null; // best-effort — repli silencieux sur la confiance IA
+            }
+          }
+        }
+
+        const isGated = computed
+          ? (computed.valeur === null || (typeof computed.confiance === "number" && computed.confiance < threshold))
+          : (!!statutEntry && (
+              statutEntry.statut !== "déterminé" ||
+              (typeof statutEntry.confiance === "number" && statutEntry.confiance < threshold)
+            ));
+        const effectiveValue = (computed && typeof computed.valeur === "number") ? computed.valeur : best.value;
+
+        // v1.97.1 — Debug temporaire : capture indépendante du gating (on veut
+        // voir la couleur reconnue même pour un paramètre incertain, c'est
+        // justement l'intérêt du debug). v1.97.6 — ajout des champs calculés.
+        if (best.device === "bandelette") {
+          const cr = allResults[best.photoIdx]?.couleur_reconnue?.[k];
+          if (cr) colorDebug[k] = {
+            ...cr,
+            confiance: typeof statutEntry?.confiance === "number" ? statutEntry.confiance : null,
+            confianceCalculee: computed?.confiance ?? null,
+            valeurCalculee: computed?.valeur ?? null,
+            dInfLab: computed?.dInf ?? null,
+            dSupLab: computed?.dSup ?? null,
+            dScaleLab: computed?.dScale ?? null,
+          };
+        }
+
+        // v1.97.4 — Échantillon de confiance : cherché parmi TOUS les
+        // candidats bandelette de ce paramètre, pas seulement "best" — sinon
+        // le cas calibration (photomètre + bandelette en parallèle, best =
+        // photomètre) ne serait jamais capturé alors que c'est là que
+        // trueValue est disponible pour comparaison.
+        const bandeletteCandidatesForSample = candidates.filter(c => c.device === "bandelette");
+        if (bandeletteCandidatesForSample.length) {
+          const bMaxScore = Math.max(...bandeletteCandidatesForSample.map(c => c.score));
+          const bCand = bandeletteCandidatesForSample.find(c => c.score === bMaxScore);
+          const bResult = allResults[bCand.photoIdx];
+          const bStatutEntry = bResult?.parametres?.find((p) => p.parametre === k) || null;
+          const cr = bResult?.couleur_reconnue?.[k] || null;
+
+          // v1.97.6 — Réutilise le calcul déjà fait plus haut si c'est le même
+          // candidat (cas normal, best = bandelette) ; sinon (cas calibration,
+          // best = photomètre) tente un calcul séparé pour ce candidat
+          // bandelette, uniquement pour la télémétrie ci-dessous — ne modifie
+          // jamais merged[k] dans ce cas, le photomètre reste autoritaire.
+          let sampleComputed = (best.device === "bandelette" && bCand.photoIdx === best.photoIdx) ? computed : null;
+          if (!sampleComputed && cr?.tampon_point && cr?.borne_inf?.point && cr?.borne_sup?.point &&
+              typeof cr.borne_inf.valeur === "number" && typeof cr.borne_sup.valeur === "number") {
+            try {
+              sampleComputed = await computeDeterministicStripReading(
+                photos[bCand.photoIdx],
+                cr.tampon_point,
+                { point: cr.borne_inf.point, valeur: cr.borne_inf.valeur },
+                { point: cr.borne_sup.point, valeur: cr.borne_sup.valeur }
+              );
+            } catch (e) {
+              sampleComputed = null;
+            }
+          }
+
+          confidenceSamples.push({
+            param: k,
+            stripModel: bResult?.modele_id || (stripModel ? normalizeStripModel(stripModel) : null),
+            confiance: typeof bStatutEntry?.confiance === "number" ? bStatutEntry.confiance : null,
+            statut: bStatutEntry?.statut ?? null,
+            valeurLue: bCand.value,
+            tamponHex: cr?.tampon_hex ?? null,
+            borneInfValeur: cr?.borne_inf?.valeur ?? null,
+            borneInfHex: cr?.borne_inf?.hex ?? null,
+            borneInfDistance: cr?.borne_inf?.distance ?? null,
+            borneSupValeur: cr?.borne_sup?.valeur ?? null,
+            borneSupHex: cr?.borne_sup?.hex ?? null,
+            borneSupDistance: cr?.borne_sup?.distance ?? null,
+            // trueValue : uniquement si le meilleur candidat retenu pour CE
+            // paramètre est le photomètre (cf. priorité photomètre > pool) —
+            // sinon aucune vérité terrain n'existe pour cette mesure.
+            trueValue: photometerCandidates.length ? best.value : null,
+            modeleConfiance: typeof bResult?.modele_confiance === "number" ? bResult.modele_confiance : null,
+            reliabilityByParam: bResult?.reliability_by_param?.[k] ?? null,
+            // v1.97.6 — Calcul déterministe (peut être null si coordonnées
+            // absentes ou échantillonnage impossible) — sert à comparer,
+            // une fois trueValue disponible, la précision du calcul déterministe
+            // par rapport à la confiance auto-déclarée par l'IA.
+            confianceCalculee: sampleComputed?.confiance ?? null,
+            valeurCalculee: sampleComputed?.valeur ?? null,
+            dInfLab: sampleComputed?.dInf ?? null,
+            dSupLab: sampleComputed?.dSup ?? null,
+            dScaleLab: sampleComputed?.dScale ?? null,
+          });
+        }
+
+        if (isGated) {
+          gatedKeys.add(k);
+        } else {
+          merged[k] = Math.round(effectiveValue * 100) / 100;
+        }
 
         // Point de calibration : seulement si trueValue vient du photomètre (sinon
         // ce n'est qu'une estimation, pas une référence), et qu'une lecture
@@ -12272,7 +12689,7 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
           // communautaire (cf. bloc après la boucle).
           bandeletteOnlyCandidates.push({ param: k, photoIdx: best.photoIdx, samplePoints: best.samplePoints });
         }
-      });
+      }
 
       // v1.38.0 — Lot B : correction des lectures bandelette seules (aucune
       // valeur photomètre disponible pour ce paramètre sur cette mesure) via
@@ -12294,11 +12711,23 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
             const { a, b, c: coefC, d } = model.coefficients;
             const predicted = a * color.r + b * color.g + coefC * color.b + d;
             merged[bc.param] = Math.max(0, Math.round(predicted * 100) / 100);
+            // v1.97.0 — Une correction communautaire réussie l'emporte sur le
+            // gating par confiance IA : le modèle de calibration s'appuie sur
+            // une régression couleur→valeur indépendante du jugement de
+            // confiance du modèle de vision, pas sur une lecture "à l'oeil".
+            gatedKeys.delete(bc.param);
           } catch (e) {
             // silencieux — correction best-effort, l'estimation IA reste valable
           }
         }
       }
+
+      // v1.97.0 — Un paramètre reste "incertain" pour l'affichage seulement
+      // s'il est toujours gated ET qu'aucune valeur n'a finalement été
+      // retenue dans merged (pas de correction communautaire disponible).
+      const finalUncertainParams = [...gatedKeys].filter((k) => merged[k] === undefined);
+      setAnalyzeUncertainParams(finalUncertainParams);
+      setAnalyzeColorDebug(colorDebug);
 
       if (merged.pH     !== undefined) setPH(String(merged.pH));
       if (merged.fCl    !== undefined) setFCl(String(merged.fCl));
@@ -12370,6 +12799,21 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
         }
       }
 
+      // v1.97.4 — Écriture des échantillons de confiance bandelette collectés
+      // pendant la fusion (voir boucle plus haut). Best-effort et
+      // silencieux, fire-and-forget — jamais bloquant pour l'utilisateur.
+      // measureId : celui de la mesure en édition si disponible, sinon null
+      // (nouvelle mesure pas encore enregistrée — analysisId regroupe alors
+      // les échantillons de cette même session d'analyse, voir le ref).
+      if (authUid && confidenceSamples.length) {
+        if (!analyzeSessionIdRef.current) analyzeSessionIdRef.current = uid();
+        const measureIdForSample = isEditing && measure?.id ? measure.id : null;
+        const analysisId = analyzeSessionIdRef.current;
+        confidenceSamples.forEach((s) => {
+          FB.addStripConfidenceSample(authUid, { ...s, measureId: measureIdForSample, analysisId }).catch(() => {});
+        });
+      }
+
       // Calculer la note de fiabilité consolidée (moyenne des notes de chaque photo)
       const reliabilityScores = allResults.filter(r => r.reliability != null).map(r => Number(r.reliability));
       const avgReliability = reliabilityScores.length
@@ -12389,6 +12833,24 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
         setAnalyzeNote(
           `${photos.length} photo(s) — ${notes.join(" / ") || t("verify_connection")}`
         );
+      }
+
+      // v1.97.0 — Spec bandelettes (10.5) : signal best-effort si au moins une
+      // photo bandelette n'a pu être rattachée à aucun modèle connu. Jamais
+      // bloquant, jamais visible pour l'utilisateur — sert uniquement à
+      // repérer côté support qu'une nouvelle fiche modèle mérite d'être créée.
+      const unrecognized = allResults.find(
+        (r) => r.device === "bandelette" && (!r.modele_id || (typeof r.modele_confiance === "number" && r.modele_confiance < 40))
+      );
+      if (unrecognized) {
+        try {
+          const idToken = await window._fbAuth?.currentUser?.getIdToken();
+          if (idToken) {
+            await signalUnrecognizedStripModel({ idToken, note: unrecognized.note || "" });
+          }
+        } catch (e) {
+          // silencieux — signal interne, jamais affiché à l'utilisateur
+        }
       }
     } catch (err) {
       setAnalyzeError(t("error_analyze") + " : " + (err?.message || t("verify_connection")));
@@ -12657,6 +13119,57 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
           {analyzeReliability.reason && (
             <div style={{ fontSize: 11, color: "var(--brand-text-secondary)", lineHeight: 1.5 }}>{analyzeReliability.reason}</div>
           )}
+        </div>
+      )}
+
+      {/* v1.97.0 — Spec bandelettes : paramètres sous le seuil de confiance
+          (par paramètre) ou non déterminés — aucune valeur numérique n'a été
+          renseignée pour eux (voir gating dans la boucle de fusion). */}
+      {analyzeUncertainParams.length > 0 && (
+        <div style={{ marginTop: 10, padding: "10px 12px", background: "#fff8e6", borderRadius: 10, border: "1px solid #f0dca0" }}>
+          <div style={{ fontSize: 12, color: "var(--brand-text-strong)", lineHeight: 1.5 }}>
+            {t("strip_uncertain_params", { params: analyzeUncertainParams.join(", ") })}
+          </div>
+        </div>
+      )}
+
+      {/* v1.97.1 — Debug temporaire, demandé en session pour vérifier
+          visuellement la qualité de l'interpolation couleur→valeur. À retirer
+          une fois l'algorithme stabilisé — jamais dans le rapport PDF. */}
+      {Object.keys(analyzeColorDebug).length > 0 && (
+        <div style={{ marginTop: 10, padding: "10px 12px", background: "#f5f5f7", borderRadius: 10, border: "1px dashed #b0b0b8" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--brand-text-muted)", marginBottom: 6 }}>
+            🔧 Debug couleur (temporaire)
+          </div>
+          {Object.entries(analyzeColorDebug).map(([param, cr]) => (
+            <div key={param} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, color: "var(--brand-text-secondary)", marginBottom: 4 }}>
+              <span style={{ fontWeight: 700, minWidth: 40 }}>{param}</span>
+              {cr.tampon_hex && (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                  <span style={{ width: 12, height: 12, borderRadius: 3, background: cr.tampon_hex, border: "1px solid #ccc", display: "inline-block" }} />
+                  {cr.tampon_hex}
+                </span>
+              )}
+              {cr.borne_inf && (
+                <span>
+                  ↓ {cr.borne_inf.valeur} ({cr.borne_inf.hex}, d={cr.borne_inf.distance})
+                </span>
+              )}
+              {cr.borne_sup && (
+                <span>
+                  ↑ {cr.borne_sup.valeur} ({cr.borne_sup.hex}, d={cr.borne_sup.distance})
+                </span>
+              )}
+              {typeof cr.confiance === "number" && (
+                <span>· conf. IA {cr.confiance}</span>
+              )}
+              {typeof cr.confianceCalculee === "number" && (
+                <span style={{ fontWeight: 700 }}>
+                  · calc. {cr.valeurCalculee ?? "—"} (conf. {cr.confianceCalculee}, ΔE {cr.dInfLab}/{cr.dSupLab}/{cr.dScaleLab})
+                </span>
+              )}
+            </div>
+          ))}
         </div>
       )}
 
