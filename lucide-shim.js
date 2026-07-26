@@ -141,5 +141,14 @@
       circle(12, 12, 7),
       circle(12, 12, 1.5),
     ]),
+    // v1.98.2 — Manquante depuis son ajout à la destructuration LucideReact
+    // dans PoolGenAI.jsx (utilisée uniquement par les cartes "informatives"
+    // du plan de traitement, ex. chlore-excess — jamais déclenchées sur les
+    // pools de test, d'où l'absence détectée seulement maintenant).
+    Info: Icon([
+      circle(12, 12, 10),
+      line(12, 16, 12, 12),
+      line(12, 8, 12, 8.01),
+    ]),
   };
 })();
