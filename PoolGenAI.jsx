@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.98.4";
+const APP_VERSION = "1.98.5";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -12639,10 +12639,21 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
           }
         }
 
+        // v1.98.5 — Testeur : le statut texte de l'IA ("confiance_insuffisante",
+        // "echelle_non_detectee") est un second verrou INDÉPENDANT du chiffre
+        // de confiance — l'IA peut annoncer confiance 50 tout en indiquant
+        // elle-même un statut "insuffisant", et ce statut bloquait jusqu'ici
+        // même avec un seuil testeur abaissé (25). Pour un compte testeur, on
+        // ignore ce statut texte et on ne compare que le chiffre de confiance
+        // au seuil — c'est justement l'objectif : voir une estimation
+        // chiffrée même quand l'IA elle-même est réservée dessus. Un
+        // utilisateur non-testeur garde les deux verrous (comportement
+        // inchangé). Le calcul déterministe (computed) n'a pas de statut
+        // texte séparé — non concerné par ce changement.
         const isGated = computed
           ? (computed.valeur === null || (typeof computed.confiance === "number" && computed.confiance < threshold))
           : (!!statutEntry && (
-              statutEntry.statut !== "déterminé" ||
+              (!isStripTester && statutEntry.statut !== "déterminé") ||
               (typeof statutEntry.confiance === "number" && statutEntry.confiance < threshold)
             ));
         const effectiveValue = (computed && typeof computed.valeur === "number") ? computed.valeur : best.value;
