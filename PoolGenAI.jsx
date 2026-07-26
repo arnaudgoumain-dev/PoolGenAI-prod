@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.98.2";
+const APP_VERSION = "1.98.4";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -659,6 +659,8 @@ const TRANSLATIONS = {
     ai_toggle_desc: "Permet d'analyser les photos de mesure par intelligence artificielle.",
     calibration_toggle_label: "Contribuer à l'amélioration collective",
     calibration_toggle_desc: "Partage des données de calibration anonymes (couleur mesurée, valeur de référence) pour améliorer la lecture des bandelettes pour tous. Aucune photo ni identifiant transmis.",
+    strip_tester_toggle_label: "Statut testeur (bandelettes)",
+    strip_tester_toggle_desc: "Affiche une estimation chiffrée même en cas de confiance incertaine, pour aider à tester la lecture des bandelettes. Désactive-le pour revenir au seuil de fiabilité standard.",
     ai_password_title: "Accès configuration IA",
     ai_password_prompt: "Saisir le mot de passe pour activer l'analyse IA",
     ai_password_error: "Mot de passe incorrect",
@@ -1383,6 +1385,8 @@ const TRANSLATIONS = {
     ai_toggle_desc: "Allows analyzing measurement photos using artificial intelligence.",
     calibration_toggle_label: "Contribute to collective improvement",
     calibration_toggle_desc: "Shares anonymous calibration data (measured colour, reference value) to improve test strip reading for everyone. No photo or identifier is transmitted.",
+    strip_tester_toggle_label: "Tester status (test strips)",
+    strip_tester_toggle_desc: "Shows a numeric estimate even when confidence is uncertain, to help test strip reading. Turn off to return to the standard reliability threshold.",
     ai_password_title: "AI configuration access",
     ai_password_prompt: "Enter password to enable AI analysis",
     ai_password_error: "Incorrect password",
@@ -2106,6 +2110,8 @@ const TRANSLATIONS = {
     ai_toggle_desc: "Ermöglicht die Analyse von Messfotos mit künstlicher Intelligenz.",
     calibration_toggle_label: "Zur kollektiven Verbesserung beitragen",
     calibration_toggle_desc: "Teilt anonyme Kalibrierungsdaten (gemessene Farbe, Referenzwert), um die Teststreifen-Ablesung für alle zu verbessern. Es werden keine Fotos oder Kennungen übertragen.",
+    strip_tester_toggle_label: "Tester-Status (Teststreifen)",
+    strip_tester_toggle_desc: "Zeigt eine numerische Schätzung auch bei unsicherer Zuverlässigkeit an, um das Ablesen der Teststreifen zu testen. Deaktivieren, um zum Standard-Zuverlässigkeitsschwellenwert zurückzukehren.",
     ai_password_title: "KI-Konfigurationszugang",
     ai_password_prompt: "Passwort eingeben, um KI-Analyse zu aktivieren",
     ai_password_error: "Falsches Passwort",
@@ -2825,6 +2831,8 @@ const TRANSLATIONS = {
     ai_toggle_desc: "Permette di analizzare le foto di misura con intelligenza artificiale.",
     calibration_toggle_label: "Contribuisci al miglioramento collettivo",
     calibration_toggle_desc: "Condivide dati di calibrazione anonimi (colore misurato, valore di riferimento) per migliorare la lettura delle strisce reattive per tutti. Nessuna foto o identificativo viene trasmesso.",
+    strip_tester_toggle_label: "Stato tester (strisce reattive)",
+    strip_tester_toggle_desc: "Mostra una stima numerica anche in caso di affidabilità incerta, per aiutare a testare la lettura delle strisce reattive. Disattivalo per tornare alla soglia di affidabilità standard.",
     ai_password_title: "Accesso configurazione IA",
     ai_password_prompt: "Inserire la password per attivare l'analisi IA",
     ai_password_error: "Password errata",
@@ -3544,6 +3552,8 @@ const TRANSLATIONS = {
     ai_toggle_desc: "Permite analizar fotos de medición con inteligencia artificial.",
     calibration_toggle_label: "Contribuir a la mejora colectiva",
     calibration_toggle_desc: "Comparte datos de calibración anónimos (color medido, valor de referencia) para mejorar la lectura de tiras reactivas para todos. No se transmite ninguna foto ni identificador.",
+    strip_tester_toggle_label: "Estado de tester (tiras reactivas)",
+    strip_tester_toggle_desc: "Muestra una estimación numérica incluso cuando la confianza es incierta, para ayudar a probar la lectura de tiras reactivas. Desactívalo para volver al umbral de fiabilidad estándar.",
     ai_password_title: "Acceso configuración IA",
     ai_password_prompt: "Introducir contraseña para activar el análisis IA",
     ai_password_error: "Contraseña incorrecta",
@@ -4260,6 +4270,8 @@ const TRANSLATIONS = {
     ai_toggle_desc: "Permite analisar fotos de medição com inteligência artificial.",
     calibration_toggle_label: "Contribuir para a melhoria coletiva",
     calibration_toggle_desc: "Compartilha dados de calibração anônimos (cor medida, valor de referência) para melhorar a leitura de tiras de teste para todos. Nenhuma foto ou identificador é transmitido.",
+    strip_tester_toggle_label: "Status de testador (tiras de teste)",
+    strip_tester_toggle_desc: "Mostra uma estimativa numérica mesmo quando a confiança é incerta, para ajudar a testar a leitura das tiras de teste. Desative para voltar ao limite de confiabilidade padrão.",
     ai_password_title: "Acesso configuração IA",
     ai_password_prompt: "Digite a senha para ativar a análise IA",
     ai_password_error: "Senha incorreta",
@@ -6141,6 +6153,20 @@ const FB = {
     const snap = await window._fbGetDoc(ref);
     return snap.exists() ? snap.data() : {};
   },
+  // v1.98.3 — Liste des UIDs testeurs bandelette : abandonné au profit d'un
+  // simple champ config.stripTester par utilisateur (toggle dans Réglages,
+  // voir syncOwnConfig({ stripTester }) et SettingsView) — plus simple à
+  // gérer pour Arnaud (pas de script ni de liste Firestore à maintenir), et
+  // chaque testeur contrôle lui-même son statut.
+  // v1.98.3 — Seuils par paramètre pour les comptes testeurs (voir
+  // le champ config.stripTester ci-dessus). Repli 25 si absent/paramètre non
+  // renseigné — cohérent avec le seuil normal qui replie sur 70 si absent.
+  getStripTesterThresholds: async () => {
+    if (!window._fbDb || !window._fbGetDoc) return {};
+    const ref = window._fbDoc(window._fbDb, "config", "stripConfidenceThresholdsTesters");
+    const snap = await window._fbGetDoc(ref);
+    return snap.exists() ? snap.data() : {};
+  },
   // ── v1.55.0 — Utilisateurs secondaires (brique 3) ──
   // Comptes qui m'ont invité (moi = secondaire). doc.id = primaryUid.
   onLinkedAccounts: (uid, cb) => {
@@ -7189,6 +7215,16 @@ function PoolGenAIApp() {
   // partagées (CGU clause 11). Activé par défaut — données anonymes, coût nul
   // pour l'utilisateur, cohérent avec le texte CGU ("peut désactiver").
   const [calibrationContribution, setCalibrationContribution] = useState(true);
+  // v1.98.3 — Statut testeur bandelette (spec bandelettes) : seuil de
+  // confiance abaissé (config/stripConfidenceThresholdsTesters, repli 25 sur
+  // handleAnalyze) plutôt que le seuil normal (repli 70) — objectif : voir
+  // une estimation chiffrée même incertaine pendant la phase de test.
+  // Activé par défaut (true) à ce stade du développement : tout compte
+  // Premium est considéré testeur tant que l'utilisateur ne désactive pas
+  // lui-même le réglage dans Réglages (voir SettingsView). Sans effet pour
+  // un compte non-Premium (l'analyse IA bandelette est de toute façon
+  // inaccessible sans Premium, via aiEnabled/apiKey).
+  const [stripTester, setStripTester] = useState(true);
   // v1.72.0 — Wizard d'accueil : affiché une seule fois après la création du
   // tout premier bassin d'un compte. onboardingSeen est synchronisé via
   // Firestore (comme calibrationContribution) pour ne pas le revoir en cas
@@ -7578,6 +7614,9 @@ function PoolGenAIApp() {
       }
       if (config.calibrationContribution !== undefined) {
         setCalibrationContribution((prev) => (prev === config.calibrationContribution ? prev : config.calibrationContribution));
+      }
+      if (config.stripTester !== undefined) {
+        setStripTester((prev) => (prev === config.stripTester ? prev : config.stripTester));
       }
       if (config.onboardingSeen !== undefined) {
         setOnboardingSeen((prev) => (prev === config.onboardingSeen ? prev : config.onboardingSeen));
@@ -8897,6 +8936,11 @@ function PoolGenAIApp() {
 
   useEffect(() => {
     if (!loaded || !authUser?.uid) return;
+    syncOwnConfig({ stripTester });
+  }, [stripTester]);
+
+  useEffect(() => {
+    if (!loaded || !authUser?.uid) return;
     syncOwnConfig({ apiProvider });
   }, [apiProvider]);
 
@@ -9590,6 +9634,8 @@ function PoolGenAIApp() {
             setAiEnabled={setAiEnabled}
             calibrationContribution={calibrationContribution}
             setCalibrationContribution={setCalibrationContribution}
+            stripTester={stripTester}
+            setStripTester={setStripTester}
             lang={lang}
             setLang={setLang}
             cguAcceptedDate={cguAcceptedDate}
@@ -9677,6 +9723,7 @@ function PoolGenAIApp() {
           measureDevice={activePool?.measureDevice}
           stripProducts={poolProducts.filter((p) => p.action === "outil-mesure")}
           calibrationContribution={calibrationContribution}
+          stripTester={stripTester}
         />
       )}
 
@@ -12215,7 +12262,7 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, applicat
 }
 
 // ---------- Modal Ajout mesure ----------
-function AddMeasureModal({ measure, application, products, manageStock, onSaveApplication, onClose, onSave, isPremium, onWantPremium, apiKey, apiProvider, activeParamKeys, lang, onRequestPhotoAccess, authUid, measureDevice, stripProducts, calibrationContribution }) {
+function AddMeasureModal({ measure, application, products, manageStock, onSaveApplication, onClose, onSave, isPremium, onWantPremium, apiKey, apiProvider, activeParamKeys, lang, onRequestPhotoAccess, authUid, measureDevice, stripProducts, calibrationContribution, stripTester }) {
   const t = useT(lang || "fr");
   const isPrefilled = !!measure?.__prefilled;
   const isEditing = !!measure && !isPrefilled;
@@ -12445,16 +12492,23 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
       // boucle (pas de re-fetch par photo). Best-effort : un échec de lecture
       // Firestore ne doit jamais bloquer l'analyse — repli sur [] / {} (donc
       // seuil par défaut 70 pour tout paramètre absent du document).
+      // v1.98.3 — Statut testeur : vient directement du réglage utilisateur
+      // (prop stripTester, toggle dans Réglages — voir SettingsView), pas
+      // d'une liste Firestore à interroger. Seuls ses seuils par paramètre
+      // propres (repli 25) restent à charger.
       let knownModels = [];
       let confidenceThresholds = {};
+      let testerThresholds = {};
       try {
-        [knownModels, confidenceThresholds] = await Promise.all([
+        [knownModels, confidenceThresholds, testerThresholds] = await Promise.all([
           FB.listStripModels(),
           FB.getStripConfidenceThresholds(),
+          FB.getStripTesterThresholds(),
         ]);
       } catch (e) {
-        // silencieux — l'analyse continue avec le seuil de repli 70
+        // silencieux — l'analyse continue avec le seuil de repli 70 (ou 25 si testeur)
       }
+      const isStripTester = !!stripTester;
 
       // Analyse chaque photo et consolide les résultats en prenant la valeur la plus fiable par paramètre
       const allResults = [];
@@ -12550,7 +12604,13 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
         const statutEntry = best.device === "bandelette"
           ? allResults[best.photoIdx]?.parametres?.find((p) => p.parametre === k) || null
           : null;
-        const threshold = confidenceThresholds?.[k] ?? 70;
+        // v1.98.3 — Testeur bandelette : seuil abaissé (repli 25) au lieu du
+        // seuil normal (repli 70), pour voir une estimation chiffrée même
+        // incertaine. Ne change rien au calcul déterministe lui-même (valeur/
+        // confiance), uniquement le seuil auquel il est comparé.
+        const threshold = isStripTester
+          ? (testerThresholds?.[k] ?? 25)
+          : (confidenceThresholds?.[k] ?? 70);
 
         // v1.97.6 — Tentative de calcul déterministe (valeur ET confiance) à
         // partir de coordonnées pixel réelles échantillonnées dans la photo,
@@ -15230,7 +15290,7 @@ function AccountDataRequestScreen({ lang, authUser, onClose, onSubmit }) {
   );
 }
 
-function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, viewContext, onDeleteAllMeasures: onDeleteAllMeasuresRaw, orphanedCount, onRepairOrphanedData, poolMeasureCount, onGenerateReport, onWantPremiumForReport, onWantPremium, isPremium, setIsPremium, onWantManageSubscription, portalBusy, portalError, onReplayOnboarding, aiEnabled, setAiEnabled, calibrationContribution, setCalibrationContribution, lang, setLang, authUser, onSignOut, onSignIn, onDeleteAccount, dataConsent, onRevokeDataConsent, cguAcceptedDate, myPseudo }) {
+function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, viewContext, onDeleteAllMeasures: onDeleteAllMeasuresRaw, orphanedCount, onRepairOrphanedData, poolMeasureCount, onGenerateReport, onWantPremiumForReport, onWantPremium, isPremium, setIsPremium, onWantManageSubscription, portalBusy, portalError, onReplayOnboarding, aiEnabled, setAiEnabled, calibrationContribution, setCalibrationContribution, stripTester, setStripTester, lang, setLang, authUser, onSignOut, onSignIn, onDeleteAccount, dataConsent, onRevokeDataConsent, cguAcceptedDate, myPseudo }) {
   const [editingPool, setEditingPool] = useState(null);
   const [showLangPicker, setShowLangPicker] = useState(false);
   const [pendingLang, setPendingLang] = useState(lang);
@@ -15576,6 +15636,23 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
           onChange={(val) => setCalibrationContribution(val)}
         />
       </div>
+
+      {/* v1.98.3 — Statut testeur bandelette (spec bandelettes) : seuil de
+          confiance abaissé pour voir une estimation chiffrée même incertaine
+          pendant la phase de test. Visible uniquement en Premium (comme le
+          toggle IA ci-dessus), sans effet sinon. */}
+      {isPremium && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--brand-bg-tint)", borderRadius: 12, padding: "12px 14px", marginBottom: 8 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--brand-text-strong)" }}>{t("strip_tester_toggle_label")}</div>
+            <div style={{ fontSize: 11, color: "var(--brand-text-muted)", marginTop: 2 }}>{t("strip_tester_toggle_desc")}</div>
+          </div>
+          <ToggleSwitch
+            checked={stripTester}
+            onChange={(val) => setStripTester(val)}
+          />
+        </div>
+      )}
 
       {/* v1.53.0 — Le bouton "Configurer" (choix fournisseur + clé API) a été
           retiré : l'IA est fournie par l'app dans le cadre de l'abonnement,
