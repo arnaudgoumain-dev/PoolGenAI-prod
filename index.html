@@ -457,7 +457,7 @@
 <!-- Composant principal : on attend que Firebase soit prêt avant de charger l'app -->
 <script>
   function loadPoolGenAIApp() {
-    fetch("PoolGenAI.jsx")
+    fetch("PoolGenAI.jsx?t=" + Date.now(), { cache: "no-store" })
       .then((res) => {
         if (!res.ok) throw new Error("Impossible de charger PoolGenAI.jsx (HTTP " + res.status + ")");
         return res.text();
