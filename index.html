@@ -112,7 +112,6 @@
     window.__showBootError && window.__showBootError();
   }, true);
 </script>
-
 <!-- React + ReactDOM (UMD) -->
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -457,7 +456,7 @@
 <!-- Composant principal : on attend que Firebase soit prêt avant de charger l'app -->
 <script>
   function loadPoolGenAIApp() {
-    fetch("PoolGenAI.jsx")
+    fetch("PoolGenAI.jsx?t=" + Date.now(), { cache: "no-store" })
       .then((res) => {
         if (!res.ok) throw new Error("Impossible de charger PoolGenAI.jsx (HTTP " + res.status + ")");
         return res.text();

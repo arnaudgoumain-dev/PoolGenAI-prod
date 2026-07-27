@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.98.5";
+const APP_VERSION = "1.98.14";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -5220,12 +5220,36 @@ const STRIP_MIN_SCALE_DELTA_E = 3;   // bornes quasi indiscernables en dessous d
 const STRIP_RATIO_PENALTY = 1.5;     // pénalité de confiance par unité de déviation de colinéarité
 const STRIP_OFFSCALE_RATIO = 1.5;    // au-delà, tampon trop loin des deux bornes pour être fiable
 
-async function computeDeterministicStripReading(dataUrl, tamponPoint, borneInf, borneSup) {
+// v1.98.14 — Coordonnées maintenant demandées "au mieux" plutôt que
+// seulement si parfaitement sûres (voir prompt étape 4bis) : nécessite un
+// garde-fou pour ne jamais faire confiance à une coordonnée mal placée. On
+// recoupe la couleur RÉELLEMENT échantillonnée à chaque point avec le hex
+// que l'IA rapporte elle-même pour ce même point — un écart important
+// signale une coordonnée qui ne tombe pas au bon endroit (pointage
+// approximatif, tampon/case déplacé entre l'estimation et l'échantillonnage
+// réel). Dans ce cas, on abandonne le calcul déterministe plutôt que de
+// produire un résultat basé sur du bruit — repli automatique sur la
+// confiance auto-déclarée par l'IA (voir handleAnalyze).
+const STRIP_COORD_SANITY_MAX_DELTA_E = 30;
+
+async function computeDeterministicStripReading(dataUrl, tamponPoint, borneInf, borneSup, expectedHex = {}) {
   const [tamponColor, infColor, supColor] = await Promise.all([
     sampleColorAt(dataUrl, tamponPoint[0], tamponPoint[1]),
     sampleColorAt(dataUrl, borneInf.point[0], borneInf.point[1]),
     sampleColorAt(dataUrl, borneSup.point[0], borneSup.point[1]),
   ]);
+
+  if (expectedHex.tampon || expectedHex.inf || expectedHex.sup) {
+    const checks = [
+      expectedHex.tampon ? deltaE76(tamponColor, hexToRgbSimple(expectedHex.tampon)) : 0,
+      expectedHex.inf ? deltaE76(infColor, hexToRgbSimple(expectedHex.inf)) : 0,
+      expectedHex.sup ? deltaE76(supColor, hexToRgbSimple(expectedHex.sup)) : 0,
+    ];
+    if (checks.some((d) => d > STRIP_COORD_SANITY_MAX_DELTA_E)) {
+      return null; // coordonnée(s) incohérente(s) avec ce que l'IA dit avoir vu là — on n'en fait rien
+    }
+  }
+
   const dInf = deltaE76(tamponColor, infColor);
   const dSup = deltaE76(tamponColor, supColor);
   const dScale = deltaE76(infColor, supColor);
@@ -5234,7 +5258,13 @@ async function computeDeterministicStripReading(dataUrl, tamponPoint, borneInf, 
     // Bornes trop proches colorimétriquement sur cette photo (mauvais
     // éclairage, échelle décolorée...) pour discriminer quoi que ce soit —
     // pas de valeur calculée, confiance plafonnée basse.
-    return { valeur: null, confiance: 15, dInf, dSup, dScale };
+    return {
+      valeur: null,
+      confiance: 15,
+      dInf: Math.round(dInf * 10) / 10,
+      dSup: Math.round(dSup * 10) / 10,
+      dScale: Math.round(dScale * 10) / 10,
+    };
   }
 
   const valeur = borneInf.valeur + (borneSup.valeur - borneInf.valeur) * (dInf / (dInf + dSup));
@@ -5255,6 +5285,162 @@ async function computeDeterministicStripReading(dataUrl, tamponPoint, borneInf, 
     dSup: Math.round(dSup * 10) / 10,
     dScale: Math.round(dScale * 10) / 10,
   };
+}
+
+// v1.98.6 — Correction manuelle testeur (parcours de l'échelle bandelette) :
+// helpers de conversion hex/RGB et d'interpolation continue le long de la
+// chaîne de cases de référence ("echelle" dans couleur_reconnue). Voir
+// StripEchelleCorrector plus bas pour l'utilisation (widget flèches gauche/
+// droite). Interpolation couleur en RGB simple (pas Lab) : suffisant pour un
+// aperçu visuel, la précision Lab reste réservée au calcul de confiance
+// déterministe (deltaE76 ci-dessus).
+function hexToRgbSimple(hex) {
+  const clean = hex.replace("#", "");
+  return {
+    r: parseInt(clean.substring(0, 2), 16),
+    g: parseInt(clean.substring(2, 4), 16),
+    b: parseInt(clean.substring(4, 6), 16),
+  };
+}
+function rgbToHexSimple({ r, g, b }) {
+  const toHex = (v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, "0");
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+function lerpHex(hexA, hexB, t) {
+  const a = hexToRgbSimple(hexA);
+  const b = hexToRgbSimple(hexB);
+  return rgbToHexSimple({
+    r: a.r + (b.r - a.r) * t,
+    g: a.g + (b.g - a.g) * t,
+    b: a.b + (b.b - a.b) * t,
+  });
+}
+
+// echelle : liste ORDONNÉE (valeur croissante) de {valeur, hex, point}, telle
+// que fournie par l'IA (couleur_reconnue[k].echelle). Position continue =
+// index de segment + fraction (0 à 1 dans ce segment) ; un "pas" de flèche =
+// 1/10 de segment. Bornes de la position : [0, echelle.length - 1] — jamais
+// d'extrapolation au-delà de la première/dernière case connue (pas de
+// couleur de référence au-delà pour interpoler).
+
+// Position continue initiale correspondant à une valeur donnée (pour
+// positionner le curseur sur la lecture d'origine de l'IA au premier
+// affichage du widget).
+function echelleValueToPosition(echelle, value) {
+  if (!echelle || echelle.length < 2 || value == null) return 0;
+  for (let i = 0; i < echelle.length - 1; i++) {
+    const vLo = echelle[i].valeur, vHi = echelle[i + 1].valeur;
+    if (value >= vLo && value <= vHi) {
+      const frac = vHi === vLo ? 0 : (value - vLo) / (vHi - vLo);
+      return i + frac;
+    }
+  }
+  // Hors plage (valeur IA incohérente avec sa propre échelle) : borne au plus proche.
+  return value < echelle[0].valeur ? 0 : echelle.length - 1;
+}
+
+// Couleur + valeur interpolées à une position continue donnée le long de la chaîne.
+function echellePositionToColorValue(echelle, position) {
+  const clamped = Math.max(0, Math.min(echelle.length - 1, position));
+  const i = Math.min(echelle.length - 2, Math.floor(clamped));
+  const frac = clamped - i;
+  const lo = echelle[i], hi = echelle[i + 1];
+  return {
+    hex: lerpHex(lo.hex, hi.hex, frac),
+    valeur: Math.round((lo.valeur + (hi.valeur - lo.valeur) * frac) * 100) / 100,
+  };
+}
+
+// v1.98.8 — Lecture de code-barres (EAN/UPC/Code128...) via ZXing (MIT,
+// gratuit, voir index.html), depuis une photo statique — pas de webcam,
+// entièrement local, aucun coût. Best-effort strict : renvoie null au
+// moindre souci (pas de code-barres visible, angle défavorable, librairie
+// non chargée...) — jamais une exception qui remonte, l'analyse IA continue
+// normalement sans cet indice supplémentaire dans ce cas.
+// Contournement d'un bug connu de ZXing : decodeFromImage échoue souvent
+// silencieusement sur une image dont le src est un data:URL base64 direct —
+// on repasse par un Blob/object URL, plus fiable (voir zxing-js/library#602).
+async function decodeBarcodeFromDataUrl(dataUrl) {
+  if (!window.ZXing) return null;
+  let objectUrl = null;
+  try {
+    const blob = await (await fetch(dataUrl)).blob();
+    objectUrl = URL.createObjectURL(blob);
+    const img = new Image();
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+      img.src = objectUrl;
+    });
+    const hints = new Map();
+    if (window.ZXing.DecodeHintType) hints.set(window.ZXing.DecodeHintType.TRY_HARDER, true);
+    const reader = new window.ZXing.BrowserMultiFormatReader(hints);
+    const result = await reader.decodeFromImage(img);
+    return result?.getText ? result.getText() : (result?.text || null);
+  } catch (e) {
+    return null; // pas de code-barres détecté — cas normal, la plupart des photos n'en ont pas
+  } finally {
+    if (objectUrl) URL.revokeObjectURL(objectUrl);
+  }
+}
+
+// v1.98.9 — Auto-enregistrement de nouveaux modèles de bandelette (fiches
+// candidates). Constantes décidées avec Arnaud (session du 27/07/2026) :
+// tolérance 15% par valeur d'échelle, 3 confirmations avant promotion, dont
+// au moins 2 comptes utilisateurs distincts (empêche un seul compte avec 3
+// mauvaises photos du même angle de promouvoir seul une fiche bancale).
+const STRIP_CANDIDATE_TOLERANCE = 0.15;
+const STRIP_CANDIDATE_MIN_CONFIRMATIONS = 3;
+const STRIP_CANDIDATE_MIN_DISTINCT_UIDS = 2;
+
+// Filtre fin (après le filtre grossier nb_parametres côté requête Firestore) :
+// même ordre de paramètres ET chaque valeur d'échelle à ±15% près. Un ordre
+// différent ou un nombre de valeurs différent par paramètre = pas le même
+// modèle, jamais de rapprochement forcé dans ce cas.
+function stripCandidateStructureMatches(ordreA, echellesA, ordreB, echellesB) {
+  if (JSON.stringify(ordreA) !== JSON.stringify(ordreB)) return false;
+  for (const label of ordreA) {
+    const va = echellesA[label]?.valeurs, vb = echellesB[label]?.valeurs;
+    if (!Array.isArray(va) || !Array.isArray(vb) || va.length !== vb.length) return false;
+    for (let i = 0; i < va.length; i++) {
+      const x = Number(va[i]), y = Number(vb[i]);
+      if (x === 0 && y === 0) continue;
+      const ref = Math.max(Math.abs(x), Math.abs(y), 0.0001);
+      if (Math.abs(x - y) / ref > STRIP_CANDIDATE_TOLERANCE) return false;
+    }
+  }
+  return true;
+}
+
+// v1.98.9 — Consensus "qualitatif" (demande explicite d'Arnaud, pas une
+// simple moyenne) : les valeurs d'échelle sont des chiffres IMPRIMÉS sur le
+// flacon — une donnée fixe, pas une mesure bruitée. La bonne valeur est donc
+// celle sur laquelle le plus de confirmations s'accordent (une moyenne
+// inventerait un chiffre intermédiaire qui n'existe pas sur l'étiquette),
+// pas une moyenne arithmétique. Égalité → on garde la première rencontrée.
+function buildConsensusStripModel(confirmations) {
+  const first = confirmations[0];
+  const echelles = {};
+  for (const label of first.ordre_bas_vers_haut) {
+    const n = first.echelles[label]?.valeurs?.length || 0;
+    const valeurs = [];
+    for (let i = 0; i < n; i++) {
+      const counts = new Map();
+      confirmations.forEach((c) => {
+        const raw = c.echelles?.[label]?.valeurs?.[i];
+        if (typeof raw !== "number") return;
+        const v = Math.round(raw * 100) / 100;
+        counts.set(v, (counts.get(v) || 0) + 1);
+      });
+      let best = first.echelles[label].valeurs[i], bestCount = -1;
+      for (const [v, count] of counts) {
+        if (count > bestCount) { best = v; bestCount = count; }
+      }
+      valeurs.push(best);
+    }
+    echelles[label] = { unite: first.echelles[label]?.unite ?? null, valeurs };
+  }
+  return { nb_parametres: first.nb_parametres, ordre_bas_vers_haut: first.ordre_bas_vers_haut, echelles };
 }
 
 // ---------- Helpers géocodage (Nominatim / OpenStreetMap) ----------
@@ -5436,10 +5622,74 @@ async function callAIText({ apiKey, prompt, uid: callerUid }) {
 // formule de confiance (STRIP_MIN_SCALE_DELTA_E, STRIP_RATIO_PENALTY,
 // STRIP_OFFSCALE_RATIO) provisoires — à recalibrer avec les
 // stripConfidenceSamples une fois assez de trueValue disponibles.
-async function analyzeStripPhoto({ apiKey, apiProvider, dataUrl, uid: callerUid, knownModels = [] }) {
+// v1.98.11 — Répare un JSON tronqué en fin de flux (réponse coupée par
+// max_tokens en plein milieu d'un tableau/objet) en rééquilibrant les
+// crochets/accolades manquants. Ne corrige PAS une virgule finale traînante
+// avant complétion (invalide sinon), ni un contenu corrompu au milieu du
+// texte — uniquement la troncature en bout de chaîne, de loin le cas le
+// plus fréquent avec un modèle qui génère un JSON structuré au fil de l'eau.
+// v1.98.12 — Extrait l'objet JSON réellement délimité (première "{" jusqu'à
+// SA "}" correspondante, en comptant la profondeur), plutôt que de prendre
+// tout le texte jusqu'à la fin. Nécessaire car l'IA entoure parfois sa
+// réponse de balises markdown ("```json ... ```") malgré la consigne "JSON
+// pur, rien d'autre" — un simple slice jusqu'à la fin du texte inclurait
+// alors la balise finale, invalide pour JSON.parse. Si la profondeur ne
+// retombe jamais à 0 (réponse tronquée avant la fin), renvoie tout ce qui a
+// été généré depuis le début, pour tentative de réparation (voir
+// repairTruncatedJson).
+function extractJsonObject(text) {
+  const start = text.indexOf("{");
+  if (start === -1) return null;
+  let depth = 0, inString = false, escape = false;
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i];
+    if (escape) { escape = false; continue; }
+    if (ch === "\\") { escape = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (ch === "{") depth++;
+    else if (ch === "}") {
+      depth--;
+      if (depth === 0) return text.slice(start, i + 1);
+    }
+  }
+  return text.slice(start); // jamais retombé à 0 — tronqué, à réparer
+}
+
+function repairTruncatedJson(str) {
+  let s = str.replace(/,\s*$/, "");
+  const stack = [];
+  let inString = false, escape = false;
+  for (const ch of s) {
+    if (escape) { escape = false; continue; }
+    if (ch === "\\") { escape = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (ch === "{" || ch === "[") stack.push(ch);
+    else if (ch === "}" && stack[stack.length - 1] === "{") stack.pop();
+    else if (ch === "]" && stack[stack.length - 1] === "[") stack.pop();
+  }
+  let repaired = s + (inString ? '"' : "");
+  for (let i = stack.length - 1; i >= 0; i--) repaired += stack[i] === "{" ? "}" : "]";
+  return repaired;
+}
+
+async function analyzeStripPhoto({ apiKey, apiProvider, dataUrl, uid: callerUid, knownModels = [], barcodeDetected = null, forcedModelId = null }) {
   const modelsJson = knownModels.length
     ? JSON.stringify(knownModels)
     : "[] (aucun modèle connu pour l'instant — identification à l'aveugle)";
+
+  // v1.98.8 — Code-barres lu localement (ZXing, déterministe, hors IA) avant
+  // l'appel — voir decodeBarcodeFromDataUrl. Si un "code_barre" de fiche
+  // correspond EXACTEMENT, forcedModelId force l'identification (bien plus
+  // fiable qu'une reconnaissance visuelle) ; sinon on informe juste l'IA du
+  // code lu, à titre indicatif seulement (peut aider si elle-même lit un
+  // code produit imprimé à proximité).
+  const barcodeInstruction = forcedModelId
+    ? `\n   - CODE-BARRES DÉTECTÉ AUTOMATIQUEMENT (lecture déterministe hors IA, fiable) : ${barcodeDetected} — correspond EXACTEMENT au "code_barre" de la fiche "${forcedModelId}" dans la liste ci-dessus. Utilise cette fiche avec "modele_id": "${forcedModelId}" et "modele_confiance": 100, sans avoir besoin de la reconnaître visuellement — sauf incohérence flagrante avec ce que tu vois (nombre de tampons, design radicalement différent), auquel cas explique pourquoi dans "note".`
+    : (barcodeDetected
+        ? `\n   - Code-barres détecté automatiquement sur la photo (lecture déterministe hors IA) : ${barcodeDetected} — ne correspond à aucune fiche connue. Purement indicatif, ne force rien.`
+        : "");
 
   const prompt = `Tu es un expert en chimie de l'eau de piscine. Analyse cette photo qui montre soit :
 
@@ -5451,12 +5701,13 @@ La bandelette a été trempée dans l'eau et présente des tampons colorés. Ava
 
 1. IDENTIFICATION DU MODÈLE DE LANGUETTE
    Modèles connus (fiches complètes, à utiliser en priorité si l'un correspond) :
-   ${modelsJson}
+   ${modelsJson}${barcodeInstruction}
    - Cherche un code produit visible sur le tube (OCR) et compare-le à "modele_id"/code des fiches ci-dessus.
    - À défaut, reconnaît la marque/design du tube.
    - À défaut, utilise nombre de tampons + palette générale (confiance d'identification plafonnée bas dans ce cas).
    - Si un modèle de la liste correspond avec confiance suffisante : utilise SON "ordre_bas_vers_haut" et SES "echelles" (valeurs connues) pour mapper chaque tampon à une valeur, par correspondance d'index de case colorée sur l'échelle imprimée VISIBLE DANS CETTE PHOTO — jamais une échelle mémorisée d'une autre photo.
    - Si aucun modèle ne correspond avec confiance suffisante : ne jamais appliquer une fiche au hasard. "modele_id": null, "modele_confiance" bas, et procède à une lecture directe des valeurs numériques imprimées sur l'échelle du tube visible dans la photo (comme avant v1.97.0), avec un statut par paramètre reflétant cette incertitude.
+   - v1.98.9 — DANS CE CAS (modele_id null), SI ET SEULEMENT SI l'échelle imprimée est bien lisible pour TOUS les paramètres de cette bandelette (même exigence stricte que pour "echelle" : tout ou rien), propose EN PLUS une fiche candidate complète : voir "modele_candidat" dans le format de sortie. Sert à enregistrer automatiquement ce nouveau modèle après plusieurs confirmations indépendantes — jamais si la lisibilité est insuffisante pour l'ensemble des paramètres.
 
 2. CALIBRATION
    L'échelle de référence imprimée sur le tube est-elle visible et lisible dans la photo (couleurs distinctes, pas de reflet/surexposition) ? Si non → confiance globale max 20%, statut "echelle_non_detectee" pour tous les paramètres concernés.
@@ -5476,7 +5727,9 @@ La bandelette a été trempée dans l'eau et présente des tampons colorés. Ava
 
 4bis. COULEUR RECONNUE, DISTANCES ET COORDONNÉES (voir "couleur_reconnue" dans le format de sortie)
    Pour chaque tampon, rapporte : la couleur mesurée du tampon (hex ou description RGB approximative), et pour les deux valeurs de référence encadrantes retenues à l'étape 4, leur valeur et leur distance colorimétrique respective.
-   En plus, SI tu es CONFIANT d'avoir localisé précisément le tampon ET les deux cases de référence encadrantes (même règle que pour "sample_points" : ne devine jamais des coordonnées approximatives, omets l'entrée sinon), fournis leurs coordonnées pixel : "tampon_point": [x, y] au niveau du paramètre, et "point": [x, y] dans chacun des objets "borne_inf"/"borne_sup" — x et y en fraction de l'image, 0 à 1, origine en haut à gauche. Ces coordonnées servent à un calcul de confiance déterministe (échantillonnage réel des pixels, hors de ce prompt) — leur précision compte davantage que pour une simple indication visuelle.
+   IMPORTANT — deux confiances DISTINCTES, ne les mélange jamais : la confiance de LOCALISATION (peux-tu désigner où se trouve précisément un tampon ou une case, quel que soit ce que tu en déduis ensuite ?) et la confiance de COMPARAISON/VALEUR (dans quelle mesure la couleur du tampon ressemble-t-elle à telle case ?). Une bandelette photographiée À CÔTÉ du tube (posée juste à côté, PAS collée dessus — cas normal, ne l'exige jamais de l'utilisateur) réduit légitimement la confiance de COMPARAISON (éclairage potentiellement différent entre les deux zones, cf. étape 2bis), mais ne réduit PAS la confiance de LOCALISATION de chaque élément pris séparément — tu peux très bien désigner précisément où se trouve le 3e tampon dans l'image ET où se trouve la case "3 ppm" de l'échelle, même si les deux objets sont éloignés l'un de l'autre dans la photo.
+   Fournis TOUJOURS ta meilleure estimation des coordonnées pixel du tampon ET des deux cases de référence encadrantes, même approximative — n'attends pas d'être parfaitement sûr avant de les donner (contrairement à "sample_points" plus haut, plus strict) : ces coordonnées sont vérifiées automatiquement après coup par recoupement avec la couleur (hex) que tu rapportes toi-même à ce même endroit, donc jamais utilisées aveuglément — une estimation raisonnable vaut largement mieux qu'une omission. "tampon_point": [x, y] au niveau du paramètre, et "point": [x, y] dans chacun des objets "borne_inf"/"borne_sup" — x et y en fraction de l'image, 0 à 1, origine en haut à gauche. N'omets un de ces champs que si l'élément correspondant est réellement hors champ ou totalement invisible dans la photo — une bandelette éloignée du tube n'est PAS une raison d'omettre (voir paragraphe ci-dessus). Ces coordonnées servent à un calcul de confiance déterministe (échantillonnage réel des pixels, hors de ce prompt).
+   SI ET SEULEMENT SI un modèle de fiche a été identifié avec confiance suffisante (modele_confiance élevé) : fournis EN PLUS "echelle" : la liste COMPLÈTE et ORDONNÉE (valeur croissante) des cases de l'échelle imprimée de CE paramètre TELLE QUE VISIBLE SUR CETTE PHOTO (pas les valeurs théoriques de la fiche), chacune avec sa valeur et sa couleur hex — utilise l'"ordre_bas_vers_haut"/"echelles" de la fiche identifiée pour savoir combien de cases attendre et dans quel ordre. Pas besoin de coordonnées pixel ici, seulement valeur+couleur — exactement le même effort que ce que tu fournis déjà pour "borne_inf"/"borne_sup", juste étendu à toutes les cases plutôt qu'aux deux encadrantes. Cette liste sert à une correction manuelle par un testeur (parcours visuel des cases de l'échelle) — exigence stricte uniquement sur l'exhaustivité : soit tu fournis la liste ENTIÈRE (une couleur discernable pour chaque case), soit tu omets complètement le champ "echelle" (jamais de liste partielle, ça casserait l'interpolation entre cases).
 
 5. QUALITÉ IMAGE LOCALE
    Zone du tampon nette ? Pas de chevauchement avec un tampon adjacent ? Languette non pliée/froissée dans cette zone ? Chaque défaut détecté réduit la confiance du paramètre concerné de 15-20 points.
@@ -5506,7 +5759,7 @@ Correspondances des abréviations courantes (utilise ces clés courtes, identiqu
 - O2 / Active O2 → o2
 
 Réponds UNIQUEMENT en JSON valide, sans texte avant ou après, sans markdown, sans commentaires :
-{"device": "photometre" ou "bandelette", "pH": nombre ou null, "fCl": nombre ou null, "tCl": nombre ou null, "ccl": nombre ou null, "tac": nombre ou null, "cya": nombre ou null, "hard": nombre ou null, "phos": nombre ou null, "copper": nombre ou null, "iron": nombre ou null, "temp": nombre ou null, "brome": nombre ou null, "o2": nombre ou null, "sel": nombre ou null, "confidence": "haute" ou "moyenne" ou "basse", "reliability": entier de 1 à 5 (1=très peu fiable, 5=très fiable), "reliability_by_param": {"pH": entier 1-5, "fCl": entier 1-5, ...} (une entrée par paramètre non-null uniquement, note la lisibilité de CE tampon précis — un reflet ou un angle défavorable sur un seul tampon doit baisser SA note sans affecter les autres), "sample_points": {"pH": {"pad": [x, y], "reference": [x, y], "padSizeFraction": nombre}, ...} (UNIQUEMENT si device est "bandelette" ; pour chaque paramètre où tu es CONFIANT d'avoir localisé précisément à la fois le tampon coloré ET la case de référence correspondante sur l'échelle imprimée du tube, donne leurs coordonnées en fraction de l'image, x et y entre 0 et 1, origine en haut à gauche ; omets complètement l'entrée pour un paramètre si tu n'es pas confiant sur la localisation exacte — ne devine jamais des coordonnées approximatives ; "padSizeFraction" est une estimation approximative de la largeur du tampon coloré exprimée en fraction de la largeur totale de l'image, 0 à 1, sert uniquement d'indicateur de qualité donc une estimation grossière suffit, contrairement à pad/reference qui doivent être précis — omets ce champ si tu ne peux pas l'estimer visuellement), "reliability_reason": "une phrase en français expliquant la note de fiabilité (qualité image, lisibilité échelle, etc.)", "note": "une phrase en français sur la lisibilité et la méthode utilisée", "modele_id": "identifiant de la fiche utilisée (ex: mareva_mv3028) ou null si non identifié ou si device est photometre", "modele_confiance": entier 0-100 (confiance dans l'identification du modèle ; 0 si device est photometre), "parametres": [{"parametre": "pH", "valeur": nombre ou null, "confiance": entier 0-100, "statut": "déterminé" ou "confiance_insuffisante" ou "echelle_non_detectee"}, ...] (un objet par paramètre non-null dans les champs numériques ci-dessus ; tableau vide si device est photometre), "couleur_reconnue": {"pH": {"tampon_hex": "#rrggbb", "tampon_point": [x, y], "borne_inf": {"valeur": nombre, "hex": "#rrggbb", "distance": nombre, "point": [x, y]}, "borne_sup": {"valeur": nombre, "hex": "#rrggbb", "distance": nombre, "point": [x, y]}}, ...} (UNIQUEMENT si device est "bandelette" ; un objet par paramètre présent dans "parametres" ; "distance" est la distance colorimétrique perçue calculée à l'étape 4, mêmes unités que celles utilisées pour départager les cases ; omets l'entrée d'un paramètre si les bornes encadrantes n'ont pas pu être identifiées avec confiance ; champ temporaire (hex/distance), retiré une fois l'algorithme stabilisé — ne pas omettre tant qu'il est demandé ; "tampon_point"/"point" (x, y en fraction de l'image, 0 à 1, origine en haut à gauche) : UNIQUEMENT si localisation précise et confiante des 3 zones, jamais de coordonnées approximatives devinées — omets "tampon_point" ou l'un des "point" si la localisation exacte n'est pas certaine, sert au calcul de confiance déterministe, voir étape 4bis)}
+{"device": "photometre" ou "bandelette", "pH": nombre ou null, "fCl": nombre ou null, "tCl": nombre ou null, "ccl": nombre ou null, "tac": nombre ou null, "cya": nombre ou null, "hard": nombre ou null, "phos": nombre ou null, "copper": nombre ou null, "iron": nombre ou null, "temp": nombre ou null, "brome": nombre ou null, "o2": nombre ou null, "sel": nombre ou null, "confidence": "haute" ou "moyenne" ou "basse", "reliability": entier de 1 à 5 (1=très peu fiable, 5=très fiable), "reliability_by_param": {"pH": entier 1-5, "fCl": entier 1-5, ...} (une entrée par paramètre non-null uniquement, note la lisibilité de CE tampon précis — un reflet ou un angle défavorable sur un seul tampon doit baisser SA note sans affecter les autres), "sample_points": {"pH": {"pad": [x, y], "reference": [x, y], "padSizeFraction": nombre}, ...} (UNIQUEMENT si device est "bandelette" ; pour chaque paramètre où tu es CONFIANT d'avoir localisé précisément à la fois le tampon coloré ET la case de référence correspondante sur l'échelle imprimée du tube, donne leurs coordonnées en fraction de l'image, x et y entre 0 et 1, origine en haut à gauche ; omets complètement l'entrée pour un paramètre si tu n'es pas confiant sur la localisation exacte — ne devine jamais des coordonnées approximatives ; "padSizeFraction" est une estimation approximative de la largeur du tampon coloré exprimée en fraction de la largeur totale de l'image, 0 à 1, sert uniquement d'indicateur de qualité donc une estimation grossière suffit, contrairement à pad/reference qui doivent être précis — omets ce champ si tu ne peux pas l'estimer visuellement), "reliability_reason": "une phrase en français expliquant la note de fiabilité (qualité image, lisibilité échelle, etc.)", "note": "une phrase en français sur la lisibilité et la méthode utilisée", "modele_id": "identifiant de la fiche utilisée (ex: mareva_mv3028) ou null si non identifié ou si device est photometre", "modele_confiance": entier 0-100 (confiance dans l'identification du modèle ; 0 si device est photometre), "parametres": [{"parametre": "pH", "valeur": nombre ou null, "confiance": entier 0-100, "statut": "déterminé" ou "confiance_insuffisante" ou "echelle_non_detectee"}, ...] (un objet par paramètre non-null dans les champs numériques ci-dessus ; tableau vide si device est photometre), "couleur_reconnue": {"pH": {"tampon_hex": "#rrggbb", "tampon_point": [x, y], "borne_inf": {"valeur": nombre, "hex": "#rrggbb", "distance": nombre, "point": [x, y]}, "borne_sup": {"valeur": nombre, "hex": "#rrggbb", "distance": nombre, "point": [x, y]}, "echelle": [{"valeur": nombre, "hex": "#rrggbb"}, ...]}, ...} (UNIQUEMENT si device est "bandelette" ; un objet par paramètre présent dans "parametres" ; "distance" est la distance colorimétrique perçue calculée à l'étape 4, mêmes unités que celles utilisées pour départager les cases ; omets l'entrée d'un paramètre si les bornes encadrantes n'ont pas pu être identifiées avec confiance ; champ temporaire (hex/distance), retiré une fois l'algorithme stabilisé — ne pas omettre tant qu'il est demandé ; "tampon_point"/"point" (x, y en fraction de l'image, 0 à 1, origine en haut à gauche) : fournis TOUJOURS ta meilleure estimation, même approximative — ces coordonnées sont vérifiées automatiquement après coup (recoupées avec le hex que tu rapportes toi-même pour ce même point) avant d'être utilisées, jamais prises telles quelles ; n'omets "tampon_point" ou un "point" que si l'élément est réellement introuvable dans l'image (hors cadre, totalement invisible) — sert au calcul de confiance déterministe, voir étape 4bis ; "echelle" : voir étape 4bis, liste ORDONNÉE complète ou absente, jamais partielle, valeur+hex uniquement, pas de coordonnées nécessaires ici), "modele_candidat": {"nb_parametres": nombre, "ordre_bas_vers_haut": ["pH", "Cl", ...] (utilise les MÊMES labels internes que les fiches connues ci-dessus — "pH", "Cl" (chlore libre), "TCl" (chlore total), "Alc" (alcalinité), "CyA" (stabilisant), "TH" (dureté) — pour rester compatible avec le registre), "echelles": {"<label>": {"unite": "ppm" ou null, "valeurs": [nombre, ...]}, ...} (liste ORDONNÉE croissante des valeurs imprimées pour CE paramètre, une entrée par label de "ordre_bas_vers_haut"), "indices_texte_marque": ["fragment de texte visible sur le tube, même partiel", ...] (tout texte de marque/référence lisible, pour aide à la reconnaissance manuelle future, peut être vide)} (UNIQUEMENT si device est "bandelette" ET "modele_id" est null ET l'échelle est lisible pour TOUS les paramètres de cette bandelette — omets complètement ce champ sinon, jamais de structure partielle ou devinée ; sert à proposer l'enregistrement automatique d'un nouveau modèle après plusieurs confirmations indépendantes, voir étape 1)}
 
 Règles strictes :
 - "device" indique lequel des deux CAS ci-dessus correspond à la photo analysée — jamais null, choisis le plus probable même en cas de doute
@@ -5521,10 +5774,30 @@ Règles strictes :
 - "parametres" ne doit jamais contenir un paramètre absent du modèle identifié (respecte "nb_parametres" de la fiche le cas échéant)
 - JSON pur, rien d'autre`;
 
-  const text = await callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl: dataUrl, uid: callerUid, maxTokens: 1800 });
-  const match = text.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error("Réponse IA non parseable : " + text.slice(0, 200));
-  return JSON.parse(match[0]);
+  // v1.98.11 — 1800 était calibré avant l'ajout de "echelle" (v1.98.6) et
+  // "modele_candidat" (v1.98.9), qui peuvent à eux seuls représenter
+  // plusieurs centaines de tokens supplémentaires par paramètre (jusqu'à 6
+  // cases × 3 champs, pour jusqu'à 6 paramètres sur une fiche comme Mareva).
+  // Une réponse tronquée en plein milieu d'un tableau produit un JSON
+  // invalide ("Expected ',' or ']'...") — augmenté avec de la marge. Coût
+  // : Claude s'arrête naturellement dès qu'il a fini, ce plafond plus haut
+  // n'augmente le coût réel QUE si la troncature se produisait vraiment.
+  const text = await callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl: dataUrl, uid: callerUid, maxTokens: 3200 });
+  const raw = extractJsonObject(text);
+  if (!raw) throw new Error("Réponse IA non parseable : " + text.slice(0, 200));
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
+    // v1.98.11 — Filet de sécurité si la réponse est malgré tout tronquée
+    // (photo très complexe, plusieurs modèles à décrire...) : tente de
+    // rééquilibrer les accolades/crochets manquants en fin de flux plutôt
+    // que d'échouer sèchement sur "Analyse impossible".
+    try {
+      return JSON.parse(repairTruncatedJson(raw));
+    } catch (e2) {
+      throw new Error("Réponse IA non parseable : " + text.slice(0, 200));
+    }
+  }
 }
 
 
@@ -6166,6 +6439,37 @@ const FB = {
     const ref = window._fbDoc(window._fbDb, "config", "stripConfidenceThresholdsTesters");
     const snap = await window._fbGetDoc(ref);
     return snap.exists() ? snap.data() : {};
+  },
+  // v1.98.9 — Auto-enregistrement de nouveaux modèles de bandelette (fiches
+  // candidates, collection stripModelCandidates). Voir handleAnalyze pour le
+  // rapprochement (tolérance 15%) et la promotion (3 confirmations, dont 2
+  // comptes distincts). Filtre grossier serveur (nb_parametres, statut) puis
+  // filtre fin client (ordre_bas_vers_haut, tolérance numérique par valeur) —
+  // Firestore ne sait pas comparer un tableau avec tolérance.
+  findMatchingStripCandidates: async (nbParametres) => {
+    if (!window._fbDb || !window._fbGetDocs || !window._fbQuery || !window._fbCollection || !window._fbWhere) return [];
+    const col = window._fbCollection(window._fbDb, "stripModelCandidates");
+    const q = window._fbQuery(col, window._fbWhere("status", "==", "pending"), window._fbWhere("nb_parametres", "==", nbParametres));
+    const snap = await window._fbGetDocs(q);
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  },
+  createStripModelCandidate: async (candidate) => {
+    if (!window._fbDb || !window._fbAddDoc || !window._fbCollection) return null;
+    const col = window._fbCollection(window._fbDb, "stripModelCandidates");
+    const ref = await window._fbAddDoc(col, { ...candidate, status: "pending", createdAt: new Date().toISOString() });
+    return ref.id;
+  },
+  addStripModelCandidateConfirmation: async (candidateId, confirmation) => {
+    if (!window._fbDb || !window._fbDoc || !window._fbUpdateDoc || !window._fbArrayUnion) return;
+    const ref = window._fbDoc(window._fbDb, "stripModelCandidates", candidateId);
+    await window._fbUpdateDoc(ref, { confirmations: window._fbArrayUnion(confirmation), updatedAt: new Date().toISOString() });
+  },
+  promoteStripModelCandidate: async (candidateId, modelId, modelDoc) => {
+    if (!window._fbDb || !window._fbDoc || !window._fbSetDoc || !window._fbUpdateDoc) return;
+    const modelRef = window._fbDoc(window._fbDb, "stripModels", modelId);
+    await window._fbSetDoc(modelRef, modelDoc);
+    const candidateRef = window._fbDoc(window._fbDb, "stripModelCandidates", candidateId);
+    await window._fbUpdateDoc(candidateRef, { status: "promoted", promotedModelId: modelId, promotedAt: new Date().toISOString() });
   },
   // ── v1.55.0 — Utilisateurs secondaires (brique 3) ──
   // Comptes qui m'ont invité (moi = secondaire). doc.id = primaryUid.
@@ -12397,6 +12701,14 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
   // la qualité de l'interpolation. Affiché uniquement dans ce formulaire,
   // jamais dans le rapport PDF ni ailleurs.
   const [analyzeColorDebug, setAnalyzeColorDebug] = useState({});
+  // v1.98.6 — Correction manuelle testeur : position continue (index de
+  // segment + fraction, pas de 1/10) par paramètre le long de l'échelle
+  // couleur_reconnue[k].echelle. Réinitialisé à chaque nouvelle analyse (voir
+  // setAnalyzeColorDebug({}) plus haut) — pas de useEffect séparé, la valeur
+  // initiale par paramètre est calculée à la volée au premier rendu du
+  // widget (voir StripEchelleCorrector).
+  const [testerCorrectionPos, setTesterCorrectionPos] = useState({});
+  const [testerCorrectionConfirmed, setTesterCorrectionConfirmed] = useState({});
   const analyzeTimerRef = React.useRef(null);
   // v1.97.4 — Regroupe les échantillons de confiance (stripConfidenceSamples)
   // d'une même session d'analyse quand la mesure n'est pas encore enregistrée
@@ -12479,6 +12791,8 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
     setAnalyzeReliability(null);
     setAnalyzeUncertainParams([]);
     setAnalyzeColorDebug({});
+    setTesterCorrectionPos({});
+    setTesterCorrectionConfirmed({});
     // Démarrer le timer
     setAnalyzeTimer(0);
     let elapsed = 0;
@@ -12514,9 +12828,83 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
       const allResults = [];
       const notes = [];
       for (const dataUrl of photos) {
-        const result = await analyzeStripPhoto({ apiKey, apiProvider, dataUrl, uid: authUid, knownModels });
+        // v1.98.8 — Décodage code-barres local (gratuit, déterministe) avant
+        // l'appel IA — best-effort, jamais bloquant (voir
+        // decodeBarcodeFromDataUrl). Si le code lu correspond EXACTEMENT au
+        // "code_barre" d'une fiche connue, on force l'identification du
+        // modèle plutôt que de laisser l'IA deviner visuellement — bien plus
+        // fiable. Aucune fiche n'a encore de code_barre renseigné à ce jour
+        // (à ajouter via seed-strip-models.js une fois les codes relevés) :
+        // ce mécanisme reste inactif tant que ce n'est pas fait, sans risque.
+        let barcodeDetected = null;
+        let forcedModelId = null;
+        try {
+          barcodeDetected = await decodeBarcodeFromDataUrl(dataUrl);
+          if (barcodeDetected) {
+            const matched = knownModels.find((m) => m.code_barre && m.code_barre === barcodeDetected);
+            if (matched) forcedModelId = matched.modele_id;
+          }
+        } catch (e) {
+          barcodeDetected = null; // silencieux — best-effort
+        }
+        const result = await analyzeStripPhoto({ apiKey, apiProvider, dataUrl, uid: authUid, knownModels, barcodeDetected, forcedModelId });
         allResults.push(result);
         if (result.note) notes.push(result.note);
+
+        // v1.98.9 — Modèle non reconnu mais bandelette bien lisible : l'IA a
+        // proposé une fiche candidate (voir prompt étape 1). Rapprochement
+        // avec les candidates déjà en attente (tolérance 15%, même
+        // structure) ou création d'une nouvelle ; promotion automatique en
+        // fiche active dès 3 confirmations dont 2 comptes distincts.
+        // Best-effort, silencieux — ne doit jamais bloquer la mesure en cours.
+        if (result.device === "bandelette" && !result.modele_id && result.modele_candidat && authUid) {
+          try {
+            const mc = result.modele_candidat;
+            const pending = await FB.findMatchingStripCandidates(mc.nb_parametres);
+            const match = pending.find((c) =>
+              stripCandidateStructureMatches(mc.ordre_bas_vers_haut, mc.echelles, c.ordre_bas_vers_haut, c.echelles)
+            );
+            const confirmation = {
+              uid: authUid,
+              capturedAt: new Date().toISOString(),
+              ordre_bas_vers_haut: mc.ordre_bas_vers_haut,
+              echelles: mc.echelles,
+              indices_texte_marque: mc.indices_texte_marque || [],
+            };
+            let candidateId, confirmations;
+            if (match) {
+              await FB.addStripModelCandidateConfirmation(match.id, confirmation);
+              candidateId = match.id;
+              confirmations = [...(match.confirmations || []), confirmation];
+            } else {
+              candidateId = await FB.createStripModelCandidate({
+                nb_parametres: mc.nb_parametres,
+                ordre_bas_vers_haut: mc.ordre_bas_vers_haut,
+                echelles: mc.echelles,
+                confirmations: [confirmation],
+              });
+              confirmations = [confirmation];
+            }
+            const distinctUids = new Set(confirmations.map((c) => c.uid)).size;
+            if (candidateId && confirmations.length >= STRIP_CANDIDATE_MIN_CONFIRMATIONS && distinctUids >= STRIP_CANDIDATE_MIN_DISTINCT_UIDS) {
+              const consensus = buildConsensusStripModel(confirmations);
+              const brandHint = confirmations.flatMap((c) => c.indices_texte_marque || []).find((s) => s && s.trim()) || null;
+              const slug = brandHint
+                ? brandHint.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "")
+                : "";
+              const modelId = slug || `auto_${candidateId.slice(0, 8)}`;
+              await FB.promoteStripModelCandidate(candidateId, modelId, {
+                ...consensus,
+                code_produit: brandHint || null,
+                nom_marque: brandHint || "Modèle auto-détecté",
+                code_barre: null,
+                autoRegistered: true,
+              });
+            }
+          } catch (e) {
+            // silencieux — best-effort, jamais bloquant pour la mesure en cours
+          }
+        }
       }
 
       // v1.33.0 — Fix : method n'était jamais recalculé après analyse (toujours
@@ -12631,7 +13019,8 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
                 photos[best.photoIdx],
                 crBest.tampon_point,
                 { point: crBest.borne_inf.point, valeur: crBest.borne_inf.valeur },
-                { point: crBest.borne_sup.point, valeur: crBest.borne_sup.valeur }
+                { point: crBest.borne_sup.point, valeur: crBest.borne_sup.valeur },
+                { tampon: crBest.tampon_hex, inf: crBest.borne_inf.hex, sup: crBest.borne_sup.hex }
               );
             } catch (e) {
               computed = null; // best-effort — repli silencieux sur la confiance IA
@@ -12700,7 +13089,8 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
                 photos[bCand.photoIdx],
                 cr.tampon_point,
                 { point: cr.borne_inf.point, valeur: cr.borne_inf.valeur },
-                { point: cr.borne_sup.point, valeur: cr.borne_sup.valeur }
+                { point: cr.borne_sup.point, valeur: cr.borne_sup.valeur },
+                { tampon: cr.tampon_hex, inf: cr.borne_inf.hex, sup: cr.borne_sup.hex }
               );
             } catch (e) {
               sampleComputed = null;
@@ -13213,7 +13603,7 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
             🔧 Debug couleur (temporaire)
           </div>
           {Object.entries(analyzeColorDebug).map(([param, cr]) => (
-            <div key={param} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, color: "var(--brand-text-secondary)", marginBottom: 4 }}>
+            <div key={param} style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, fontSize: 11, color: "var(--brand-text-secondary)", marginBottom: 4 }}>
               <span style={{ fontWeight: 700, minWidth: 40 }}>{param}</span>
               {cr.tampon_hex && (
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
@@ -13241,6 +13631,82 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* v1.98.6 — Correction manuelle testeur : parcours de l'échelle
+          couleur réelle de la photo par incréments de 1/10 de segment,
+          gauche/droite, jusqu'à faire correspondre visuellement la case
+          affichée au tampon. Testeurs uniquement (stripTester) — nécessite
+          couleur_reconnue[k].echelle (liste complète, seulement si modèle
+          identifié avec confiance, voir prompt étape 4bis). La confirmation
+          écrase la valeur du champ ET nourrit stripConfidenceSamples comme
+          signal humain (plus fiable qu'une auto-évaluation IA). */}
+      {stripTester && Object.entries(analyzeColorDebug).some(([, cr]) => Array.isArray(cr.echelle) && cr.echelle.length >= 2) && (
+        <div style={{ marginTop: 10, padding: "10px 12px", background: "#eef6f3", borderRadius: 10, border: "1px solid #b9dcd0" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--brand-text-strong)", marginBottom: 6 }}>
+            🧪 Correction testeur — ajuste la couleur de référence considérée
+          </div>
+          {Object.entries(analyzeColorDebug)
+            .filter(([, cr]) => Array.isArray(cr.echelle) && cr.echelle.length >= 2)
+            .map(([param, cr]) => {
+              const paramSetters = {
+                pH: setPH, fCl: setFCl, tCl: setTCl, ccl: setCcl, tac: setTac, cya: setCya,
+                hard: setHard, phos: setPhos, copper: setCopper, iron: setIron, temp: setTemp,
+                brome: setBrome, o2: setO2, sel: setSel,
+              };
+              // Position initiale : à partir de la valeur calculée déterministe si
+              // disponible, sinon interpolation des bornes IA via leurs distances
+              // (même logique que le reste de l'app), sinon milieu de l'échelle.
+              const fallbackValue = cr.valeurCalculee ?? (
+                cr.borne_inf && cr.borne_sup && typeof cr.borne_inf.distance === "number" && typeof cr.borne_sup.distance === "number"
+                  ? cr.borne_inf.valeur + (cr.borne_sup.valeur - cr.borne_inf.valeur) * (cr.borne_inf.distance / (cr.borne_inf.distance + cr.borne_sup.distance || 1))
+                  : cr.echelle[Math.floor((cr.echelle.length - 1) / 2)].valeur
+              );
+              const pos = testerCorrectionPos[param] ?? echelleValueToPosition(cr.echelle, fallbackValue);
+              const { hex: currentHex, valeur: currentValeur } = echellePositionToColorValue(cr.echelle, pos);
+              const confirmed = testerCorrectionConfirmed[param];
+              const move = (delta) => {
+                const next = Math.max(0, Math.min(cr.echelle.length - 1, pos + delta));
+                setTesterCorrectionPos((prev) => ({ ...prev, [param]: next }));
+                setTesterCorrectionConfirmed((prev) => ({ ...prev, [param]: false }));
+              };
+              const confirm = () => {
+                if (paramSetters[param]) paramSetters[param](String(currentValeur));
+                setTesterCorrectionConfirmed((prev) => ({ ...prev, [param]: true }));
+                if (authUid) {
+                  if (!analyzeSessionIdRef.current) analyzeSessionIdRef.current = uid();
+                  FB.addStripConfidenceSample(authUid, {
+                    param,
+                    stripModel: stripModel ? normalizeStripModel(stripModel) : null,
+                    analysisId: analyzeSessionIdRef.current,
+                    testerCorrected: true,
+                    correctedValue: currentValeur,
+                    originalValueIA: fallbackValue,
+                    originalConfianceIA: typeof cr.confiance === "number" ? cr.confiance : null,
+                  }).catch(() => {});
+                }
+              };
+              return (
+                <div key={param} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12, marginBottom: 6 }}>
+                  <span style={{ fontWeight: 700, minWidth: 40 }}>{param}</span>
+                  <button type="button" onClick={() => move(-0.1)} style={{ border: "1px solid #b9dcd0", background: "#fff", borderRadius: 6, width: 26, height: 26, cursor: "pointer" }}>◀</button>
+                  <span style={{ width: 16, height: 16, borderRadius: 4, background: currentHex, border: "1px solid #ccc", display: "inline-block" }} />
+                  <span style={{ minWidth: 48, textAlign: "center" }}>{currentValeur}</span>
+                  <button type="button" onClick={() => move(0.1)} style={{ border: "1px solid #b9dcd0", background: "#fff", borderRadius: 6, width: 26, height: 26, cursor: "pointer" }}>▶</button>
+                  <button
+                    type="button"
+                    onClick={confirm}
+                    style={{
+                      marginLeft: 6, border: "none", borderRadius: 6, padding: "5px 10px", cursor: "pointer",
+                      background: confirmed ? "#1a8fd1" : "var(--brand-primary)", color: "#fff", fontSize: 11, fontWeight: 600,
+                    }}
+                  >
+                    {confirmed ? "✓ Appliqué" : "Confirmer"}
+                  </button>
+                </div>
+              );
+            })}
         </div>
       )}
 
