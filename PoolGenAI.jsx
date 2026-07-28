@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.98.14";
+const APP_VERSION = "1.99.1";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -440,6 +440,8 @@ const TRANSLATIONS = {
     merge_link_confirming: "Fusion en cours…",
     merge_link_merged_title: "Fusion confirmée",
     merge_link_merged_desc: "Le code-barre a été relié à la fiche produit existante.",
+    common_product_badge: "Fiche communautaire (utilisée {count} fois)",
+    common_product_prefilled_note: "Informations préremplies automatiquement depuis la base communautaire.",
     merge_link_already_merged_title: "Déjà fusionné",
     merge_link_already_merged_desc: "Cette fusion avait déjà été confirmée.",
     merge_link_expired_title: "Lien expiré",
@@ -1166,6 +1168,8 @@ const TRANSLATIONS = {
     merge_link_confirming: "Merging…",
     merge_link_merged_title: "Merge confirmed",
     merge_link_merged_desc: "The barcode has been linked to the existing product sheet.",
+    common_product_badge: "Community sheet (used {count} times)",
+    common_product_prefilled_note: "Information automatically pre-filled from the shared database.",
     merge_link_already_merged_title: "Already merged",
     merge_link_already_merged_desc: "This merge had already been confirmed.",
     merge_link_expired_title: "Link expired",
@@ -1891,6 +1895,8 @@ const TRANSLATIONS = {
     merge_link_confirming: "Zusammenführung läuft…",
     merge_link_merged_title: "Zusammenführung bestätigt",
     merge_link_merged_desc: "Der Barcode wurde mit dem bestehenden Produktdatenblatt verknüpft.",
+    common_product_badge: "Community-Datenblatt ({count}-mal verwendet)",
+    common_product_prefilled_note: "Informationen automatisch aus der gemeinsamen Datenbank vorausgefüllt.",
     merge_link_already_merged_title: "Bereits zusammengeführt",
     merge_link_already_merged_desc: "Diese Zusammenführung wurde bereits bestätigt.",
     merge_link_expired_title: "Link abgelaufen",
@@ -2612,6 +2618,8 @@ const TRANSLATIONS = {
     merge_link_confirming: "Fusione in corso…",
     merge_link_merged_title: "Fusione confermata",
     merge_link_merged_desc: "Il codice a barre è stato collegato alla scheda prodotto esistente.",
+    common_product_badge: "Scheda comunitaria (usata {count} volte)",
+    common_product_prefilled_note: "Informazioni precompilate automaticamente dal database condiviso.",
     merge_link_already_merged_title: "Già fusa",
     merge_link_already_merged_desc: "Questa fusione era già stata confermata.",
     merge_link_expired_title: "Link scaduto",
@@ -3333,6 +3341,8 @@ const TRANSLATIONS = {
     merge_link_confirming: "Fusionando…",
     merge_link_merged_title: "Fusión confirmada",
     merge_link_merged_desc: "El código de barras se vinculó a la ficha de producto existente.",
+    common_product_badge: "Ficha comunitaria (usada {count} veces)",
+    common_product_prefilled_note: "Información autocompletada desde la base de datos compartida.",
     merge_link_already_merged_title: "Ya fusionado",
     merge_link_already_merged_desc: "Esta fusión ya había sido confirmada.",
     merge_link_expired_title: "Enlace caducado",
@@ -4051,6 +4061,8 @@ const TRANSLATIONS = {
     merge_link_confirming: "A fundir…",
     merge_link_merged_title: "Fusão confirmada",
     merge_link_merged_desc: "O código de barras foi ligado à ficha de produto existente.",
+    common_product_badge: "Ficha comunitária (usada {count} vezes)",
+    common_product_prefilled_note: "Informações preenchidas automaticamente a partir da base comunitária.",
     merge_link_already_merged_title: "Já fundido",
     merge_link_already_merged_desc: "Esta fusão já tinha sido confirmada.",
     merge_link_expired_title: "Link expirado",
@@ -5802,10 +5814,18 @@ Règles strictes :
 
 
 
-async function analyzeProductPhoto({ apiKey, apiProvider, dataUrls, uid: callerUid }) {
+async function analyzeProductPhoto({ apiKey, apiProvider, dataUrls, uid: callerUid, barcodeDetected = null }) {
   const photos = Array.isArray(dataUrls) ? dataUrls : [dataUrls];
   const multiPhotoNote = photos.length > 1
     ? `Tu reçois ${photos.length} photos du MÊME produit, prises séparément (face, code-barre, notice de dosage selon ce qui était visible). Croise les informations entre toutes les photos : le nom peut venir de la photo de face, le code-barre de sa photo dédiée, la dose/effet de la notice. `
+    : "";
+  // v1.99.0 — Code-barres lu localement (ZXing, déterministe, hors IA, voir
+  // decodeBarcodeFromDataUrl) avant l'appel — même principe que pour les
+  // bandelettes (v1.98.8). Quand disponible, ce numéro remplace la lecture
+  // visuelle des chiffres par l'IA (moins fiable : reflets, angle, taille du
+  // texte) plutôt que de la compléter.
+  const barcodeNote = barcodeDetected
+    ? `\n\nCODE-BARRES DÉTECTÉ AUTOMATIQUEMENT (lecture déterministe hors IA, fiable) : ${barcodeDetected} — utilise EXACTEMENT ce numéro pour le champ "barcode" plutôt que de tenter de relire les chiffres sur la photo, sauf incohérence flagrante avec ce que tu vois.`
     : "";
   const prompt = `Tu es un expert en chimie de l'eau de piscine. ${multiPhotoNote}Analyse ${photos.length > 1 ? "ces photos" : "cette photo"} d'étiquette ou d'emballage d'un produit de traitement piscine (chlore, pH, sel, algicide, floculant, etc.).
 
@@ -5825,7 +5845,7 @@ Informations à renseigner, dans les deux cas :
 - La taille TOTALE du contenant/emballage tel que vendu (ex : "5 kg", "25 kg", "1 L", "20 L")
 - Le conditionnement du produit : "galets" si le produit se présente sous forme d'unités solides discrètes (galets, pastilles, sticks, comprimés), "vrac" sinon (poudre, granulés en vrac, liquide)
 - Si conditionnement "galets" : le poids d'une seule unité en grammes (ex: "galets de 250g" → 250). Cherche cette info sur l'étiquette (souvent indiquée à côté du nombre d'unités ou du poids total divisé par le nombre d'unités), puis sur le web si absente de l'étiquette (même recherche que pour la dose de traitement)
-- Si conditionnement "galets" : le ratio d'entretien continu annoncé par le fabricant, tel qu'affiché sur l'emballage ou trouvé sur le web (ex : "1 galet / 30 m³ / 7-10 jours") — nombre d'unités, volume en m³, et nombre de jours entre deux ajouts. Ce ratio est différent de la dose de traitement correctif : ne pas le confondre ni le déduire, uniquement le rapporter s'il est explicitement indiqué
+- Si conditionnement "galets" : le ratio d'entretien continu annoncé par le fabricant, tel qu'affiché sur l'emballage ou trouvé sur le web (ex : "1 galet / 30 m³ / 7-10 jours") — nombre d'unités, volume en m³, et nombre de jours entre deux ajouts. Ce ratio est différent de la dose de traitement correctif : ne pas le confondre ni le déduire, uniquement le rapporter s'il est explicitement indiqué${barcodeNote}
 
 Réponds UNIQUEMENT en JSON valide, sans texte avant ou après, sans markdown :
 {"name": "nom du produit ou null", "barcode": "numéro EAN/UPC en chaîne de caractères ou null", "activeSubstance": "nom chimique ou null", "action": "une des valeurs listées ci-dessus ou null", "doseAmount": nombre ou null, "doseUnit": "g" ou "kg" ou "ml" ou "L" ou null, "effectAmount": nombre ou null, "effectPer": nombre de m³ ou null, "waitHours": nombre ou null, "containerAmount": nombre ou null, "containerUnit": "g" ou "kg" ou "ml" ou "L" ou null, "packagingType": "galets" ou "vrac" ou null, "unitWeight": nombre en grammes ou null, "maintenanceUnits": nombre ou null, "maintenanceVolumePer": nombre de m³ ou null, "maintenanceDays": nombre ou null, "productImageUrl": "URL directe de la photo officielle trouvée en ligne, ou null si aucune", "source": "web" ou "etiquette", "confidence": "haute" ou "moyenne" ou "basse", "note": "une phrase en français sur ce qui a été trouvé, en précisant si ça vient de la recherche web ou de la lecture d'étiquette"}
@@ -5913,6 +5933,68 @@ async function markCommonProductUsed({ idToken, productId }) {
   if (!res.ok) throw new Error(`Échec d'incrément base commune (${res.status})`);
   return res.json();
 }
+
+// v1.99.0 — Maturation code-barres produits (voir handleAnalyzePhoto) :
+// palier "semi-mature" (5-19 usages) : les champs de dose viennent déjà de
+// la fiche partagée, mais packagingType/unitWeight/maintenance* peuvent
+// encore être inconnus (absents du schéma avant v1.99.0, ou produit jamais
+// rencontré en "galets"). Appel en tâche de fond (fire-and-forget, jamais
+// bloquant pour l'utilisateur) : enrichit UNIQUEMENT la fiche partagée,
+// jamais le formulaire local déjà rempli depuis la fiche existante.
+async function enrichCommonProductPackaging({ idToken, productId, packagingType, unitWeight, maintenanceUnits, maintenanceVolumePer, maintenanceDays }) {
+  const res = await fetch(`${PROXY_BASE_URL}/product-enrich-packaging`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+    body: JSON.stringify({ productId, packagingType, unitWeight, maintenanceUnits, maintenanceVolumePer, maintenanceDays }),
+  });
+  if (!res.ok) throw new Error(`Échec d'enrichissement galets (${res.status})`);
+  return res.json();
+}
+
+// v1.99.0 — Palier "recontrôle" (tous les 20 usages, 20/40/60...) : une
+// vraie photo + analyse IA complète est refaite (comme au palier immature),
+// et sert aussi à rafraîchir la fiche partagée elle-même (dose/effet/
+// contenant/galets), au lieu du recontrôle texte-seul tous les 50 supprimé
+// dans le Worker (voir revalidateProductViaWebSearch, retiré v1.99.0 —
+// cycle unifié sur ce seul mécanisme, déclenché par un vrai scan photo).
+// Fire-and-forget : ne bloque jamais l'enregistrement local de l'utilisateur.
+async function recheckCommonProduct({ idToken, productId, quantity, effect, forXm3, delay, container, packagingType, unitWeight, maintenanceUnits, maintenanceVolumePer, maintenanceDays }) {
+  const res = await fetch(`${PROXY_BASE_URL}/product-recheck`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+    body: JSON.stringify({ productId, quantity, effect, forXm3, delay, container, packagingType, unitWeight, maintenanceUnits, maintenanceVolumePer, maintenanceDays }),
+  });
+  if (!res.ok) throw new Error(`Échec du recontrôle base commune (${res.status})`);
+  return res.json();
+}
+
+// v1.99.0 — Parse la chaîne "container" de la base commune (ex: "5kg",
+// "20L", format `${containerAmount}${containerUnit}` écrit par le
+// formulaire, voir handleSave) pour la redécomposer en montant + unité lors
+// d'un préremplissage direct depuis une fiche partagée. null si format
+// inattendu (ancienne fiche mal formée, etc.) — le formulaire garde alors sa
+// valeur par défaut plutôt que de planter.
+function parseContainerString(container) {
+  if (!container || typeof container !== "string") return null;
+  const match = container.trim().match(/^([\d.,]+)\s*(kg|L)$/);
+  if (!match) return null;
+  const amount = parseFloat(match[1].replace(",", "."));
+  if (Number.isNaN(amount)) return null;
+  return { amount, unit: match[2] };
+}
+
+// v1.99.0 — Seuils de maturation d'une fiche communautaire identifiée par
+// code-barres (décidés avec Arnaud, session du 27/07/2026), basés sur
+// commonProducts.callCount (déjà incrémenté à chaque save confirmé via
+// markCommonProductUsed/product-use) :
+//   - < 5 usages  : immature, IA complète à chaque scan
+//   - 5-19 usages : semi-mature, dose préremplie depuis la fiche partagée,
+//     IA en tâche de fond uniquement si packagingType encore inconnu
+//   - ≥ 20 usages : mature, skip total — sauf multiple exact de 20
+//     (recontrôle : IA complète, comme immature, rafraîchit la fiche)
+const COMMON_PRODUCT_SEMI_MATURE_THRESHOLD = 5;
+const COMMON_PRODUCT_MATURE_THRESHOLD = 20;
+const COMMON_PRODUCT_RECHECK_INTERVAL = 20;
 
 // v1.51.0 — Upload photo utilisateur vers R2 pour illustrer une fiche
 // commonProducts. Le Worker déduplique côté serveur (ne remplace jamais un
@@ -7555,6 +7637,14 @@ function PoolGenAIApp() {
     return () => { delete window._openLightbox; };
   }, []);
 
+  // v1.99.1 — Signal de montage réussi pour le watchdog de démarrage (voir
+  // maybeShowFatalOverlay et le setTimeout juste avant ReactDOM.createRoot en
+  // bas du fichier). Si ce composant a pu s'exécuter jusqu'ici sans planter
+  // (donc au-delà de l'AppErrorBoundary), on considère l'app démarrée.
+  useEffect(() => {
+    window.__appMountConfirmed = true;
+  }, []);
+
   // ── Vérification de version — force la mise à jour si une nouvelle version est déployée ──
   useEffect(() => {
     let cancelled = false;
@@ -7586,20 +7676,12 @@ function PoolGenAIApp() {
   }, []);
 
   async function forceReloadApp() {
-    try {
-      if ("serviceWorker" in navigator) {
-        const regs = await navigator.serviceWorker.getRegistrations();
-        for (const reg of regs) await reg.unregister();
-      }
-      if (window.caches) {
-        const keys = await caches.keys();
-        await Promise.all(keys.map((k) => caches.delete(k)));
-      }
-    } catch (e) {}
-    // Navigation vers une URL anti-cache (bypass du cache HTTP natif du navigateur,
-    // en plus du nettoyage du Service Worker ci-dessus)
-    const base = window.location.origin + window.location.pathname;
-    window.location.href = `${base}?_r=${Date.now()}`;
+    // v1.99.1 — Délègue à hardResetAndReload (fonction top-level, définie
+    // juste avant le montage React en bas du fichier) : même nettoyage,
+    // désormais étendu à IndexedDB/localStorage (voir incident Honor 200 Pro
+    // du 27/07/2026, résolu en vidant l'historique Chrome — le nettoyage
+    // Service Worker + Cache Storage seul ne suffisait pas toujours).
+    await hardResetAndReload();
   }
 
   // v1.77.0 — Poll version.json jusqu'à 2 lectures consécutives identiques
@@ -15101,9 +15183,48 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
   const [commonMatch, setCommonMatch] = useState(null);
   const [detectedBarcode, setDetectedBarcode] = useState(null);
   const [detectedSubstance, setDetectedSubstance] = useState(null);
+  // v1.99.0 — Palier de maturation d'une fiche communautaire identifiée par
+  // code-barres (voir handleAnalyzePhoto et les constantes COMMON_PRODUCT_*) :
+  // null tant qu'aucun match exact par code-barres, "immature" (<5 usages,
+  // IA complète comme avant v1.99.0), "semi-mature" (5-19, dose préremplie
+  // depuis la fiche partagée), "mature" (≥20, skip total), "recheck"
+  // (multiple de 20, IA complète + rafraîchit la fiche partagée).
+  const [commonProductTier, setCommonProductTier] = useState(null);
+  const [commonProductUsageCount, setCommonProductUsageCount] = useState(0);
   const fileInputRef = useRef(null);
   const galleryInputRef = useRef(null);
   const formErrorRef = useRef(null);
+
+  // v1.99.0 — Applique directement les champs d'une fiche commonProducts
+  // (match exact code-barres, palier semi-mature/mature) au formulaire
+  // local. doseUnit n'est pas stocké côté fiche partagée (convention
+  // existante : dose toujours en g pour containerUnit "kg", mL pour "L" —
+  // voir les usages de cUnit/doseUnit ailleurs dans ce fichier, ex. ligne
+  // ~8859). packagingType/unitWeight/maintenance* peuvent être absents sur
+  // une fiche pas encore enrichie (voir enrichCommonProductPackaging) :
+  // dans ce cas on ne touche pas aux valeurs par défaut du formulaire.
+  function applySharedProductToForm(product) {
+    if (!product) return;
+    if (product.displayName) setName(product.displayName);
+    if (product.action) setAction(product.action);
+    const parsedContainer = parseContainerString(product.container);
+    const inferredDoseUnit = parsedContainer?.unit === "L" ? "mL" : "g";
+    setDoseUnit(inferredDoseUnit);
+    if (product.quantity != null) setDoseAmount(product.quantity);
+    if (product.effect != null) setEffectAmount(product.effect);
+    if (product.forXm3 != null) setEffectPer(product.forXm3);
+    if (product.delay != null) setWaitHours(product.delay);
+    if (parsedContainer) {
+      setContainerAmount(parsedContainer.amount);
+      setContainerUnit(parsedContainer.unit);
+    }
+    if (product.packagingType) setPackagingType(product.packagingType);
+    if (product.unitWeight != null) setUnitWeight(product.unitWeight);
+    if (product.maintenanceUnits != null) setMaintenanceUnits(product.maintenanceUnits);
+    if (product.maintenanceVolumePer != null) setMaintenanceVolumePer(product.maintenanceVolumePer);
+    if (product.maintenanceDays != null) setMaintenanceDays(product.maintenanceDays);
+    setAiNote(t("common_product_prefilled_note"));
+  }
 
   async function handlePhotoChange(e) {
     const file = e.target.files?.[0];
@@ -15142,8 +15263,77 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
     setAiError(null);
     setAiNote(null);
     setAiSuggestion(null);
+    setCommonProductTier(null);
     try {
-      const result = await analyzeProductPhoto({ apiKey, apiProvider, dataUrls: analysisPhotos, uid: authUid });
+      // v1.99.0 — Lecture code-barres locale (ZXing, déterministe, hors IA,
+      // voir decodeBarcodeFromDataUrl) sur chaque photo fournie, avant tout
+      // appel IA — même principe que pour les bandelettes (v1.98.8).
+      // Best-effort : s'arrête à la première photo où un code-barres est lu.
+      let zxingBarcode = null;
+      for (const dataUrl of analysisPhotos) {
+        zxingBarcode = await decodeBarcodeFromDataUrl(dataUrl);
+        if (zxingBarcode) break;
+      }
+
+      // v1.99.0 — Si un code-barres est lu localement, interroge la base
+      // commune AVANT l'IA : un match exact (matchType "alias") permet de
+      // décider du palier de maturation sans attendre l'analyse photo.
+      let earlyMatch = null;
+      let idTokenForLookup = null;
+      if (zxingBarcode && window._fbAuth?.currentUser) {
+        try {
+          idTokenForLookup = await window._fbAuth.currentUser.getIdToken();
+          earlyMatch = await lookupCommonProduct({ idToken: idTokenForLookup, barcode: zxingBarcode, name: "", activeSubstance: "" });
+        } catch (e) {
+          console.warn("Lookup base commune (pré-IA) échoué :", e.message);
+        }
+      }
+
+      const isAliasMatch = earlyMatch?.matchType === "alias" && !!earlyMatch.product;
+      const usageCount = isAliasMatch ? (earlyMatch.product.callCount || 0) : 0;
+      const isRecheckCycle = isAliasMatch && usageCount > 0 && usageCount % COMMON_PRODUCT_RECHECK_INTERVAL === 0;
+      const isMature = isAliasMatch && usageCount >= COMMON_PRODUCT_MATURE_THRESHOLD && !isRecheckCycle;
+      const isSemiMature = isAliasMatch && usageCount >= COMMON_PRODUCT_SEMI_MATURE_THRESHOLD && usageCount < COMMON_PRODUCT_MATURE_THRESHOLD;
+
+      if (isSemiMature || isMature) {
+        // Palier semi-mature/mature : skip de l'appel IA bloquant, formulaire
+        // prérempli directement depuis la fiche partagée.
+        applySharedProductToForm(earlyMatch.product);
+        setDetectedBarcode(zxingBarcode);
+        setDetectedSubstance(earlyMatch.product.activeSubstance || null);
+        setCommonMatch(earlyMatch);
+        setCommonProductTier(isMature ? "mature" : "semi-mature");
+        setCommonProductUsageCount(usageCount);
+
+        // Enrichissement galets en tâche de fond si encore inconnu côté
+        // fiche partagée — jamais appliqué au formulaire local, uniquement
+        // écrit dans la base commune pour bénéficier aux scans futurs.
+        if (earlyMatch.product.packagingType == null && idTokenForLookup) {
+          (async () => {
+            try {
+              const bgResult = await analyzeProductPhoto({ apiKey, apiProvider, dataUrls: analysisPhotos, uid: authUid, barcodeDetected: zxingBarcode });
+              await enrichCommonProductPackaging({
+                idToken: idTokenForLookup,
+                productId: earlyMatch.productId,
+                packagingType: bgResult.packagingType || "vrac",
+                unitWeight: bgResult.unitWeight ?? null,
+                maintenanceUnits: bgResult.maintenanceUnits ?? null,
+                maintenanceVolumePer: bgResult.maintenanceVolumePer ?? null,
+                maintenanceDays: bgResult.maintenanceDays ?? null,
+              });
+            } catch (e) {
+              console.warn("Enrichissement galets (fond) échoué :", e.message);
+            }
+          })();
+        }
+        return;
+      }
+
+      // Palier immature (ou recontrôle, ou pas de match) : analyse IA
+      // complète, comme avant v1.99.0 — le code-barres ZXing (s'il existe)
+      // est passé en indice fiable au prompt plutôt que laissé à la lecture
+      // visuelle des chiffres par l'IA.
+      const result = await analyzeProductPhoto({ apiKey, apiProvider, dataUrls: analysisPhotos, uid: authUid, barcodeDetected: zxingBarcode });
       if (result.name) setName(result.name);
       if (result.action) setAction(result.action);
       // v1.46.0 — Normalisation : la dose de traitement ne s'exprime jamais en
@@ -15185,24 +15375,78 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
       if (result.maintenanceVolumePer != null) setMaintenanceVolumePer(result.maintenanceVolumePer);
       if (result.maintenanceDays != null) setMaintenanceDays(result.maintenanceDays);
       if (result.note) setAiNote(result.note);
-      setDetectedBarcode(result.barcode || null);
+      // v1.99.0 — Le code-barres ZXing (déterministe) prime toujours sur la
+      // lecture visuelle de l'IA quand les deux sont disponibles.
+      const finalBarcode = zxingBarcode || result.barcode || null;
+      setDetectedBarcode(finalBarcode);
       setDetectedSubstance(result.activeSubstance || null);
 
       // v1.48.0 — Lookup base commune (indépendant du résultat photo/web
       // ci-dessus, qui reste la source de vérité pour les valeurs affichées
-      // en placeholder). Sert uniquement à savoir, à la sauvegarde, s'il faut
-      // relier ce produit à une fiche partagée existante ou en créer une
-      // nouvelle. Aucun champ du formulaire n'est modifié ici.
+      // en placeholder). Sert à savoir, à la sauvegarde, s'il faut relier ce
+      // produit à une fiche partagée existante ou en créer une nouvelle.
+      // Aucun champ du formulaire n'est modifié ici (sauf palier recontrôle
+      // ci-dessous, qui rafraîchit la fiche partagée elle-même, jamais le
+      // formulaire).
       try {
-        if (window._fbAuth?.currentUser && (result.barcode || result.name)) {
-          const idToken = await window._fbAuth.currentUser.getIdToken();
-          const lookup = await lookupCommonProduct({
-            idToken,
-            barcode: result.barcode || null,
-            name: result.name || "",
-            activeSubstance: result.activeSubstance || "",
-          });
+        if (window._fbAuth?.currentUser && (finalBarcode || result.name)) {
+          const idToken = idTokenForLookup || await window._fbAuth.currentUser.getIdToken();
+          const lookup = (finalBarcode && finalBarcode === zxingBarcode && earlyMatch)
+            ? earlyMatch
+            : await lookupCommonProduct({ idToken, barcode: finalBarcode, name: result.name || "", activeSubstance: result.activeSubstance || "" });
           setCommonMatch(lookup);
+
+          if (isRecheckCycle && lookup?.productId) {
+            // v1.99.0 — Palier recontrôle (multiple de 20) : rafraîchit la
+            // fiche partagée avec les valeurs fraîchement lues (remplace le
+            // recontrôle texte-seul tous les 50, retiré côté Worker).
+            (async () => {
+              try {
+                await recheckCommonProduct({
+                  idToken,
+                  productId: lookup.productId,
+                  quantity: suggDoseAmount,
+                  effect: result.effectAmount ?? null,
+                  forXm3: result.effectPer ?? null,
+                  delay: result.waitHours ?? null,
+                  container: (result.containerAmount != null && result.containerUnit) ? `${result.containerAmount}${result.containerUnit}` : null,
+                  packagingType: result.packagingType || null,
+                  unitWeight: result.unitWeight ?? null,
+                  maintenanceUnits: result.maintenanceUnits ?? null,
+                  maintenanceVolumePer: result.maintenanceVolumePer ?? null,
+                  maintenanceDays: result.maintenanceDays ?? null,
+                });
+              } catch (e) {
+                console.warn("Recontrôle base commune échoué :", e.message);
+              }
+            })();
+            setCommonProductTier("recheck");
+            setCommonProductUsageCount(usageCount);
+          } else if (isAliasMatch) {
+            setCommonProductTier("immature");
+            setCommonProductUsageCount(usageCount);
+            // Opportuniste : l'IA vient d'être appelée de toute façon à ce
+            // palier, on enrichit la fiche partagée si les infos galets
+            // manquent encore — aucun coût IA supplémentaire, juste une
+            // écriture Firestore.
+            if (earlyMatch.product.packagingType == null && lookup?.productId) {
+              (async () => {
+                try {
+                  await enrichCommonProductPackaging({
+                    idToken,
+                    productId: lookup.productId,
+                    packagingType: result.packagingType || "vrac",
+                    unitWeight: result.unitWeight ?? null,
+                    maintenanceUnits: result.maintenanceUnits ?? null,
+                    maintenanceVolumePer: result.maintenanceVolumePer ?? null,
+                    maintenanceDays: result.maintenanceDays ?? null,
+                  });
+                } catch (e) {
+                  console.warn("Enrichissement galets (fond) échoué :", e.message);
+                }
+              })();
+            }
+          }
         }
       } catch (e) {
         // Non bloquant : la base commune est un plus, pas une dépendance dure
@@ -15317,6 +15561,15 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
                 // pendant sa recherche web, si disponible.
                 photoUrl: aiSuggestion?.productImageUrl || null,
                 source: aiSuggestion?.source || "etiquette",
+                // v1.99.0 — Infos galets dès la création de la fiche
+                // partagée, quand connues, pour que le premier match
+                // code-barres d'un autre utilisateur en bénéficie déjà
+                // (évite un aller-retour d'enrichissement inutile).
+                packagingType: packagingType || null,
+                unitWeight: packagingType !== "galets" ? null : (parseFloat(unitWeight) || null),
+                maintenanceUnits: packagingType !== "galets" ? null : (parseFloat(maintenanceUnits) || null),
+                maintenanceVolumePer: packagingType !== "galets" ? null : (parseFloat(maintenanceVolumePer) || null),
+                maintenanceDays: packagingType !== "galets" ? null : (parseFloat(maintenanceDays) || null),
               },
             });
             sharedProductId = created?.productId || null;
@@ -15423,6 +15676,15 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
           {analysisPhotos.length > 0 && !aiEnabled && (
             <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginTop: 8, lineHeight: 1.5 }}>
               {t("product_ai_hint")}
+            </div>
+          )}
+          {/* v1.99.0 — Badge fiche communautaire identifiée par code-barres
+              (palier semi-mature/mature/recheck — voir handleAnalyzePhoto).
+              Affiché uniquement quand un match exact a été trouvé. */}
+          {commonProductTier && commonProductTier !== "immature" && (
+            <div style={{ ...styles.photoHintBox, background: "#eef6ff", border: "1px solid #a9cdf5", marginTop: 8, display: "flex", alignItems: "center", gap: 8 }}>
+              <CheckCircle2 size={15} style={{ flexShrink: 0, color: "#3574c9" }} />
+              <span style={{ fontSize: 12.5 }}>{t("common_product_badge", { count: commonProductUsageCount })}</span>
             </div>
           )}
           {aiNote && <div style={{ ...styles.analyzeNoteOk, marginTop: 8 }}>{aiNote}</div>}
@@ -19588,7 +19850,160 @@ const styles = {
   if (!meta.parentNode) document.head.appendChild(meta);
 })();
 
+// ============================================================================
+// v1.99.1 — Filet de sécurité anti-écran-blanc
+// ----------------------------------------------------------------------------
+// Suite à l'incident du 27/07/2026 (Honor 200 Pro : écran de démarrage
+// bref puis écran blanc, résolu en vidant l'historique Chrome — donc un
+// état corrompu plus large que ce que forceReloadApp nettoyait jusqu'ici).
+// Trois couches, du plus précis au plus large :
+//   1. AppErrorBoundary — attrape les erreurs de rendu React (la cause la
+//      plus probable d'un écran blanc : le boot-loader est retiré juste
+//      après l'appel à .render(), qui ne lève pas forcément d'exception
+//      synchrone même si l'arbre plante juste après).
+//   2. Watchdog de démarrage — si window.__appMountConfirmed (posé par un
+//      useEffect dans PoolGenAIApp) n'est toujours pas vrai après 12s,
+//      affiche le filet (couvre les plantages qu'un ErrorBoundary ne peut
+//      pas attraper : erreurs asynchrones, écouteur qui ne se déclenche
+//      jamais, etc.).
+//   3. Écouteurs globaux error/unhandledrejection — filet complémentaire,
+//      protégé par un contrôle sur #root pour ne pas interrompre
+//      l'utilisateur pour une erreur mineure sans rapport (ex. script d'une
+//      extension navigateur) tant que l'app reste visiblement fonctionnelle.
+// Ne remplace PAS un futur filet côté index.html (hors de ce fichier) pour
+// le cas, plus rare, d'un échec total de la transformation Babel elle-même
+// avant que ce script ne s'exécute — à voir séparément si besoin, avec
+// index.html/sw.js.
+// ============================================================================
+
+function getFatalOverlayTexts() {
+  const lang = (navigator.language || "fr").slice(0, 2).toLowerCase();
+  const texts = {
+    fr: { title: "Un problème est survenu", desc: "L'application n'a pas pu se charger correctement sur cet appareil.", button: "Recharger l'application" },
+    en: { title: "Something went wrong", desc: "The app could not load correctly on this device.", button: "Reload the app" },
+    de: { title: "Ein Problem ist aufgetreten", desc: "Die App konnte auf diesem Gerät nicht korrekt geladen werden.", button: "App neu laden" },
+    it: { title: "Si è verificato un problema", desc: "L'app non è riuscita a caricarsi correttamente su questo dispositivo.", button: "Ricarica l'app" },
+    es: { title: "Se produjo un problema", desc: "La aplicación no pudo cargarse correctamente en este dispositivo.", button: "Recargar la aplicación" },
+    pt: { title: "Ocorreu um problema", desc: "O aplicativo não conseguiu carregar corretamente neste dispositivo.", button: "Recarregar o aplicativo" },
+  };
+  return texts[lang] || texts.fr;
+}
+
+// v1.99.1 — Réinitialisation complète du stockage local (Service Worker,
+// Cache Storage, IndexedDB, localStorage/sessionStorage), puis rechargement
+// anti-cache. Fonction top-level (pas de dépendance à l'état d'un
+// composant) : appelable depuis l'ErrorBoundary et le watchdog ci-dessous,
+// qui s'exécutent tous les deux en dehors de tout arbre React
+// potentiellement planté. L'app ne stocke rien elle-même dans localStorage/
+// sessionStorage (vérifié — tout vit dans Firestore), donc les vider ici
+// est sans risque de perte de données.
+async function hardResetAndReload() {
+  try {
+    if ("serviceWorker" in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      for (const reg of regs) await reg.unregister();
+    }
+    if (window.caches) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k)));
+    }
+    if (window.indexedDB?.databases) {
+      const dbs = await indexedDB.databases();
+      await Promise.all((dbs || []).map((db) => db.name && new Promise((resolve) => {
+        try {
+          const req = indexedDB.deleteDatabase(db.name);
+          req.onsuccess = req.onerror = req.onblocked = () => resolve();
+        } catch (e) { resolve(); }
+      })));
+    }
+    try { localStorage.clear(); } catch (e) {}
+    try { sessionStorage.clear(); } catch (e) {}
+  } catch (e) {
+    // Best-effort : on recharge de toute façon même si le nettoyage a
+    // échoué partiellement — mieux qu'un écran blanc permanent.
+  }
+  const base = window.location.origin + window.location.pathname;
+  window.location.href = `${base}?_r=${Date.now()}`;
+}
+
+// v1.99.1 — Overlay vanilla JS (aucune dépendance React/état applicatif) :
+// dernier recours quand on ne peut pas faire confiance à l'arbre React pour
+// afficher quoi que ce soit. Protégé contre une double injection.
+let __fatalOverlayShown = false;
+function showFatalOverlay() {
+  if (__fatalOverlayShown || document.getElementById("__fatal_overlay")) return;
+  __fatalOverlayShown = true;
+  const tt = getFatalOverlayTexts();
+  const overlay = document.createElement("div");
+  overlay.id = "__fatal_overlay";
+  overlay.style.cssText = "position:fixed;inset:0;z-index:999999;background:#f4f8fb;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;";
+  overlay.innerHTML = `
+    <div style="font-size:19px;font-weight:800;color:#1a2b3c;margin-bottom:10px;">${tt.title}</div>
+    <div style="font-size:14px;color:#5a6b7c;margin-bottom:24px;max-width:320px;line-height:1.5;">${tt.desc}</div>
+    <button id="__fatal_overlay_btn" style="background:#1a8fd1;color:#fff;border:none;border-radius:10px;padding:13px 28px;font-size:15px;font-weight:700;cursor:pointer;">${tt.button}</button>
+  `;
+  document.body.appendChild(overlay);
+  document.getElementById("__fatal_overlay_btn").addEventListener("click", () => { hardResetAndReload(); });
+}
+
+// v1.99.1 — Ne montre le filet global que si #root semble réellement vide :
+// évite d'interrompre l'utilisateur pour une erreur mineure sans rapport
+// (ex. script d'une extension navigateur) tant que l'app reste visiblement
+// fonctionnelle.
+function maybeShowFatalOverlay() {
+  const root = document.getElementById("root");
+  if (!root || root.children.length === 0) showFatalOverlay();
+}
+
+window.addEventListener("error", maybeShowFatalOverlay);
+window.addEventListener("unhandledrejection", maybeShowFatalOverlay);
+
+// v1.99.1 — Watchdog de démarrage : si l'app n'a pas confirmé son montage
+// (voir le useEffect correspondant dans PoolGenAIApp) passé ce délai, le
+// rendu React a probablement échoué silencieusement (pas d'exception
+// synchrone attrapable par AppErrorBoundary) — on affiche le filet.
+setTimeout(() => {
+  if (!window.__appMountConfirmed) maybeShowFatalOverlay();
+}, 12000);
+
+// v1.99.1 — Attrape les erreurs de rendu React dans PoolGenAIApp (la cause
+// la plus probable d'un écran blanc, voir l'en-tête de section ci-dessus).
+// Composant classe : obligatoire pour un error boundary, aucun équivalent
+// à base de Hooks n'existe en React 18.
+class AppErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error, info) {
+    console.error("AppErrorBoundary — erreur de rendu attrapée :", error, info?.componentStack);
+  }
+  render() {
+    if (this.state.hasError) {
+      const tt = getFatalOverlayTexts();
+      return React.createElement(
+        "div",
+        { style: { position: "fixed", inset: 0, background: "#f4f8fb", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32, textAlign: "center", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" } },
+        React.createElement("div", { style: { fontSize: 19, fontWeight: 800, color: "#1a2b3c", marginBottom: 10 } }, tt.title),
+        React.createElement("div", { style: { fontSize: 14, color: "#5a6b7c", marginBottom: 24, maxWidth: 320, lineHeight: 1.5 } }, tt.desc),
+        React.createElement(
+          "button",
+          {
+            style: { background: "#1a8fd1", color: "#fff", border: "none", borderRadius: 10, padding: "13px 28px", fontSize: 15, fontWeight: 700, cursor: "pointer" },
+            onClick: () => hardResetAndReload(),
+          },
+          tt.button
+        )
+      );
+    }
+    return this.props.children;
+  }
+}
+
 const __root = ReactDOM.createRoot(document.getElementById("root"));
-__root.render(React.createElement(PoolGenAIApp));
+__root.render(React.createElement(AppErrorBoundary, null, React.createElement(PoolGenAIApp)));
 const __loader = document.getElementById("boot-loader");
 if (__loader) __loader.remove();
