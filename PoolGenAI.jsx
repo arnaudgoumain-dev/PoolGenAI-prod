@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.99.1";
+const APP_VERSION = "1.99.2";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -6024,6 +6024,29 @@ async function signalUnrecognizedStripModel({ idToken, note }) {
   return res.json();
 }
 
+// v1.100.0 — stripModels/calibrationModels/config (seuils de confiance)
+// servis par le Worker plutôt que lus directement en Firestore : ces
+// collections étaient lisibles par tout compte authentifié (voir
+// firestore.rules), exposant le savoir métier bandelettes (échelles de
+// couleurs, modèle de calibration entraîné) à quiconque crée un compte
+// gratuit. Voir handleStripReferenceData/handleStripCalibrationModel côté
+// Worker.
+async function getStripReferenceData({ idToken }) {
+  const res = await fetch(`${PROXY_BASE_URL}/strip-reference-data`, {
+    headers: { Authorization: `Bearer ${idToken}` },
+  });
+  if (!res.ok) throw new Error(`Échec de lecture des données bandelette (${res.status})`);
+  return res.json();
+}
+
+async function getStripCalibrationModel({ idToken, stripModel, param }) {
+  const url = `${PROXY_BASE_URL}/strip-calibration-model?stripModel=${encodeURIComponent(stripModel)}&param=${encodeURIComponent(param)}`;
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${idToken}` } });
+  if (!res.ok) throw new Error(`Échec de lecture du modèle de calibration (${res.status})`);
+  const { model } = await res.json();
+  return model;
+}
+
 async function confirmCommonProductMerge({ mergeId, token }) {
   const res = await fetch(`${PROXY_BASE_URL}/confirm-merge`, {
     method: "POST",
@@ -6449,17 +6472,14 @@ const FB = {
     const ref = window._fbDoc(window._fbDb, "calibrationPoints", uid());
     await window._fbSetDoc(ref, point);
   },
-  // v1.38.0 — Lot B : lit un modèle de calibration agrégé (calculé côté
-  // Worker Cloudflare à partir des points contribués par tous les
-  // utilisateurs). Collection en lecture seule côté client (cf.
-  // firestore.rules), écrite uniquement par le Worker. Retourne null si aucun
-  // modèle n'existe encore pour ce couple modèle de bandelette + paramètre
-  // (pas assez de points collectés).
-  getCalibrationModel: async (stripModel, param) => {
-    if (!window._fbDb || !window._fbGetDoc) return null;
-    const ref = window._fbDoc(window._fbDb, "calibrationModels", `${stripModel}_${param}`);
-    const snap = await window._fbGetDoc(ref);
-    return snap.exists() ? snap.data() : null;
+  // v1.38.0 — Lit un modèle de calibration agrégé (calculé côté Worker
+  // Cloudflare à partir des points contribués par tous les utilisateurs).
+  // v1.100.0 — Servi par le Worker (GET /strip-calibration-model) plutôt que
+  // lu directement en Firestore (voir getStripCalibrationModel). Retourne
+  // null si aucun modèle n'existe encore pour ce couple modèle de bandelette
+  // + paramètre (pas assez de points collectés).
+  getCalibrationModel: async (idToken, stripModel, param) => {
+    return getStripCalibrationModel({ idToken, stripModel, param });
   },
   // v1.97.4 — Échantillons de confiance bandelette (spec bandelettes) :
   // collection RACINE, create-only, un document par paramètre analysé en
@@ -6477,50 +6497,18 @@ const FB = {
   },
   // v1.97.0 — Spec bandelettes (seuil de confiance + fiches modèle) : registre
   // des modèles de bandelette connus (ordre des tampons, échelles, indices
-  // d'orientation — voir section 10.2 de la spec). Collection en lecture
-  // seule côté client (même principe que calibrationModels) ; écriture
-  // réservée à un script d'admin one-shot (validation humaine obligatoire
-  // avant publication d'une fiche, jamais générée automatiquement par l'IA).
-  getStripModel: async (modeleId) => {
-    if (!window._fbDb || !window._fbGetDoc) return null;
-    const ref = window._fbDoc(window._fbDb, "stripModels", modeleId);
-    const snap = await window._fbGetDoc(ref);
-    return snap.exists() ? snap.data() : null;
-  },
-  // v1.97.0 — Registre complet, embarqué dans le prompt IA pour permettre
-  // l'identification du modèle + la lecture par correspondance d'index de
-  // case colorée (voir analyzeStripPhoto). Collection restant modeste en
-  // volume (quelques dizaines de modèles au plus), un listage complet à
-  // chaque analyse reste largement acceptable.
-  listStripModels: async () => {
-    if (!window._fbDb || !window._fbGetDocs) return [];
-    const col = window._fbCollection(window._fbDb, "stripModels");
-    const snap = await window._fbGetDocs(col);
-    return snap.docs.map((d) => ({ modele_id: d.id, ...d.data() }));
-  },
-  // v1.97.0 — Seuil de confiance minimum par paramètre (0-100), configurable
-  // sans redéploiement (document unique, modifiable depuis la console
-  // Firebase). Valeur de repli 70 si le document ou un paramètre précis est
-  // absent — cohérent avec le seuil initial demandé dans la spec.
-  getStripConfidenceThresholds: async () => {
-    if (!window._fbDb || !window._fbGetDoc) return {};
-    const ref = window._fbDoc(window._fbDb, "config", "stripConfidenceThresholds");
-    const snap = await window._fbGetDoc(ref);
-    return snap.exists() ? snap.data() : {};
-  },
-  // v1.98.3 — Liste des UIDs testeurs bandelette : abandonné au profit d'un
-  // simple champ config.stripTester par utilisateur (toggle dans Réglages,
-  // voir syncOwnConfig({ stripTester }) et SettingsView) — plus simple à
-  // gérer pour Arnaud (pas de script ni de liste Firestore à maintenir), et
-  // chaque testeur contrôle lui-même son statut.
-  // v1.98.3 — Seuils par paramètre pour les comptes testeurs (voir
-  // le champ config.stripTester ci-dessus). Repli 25 si absent/paramètre non
-  // renseigné — cohérent avec le seuil normal qui replie sur 70 si absent.
-  getStripTesterThresholds: async () => {
-    if (!window._fbDb || !window._fbGetDoc) return {};
-    const ref = window._fbDoc(window._fbDb, "config", "stripConfidenceThresholdsTesters");
-    const snap = await window._fbGetDoc(ref);
-    return snap.exists() ? snap.data() : {};
+  // d'orientation — voir section 10.2 de la spec), embarqué dans le prompt IA
+  // pour permettre l'identification du modèle + la lecture par
+  // correspondance d'index de case colorée (voir analyzeStripPhoto).
+  // v1.98.3 — Seuils de confiance (normal + testeur) bundlés dans le même
+  // appel, chargés ensemble avant la boucle d'analyse (voir handleAnalyze).
+  // v1.100.0 — Les trois étaient lus directement en Firestore (collections
+  // lisibles par tout compte authentifié — voir firestore.rules), exposant
+  // le savoir métier bandelettes à quiconque crée un compte gratuit. Servis
+  // désormais par le Worker (GET /strip-reference-data), en un seul appel
+  // réseau au lieu de trois lectures Firestore séparées.
+  getStripReferenceData: async (idToken) => {
+    return getStripReferenceData({ idToken });
   },
   // v1.98.9 — Auto-enregistrement de nouveaux modèles de bandelette (fiches
   // candidates, collection stripModelCandidates). Voir handleAnalyze pour le
@@ -12895,12 +12883,15 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
       let knownModels = [];
       let confidenceThresholds = {};
       let testerThresholds = {};
+      let analyzeIdToken = null;
       try {
-        [knownModels, confidenceThresholds, testerThresholds] = await Promise.all([
-          FB.listStripModels(),
-          FB.getStripConfidenceThresholds(),
-          FB.getStripTesterThresholds(),
-        ]);
+        analyzeIdToken = await window._fbAuth?.currentUser?.getIdToken();
+        if (analyzeIdToken) {
+          const refData = await FB.getStripReferenceData(analyzeIdToken);
+          knownModels = refData.stripModels || [];
+          confidenceThresholds = refData.confidenceThresholds || {};
+          testerThresholds = refData.testerThresholds || {};
+        }
       } catch (e) {
         // silencieux — l'analyse continue avec le seuil de repli 70 (ou 25 si testeur)
       }
@@ -13243,11 +13234,11 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
       // présence en base vaut donc validation du seuil. Best-effort et
       // silencieux : un échec (pas de modèle, image illisible...) laisse
       // simplement l'estimation visuelle de l'IA inchangée dans merged[k].
-      if (stripModel && bandeletteOnlyCandidates.length) {
+      if (stripModel && bandeletteOnlyCandidates.length && analyzeIdToken) {
         const normalizedModelForCorrection = normalizeStripModel(stripModel);
         for (const bc of bandeletteOnlyCandidates) {
           try {
-            const model = await FB.getCalibrationModel(normalizedModelForCorrection, bc.param);
+            const model = await FB.getCalibrationModel(analyzeIdToken, normalizedModelForCorrection, bc.param);
             if (!model?.coefficients) continue;
             const photoDataUrl = photos[bc.photoIdx];
             const { color } = await sampleColorAndQuality(photoDataUrl, bc.samplePoints.pad[0], bc.samplePoints.pad[1]);

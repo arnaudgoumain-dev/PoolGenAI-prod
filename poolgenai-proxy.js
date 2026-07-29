@@ -1271,6 +1271,59 @@ async function handleStripModelSignal(request, env, origin) {
   return jsonResponse({ success: true }, 200, origin);
 }
 __name(handleStripModelSignal, "handleStripModelSignal");
+// v1.100.0 — stripModels/calibrationModels/config (seuils de confiance) ne
+// sont plus lus directement en Firestore côté client (firestore.rules les
+// rendait lisibles à tout compte authentifié, y compris gratuit — savoir
+// métier bandelettes extractible par quiconque). Servis désormais
+// uniquement via ces deux routes, toujours authentifiées mais pas
+// premium-only.
+async function handleStripReferenceData(request, env, origin) {
+  const authHeader = request.headers.get("Authorization") || "";
+  const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (!idToken) return jsonError("Authentification requise", 401, origin);
+  try {
+    await verifyFirebaseIdToken(idToken);
+  } catch (e) {
+    return jsonError(`Token invalide : ${e.message}`, 401, origin);
+  }
+  try {
+    const [stripModelDocs, confidenceThresholds, testerThresholds] = await Promise.all([
+      firestoreListAllDocs(env, "stripModels"),
+      firestoreGetDoc(env, "config", "stripConfidenceThresholds"),
+      firestoreGetDoc(env, "config", "stripConfidenceThresholdsTesters")
+    ]);
+    const stripModels = stripModelDocs.map(({ id, ...rest }) => ({ modele_id: id, ...rest }));
+    return jsonResponse(
+      { stripModels, confidenceThresholds: confidenceThresholds || {}, testerThresholds: testerThresholds || {} },
+      200,
+      origin
+    );
+  } catch (e) {
+    return jsonError(`Erreur serveur : ${e.message}`, 500, origin);
+  }
+}
+__name(handleStripReferenceData, "handleStripReferenceData");
+async function handleStripCalibrationModel(request, env, origin) {
+  const authHeader = request.headers.get("Authorization") || "";
+  const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (!idToken) return jsonError("Authentification requise", 401, origin);
+  try {
+    await verifyFirebaseIdToken(idToken);
+  } catch (e) {
+    return jsonError(`Token invalide : ${e.message}`, 401, origin);
+  }
+  const url = new URL(request.url);
+  const stripModel = url.searchParams.get("stripModel");
+  const param = url.searchParams.get("param");
+  if (!stripModel || !param) return jsonError("stripModel et param requis", 400, origin);
+  try {
+    const model = await firestoreGetDoc(env, "calibrationModels", `${stripModel}_${param}`);
+    return jsonResponse({ model: model || null }, 200, origin);
+  } catch (e) {
+    return jsonError(`Erreur serveur : ${e.message}`, 500, origin);
+  }
+}
+__name(handleStripCalibrationModel, "handleStripCalibrationModel");
 async function handleSendVerificationEmail(request, env, origin) {
   const authHeader = request.headers.get("Authorization") || "";
   const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
@@ -2319,6 +2372,12 @@ var poolgenai_proxy_default = {
       }
       if (url.pathname === "/revocation-info") {
         return handleRevocationRequestInfo(request, env, origin);
+      }
+      if (url.pathname === "/strip-reference-data") {
+        return handleStripReferenceData(request, env, origin);
+      }
+      if (url.pathname === "/strip-calibration-model") {
+        return handleStripCalibrationModel(request, env, origin);
       }
       return new Response("Not found", { status: 404 });
     }
