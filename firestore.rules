@@ -14,17 +14,6 @@ service cloud.firestore {
     function isActiveOwner(uid) {
       return isOwner(uid) && !isSuspended(uid);
     }
-    // v1.53.0 — Utilisateurs secondaires (spec du 04/07, cloisonnée à un seul
-    // bassin par invitation, décidée le 260706). Le lien vit dans
-    // users/{primaryUid}/secondaryUsers/{secondaryUid} : { email, status:
-    // "active"|"revoked", poolId, addedAt }. Écrit uniquement par le Worker
-    // (routes /invite-secondary-user, /respond-invitation,
-    // /revoke-secondary-access), jamais par le client — voir plus bas.
-    // isActiveSecondary : lien actif, sans regarder quel bassin (utilisé pour
-    // config/main, dont pools/products ne sont pas cloisonnables par bassin
-    // au niveau des règles — voir note sur ce match plus bas).
-    // isActiveSecondaryForPool : en plus, vérifie que le bassin concerné est
-    // bien celui assigné à l'invitation (measures/applications/photos).
     function secondaryLink(primaryUid) {
       return get(/databases/$(database)/documents/users/$(primaryUid)/secondaryUsers/$(request.auth.uid));
     }
@@ -40,13 +29,7 @@ service cloud.firestore {
     }
     // v1.95.0 — Compte le nombre de bassins ACTIFS (non désactivés en soft
     // delete) dans le tableau "pools" de config/main, pour plafonner à 1
-    // (gratuit) ou 3 (Premium). Le langage des Security Rules n'a ni boucle
-    // ni fonction filter/map générique (une seule instruction return, pas de
-    // récursion) : on somme donc manuellement jusqu'à 15 index, un plafond
-    // large qu'aucun compte réel n'atteindra jamais même après de nombreuses
-    // créations/suppressions de bassins. Un tableau plus grand que 15 est de
-    // toute façon rejeté séparément par le contrôle pools.size() <= 15 posé
-    // directement dans les règles create/update de config/main ci-dessous.
+    // (gratuit) ou 3 (Premium).
     function activePoolCount(pools) {
       return (pools.size() > 0  && pools[0].get('disabled', false)  != true ? 1 : 0)
            + (pools.size() > 1  && pools[1].get('disabled', false)  != true ? 1 : 0)
@@ -64,47 +47,24 @@ service cloud.firestore {
            + (pools.size() > 13 && pools[13].get('disabled', false) != true ? 1 : 0)
            + (pools.size() > 14 && pools[14].get('disabled', false) != true ? 1 : 0);
     }
-    // Plafond du nombre de bassins actifs selon le statut Premium (basé sur
-    // resource.data, la valeur DÉJÀ en base — isPremium n'étant modifiable
-    // par le client que vers false, resource.data reste la source fiable du
-    // vrai statut d'abonnement, jamais falsifiable par le client lui-même).
     function maxActivePools(currentIsPremium) {
       return currentIsPremium ? 3 : 1;
     }
-    // Statut de suspension : lecture par le propriétaire uniquement (pour afficher
-    // l'écran "Compte suspendu"), écriture strictement interdite au client.
     match /suspended/{uid} {
       allow read: if isOwner(uid);
       allow write: if false;
     }
-    // Profil utilisateur (email, consentements, CGU...)
-    // Lecture toujours autorisée au propriétaire (même suspendu, pour permettre
-    // l'effacement volontaire des données depuis l'écran de suspension).
-    // Écriture bloquée si suspendu, SAUF suppression (nécessaire pour l'effacement).
     match /users/{uid} {
       allow read: if isOwner(uid);
       allow create, update: if isActiveOwner(uid);
       allow delete: if isOwner(uid);
     }
-    // Mesures, plans appliqués, diagnostics IA : lecture/écriture pour le
-    // propriétaire actif ; suppression toujours permise (même suspendu, pour
-    // l'effacement volontaire des données).
     match /users/{uid}/measures/{docId} {
       allow read, update: if isActiveOwner(uid) || isActiveSecondaryForPool(uid, resource.data.poolId);
       allow create: if isActiveOwner(uid) || isActiveSecondaryForPool(uid, request.resource.data.poolId);
-      // v1.53.0 — Le propriétaire peut toujours tout supprimer. Un secondaire
-      // ne peut supprimer que ce qu'il a lui-même créé (champ createdBy,
-      // ajouté à cette version — absent sur les mesures antérieures, donc
-      // .get(...,'') renvoie une chaîne vide qui ne matche jamais un uid réel :
-      // les anciennes mesures restent protégées contre un secondaire par défaut).
       allow delete: if isOwner(uid) ||
         (isActiveSecondaryForPool(uid, resource.data.poolId) && resource.data.get('createdBy', '') == request.auth.uid);
     }
-    // v1.39.0 — Photos de mesure (photomètre/bandelette/bassin, jusqu'à 10 par
-    // mesure) migrées hors du document measures/{id} vers un document par
-    // photo, pour ne plus jamais dépasser la limite Firestore de 1 Mio par
-    // document (même panne que productPhotos en v1.30.0, mais measures peut
-    // contenir jusqu'à 10 photos alors qu'un produit n'en a qu'une seule).
     match /users/{uid}/measures/{measureId}/photos/{photoId} {
       allow read, create, update: if isActiveOwner(uid) ||
         isActiveSecondaryForPool(uid, get(/databases/$(database)/documents/users/$(uid)/measures/$(measureId)).data.poolId);
@@ -118,31 +78,13 @@ service cloud.firestore {
         (isActiveSecondaryForPool(uid, resource.data.poolId) && resource.data.get('createdBy', '') == request.auth.uid);
     }
     match /users/{uid}/diagnostics/{docId} {
-      // v1.53.0 — Pas de poolId sur les diagnostics (historique global au
-      // compte, pas par bassin) : exclu de l'accès secondaire, incohérent
-      // avec le cloisonnement à un seul bassin décidé le 260706.
       allow read, create, update: if isActiveOwner(uid);
       allow delete: if isOwner(uid);
     }
-    // v1.30.0 — Photos produits (migrées hors de config/main pour la limite
-    // 1 Mio). Même logique que measures/applications/diagnostics.
     match /users/{uid}/productPhotos/{productId} {
-      // v1.53.0 — Pas de poolId sur les photos produit (rattachées à un
-      // productId, pas un bassin) : accès large à tout secondaire actif,
-      // même logique que config/main.products ci-dessous (Option A, 260706).
       allow read, create, update: if isActiveOwner(uid) || isActiveSecondary(uid);
       allow delete: if isOwner(uid) || isActiveSecondary(uid);
     }
-    // v1.53.0 — Utilisateurs secondaires : les collections qui portent la
-    // relation elle-même (+ revocationRequests depuis v1.60.0). Écriture
-    // strictement réservée au Worker (compte de service, hors périmètre de
-    // ces règles, même logique que calibrationModels/commonProducts) — le
-    // client ne fait jamais un setDoc direct dessus, toujours via
-    // /invite-secondary-user, /respond-invitation, /revoke-secondary-access,
-    // /request-revoke-own-access, /respond-revocation.
-    // Lecture : le principal peut lister ses secondaires (réglages), le
-    // secondaire peut lire son propre lien miroir pour savoir à quels
-    // comptes il a accès.
     match /users/{primaryUid}/secondaryUsers/{secondaryUid} {
       allow read: if isOwner(primaryUid) || isOwner(secondaryUid);
       allow write: if false;
@@ -151,77 +93,21 @@ service cloud.firestore {
       allow read: if isOwner(secondaryUid);
       allow write: if false;
     }
-    // Contient un token/lien d'invitation : jamais lisible par le client,
-    // même authentifié (même raison que pendingMerges) — la réponse à une
-    // invitation passe par /respond-invitation avec le token en paramètre,
-    // pas par une lecture directe du document.
     match /invitations/{token} {
       allow read, write: if false;
     }
-    // v1.60.0 — Demande de révocation initiée par l'invité, confirmée par le
-    // propriétaire via lien email. Même raison qu'invitations : jamais lu ni
-    // écrit directement par le client, tout passe par le Worker (compte de
-    // service) via /request-revoke-own-access, /revocation-info,
-    // /respond-revocation.
     match /revocationRequests/{token} {
       allow read, write: if false;
     }
-    // v1.55.0 — Unicité des pseudos (brique 3). Index racine pseudo normalisé
-    // (minuscule) -> uid, écrit uniquement par le Worker (/set-pseudo), qui
-    // gère la réservation/libération. Jamais lu ni écrit directement par le
-    // client (le pseudo affiché vient de users/{uid}/config/main.pseudo).
     match /pseudos/{pseudoKey} {
       allow read, write: if false;
     }
-
-    // Config (pools, products, lang, aiEnabled, apiProvider, activePlan, isPremium)
-    // Le client peut tout modifier SAUF isPremium, réservé au backend (Admin SDK / webhook Stripe)
-    // NOTE : on utilise .get(clé, défaut) plutôt que l'accès direct (.isPremium) car
-    // ce champ peut être absent sur les tout premiers writes d'un nouveau compte
-    // (plusieurs useEffect côté client créent des writes partiels en parallèle,
-    // isPremium n'est pas forcément inclus dans celui qui gagne la course et crée
-    // le document). L'accès direct sur un champ absent lève une erreur d'évaluation
-    // → refus silencieux "Missing or insufficient permissions", même pour un
-    // utilisateur légitime.
     match /users/{uid}/config/main {
       allow read: if isOwner(uid) || isActiveSecondary(uid);
-      // v1.95.0 — Un tout premier document créé par un compte gratuit ne
-      // peut contenir plus d'1 bassin actif. En pratique un nouveau compte
-      // n'a jamais isPremium=true à la création (bloqué juste après par la
-      // condition existante), donc maxActivePools(false) == 1 s'applique
-      // toujours ici.
       allow create: if isActiveOwner(uid) &&
         request.resource.data.get('isPremium', false) == false &&
         request.resource.data.get('pools', []).size() <= 15 &&
         activePoolCount(request.resource.data.get('pools', [])) <= maxActivePools(false);
-      // v1.53.0 — Un secondaire actif peut modifier le champ "products"
-      // (stock partagé) mais rien d'autre : ni "pools" (pas de création/
-      // suppression de bassin), ni "isPremium", "lang", "aiEnabled",
-      // "apiProvider". Note (260706) : products/pools restent des tableaux
-      // dans ce même document, pas des sous-collections par bassin — un
-      // secondaire avec accès à un seul bassin voit donc techniquement
-      // l'ensemble du tableau products de tous les bassins du compte, pas
-      // juste le sien (l'app ne montre/n'édite que son bassin, mais les
-      // règles ne peuvent pas le garantir sans migrer products en
-      // sous-collection — accepté comme compromis, cohérent avec le fait que
-      // le propriétaire lui-même n'a aucun cloisonnement par bassin sur ce
-      // champ non plus).
-      // v1.55.0 — "activePlan" (map poolId -> plan) devient modifiable par un
-      // secondaire, mais seulement la clé de son propre bassin (brique 3 :
-      // sans ça, un secondaire ne peut pas suivre le plan de traitement en
-      // cours sur le bassin qu'on lui a confié). .get(..., {}) évite une
-      // erreur d'évaluation si le champ est absent (nouveau compte).
-      // v1.76.0 — Le client peut désormais écrire isPremium=FALSE (jamais
-      // true) : ça permet au toggle de test de vraiment désactiver Premium
-      // côté serveur (au lieu de rester local et de se faire réécraser par le
-      // prochain snapshot Firestore si un true traînait en base). Aucune
-      // ouverture de faille : la direction "passer à true" reste strictement
-      // bloquée, seule "revenir à false" est permise.
-      // v1.95.0 — Plafond du nombre de bassins actifs : 1 en gratuit, 3 en
-      // Premium (resource.data.isPremium = statut réel avant cette écriture,
-      // jamais falsifiable par le client). S'applique uniquement à la
-      // branche propriétaire : un secondaire ne peut de toute façon pas
-      // toucher "pools" (voir hasOnly ci-dessous).
       allow update: if (isActiveOwner(uid) &&
           (request.resource.data.get('isPremium', false) == resource.data.get('isPremium', false) ||
            request.resource.data.get('isPremium', false) == false) &&
@@ -232,15 +118,6 @@ service cloud.firestore {
           request.resource.data.get('activePlan', {}).diff(resource.data.get('activePlan', {})).affectedKeys().hasOnly([secondaryLink(uid).data.poolId]));
       allow delete: if isOwner(uid);
     }
-    // Lot B — Calibration bandelette/photomètre (v1.32.0, champ renommé
-    // stripModel en v1.35.0). Collection RACINE, partagée entre tous les
-    // comptes (pas sous users/{uid}). Données anonymes (couleur mesurée,
-    // valeur de référence, modèle de bandelette identifié via le produit
-    // "outil-mesure" de l'utilisateur) : aucun uid stocké, donc aucune
-    // lecture liée à un compte n'est possible. Pas de lecture client
-    // (l'agrégation/apprentissage se fait côté backend) ; create seulement,
-    // jamais d'update ni de delete depuis le client — l'historique de
-    // calibration doit rester immuable.
     match /calibrationPoints/{docId} {
       allow read: if false;
       allow create: if request.auth != null &&
@@ -251,52 +128,71 @@ service cloud.firestore {
         );
       allow update, delete: if false;
     }
-
-    // v1.38.0 — Lot B : modèles de calibration agrégés, un document par
-    // couple {stripModel, param}. Écrit uniquement par le Worker Cloudflare
-    // via un compte de service (accès OAuth2 direct à l'API Firestore, hors
-    // SDK client, donc hors périmètre de ces règles) — le "allow write: if
-    // false" ci-dessous documente l'intention et bloque toute tentative
-    // d'écriture depuis un client authentifié, même si elle n'a aucun effet
-    // sur le Worker lui-même.
+    // v1.100.0 — Lecture retirée du client (servie par le Worker, voir
+    // /strip-calibration-model) : ces coefficients entraînés étaient lisibles
+    // par tout compte authentifié, y compris gratuit.
     match /calibrationModels/{docId} {
-      allow read: if request.auth != null;
+      allow read: if false;
       allow write: if false;
     }
-    // v1.41.0 — Compteurs de rate-limiting par UID (voir checkAndIncrementRateLimit
-    // dans poolgenai-proxy.js). Écrit uniquement par le Worker via compte de
-    // service (hors périmètre de ces règles, comme calibrationModels
-    // ci-dessus) — aucun accès client, ni lecture ni écriture, ce compteur ne
-    // regarde que le Worker.
     match /rateLimits/{docId} {
       allow read, write: if false;
     }
-
-    // Base commune de produits (chantier "base commune", spec du 260706).
-    // Collection RACINE, partagée entre tous les comptes. Deux types de
-    // documents dans la même collection :
-    //   - gen_{autoId} : fiche produit complète, ID stable à vie, jamais
-    //     renommé (même après qu'un code-barre soit découvert après coup)
-    //   - bc_{barcode} : alias léger { aliasOf: "gen_xxx" }, permet un lookup
-    //     direct par code-barre sans recherche floue
-    // Écriture strictement réservée au Worker (compte de service, hors
-    // périmètre de ces règles, même logique que calibrationModels). Lecture
-    // ouverte à tout utilisateur authentifié : aucune donnée sensible dans
-    // cette collection (juste noms produits, dosages, code-barres, URLs
-    // photo publiques), donc pas de raison de faire transiter la lecture
-    // par le Worker — ça doublerait la latence pour rien.
     match /commonProducts/{docId} {
       allow read: if request.auth != null;
       allow write: if false;
     }
-
-    // Fusions de doublons en attente de confirmation manuelle (email avec
-    // lien → page "Confirmer la fusion ?" côté PWA → POST /confirm-merge).
-    // Contient un token secret : ne doit jamais être lisible par le client,
-    // même authentifié, pour empêcher de deviner/lister les fusions en
-    // attente. Écriture réservée au Worker.
     match /pendingMerges/{mergeId} {
       allow read, write: if false;
+    }
+
+    // v1.97.0 — Fiches de modèles de bandelette (Mareva, AquaChek...).
+    // Écriture réservée au script admin (seed-strip-models.js, compte de
+    // service, hors périmètre de ces règles) SAUF la promotion automatique
+    // de nouvelles fiches (v1.98.9, voir stripModelCandidates ci-dessous)
+    // qui écrit en create depuis un client authentifié — jamais d'update
+    // depuis un client sur une fiche existante (seule la Console/le script
+    // admin corrige une fiche déjà en place).
+    // v1.100.0 — Lecture retirée du client (servie par le Worker, voir
+    // /strip-reference-data) : ces fiches étaient lisibles par tout compte
+    // authentifié, y compris gratuit. "create" conservé (promotion
+    // automatique ci-dessus), distincte de la lecture qu'on ferme ici.
+    match /stripModels/{modelId} {
+      allow read: if false;
+      allow create: if request.auth != null;
+      allow update, delete: if false;
+    }
+
+    // v1.97.0 — Seuils de confiance par paramètre (config/stripConfidenceThresholds,
+    // config/stripConfidenceThresholdsTesters). Collection RACINE "config" —
+    // à ne pas confondre avec users/{uid}/config/main. Écriture réservée à
+    // la Console/au script admin.
+    // v1.100.0 — Lecture retirée du client (servie par le Worker, voir
+    // /strip-reference-data) : lisible jusque-là par tout compte
+    // authentifié, y compris gratuit.
+    match /config/{docId} {
+      allow read: if false;
+      allow write: if false;
+    }
+
+    // v1.97.4 — Échantillons de confiance bandelette, traçables (uid +
+    // measureId). Collection RACINE. Create seulement.
+    match /stripConfidenceSamples/{docId} {
+      allow read: if false;
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // v1.98.9 — Fiches candidates de bandelette (auto-enregistrement de
+    // nouveaux modèles). Lecture nécessaire au rapprochement ; create pour
+    // une nouvelle candidate ; update limité aux champs de
+    // confirmation/promotion ; jamais de suppression.
+    match /stripModelCandidates/{candidateId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['confirmations', 'updatedAt', 'status', 'promotedModelId', 'promotedAt']);
+      allow delete: if false;
     }
   }
 }
