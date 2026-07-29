@@ -10,5 +10,9 @@
   ],
   "triggers": {
     "crons": ["1 0 1 * *", "0 3 * * *"]
+  },
+  "vars": {
+    "STRIPE_PRICE_MONTHLY": "price_1TtUQ7KFOL6TAFyql3RB9XyR",
+    "STRIPE_PRICE_YEARLY": "price_1TtUQ8KFOL6TAFyqzZlffkIu"
   }
 }
