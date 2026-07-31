@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.99.2";
+const APP_VERSION = "1.99.3";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -5176,6 +5176,38 @@ function sampleColorAndQuality(dataUrl, xNorm, yNorm, colorBoxSize = 8, qualityB
   });
 }
 
+// v1.100.0 — Correction de dominante (gray-world) à partir d'un point de
+// référence neutre (zone non imbibée de la languette / zone_prehension).
+// Même principe que l'étape 6 du prompt IA ("CORRECTION DE DOMINANTE"),
+// mais rendu déterministe ici (calculable sans IA, utilisé par le futur
+// flux gratuit) — et rétrofité sur le calcul déterministe existant
+// (computeDeterministicStripReading), qui n'appliquait jusqu'ici aucune
+// correction malgré ce que le prompt demande à l'IA de faire cognitivement.
+// Principe "gray-world" : la zone de référence est supposée neutre (R≈G≈B) ;
+// tout écart entre ses canaux réels révèle la dominante de la photo à cet
+// endroit. gain = moyenne(R,G,B) / canal — neutralise la dominante sans
+// supposer une luminosité cible fixe (donc pas d'hypothèse sur l'exposition
+// globale, juste sur l'équilibre relatif des canaux).
+function computeGrayWorldGain(refColor) {
+  if (!refColor) return null;
+  const avg = (refColor.r + refColor.g + refColor.b) / 3;
+  if (avg <= 0) return null;
+  return {
+    gainR: avg / Math.max(1, refColor.r),
+    gainG: avg / Math.max(1, refColor.g),
+    gainB: avg / Math.max(1, refColor.b),
+  };
+}
+
+function applyGrayWorldGain(color, gain) {
+  if (!gain || !color) return color;
+  return {
+    r: Math.min(255, Math.round(color.r * gain.gainR)),
+    g: Math.min(255, Math.round(color.g * gain.gainG)),
+    b: Math.min(255, Math.round(color.b * gain.gainB)),
+  };
+}
+
 // v1.97.6 — Conversion sRGB → CIE Lab (D65), formule standard, vanilla JS
 // (pas de bundler dans ce fichier, donc pas de librairie de couleur externe).
 // Utilisée pour le calcul déterministe de confiance/valeur bandelette
@@ -5244,7 +5276,15 @@ const STRIP_OFFSCALE_RATIO = 1.5;    // au-delà, tampon trop loin des deux born
 // confiance auto-déclarée par l'IA (voir handleAnalyze).
 const STRIP_COORD_SANITY_MAX_DELTA_E = 30;
 
-async function computeDeterministicStripReading(dataUrl, tamponPoint, borneInf, borneSup, expectedHex = {}) {
+// v1.100.0 — whiteRefPoint (optionnel) : coordonnées [x, y] d'une zone
+// neutre (zone_prehension, voir prompt étape 6 "CORRECTION DE DOMINANTE" et
+// nouveau champ "zone_blanche" de la réponse IA) servant de référence
+// gray-world. Absent ou hors image → repli silencieux sur le comportement
+// d'avant (pas de correction), jamais bloquant. Le contrôle de cohérence
+// (expectedHex) reste comparé aux couleurs BRUTES, non corrigées — il vérifie
+// que les coordonnées tombent bien là où l'IA dit avoir regardé, ce qui doit
+// rester indépendant d'une correction appliquée après coup.
+async function computeDeterministicStripReading(dataUrl, tamponPoint, borneInf, borneSup, expectedHex = {}, whiteRefPoint = null) {
   const [tamponColor, infColor, supColor] = await Promise.all([
     sampleColorAt(dataUrl, tamponPoint[0], tamponPoint[1]),
     sampleColorAt(dataUrl, borneInf.point[0], borneInf.point[1]),
@@ -5262,9 +5302,22 @@ async function computeDeterministicStripReading(dataUrl, tamponPoint, borneInf, 
     }
   }
 
-  const dInf = deltaE76(tamponColor, infColor);
-  const dSup = deltaE76(tamponColor, supColor);
-  const dScale = deltaE76(infColor, supColor);
+  let gain = null;
+  if (Array.isArray(whiteRefPoint)) {
+    try {
+      const whiteColor = await sampleColorAt(dataUrl, whiteRefPoint[0], whiteRefPoint[1]);
+      gain = computeGrayWorldGain(whiteColor);
+    } catch (e) {
+      gain = null; // best-effort — pas de correction plutôt qu'un échec du calcul déterministe
+    }
+  }
+  const correctedTampon = gain ? applyGrayWorldGain(tamponColor, gain) : tamponColor;
+  const correctedInf = gain ? applyGrayWorldGain(infColor, gain) : infColor;
+  const correctedSup = gain ? applyGrayWorldGain(supColor, gain) : supColor;
+
+  const dInf = deltaE76(correctedTampon, correctedInf);
+  const dSup = deltaE76(correctedTampon, correctedSup);
+  const dScale = deltaE76(correctedInf, correctedSup);
 
   if (dScale < STRIP_MIN_SCALE_DELTA_E) {
     // Bornes trop proches colorimétriquement sur cette photo (mauvais
@@ -5276,6 +5329,7 @@ async function computeDeterministicStripReading(dataUrl, tamponPoint, borneInf, 
       dInf: Math.round(dInf * 10) / 10,
       dSup: Math.round(dSup * 10) / 10,
       dScale: Math.round(dScale * 10) / 10,
+      dominanteCorrigee: !!gain,
     };
   }
 
@@ -5296,6 +5350,7 @@ async function computeDeterministicStripReading(dataUrl, tamponPoint, borneInf, 
     dInf: Math.round(dInf * 10) / 10,
     dSup: Math.round(dSup * 10) / 10,
     dScale: Math.round(dScale * 10) / 10,
+    dominanteCorrigee: !!gain,
   };
 }
 
@@ -5748,6 +5803,7 @@ La bandelette a été trempée dans l'eau et présente des tampons colorés. Ava
 
 6. CORRECTION DE DOMINANTE
    Utilise une zone non imbibée de la languette (blanc de référence) pour estimer la dominante de la photo (température de couleur, ombre, reflet coloré) et corriger la comparaison couleur en conséquence, si cette zone est visible. Cette correction s'ajoute à la vérification de cohérence d'éclairage de l'étape 2bis — elle ne la remplace pas : une zone blanche cohérente ne compense pas une ombre localisée qui ne toucherait que le tampon ou que l'échelle.
+   v1.100.0 — EN PLUS de cette correction cognitive, rapporte les coordonnées pixel de cette zone non imbibée si tu peux la désigner précisément (voir "zone_blanche" dans le format de sortie) : sert à un recalcul déterministe de la même correction (échantillonnage réel des pixels, hors de ce prompt), en complément de ton estimation — jamais à sa place. Omets le champ si aucune zone non imbibée n'est clairement identifiable dans l'image (bandelette entièrement immergée jusqu'à la zone de préhension, par exemple).
 
 7. SEGMENTATION
    Le nombre et l'espacement des tampons détectés doivent correspondre au nombre de paramètres attendus pour le modèle identifié ("nb_parametres" de la fiche). Si la segmentation n'y arrive pas → abstention totale pour les paramètres concernés (statut "confiance_insuffisante"), pas de lecture partielle inventée.
@@ -5771,7 +5827,7 @@ Correspondances des abréviations courantes (utilise ces clés courtes, identiqu
 - O2 / Active O2 → o2
 
 Réponds UNIQUEMENT en JSON valide, sans texte avant ou après, sans markdown, sans commentaires :
-{"device": "photometre" ou "bandelette", "pH": nombre ou null, "fCl": nombre ou null, "tCl": nombre ou null, "ccl": nombre ou null, "tac": nombre ou null, "cya": nombre ou null, "hard": nombre ou null, "phos": nombre ou null, "copper": nombre ou null, "iron": nombre ou null, "temp": nombre ou null, "brome": nombre ou null, "o2": nombre ou null, "sel": nombre ou null, "confidence": "haute" ou "moyenne" ou "basse", "reliability": entier de 1 à 5 (1=très peu fiable, 5=très fiable), "reliability_by_param": {"pH": entier 1-5, "fCl": entier 1-5, ...} (une entrée par paramètre non-null uniquement, note la lisibilité de CE tampon précis — un reflet ou un angle défavorable sur un seul tampon doit baisser SA note sans affecter les autres), "sample_points": {"pH": {"pad": [x, y], "reference": [x, y], "padSizeFraction": nombre}, ...} (UNIQUEMENT si device est "bandelette" ; pour chaque paramètre où tu es CONFIANT d'avoir localisé précisément à la fois le tampon coloré ET la case de référence correspondante sur l'échelle imprimée du tube, donne leurs coordonnées en fraction de l'image, x et y entre 0 et 1, origine en haut à gauche ; omets complètement l'entrée pour un paramètre si tu n'es pas confiant sur la localisation exacte — ne devine jamais des coordonnées approximatives ; "padSizeFraction" est une estimation approximative de la largeur du tampon coloré exprimée en fraction de la largeur totale de l'image, 0 à 1, sert uniquement d'indicateur de qualité donc une estimation grossière suffit, contrairement à pad/reference qui doivent être précis — omets ce champ si tu ne peux pas l'estimer visuellement), "reliability_reason": "une phrase en français expliquant la note de fiabilité (qualité image, lisibilité échelle, etc.)", "note": "une phrase en français sur la lisibilité et la méthode utilisée", "modele_id": "identifiant de la fiche utilisée (ex: mareva_mv3028) ou null si non identifié ou si device est photometre", "modele_confiance": entier 0-100 (confiance dans l'identification du modèle ; 0 si device est photometre), "parametres": [{"parametre": "pH", "valeur": nombre ou null, "confiance": entier 0-100, "statut": "déterminé" ou "confiance_insuffisante" ou "echelle_non_detectee"}, ...] (un objet par paramètre non-null dans les champs numériques ci-dessus ; tableau vide si device est photometre), "couleur_reconnue": {"pH": {"tampon_hex": "#rrggbb", "tampon_point": [x, y], "borne_inf": {"valeur": nombre, "hex": "#rrggbb", "distance": nombre, "point": [x, y]}, "borne_sup": {"valeur": nombre, "hex": "#rrggbb", "distance": nombre, "point": [x, y]}, "echelle": [{"valeur": nombre, "hex": "#rrggbb"}, ...]}, ...} (UNIQUEMENT si device est "bandelette" ; un objet par paramètre présent dans "parametres" ; "distance" est la distance colorimétrique perçue calculée à l'étape 4, mêmes unités que celles utilisées pour départager les cases ; omets l'entrée d'un paramètre si les bornes encadrantes n'ont pas pu être identifiées avec confiance ; champ temporaire (hex/distance), retiré une fois l'algorithme stabilisé — ne pas omettre tant qu'il est demandé ; "tampon_point"/"point" (x, y en fraction de l'image, 0 à 1, origine en haut à gauche) : fournis TOUJOURS ta meilleure estimation, même approximative — ces coordonnées sont vérifiées automatiquement après coup (recoupées avec le hex que tu rapportes toi-même pour ce même point) avant d'être utilisées, jamais prises telles quelles ; n'omets "tampon_point" ou un "point" que si l'élément est réellement introuvable dans l'image (hors cadre, totalement invisible) — sert au calcul de confiance déterministe, voir étape 4bis ; "echelle" : voir étape 4bis, liste ORDONNÉE complète ou absente, jamais partielle, valeur+hex uniquement, pas de coordonnées nécessaires ici), "modele_candidat": {"nb_parametres": nombre, "ordre_bas_vers_haut": ["pH", "Cl", ...] (utilise les MÊMES labels internes que les fiches connues ci-dessus — "pH", "Cl" (chlore libre), "TCl" (chlore total), "Alc" (alcalinité), "CyA" (stabilisant), "TH" (dureté) — pour rester compatible avec le registre), "echelles": {"<label>": {"unite": "ppm" ou null, "valeurs": [nombre, ...]}, ...} (liste ORDONNÉE croissante des valeurs imprimées pour CE paramètre, une entrée par label de "ordre_bas_vers_haut"), "indices_texte_marque": ["fragment de texte visible sur le tube, même partiel", ...] (tout texte de marque/référence lisible, pour aide à la reconnaissance manuelle future, peut être vide)} (UNIQUEMENT si device est "bandelette" ET "modele_id" est null ET l'échelle est lisible pour TOUS les paramètres de cette bandelette — omets complètement ce champ sinon, jamais de structure partielle ou devinée ; sert à proposer l'enregistrement automatique d'un nouveau modèle après plusieurs confirmations indépendantes, voir étape 1)}
+{"device": "photometre" ou "bandelette", "pH": nombre ou null, "fCl": nombre ou null, "tCl": nombre ou null, "ccl": nombre ou null, "tac": nombre ou null, "cya": nombre ou null, "hard": nombre ou null, "phos": nombre ou null, "copper": nombre ou null, "iron": nombre ou null, "temp": nombre ou null, "brome": nombre ou null, "o2": nombre ou null, "sel": nombre ou null, "confidence": "haute" ou "moyenne" ou "basse", "reliability": entier de 1 à 5 (1=très peu fiable, 5=très fiable), "reliability_by_param": {"pH": entier 1-5, "fCl": entier 1-5, ...} (une entrée par paramètre non-null uniquement, note la lisibilité de CE tampon précis — un reflet ou un angle défavorable sur un seul tampon doit baisser SA note sans affecter les autres), "sample_points": {"pH": {"pad": [x, y], "reference": [x, y], "padSizeFraction": nombre}, ...} (UNIQUEMENT si device est "bandelette" ; pour chaque paramètre où tu es CONFIANT d'avoir localisé précisément à la fois le tampon coloré ET la case de référence correspondante sur l'échelle imprimée du tube, donne leurs coordonnées en fraction de l'image, x et y entre 0 et 1, origine en haut à gauche ; omets complètement l'entrée pour un paramètre si tu n'es pas confiant sur la localisation exacte — ne devine jamais des coordonnées approximatives ; "padSizeFraction" est une estimation approximative de la largeur du tampon coloré exprimée en fraction de la largeur totale de l'image, 0 à 1, sert uniquement d'indicateur de qualité donc une estimation grossière suffit, contrairement à pad/reference qui doivent être précis — omets ce champ si tu ne peux pas l'estimer visuellement), "reliability_reason": "une phrase en français expliquant la note de fiabilité (qualité image, lisibilité échelle, etc.)", "note": "une phrase en français sur la lisibilité et la méthode utilisée", "modele_id": "identifiant de la fiche utilisée (ex: mareva_mv3028) ou null si non identifié ou si device est photometre", "modele_confiance": entier 0-100 (confiance dans l'identification du modèle ; 0 si device est photometre), "zone_blanche": {"point": [x, y]} ou null (UNIQUEMENT si device est "bandelette" ; coordonnées en fraction de l'image, 0 à 1, origine en haut à gauche, de la zone non imbibée de la languette utilisée à l'étape 6 ; omets ou null si non identifiable avec confiance — jamais de coordonnée approximative), "parametres": [{"parametre": "pH", "valeur": nombre ou null, "confiance": entier 0-100, "statut": "déterminé" ou "confiance_insuffisante" ou "echelle_non_detectee"}, ...] (un objet par paramètre non-null dans les champs numériques ci-dessus ; tableau vide si device est photometre), "couleur_reconnue": {"pH": {"tampon_hex": "#rrggbb", "tampon_point": [x, y], "borne_inf": {"valeur": nombre, "hex": "#rrggbb", "distance": nombre, "point": [x, y]}, "borne_sup": {"valeur": nombre, "hex": "#rrggbb", "distance": nombre, "point": [x, y]}, "echelle": [{"valeur": nombre, "hex": "#rrggbb"}, ...]}, ...} (UNIQUEMENT si device est "bandelette" ; un objet par paramètre présent dans "parametres" ; "distance" est la distance colorimétrique perçue calculée à l'étape 4, mêmes unités que celles utilisées pour départager les cases ; omets l'entrée d'un paramètre si les bornes encadrantes n'ont pas pu être identifiées avec confiance ; champ temporaire (hex/distance), retiré une fois l'algorithme stabilisé — ne pas omettre tant qu'il est demandé ; "tampon_point"/"point" (x, y en fraction de l'image, 0 à 1, origine en haut à gauche) : fournis TOUJOURS ta meilleure estimation, même approximative — ces coordonnées sont vérifiées automatiquement après coup (recoupées avec le hex que tu rapportes toi-même pour ce même point) avant d'être utilisées, jamais prises telles quelles ; n'omets "tampon_point" ou un "point" que si l'élément est réellement introuvable dans l'image (hors cadre, totalement invisible) — sert au calcul de confiance déterministe, voir étape 4bis ; "echelle" : voir étape 4bis, liste ORDONNÉE complète ou absente, jamais partielle, valeur+hex uniquement, pas de coordonnées nécessaires ici), "modele_candidat": {"nb_parametres": nombre, "ordre_bas_vers_haut": ["pH", "Cl", ...] (utilise les MÊMES labels internes que les fiches connues ci-dessus — "pH", "Cl" (chlore libre), "TCl" (chlore total), "Alc" (alcalinité), "CyA" (stabilisant), "TH" (dureté) — pour rester compatible avec le registre), "echelles": {"<label>": {"unite": "ppm" ou null, "valeurs": [nombre, ...]}, ...} (liste ORDONNÉE croissante des valeurs imprimées pour CE paramètre, une entrée par label de "ordre_bas_vers_haut"), "indices_texte_marque": ["fragment de texte visible sur le tube, même partiel", ...] (tout texte de marque/référence lisible, pour aide à la reconnaissance manuelle future, peut être vide)} (UNIQUEMENT si device est "bandelette" ET "modele_id" est null ET l'échelle est lisible pour TOUS les paramètres de cette bandelette — omets complètement ce champ sinon, jamais de structure partielle ou devinée ; sert à proposer l'enregistrement automatique d'un nouveau modèle après plusieurs confirmations indépendantes, voir étape 1)}
 
 Règles strictes :
 - "device" indique lequel des deux CAS ci-dessus correspond à la photo analysée — jamais null, choisis le plus probable même en cas de doute
@@ -13093,7 +13149,8 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
                 crBest.tampon_point,
                 { point: crBest.borne_inf.point, valeur: crBest.borne_inf.valeur },
                 { point: crBest.borne_sup.point, valeur: crBest.borne_sup.valeur },
-                { tampon: crBest.tampon_hex, inf: crBest.borne_inf.hex, sup: crBest.borne_sup.hex }
+                { tampon: crBest.tampon_hex, inf: crBest.borne_inf.hex, sup: crBest.borne_sup.hex },
+                allResults[best.photoIdx]?.zone_blanche?.point ?? null
               );
             } catch (e) {
               computed = null; // best-effort — repli silencieux sur la confiance IA
@@ -13163,7 +13220,8 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
                 cr.tampon_point,
                 { point: cr.borne_inf.point, valeur: cr.borne_inf.valeur },
                 { point: cr.borne_sup.point, valeur: cr.borne_sup.valeur },
-                { tampon: cr.tampon_hex, inf: cr.borne_inf.hex, sup: cr.borne_sup.hex }
+                { tampon: cr.tampon_hex, inf: cr.borne_inf.hex, sup: cr.borne_sup.hex },
+                allResults[bCand.photoIdx]?.zone_blanche?.point ?? null
               );
             } catch (e) {
               sampleComputed = null;
@@ -13306,6 +13364,22 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
               sampleColorAndQuality(photoDataUrl, c.samplePoints.pad[0], c.samplePoints.pad[1]),
               sampleColorAt(photoDataUrl, c.samplePoints.reference[0], c.samplePoints.reference[1]),
             ]);
+            // v1.100.0 — Même correction de dominante que le calcul déterministe
+            // (voir computeDeterministicStripReading) : "sampledColor" écrit
+            // ci-dessous est déjà corrigé quand une zone_blanche est disponible
+            // pour cette photo, sans rien changer côté Worker (aggregateCalibrationModels
+            // consomme sampledColor tel quel, corrigé ou non).
+            const whiteRefPoint = allResults[c.photoIdx]?.zone_blanche?.point ?? null;
+            let gainLotB = null;
+            if (Array.isArray(whiteRefPoint)) {
+              try {
+                const whiteColorLotB = await sampleColorAt(photoDataUrl, whiteRefPoint[0], whiteRefPoint[1]);
+                gainLotB = computeGrayWorldGain(whiteColorLotB);
+              } catch (e) {
+                gainLotB = null;
+              }
+            }
+            const correctedPadColor = gainLotB ? applyGrayWorldGain(padSample.color, gainLotB) : padSample.color;
             // padCoverageRatio : approximation de l'aire du tampon dans l'image,
             // à partir de padSizeFraction (largeur estimée par l'IA, fraction de
             // la largeur totale). Aire ≈ côté² (approximation carrée, suffisante
@@ -13318,7 +13392,7 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
             await FB.addCalibrationPoint({
               stripModel: normalizedModel,
               param: c.param,
-              sampledColor: padSample.color,
+              sampledColor: correctedPadColor,
               referenceColor,
               trueValue: c.trueValue,
               capturedAt: new Date().toISOString(),
@@ -13326,6 +13400,7 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
               exposure: padSample.exposure,
               exposureClipped: padSample.exposureClipped,
               padCoverageRatio,
+              dominanteCorrigee: !!gainLotB,
             });
           } catch (e) {
             // silencieux — contribution best-effort, jamais bloquante pour l'utilisateur
