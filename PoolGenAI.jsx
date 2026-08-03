@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.99.3";
+const APP_VERSION = "1.101.3";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -326,6 +326,27 @@ const TRANSLATIONS = {
     measure_device_both: "Les deux",
     strip_model_label: "Modèle de bandelette utilisé",
     strip_model_none: "Non précisé",
+    strip_marker_instruction: "Pose le repère vert sur le centre du premier tampon, à l'extrémité de la languette. Lève le doigt, puis pose le repère rouge sur le centre du dernier tampon, juste avant la zone que tu tiens pour la manipuler.",
+    strip_marker_restart: "Recommencer",
+    strip_pad_preview_instruction: "Vérifie que chaque repère tombe bien sur le bon tampon. Un repère décalé se corrige directement : glisse-le au bon endroit.",
+    strip_pad_preview_back: "Corriger le tracé",
+    strip_pad_preview_confirm: "C'est correct",
+    strip_arrow_instruction: "Pour chaque paramètre, choisis la valeur imprimée la plus proche de la couleur de ton tampon, en comparant à ton tube.",
+    strip_arrow_cancel: "Corriger les repères",
+    strip_arrow_confirm: "Valider les valeurs",
+    strip_guided_title: "Bandelette guidée",
+    strip_guided_free_btn: "Bandelette guidée (gratuit)",
+    strip_guided_loading: "Chargement des modèles connus…",
+    strip_guided_error_prefix: "Erreur : ",
+    strip_guided_pick_model: "Quel modèle de bandelette utilises-tu ? (sélection temporaire — la reconnaissance par code-barres arrive bientôt)",
+    strip_guided_choose_placeholder: "— Choisir —",
+    strip_guided_no_models: "Aucun modèle connu pour l'instant.",
+    strip_guided_checking_orientation: "Vérification du sens…",
+    strip_guided_positioning: "Positionnement des tampons…",
+    strip_guided_save_error_prefix: "Échec de l'enregistrement : ",
+    strip_guided_saving: "Enregistrement…",
+    strip_guided_orientation_warning: "Le sens du tracé n'est pas clair. Repars du tampon proche de la zone de préhension (attendu : {bas}) jusqu'au tampon opposé (attendu : {haut}).",
+    strip_guided_not_connected: "Non connecté",
     filtration_type: "Type de filtration",
     manage_stock_label: "Gestion du stock",
     manage_stock_desc: "Suit la consommation des produits et l\'affiche dans le rapport.",
@@ -1059,6 +1080,27 @@ const TRANSLATIONS = {
     measure_device_both: "Both",
     strip_model_label: "Test strip model used",
     strip_model_none: "Not specified",
+    strip_marker_instruction: "Place the green marker on the center of the first pad, at the tip of the strip. Lift your finger, then place the red marker on the center of the last pad, just before the area you hold to handle it.",
+    strip_marker_restart: "Start over",
+    strip_pad_preview_instruction: "Check that each marker lands on the right pad. A misplaced marker can be corrected directly: drag it to the right spot.",
+    strip_pad_preview_back: "Redo the trace",
+    strip_pad_preview_confirm: "Looks right",
+    strip_arrow_instruction: "For each parameter, pick the printed value closest to the colour of your pad, comparing it with your tube.",
+    strip_arrow_cancel: "Fix markers",
+    strip_arrow_confirm: "Confirm values",
+    strip_guided_title: "Guided test strip",
+    strip_guided_free_btn: "Guided test strip (free)",
+    strip_guided_loading: "Loading known models…",
+    strip_guided_error_prefix: "Error: ",
+    strip_guided_pick_model: "Which test strip model are you using? (temporary selection — barcode recognition is coming soon)",
+    strip_guided_choose_placeholder: "— Choose —",
+    strip_guided_no_models: "No known models yet.",
+    strip_guided_checking_orientation: "Checking direction…",
+    strip_guided_positioning: "Positioning pads…",
+    strip_guided_save_error_prefix: "Save failed: ",
+    strip_guided_saving: "Saving…",
+    strip_guided_orientation_warning: "The direction of the trace isn't clear. Start again from the pad near the grip area (expected: {bas}) to the opposite pad (expected: {haut}).",
+    strip_guided_not_connected: "Not signed in",
     filtration_type: "Filtration type",
     manage_stock_label: "Stock management",
     manage_stock_desc: "Tracks product consumption and displays it in the report.",
@@ -1783,6 +1825,27 @@ const TRANSLATIONS = {
     measure_device_both: "Beides",
     strip_model_label: "Verwendetes Teststreifenmodell",
     strip_model_none: "Nicht angegeben",
+    strip_marker_instruction: "Setze die grüne Markierung auf die Mitte des ersten Tupfers, am Ende des Streifens. Finger heben, dann die rote Markierung auf die Mitte des letzten Tupfers setzen, direkt vor dem Bereich, an dem du den Streifen hältst.",
+    strip_marker_restart: "Neu beginnen",
+    strip_pad_preview_instruction: "Prüfe, ob jede Markierung auf dem richtigen Tupfer liegt. Eine falsch platzierte Markierung lässt sich direkt korrigieren: einfach an die richtige Stelle ziehen.",
+    strip_pad_preview_back: "Markierung neu setzen",
+    strip_pad_preview_confirm: "Passt so",
+    strip_arrow_instruction: "Wähle für jeden Parameter den aufgedruckten Wert, der der Farbe deines Tupfers am nächsten kommt, im Vergleich mit deiner Tube.",
+    strip_arrow_cancel: "Markierungen korrigieren",
+    strip_arrow_confirm: "Werte bestätigen",
+    strip_guided_title: "Geführter Teststreifen",
+    strip_guided_free_btn: "Geführter Teststreifen (kostenlos)",
+    strip_guided_loading: "Bekannte Modelle werden geladen…",
+    strip_guided_error_prefix: "Fehler: ",
+    strip_guided_pick_model: "Welches Teststreifenmodell verwendest du? (vorübergehende Auswahl — Barcode-Erkennung kommt bald)",
+    strip_guided_choose_placeholder: "— Auswählen —",
+    strip_guided_no_models: "Noch keine bekannten Modelle.",
+    strip_guided_checking_orientation: "Richtung wird geprüft…",
+    strip_guided_positioning: "Tupfer werden positioniert…",
+    strip_guided_save_error_prefix: "Speichern fehlgeschlagen: ",
+    strip_guided_saving: "Wird gespeichert…",
+    strip_guided_orientation_warning: "Die Richtung des Strichs ist nicht eindeutig. Beginne erneut beim Tupfer nahe dem Griffbereich (erwartet: {bas}) bis zum gegenüberliegenden Tupfer (erwartet: {haut}).",
+    strip_guided_not_connected: "Nicht angemeldet",
     filtration_type: "Filtrationsart",
     manage_stock_label: "Lagerverwaltung",
     manage_stock_desc: "Verfolgt den Produktverbrauch und zeigt ihn im Bericht an.",
@@ -2509,6 +2572,27 @@ const TRANSLATIONS = {
     measure_device_both: "Entrambi",
     strip_model_label: "Modello di striscia reattiva utilizzato",
     strip_model_none: "Non specificato",
+    strip_marker_instruction: "Posiziona il segno verde al centro del primo tampone, all'estremità della striscia. Solleva il dito, poi posiziona il segno rosso al centro dell'ultimo tampone, appena prima della zona che tieni in mano.",
+    strip_marker_restart: "Ricomincia",
+    strip_pad_preview_instruction: "Verifica che ogni segno cada sul tampone giusto. Un segno spostato si corregge direttamente: trascinalo nel punto giusto.",
+    strip_pad_preview_back: "Rifai il tracciato",
+    strip_pad_preview_confirm: "È corretto",
+    strip_arrow_instruction: "Per ogni parametro, scegli il valore stampato più vicino al colore del tuo tampone, confrontandolo con il tuo tubo.",
+    strip_arrow_cancel: "Correggi i segni",
+    strip_arrow_confirm: "Conferma i valori",
+    strip_guided_title: "Striscia reattiva guidata",
+    strip_guided_free_btn: "Striscia reattiva guidata (gratis)",
+    strip_guided_loading: "Caricamento modelli noti…",
+    strip_guided_error_prefix: "Errore: ",
+    strip_guided_pick_model: "Quale modello di striscia reattiva usi? (selezione temporanea — il riconoscimento tramite codice a barre arriva presto)",
+    strip_guided_choose_placeholder: "— Scegli —",
+    strip_guided_no_models: "Nessun modello noto per ora.",
+    strip_guided_checking_orientation: "Verifica del verso…",
+    strip_guided_positioning: "Posizionamento dei tamponi…",
+    strip_guided_save_error_prefix: "Salvataggio fallito: ",
+    strip_guided_saving: "Salvataggio…",
+    strip_guided_orientation_warning: "Il verso del tracciato non è chiaro. Riparti dal tampone vicino alla zona di presa (atteso: {bas}) fino al tampone opposto (atteso: {haut}).",
+    strip_guided_not_connected: "Non connesso",
     filtration_type: "Tipo di filtrazione",
     manage_stock_label: "Gestione stock",
     manage_stock_desc: "Tiene traccia del consumo dei prodotti e lo mostra nel rapporto.",
@@ -3232,6 +3316,27 @@ const TRANSLATIONS = {
     measure_device_both: "Ambos",
     strip_model_label: "Modelo de tira reactiva utilizado",
     strip_model_none: "No especificado",
+    strip_marker_instruction: "Coloca la marca verde en el centro del primer tampón, en el extremo de la tira. Levanta el dedo, luego coloca la marca roja en el centro del último tampón, justo antes de la zona que sujetas para manipularla.",
+    strip_marker_restart: "Empezar de nuevo",
+    strip_pad_preview_instruction: "Comprueba que cada marca caiga sobre el tampón correcto. Una marca desplazada se corrige directamente: arrástrala al lugar correcto.",
+    strip_pad_preview_back: "Rehacer el trazo",
+    strip_pad_preview_confirm: "Es correcto",
+    strip_arrow_instruction: "Para cada parámetro, elige el valor impreso más cercano al color de tu tampón, comparándolo con tu tubo.",
+    strip_arrow_cancel: "Corregir marcas",
+    strip_arrow_confirm: "Confirmar valores",
+    strip_guided_title: "Tira reactiva guiada",
+    strip_guided_free_btn: "Tira reactiva guiada (gratis)",
+    strip_guided_loading: "Cargando modelos conocidos…",
+    strip_guided_error_prefix: "Error: ",
+    strip_guided_pick_model: "¿Qué modelo de tira reactiva usas? (selección temporal — el reconocimiento por código de barras llega pronto)",
+    strip_guided_choose_placeholder: "— Elegir —",
+    strip_guided_no_models: "Ningún modelo conocido por ahora.",
+    strip_guided_checking_orientation: "Comprobando el sentido…",
+    strip_guided_positioning: "Posicionando los tampones…",
+    strip_guided_save_error_prefix: "Error al guardar: ",
+    strip_guided_saving: "Guardando…",
+    strip_guided_orientation_warning: "El sentido del trazo no está claro. Vuelve a empezar desde el tampón cerca de la zona de agarre (esperado: {bas}) hasta el tampón opuesto (esperado: {haut}).",
+    strip_guided_not_connected: "No conectado",
     filtration_type: "Tipo de filtración",
     manage_stock_label: "Gestión de stock",
     manage_stock_desc: "Hace seguimiento del consumo de productos y lo muestra en el informe.",
@@ -3955,6 +4060,27 @@ const TRANSLATIONS = {
     measure_device_both: "Ambos",
     strip_model_label: "Modelo de tira de teste utilizado",
     strip_model_none: "Não especificado",
+    strip_marker_instruction: "Coloque a marca verde no centro do primeiro tampão, na ponta da tira. Levante o dedo, depois coloque a marca vermelha no centro do último tampão, logo antes da área que você segura para manuseá-la.",
+    strip_marker_restart: "Recomeçar",
+    strip_pad_preview_instruction: "Verifique se cada marca caiu sobre o tampão certo. Uma marca deslocada se corrige diretamente: arraste-a até o lugar certo.",
+    strip_pad_preview_back: "Refazer o traço",
+    strip_pad_preview_confirm: "Está correto",
+    strip_arrow_instruction: "Para cada parâmetro, escolha o valor impresso mais próximo da cor do seu tampão, comparando com o seu tubo.",
+    strip_arrow_cancel: "Corrigir marcas",
+    strip_arrow_confirm: "Confirmar valores",
+    strip_guided_title: "Tira de teste guiada",
+    strip_guided_free_btn: "Tira de teste guiada (grátis)",
+    strip_guided_loading: "Carregando modelos conhecidos…",
+    strip_guided_error_prefix: "Erro: ",
+    strip_guided_pick_model: "Qual modelo de tira de teste você usa? (seleção temporária — o reconhecimento por código de barras chega em breve)",
+    strip_guided_choose_placeholder: "— Escolher —",
+    strip_guided_no_models: "Nenhum modelo conhecido por enquanto.",
+    strip_guided_checking_orientation: "Verificando o sentido…",
+    strip_guided_positioning: "Posicionando os tampões…",
+    strip_guided_save_error_prefix: "Falha ao salvar: ",
+    strip_guided_saving: "Salvando…",
+    strip_guided_orientation_warning: "O sentido do traço não está claro. Comece novamente a partir do tampão perto da área de preensão (esperado: {bas}) até o tampão oposto (esperado: {haut}).",
+    strip_guided_not_connected: "Não conectado",
     filtration_type: "Tipo de filtração",
     manage_stock_label: "Gestão de estoque",
     manage_stock_desc: "Rastreia o consumo de produtos e o exibe no relatório.",
@@ -5208,6 +5334,350 @@ function applyGrayWorldGain(color, gain) {
   };
 }
 
+function pixelAt(data, width, x, y) {
+  const i = (y * width + x) * 4;
+  return { r: data[i], g: data[i + 1], b: data[i + 2] };
+}
+
+function medianColor(colors) {
+  const rs = colors.map((c) => c.r).sort((a, b) => a - b);
+  const gs = colors.map((c) => c.g).sort((a, b) => a - b);
+  const bs = colors.map((c) => c.b).sort((a, b) => a - b);
+  const mid = Math.floor(colors.length / 2);
+  return { r: rs[mid], g: gs[mid], b: bs[mid] };
+}
+
+// v1.100.0 — Détection de la languette par sa forme (contraste au fond),
+// PAS par la couleur de ses tampons — un tampon revenu blanc/quasi blanc
+// après trempage (ex. chlore libre à 0 ppm) a une saturation aussi faible
+// que le fond, donc indétectable par un critère colorimétrique. Utilisé par
+// le flux gratuit sans IA (écrans "création de modèle" et "lecture
+// bandelette") : aucun gabarit en temps réel disponible (photo prise via le
+// sélecteur natif du téléphone, cadrage libre — voir capture="environment"
+// existant), donc pas de position garantie des tampons dans l'image, il
+// faut la retrouver après coup.
+//
+// Principe : la couleur de fond est estimée depuis les bords de l'image
+// (suppose que l'utilisateur photographie la languette posée sur une
+// surface qui domine largement les bords du cadre — cf. consigne du guide
+// affiché avant la prise de vue). Chaque ligne de l'image est classée
+// "premier plan" si elle s'écarte assez de cette couleur de fond ; on
+// cherche ensuite la plus longue plage verticale contiguë de lignes
+// "premier plan" (tolère de petits trous — reflet, tampon très clair —
+// sans casser la plage), qui correspond à la languette.
+//
+// Retourne les points [x, y] (fraction 0-1) du haut et du bas de la
+// languette détectée, ou null si aucune plage suffisamment longue et nette
+// n'a été trouvée (photo à reprendre). Ne dit encore rien du nombre de
+// tampons ni de la zone de préhension — voir fonctions dédiées.
+const STRIP_FOREGROUND_COLOR_DIST = 28; // écart RGB min au fond estimé — provisoire, à ajuster avec de vraies photos
+const STRIP_MIN_ROW_COVERAGE = 0.04; // fraction mini de la largeur de l'image pour qu'une ligne compte comme "languette"
+const STRIP_MIN_LENGTH_FRACTION = 0.15; // en dessous, détection jugée non fiable (photo à reprendre)
+
+async function detectStripBounds(dataUrl) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        // Sous-échantillonnage : la détection de forme n'a pas besoin de la
+        // pleine résolution, juste d'assez de lignes pour une plage nette.
+        const maxDim = 400;
+        const scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+        const w = Math.max(1, Math.round(img.naturalWidth * scale));
+        const h = Math.max(1, Math.round(img.naturalHeight * scale));
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, w, h);
+        const data = ctx.getImageData(0, 0, w, h).data;
+
+        // 1. Couleur de fond estimée depuis les bords de l'image.
+        const borderSamples = [];
+        const borderMargin = Math.max(1, Math.round(Math.min(w, h) * 0.03));
+        for (let x = 0; x < w; x += 4) {
+          borderSamples.push(pixelAt(data, w, x, borderMargin));
+          borderSamples.push(pixelAt(data, w, x, h - 1 - borderMargin));
+        }
+        for (let y = 0; y < h; y += 4) {
+          borderSamples.push(pixelAt(data, w, borderMargin, y));
+          borderSamples.push(pixelAt(data, w, w - 1 - borderMargin, y));
+        }
+        const bg = medianColor(borderSamples);
+
+        // 2. Par ligne : étendue horizontale des pixels "premier plan".
+        const rowStats = new Array(h);
+        for (let y = 0; y < h; y++) {
+          let minX = -1, maxX = -1;
+          for (let x = 0; x < w; x++) {
+            const p = pixelAt(data, w, x, y);
+            const dist = Math.sqrt((p.r - bg.r) ** 2 + (p.g - bg.g) ** 2 + (p.b - bg.b) ** 2);
+            if (dist > STRIP_FOREGROUND_COLOR_DIST) {
+              if (minX === -1) minX = x;
+              maxX = x;
+            }
+          }
+          rowStats[y] = { minX, maxX, width: minX === -1 ? 0 : maxX - minX + 1 };
+        }
+
+        // 3. Plus longue plage verticale contiguë de lignes "premier plan".
+        const maxGap = Math.round(h * 0.02);
+        let bestStart = -1, bestEnd = -1, curStart = -1, gap = 0;
+        for (let y = 0; y < h; y++) {
+          const hasSignal = rowStats[y].width / w >= STRIP_MIN_ROW_COVERAGE;
+          if (hasSignal) {
+            if (curStart === -1) curStart = y;
+            gap = 0;
+          } else if (curStart !== -1) {
+            gap++;
+            if (gap > maxGap) {
+              const end = y - gap;
+              if (end - curStart > bestEnd - bestStart) { bestStart = curStart; bestEnd = end; }
+              curStart = -1;
+              gap = 0;
+            }
+          }
+        }
+        if (curStart !== -1) {
+          const end = h - 1 - gap;
+          if (end - curStart > bestEnd - bestStart) { bestStart = curStart; bestEnd = end; }
+        }
+
+        if (bestStart === -1 || (bestEnd - bestStart) < h * STRIP_MIN_LENGTH_FRACTION) {
+          resolve(null);
+          return;
+        }
+
+        // 4. Centre horizontal à chaque extrémité (moyenne sur quelques
+        // lignes, plus stable qu'une seule ligne isolée).
+        const centerXAt = (yStart, yEnd) => {
+          let sum = 0, n = 0;
+          for (let y = yStart; y <= yEnd; y++) {
+            if (rowStats[y].width > 0) { sum += (rowStats[y].minX + rowStats[y].maxX) / 2; n++; }
+          }
+          return n ? sum / n : w / 2;
+        };
+        const topX = centerXAt(bestStart, Math.min(bestStart + 5, bestEnd));
+        const bottomX = centerXAt(Math.max(bestEnd - 5, bestStart), bestEnd);
+
+        resolve({
+          topPoint: [topX / w, bestStart / h],
+          bottomPoint: [bottomX / w, bestEnd / h],
+          lengthFraction: (bestEnd - bestStart) / h,
+        });
+      } catch (e) {
+        reject(e);
+      }
+    };
+    img.onerror = () => reject(new Error("Image illisible"));
+    img.src = dataUrl;
+  });
+}
+
+// v1.100.0 — Positions des tampons par interpolation linéaire entre les deux
+// points marqués manuellement (voir StripMarker : l'utilisateur glisse du
+// premier tampon — bas de l'échelle — jusqu'au dernier, zone de préhension
+// déjà exclue par construction du geste). Répartition égale : hypothèse
+// raisonnable pour des tampons imprimés à espacement régulier (cas normal
+// des bandelettes du commerce) — à revoir si un modèle réel s'avère
+// irrégulier. count = nb_parametres de la fiche du modèle identifié ;
+// points[i] correspond directement à ordre_bas_vers_haut[i] (même
+// convention "bas vers haut" que le sens du glissement demandé).
+function computeStripPadPositions(startPoint, endPoint, count) {
+  if (!Array.isArray(startPoint) || !Array.isArray(endPoint) || count < 1) return [];
+  if (count === 1) return [startPoint];
+  const points = [];
+  for (let i = 0; i < count; i++) {
+    const t = i / (count - 1);
+    points.push([
+      startPoint[0] + (endPoint[0] - startPoint[0]) * t,
+      startPoint[1] + (endPoint[1] - startPoint[1]) * t,
+    ]);
+  }
+  return points;
+}
+
+// v1.101.0 — Dimensions naturelles d'une image (largeur/hauteur) sans
+// dessiner sur un canvas — utilisé pour convertir une fraction (espacement
+// entre tampons, taille de tampon estimée par l'IA) en pixels réels.
+function loadImageDims(dataUrl) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve({ naturalWidth: img.naturalWidth, naturalHeight: img.naturalHeight });
+    img.onerror = () => reject(new Error("Image illisible"));
+    img.src = dataUrl;
+  });
+}
+
+// v1.101.0 — Le raffinement automatique par profil couleur/texture
+// (refineStripPadPositions, v1.100.1) s'est révélé peu fiable en conditions
+// réelles : validé sur une photo de test, mais en échec sur 2 photos
+// supplémentaires du même modèle Mareva, y compris après réglage de ses
+// paramètres (artefact de test "Détection tampons — couleur + texture",
+// session du 03/08/2026) — abandonné. Retour à l'interpolation uniforme
+// (computeStripPadPositions) comme unique mécanisme de calcul, désormais
+// affinée par apprentissage statistique communautaire plutôt que par analyse
+// d'image : chaque correction manuelle de l'utilisateur (voir StripPadPreview)
+// alimente stripPadPositionSamples, agrégé côté Worker en
+// stripPadPositionModels (médiane par modèle+index de tampon, une fois assez
+// de contributions — même logique que calibrationModels/Lot B). learnedT est
+// le résultat de cet apprentissage pour CE modèle (sparse : { index: t }, un
+// index absent = pas encore assez de contributions) ; sa seule présence pour
+// un index vaut validation du seuil, comme pour calibrationModels — aucune
+// pondération supplémentaire côté client.
+function computeStripPadPositionsWithLearning(startPoint, endPoint, count, learnedT) {
+  const uniform = computeStripPadPositions(startPoint, endPoint, count);
+  if (!learnedT || typeof learnedT !== "object") return uniform;
+  return uniform.map((pt, i) => {
+    const t = learnedT[i];
+    if (typeof t !== "number") return pt;
+    return [
+      startPoint[0] + (endPoint[0] - startPoint[0]) * t,
+      startPoint[1] + (endPoint[1] - startPoint[1]) * t,
+    ];
+  });
+}
+
+// v1.101.0 — Position relative (0..1) d'un point le long du segment
+// startPoint→endPoint (projection scalaire) — sert à convertir une correction
+// manuelle de tampon (coordonnées absolues) en "t" pour
+// stripPadPositionSamples. Résultat borné à [0,1] : une correction très
+// légèrement hors segment (main qui dévie un peu) reste exploitable plutôt
+// que rejetée.
+function projectPointToLineT(point, startPoint, endPoint) {
+  const dx = endPoint[0] - startPoint[0], dy = endPoint[1] - startPoint[1];
+  const lenSq = dx * dx + dy * dy;
+  if (lenSq === 0) return 0;
+  const t = ((point[0] - startPoint[0]) * dx + (point[1] - startPoint[1]) * dy) / lenSq;
+  return Math.max(0, Math.min(1, t));
+}
+
+// v1.100.1 — Table de correspondance mot-couleur (FR, vocabulaire déjà
+// utilisé dans seed-strip-models.js : teinte_min/teinte_max,
+// indices_orientation.signature_extremites) → couleur RGB représentative.
+// Volontairement approximative : sert uniquement à arbitrer entre 2 sens de
+// marquage possibles (voir resolveStripMarkOrientation ci-dessous), pas à
+// une correspondance colorimétrique précise. Un mot absent de cette table
+// est simplement ignoré (pas d'erreur, juste moins de signal pour arbitrer).
+const STRIP_COLOR_NAME_RGB = [
+  { words: ["blanc", "crème", "creme"], rgb: { r: 245, g: 242, b: 235 } },
+  { words: ["fuchsia", "magenta"], rgb: { r: 220, g: 20, b: 160 } },
+  { words: ["orangé", "orange"], rgb: { r: 255, g: 140, b: 20 } },
+  { words: ["rosé", "rose"], rgb: { r: 240, g: 170, b: 190 } },
+  { words: ["rougeâtre", "rougeatre", "rouge"], rgb: { r: 210, g: 40, b: 45 } },
+  { words: ["violet", "pourpre", "lavande"], rgb: { r: 140, g: 70, b: 170 } },
+  { words: ["vert"], rgb: { r: 70, g: 165, b: 95 } },
+  { words: ["bleu"], rgb: { r: 55, g: 110, b: 200 } },
+  { words: ["jaune"], rgb: { r: 235, g: 210, b: 60 } },
+];
+
+function extractColorAnchors(text) {
+  if (!text) return [];
+  const lower = text.toLowerCase();
+  const anchors = [];
+  STRIP_COLOR_NAME_RGB.forEach(({ words, rgb }) => {
+    if (words.some((w) => lower.includes(w))) anchors.push(rgb);
+  });
+  return anchors;
+}
+
+function colorDistance(a, b) {
+  return Math.sqrt((a.r - b.r) ** 2 + (a.g - b.g) ** 2 + (a.b - b.b) ** 2);
+}
+
+function bestAnchorDistance(color, anchors) {
+  if (!anchors.length) return null;
+  return Math.min(...anchors.map((a) => colorDistance(color, a)));
+}
+
+// v1.100.1 — Contrôle du sens de marquage. StripMarker demande à
+// l'utilisateur de glisser du premier tampon (bas de l'échelle) vers le
+// dernier, mais rien ne garantissait jusqu'ici que le sens choisi
+// correspondait au sens physique réel de la languette sur la photo (incident
+// constaté le 01/08/2026 : tampons manifestement inversés lors d'un test
+// réel, cf. teinte blanche attendue sur Cl retrouvée sur le tampon étiqueté
+// CyA). Évalue les 2 sens possibles en comparant la couleur échantillonnée à
+// chaque extrémité du tracé à la signature attendue de la fiche
+// (indices_orientation.signature_extremites) — et ne retient le sens
+// auto-détecté que si l'écart entre les 2 hypothèses est net. En cas de
+// doute, laisse l'appelant redemander le tracé plutôt que de deviner. Fiche
+// sans signature_extremites (ou mots non reconnus) → aucun arbitrage
+// possible, "checked: false", pas de régression pour les fiches qui n'ont
+// pas encore cette donnée.
+const STRIP_ORIENTATION_AMBIGUOUS_MARGIN = 35; // écart RGB minimal entre les 2 hypothèses pour trancher sans redemander — provisoire, à ajuster avec des tests réels
+
+async function resolveStripMarkOrientation(photoDataUrl, startPoint, endPoint, signatureExtremites) {
+  const basAnchors = extractColorAnchors(signatureExtremites && signatureExtremites.bas);
+  const hautAnchors = extractColorAnchors(signatureExtremites && signatureExtremites.haut);
+  if (!basAnchors.length || !hautAnchors.length) {
+    return { swapped: false, ambiguous: false, checked: false };
+  }
+  const [startSample, endSample] = await Promise.all([
+    sampleColorAndQuality(photoDataUrl, startPoint[0], startPoint[1]),
+    sampleColorAndQuality(photoDataUrl, endPoint[0], endPoint[1]),
+  ]);
+  const forwardScore = bestAnchorDistance(startSample.color, basAnchors) + bestAnchorDistance(endSample.color, hautAnchors);
+  const backwardScore = bestAnchorDistance(endSample.color, basAnchors) + bestAnchorDistance(startSample.color, hautAnchors);
+  const margin = Math.abs(forwardScore - backwardScore);
+  if (margin < STRIP_ORIENTATION_AMBIGUOUS_MARGIN) {
+    return { swapped: false, ambiguous: true, checked: true };
+  }
+  return { swapped: backwardScore < forwardScore, ambiguous: false, checked: true };
+}
+
+// v1.100.0 — Dernière étape du flux "bandelette guidée" : échantillonne la
+// couleur réelle de chaque tampon (position déjà calculée) et l'associe à
+// la valeur choisie par l'utilisateur via StripArrowReader, dans
+// calibrationPoints. PAS de correction de dominante ici (contrairement au
+// calcul déterministe payant et au mécanisme "Lot B") : ce flux marque
+// seulement la zone à tampons, jamais la zone de préhension (exclue par
+// construction du geste, voir StripMarker) — donc pas de référence neutre
+// disponible pour l'instant. Amélioration à considérer plus tard, pas
+// bloquante pour une première version fonctionnelle.
+// PAS de "referenceColor" (champ du mécanisme "Lot B", une case de
+// référence photographiée qui n'existe pas dans ce flux — pas d'échelle
+// imprimée dans le cadre). Champs volontairement limités à ceux autorisés
+// par firestore.rules (allow create ... hasOnly([...])) : tout champ
+// supplémentaire ferait échouer l'écriture silencieusement côté client.
+async function sampleAndStoreStripCalibrationPoints({ photoDataUrl, stripModel, results, padPositions }) {
+  const normalizedModel = normalizeStripModel(stripModel);
+  const errors = [];
+  let count = 0;
+  // v1.101.0 — Échantillonnage recentré à 50% de l'espacement réel entre
+  // tampons voisins (plutôt qu'une boîte fixe de 8px, sans rapport avec la
+  // taille réelle du tampon sur la photo) — réduit le risque de capter du
+  // fond ou un tampon voisin sur une photo très zoomée ou très large. Best-
+  // effort : sans padPositions (≥2 points), repli sur la boîte fixe d'avant.
+  let dims = null;
+  if (Array.isArray(padPositions) && padPositions.length > 1) {
+    try { dims = await loadImageDims(photoDataUrl); } catch (e) { dims = null; }
+  }
+  for (const param of Object.keys(results)) {
+    const { value, padPoint, padIndex } = results[param];
+    if (typeof value !== "number" || !Array.isArray(padPoint)) continue;
+    try {
+      const colorBoxSize = (dims && typeof padIndex === "number")
+        ? Math.max(4, Math.round(estimatePadSpacingPx(padPositions, dims, padIndex) * 0.5))
+        : 8;
+      const sample = await sampleColorAndQuality(photoDataUrl, padPoint[0], padPoint[1], colorBoxSize);
+      await FB.addCalibrationPoint({
+        stripModel: normalizedModel,
+        param,
+        sampledColor: sample.color,
+        trueValue: value,
+        capturedAt: new Date().toISOString(),
+        sharpness: sample.sharpness,
+        exposure: sample.exposure,
+        exposureClipped: sample.exposureClipped,
+      });
+      count++;
+    } catch (e) {
+      errors.push({ param, error: e.message });
+    }
+  }
+  return { count, errors };
+}
+
 // v1.97.6 — Conversion sRGB → CIE Lab (D65), formule standard, vanilla JS
 // (pas de bundler dans ce fichier, donc pas de librairie de couleur externe).
 // Utilisée pour le calcul déterministe de confiance/valeur bandelette
@@ -5284,9 +5754,25 @@ const STRIP_COORD_SANITY_MAX_DELTA_E = 30;
 // (expectedHex) reste comparé aux couleurs BRUTES, non corrigées — il vérifie
 // que les coordonnées tombent bien là où l'IA dit avoir regardé, ce qui doit
 // rester indépendant d'une correction appliquée après coup.
-async function computeDeterministicStripReading(dataUrl, tamponPoint, borneInf, borneSup, expectedHex = {}, whiteRefPoint = null) {
+// v1.101.0 — padSizeFraction (optionnel) : "sample_points.<param>.padSizeFraction"
+// rapporté par l'IA (largeur estimée du tampon, fraction de la largeur totale
+// de l'image — voir prompt étape "sample_points"). Sert à recentrer
+// l'échantillonnage du TAMPON (pas des bornes, cases imprimées nettes) sur
+// 50% de sa largeur réelle plutôt qu'une boîte fixe de 8px sans rapport avec
+// le cadrage de la photo — même logique que sampleAndStoreStripCalibrationPoints.
+// Absent ou invalide → repli silencieux sur la boîte fixe d'avant.
+async function computeDeterministicStripReading(dataUrl, tamponPoint, borneInf, borneSup, expectedHex = {}, whiteRefPoint = null, padSizeFraction = null) {
+  let tamponBoxSize = 8;
+  if (typeof padSizeFraction === "number" && padSizeFraction > 0) {
+    try {
+      const dims = await loadImageDims(dataUrl);
+      tamponBoxSize = Math.max(4, Math.round(padSizeFraction * dims.naturalWidth * 0.5));
+    } catch (e) {
+      tamponBoxSize = 8;
+    }
+  }
   const [tamponColor, infColor, supColor] = await Promise.all([
-    sampleColorAt(dataUrl, tamponPoint[0], tamponPoint[1]),
+    sampleColorAt(dataUrl, tamponPoint[0], tamponPoint[1], tamponBoxSize),
     sampleColorAt(dataUrl, borneInf.point[0], borneInf.point[1]),
     sampleColorAt(dataUrl, borneSup.point[0], borneSup.point[1]),
   ]);
@@ -6103,6 +6589,19 @@ async function getStripCalibrationModel({ idToken, stripModel, param }) {
   return model;
 }
 
+// v1.101.0 — Positions de tampons apprises pour un modèle (voir
+// stripPadPositionSamples/stripPadPositionModels, aggregatePadPositionModels
+// côté Worker). Retourne un objet sparse { padIndex: t } — un index absent
+// signifie simplement pas encore assez de contributions pour ce tampon,
+// jamais une erreur (voir computeStripPadPositionsWithLearning).
+async function getStripPadPositionModel({ idToken, stripModel }) {
+  const url = `${PROXY_BASE_URL}/strip-pad-position-model?stripModel=${encodeURIComponent(stripModel)}`;
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${idToken}` } });
+  if (!res.ok) throw new Error(`Échec de lecture des positions apprises (${res.status})`);
+  const { positions } = await res.json();
+  return positions || {};
+}
+
 async function confirmCommonProductMerge({ mergeId, token }) {
   const res = await fetch(`${PROXY_BASE_URL}/confirm-merge`, {
     method: "POST",
@@ -6527,6 +7026,22 @@ const FB = {
     if (!window._fbDb || !window._fbSetDoc) return;
     const ref = window._fbDoc(window._fbDb, "calibrationPoints", uid());
     await window._fbSetDoc(ref, point);
+  },
+  // v1.101.0 — Même logique que addCalibrationPoint (collection RACINE,
+  // create-only, sans uid, cf. firestore.rules) : une correction manuelle de
+  // tampon (voir StripPadPreview) alimente l'apprentissage statistique de
+  // position par modèle, agrégé côté Worker (aggregatePadPositionModels).
+  addStripPadPositionSample: async (sample) => {
+    if (!window._fbDb || !window._fbSetDoc) return;
+    const ref = window._fbDoc(window._fbDb, "stripPadPositionSamples", uid());
+    await window._fbSetDoc(ref, sample);
+  },
+  // v1.101.0 — Positions de tampons apprises pour un modèle, servies par le
+  // Worker (voir getStripPadPositionModel) — même raison que
+  // getCalibrationModel : pas de lecture Firestore directe pour ce savoir
+  // agrégé.
+  getStripPadPositionModel: async (idToken, stripModel) => {
+    return getStripPadPositionModel({ idToken, stripModel });
   },
   // v1.38.0 — Lit un modèle de calibration agrégé (calculé côté Worker
   // Cloudflare à partir des points contribués par tous les utilisateurs).
@@ -12691,6 +13206,816 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, applicat
   );
 }
 
+// v1.100.0 — Marquage manuel de la zone à tampons d'une languette (flux
+// "bandelette guidée", gratuit, sans IA — voir spec bandelettes gratuit).
+// Remplace une détection automatique par forme, essayée puis abandonnée
+// après tests réels concluants négatifs (trop fragile face aux ombres et
+// reflets — voir backlog) : l'utilisateur glisse du premier tampon (bas de
+// l'échelle) jusqu'au dernier, sans la zone de préhension qu'il exclut
+// naturellement en commençant son geste au bon endroit. Loupe pendant la
+// reprise d'un point déjà posé (le doigt masque sinon la zone visée sur
+// mobile) — pas pendant la pose initiale du tracé, pour ne pas mélanger
+// "je pose" et "j'ajuste". État de glissement tenu dans une ref (pas de
+// re-render React à chaque pointermove, juste des redraws canvas directs) ;
+// un seul setState au relâché pour activer le bouton Confirmer.
+// v1.101.0 — Repère + loupe partagés entre StripMarker (tracé des 2 points
+// départ/arrivée) et StripPadPreview (correction individuelle des N tampons,
+// voir plus bas) : même geste, même rendu, factorisé pour ne pas dupliquer ce
+// bloc canvas dans les deux composants.
+function distPt(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+
+function drawStripHandle(ctx, pt, color) {
+  ctx.beginPath();
+  ctx.arc(pt.x, pt.y, 9, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = "#0d1214";
+  ctx.stroke();
+}
+
+function drawStripMagnifier(ctx, canvas, img, pt, color) {
+  if (!img) return;
+  const mSize = 116;
+  const mRadius = mSize / 2;
+  const zoom = 2.6;
+  const natScale = img.naturalWidth / canvas.width;
+  const srcHalf = (mRadius / zoom) * natScale;
+  const srcCX = pt.x * natScale;
+  const srcCY = pt.y * natScale;
+  const offsetY = mRadius + 92;
+  let cy = pt.y - offsetY;
+  if (cy - mRadius < 4) cy = pt.y + offsetY;
+  const cx = Math.max(mRadius + 4, Math.min(canvas.width - mRadius - 4, pt.x));
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, mRadius, 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.clip();
+  ctx.fillStyle = "#0d1214";
+  ctx.fillRect(cx - mRadius, cy - mRadius, mSize, mSize);
+  ctx.drawImage(img, srcCX - srcHalf, srcCY - srcHalf, srcHalf * 2, srcHalf * 2, cx - mRadius, cy - mRadius, mSize, mSize);
+  ctx.restore();
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, mRadius, 0, Math.PI * 2);
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = color;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(cx - 9, cy);
+  ctx.lineTo(cx + 9, cy);
+  ctx.moveTo(cx, cy - 9);
+  ctx.lineTo(cx, cy + 9);
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = color;
+  ctx.stroke();
+}
+
+function StripMarker({ photoDataUrl, onConfirm, onCancel, orientationWarning, lang }) {
+  const t = useT(lang || "fr");
+  const canvasRef = useRef(null);
+  const imgRef = useRef(null);
+  const stateRef = useRef({ startPt: null, endPt: null, dragging: null });
+  const [hasTrace, setHasTrace] = useState(false);
+  const HANDLE_R = 32; // px canvas — zone de reprise élargie, identique départ/arrivée
+
+  useEffect(() => {
+    const img = new Image();
+    img.onload = () => {
+      imgRef.current = img;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const maxDisplay = 640;
+      const scale = Math.min(1, maxDisplay / img.naturalWidth);
+      canvas.width = Math.round(img.naturalWidth * scale);
+      canvas.height = Math.round(img.naturalHeight * scale);
+      stateRef.current = { startPt: null, endPt: null, dragging: null };
+      setHasTrace(false);
+      draw();
+    };
+    img.src = photoDataUrl;
+  }, [photoDataUrl]);
+
+  function canvasPoint(e) {
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+      x: Math.max(0, Math.min(canvas.width, (e.clientX - rect.left) * scaleX)),
+      y: Math.max(0, Math.min(canvas.height, (e.clientY - rect.top) * scaleY)),
+    };
+  }
+
+  function draw() {
+    const canvas = canvasRef.current;
+    const img = imgRef.current;
+    if (!canvas || !img) return;
+    const ctx = canvas.getContext("2d");
+    const { startPt, endPt, dragging } = stateRef.current;
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    if (startPt && endPt) {
+      ctx.strokeStyle = "#3ddbd9";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 5]);
+      ctx.beginPath();
+      ctx.moveTo(startPt.x, startPt.y);
+      ctx.lineTo(endPt.x, endPt.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    if (startPt) drawStripHandle(ctx, startPt, "#4ade80");
+    if (endPt) drawStripHandle(ctx, endPt, "#f87171");
+    if (dragging === "start" || dragging === "end") {
+      const activePt = dragging === "start" ? startPt : endPt;
+      const activeColor = dragging === "start" ? "#4ade80" : "#f87171";
+      if (activePt) drawStripMagnifier(ctx, canvas, img, activePt, activeColor);
+    }
+  }
+
+  function handlePointerDown(e) {
+    if (!imgRef.current) return;
+    const p = canvasPoint(e);
+    const st = stateRef.current;
+    if (st.startPt && st.endPt) {
+      // Un tracé existe déjà : seule la reprise d'une poignée fait quelque
+      // chose. Taper ailleurs sur la photo ne déclenche rien — repartir de
+      // zéro passe uniquement par le bouton "Recommencer".
+      if (distPt(p, st.startPt) < HANDLE_R) {
+        st.dragging = "start";
+        draw();
+      } else if (distPt(p, st.endPt) < HANDLE_R) {
+        st.dragging = "end";
+        draw();
+      }
+    } else if (!st.startPt) {
+      st.startPt = p;
+      st.dragging = "start";
+      draw();
+    } else if (!st.endPt) {
+      st.endPt = p;
+      st.dragging = "end";
+      draw();
+    }
+    e.preventDefault();
+  }
+
+  function handlePointerMove(e) {
+    const st = stateRef.current;
+    if (!st.dragging) return;
+    const p = canvasPoint(e);
+    if (st.dragging === "start") st.startPt = p;
+    else if (st.dragging === "end") st.endPt = p;
+    draw();
+    e.preventDefault();
+  }
+
+  function handlePointerUp() {
+    const st = stateRef.current;
+    if (!st.dragging) return;
+    st.dragging = null;
+    draw();
+    setHasTrace(!!(st.startPt && st.endPt));
+  }
+
+  function handleReset() {
+    stateRef.current = { startPt: null, endPt: null, dragging: null };
+    setHasTrace(false);
+    draw();
+  }
+
+  function handleConfirmClick() {
+    const { startPt, endPt } = stateRef.current;
+    const canvas = canvasRef.current;
+    if (!startPt || !endPt || !canvas) return;
+    onConfirm({
+      startPoint: [startPt.x / canvas.width, startPt.y / canvas.height],
+      endPoint: [endPt.x / canvas.width, endPt.y / canvas.height],
+    });
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {orientationWarning ? (
+        <div style={{ fontSize: 13, color: "#8a5a00", background: "#fff4e0", border: "1px solid #f0c675", borderRadius: 8, padding: "8px 12px" }}>
+          ⚠ {orientationWarning}
+        </div>
+      ) : (
+        <div style={{ fontSize: 13, color: "var(--brand-text-strong)", background: "#eef6f3", border: "1px solid #b9dcd0", borderRadius: 8, padding: "8px 12px" }}>
+          {t("strip_marker_instruction")}
+        </div>
+      )}
+      <div style={{ position: "relative", width: "100%", borderRadius: 10, overflow: "hidden", background: "#111", touchAction: "none" }}>
+        <canvas
+          ref={canvasRef}
+          style={{ display: "block", width: "100%", height: "auto" }}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+        />
+      </div>
+      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+        {onCancel && (
+          <button type="button" onClick={onCancel} style={{ border: "1px solid #ccc", background: "#fff", borderRadius: 8, padding: "8px 14px", cursor: "pointer" }}>
+            {t("cancel")}
+          </button>
+        )}
+        <button type="button" onClick={handleReset} style={{ border: "1px solid #ccc", background: "#fff", borderRadius: 8, padding: "8px 14px", cursor: "pointer" }}>
+          {t("strip_marker_restart")}
+        </button>
+        <button
+          type="button"
+          onClick={handleConfirmClick}
+          disabled={!hasTrace}
+          style={{
+            border: "none", borderRadius: 8, padding: "8px 16px", cursor: hasTrace ? "pointer" : "default",
+            background: hasTrace ? "var(--brand-primary)" : "#ccc", color: "#fff", fontWeight: 600,
+          }}
+        >
+          {t("confirm_btn")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// v1.100.0 — Positions des tampons connues → nombre de teintes disponibles
+// pour chaque paramètre. Simple lookup, séparé pour rester testable et
+// réutilisable indépendamment de l'écran ci-dessous.
+function stripEchelleLength(echelles, paramKey) {
+  return (echelles && echelles[paramKey] && Array.isArray(echelles[paramKey].valeurs))
+    ? echelles[paramKey].valeurs.length
+    : 0;
+}
+
+// v1.100.1 — Espacement réel (en pixels de la photo d'origine) au tampon
+// d'index i, déduit de la distance à son (ou ses) voisin(s) immédiat(s) —
+// PAS un espacement global unique : une correction manuelle ou une position
+// apprise (voir computeStripPadPositionsWithLearning, v1.101.0) peut rendre
+// l'espacement local différent de la moyenne globale, donc une seule
+// distance globale (ex. tampon 0→1) pouvait sous- ou sur-dimensionner la
+// vignette d'un tampon dont les voisins réels sont plus ou moins espacés.
+// Prend la plus petite des 2 distances (voisin précédent/suivant) par
+// prudence — mieux vaut une vignette un peu trop serrée qu'une qui déborde
+// sur le voisin.
+function estimatePadSpacingPx(padPositions, img, index) {
+  if (!Array.isArray(padPositions) || padPositions.length < 2 || !img) return img ? img.naturalWidth * 0.08 : 0;
+  function distPx(a, b) {
+    const dx = (b[0] - a[0]) * img.naturalWidth;
+    const dy = (b[1] - a[1]) * img.naturalHeight;
+    return Math.hypot(dx, dy);
+  }
+  const i = typeof index === "number" ? index : 0;
+  const dists = [];
+  if (padPositions[i - 1]) dists.push(distPx(padPositions[i], padPositions[i - 1]));
+  if (padPositions[i + 1]) dists.push(distPx(padPositions[i], padPositions[i + 1]));
+  if (!dists.length) dists.push(distPx(padPositions[0], padPositions[1]));
+  return Math.max(24, Math.min.apply(null, dists));
+}
+
+// v1.100.1 — Aperçu de la photo complète avec les N points de mesure
+// superposés (repère + libellé du paramètre), inséré entre StripMarker et
+// StripArrowReader. Permet de vérifier d'un coup d'œil que chaque repère
+// tombe bien sur le bon tampon avant de passer à la sélection des valeurs.
+// v1.101.0 — Chaque repère est désormais corrigeable individuellement
+// (glisser-déposer + loupe, même geste que StripMarker via
+// drawStripMagnifier) plutôt que de renvoyer corriger tout le tracé pour un
+// seul tampon mal placé. onConfirm reçoit les positions finales ET la liste
+// des index effectivement corrigés (écart réel au-delà de CORRECTION_EPSILON,
+// pour ignorer un tremblement/tap accidentel) — voir GuidedStripFlow, qui
+// écrit ces corrections dans stripPadPositionSamples pour affiner
+// l'interpolation des futurs utilisateurs sur ce même modèle.
+function StripPadPreview({ photoDataUrl, padPositions, paramOrder, onConfirm, onBack, lang }) {
+  const t = useT(lang || "fr");
+  const canvasRef = useRef(null);
+  const imgRef = useRef(null);
+  const stateRef = useRef({ points: null, dragging: null });
+  const CORRECTION_EPSILON = 0.004; // fraction de l'image — en dessous, non compté comme une correction
+
+  useEffect(() => {
+    const img = new Image();
+    img.onload = () => {
+      imgRef.current = img;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const maxDisplay = 640;
+      const scale = Math.min(1, maxDisplay / img.naturalWidth);
+      canvas.width = Math.round(img.naturalWidth * scale);
+      canvas.height = Math.round(img.naturalHeight * scale);
+      stateRef.current = {
+        points: padPositions.map(([nx, ny]) => ({ x: nx * canvas.width, y: ny * canvas.height })),
+        dragging: null,
+      };
+      draw();
+    };
+    img.src = photoDataUrl;
+    // eslint-disable-next-line
+  }, [photoDataUrl, padPositions]);
+
+  function canvasPoint(e) {
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+      x: Math.max(0, Math.min(canvas.width, (e.clientX - rect.left) * scaleX)),
+      y: Math.max(0, Math.min(canvas.height, (e.clientY - rect.top) * scaleY)),
+    };
+  }
+
+  // Rayon de reprise dérivé de l'espacement réel entre tampons voisins à
+  // l'écran (bornes 14-28px) : des tampons serrés (photo large ou peu de
+  // paramètres) ne doivent pas se voler mutuellement les taps.
+  function handleRadius() {
+    const { points } = stateRef.current;
+    if (!points || points.length < 2) return 22;
+    let minDist = Infinity;
+    for (let i = 1; i < points.length; i++) minDist = Math.min(minDist, distPt(points[i], points[i - 1]));
+    return Math.max(14, Math.min(28, minDist * 0.5));
+  }
+
+  function draw() {
+    const canvas = canvasRef.current;
+    const img = imgRef.current;
+    const { points, dragging } = stateRef.current;
+    if (!canvas || !img || !points) return;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    points.forEach((pt, i) => {
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 11, 0, Math.PI * 2);
+      ctx.fillStyle = dragging === i ? "rgba(61,219,217,0.95)" : "rgba(255,255,255,0.92)";
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#0d1214";
+      ctx.stroke();
+      ctx.fillStyle = "#0d1214";
+      ctx.font = "bold 10px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText((paramOrder && paramOrder[i]) || String(i + 1), pt.x, pt.y);
+    });
+    if (typeof dragging === "number" && points[dragging]) {
+      drawStripMagnifier(ctx, canvas, img, points[dragging], "#3ddbd9");
+    }
+  }
+
+  function handlePointerDown(e) {
+    const { points } = stateRef.current;
+    if (!points) return;
+    const p = canvasPoint(e);
+    const r = handleRadius();
+    let closest = -1, closestDist = Infinity;
+    points.forEach((pt, i) => {
+      const d = distPt(p, pt);
+      if (d < r && d < closestDist) { closest = i; closestDist = d; }
+    });
+    if (closest !== -1) {
+      stateRef.current.dragging = closest;
+      draw();
+    }
+    e.preventDefault();
+  }
+
+  function handlePointerMove(e) {
+    const st = stateRef.current;
+    if (typeof st.dragging !== "number") return;
+    st.points[st.dragging] = canvasPoint(e);
+    draw();
+    e.preventDefault();
+  }
+
+  function handlePointerUp() {
+    const st = stateRef.current;
+    if (typeof st.dragging !== "number") return;
+    st.dragging = null;
+    draw();
+  }
+
+  function handleConfirmClick() {
+    const canvas = canvasRef.current;
+    const { points } = stateRef.current;
+    if (!canvas || !points) return;
+    const finalPositions = points.map((pt) => [pt.x / canvas.width, pt.y / canvas.height]);
+    const correctedIndices = finalPositions
+      .map(([nx, ny], i) => {
+        const [ox, oy] = padPositions[i];
+        return Math.hypot(nx - ox, ny - oy) > CORRECTION_EPSILON ? i : -1;
+      })
+      .filter((i) => i !== -1);
+    onConfirm(finalPositions, correctedIndices);
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ fontSize: 13, color: "var(--brand-text-strong)", background: "#eef6f3", border: "1px solid #b9dcd0", borderRadius: 8, padding: "8px 12px" }}>
+        {t("strip_pad_preview_instruction")}
+      </div>
+      <div style={{ position: "relative", width: "100%", borderRadius: 10, overflow: "hidden", background: "#111", touchAction: "none" }}>
+        <canvas
+          ref={canvasRef}
+          style={{ display: "block", width: "100%", height: "auto" }}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+        />
+      </div>
+      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+        <button type="button" onClick={onBack} style={{ border: "1px solid #ccc", background: "#fff", borderRadius: 8, padding: "8px 14px", cursor: "pointer" }}>
+          {t("strip_pad_preview_back")}
+        </button>
+        <button type="button" onClick={handleConfirmClick} style={{ border: "none", borderRadius: 8, padding: "8px 16px", cursor: "pointer", background: "var(--brand-primary)", color: "#fff", fontWeight: 600 }}>
+          {t("strip_pad_preview_confirm")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// v1.100.0 — Lecture bandelette par comparaison manuelle (flux "bandelette
+// guidée" gratuit, sans IA) : un widget flèches gauche/droite par
+// paramètre, parcourant les valeurs IMPRIMÉES de la fiche du modèle
+// identifié (echelles.valeurs) — à ne pas confondre avec le widget testeur
+// existant (section "Correction testeur" dans AddMeasureModal), qui lui
+// parcourt une échelle de couleurs rapportée par l'IA pour la photo en
+// cours. Ici, pas de pastille de couleur rendue : on ne stocke aucune
+// couleur de référence pour ces valeurs, l'utilisateur compare visuellement
+// à son tube physique. Un aperçu zoomé du tampon réel (extrait de la photo,
+// à la position déjà calculée) aide à se rappeler ce qu'il regarde. Ne fait
+// AUCUN échantillonnage couleur ni écriture Firestore lui-même — ne fait
+// que produire la valeur choisie par paramètre + la position du tampon,
+// laissés à l'appelant (voir plan : échantillonnage + calibrationPoints
+// interviennent après cet écran, une fois toutes les valeurs confirmées).
+// v1.101.0 — onCancel ("Corriger les repères") ramène à StripPadPreview
+// plutôt que de tout réinitialiser depuis StripMarker : un carré mal centré
+// se corrige à la loupe sans reprendre tout le tracé (voir
+// GuidedStripFlow, onCancel={() => setPadPreviewConfirmed(false)}).
+function StripArrowReader({ photoDataUrl, padPositions, paramOrder, echelles, onConfirm, onCancel, lang }) {
+  const t = useT(lang || "fr");
+  const [positions, setPositions] = useState(() =>
+    paramOrder.map((key) => {
+      const len = stripEchelleLength(echelles, key);
+      return len > 0 ? Math.floor((len - 1) / 2) : 0;
+    })
+  );
+  const cropCanvasRefs = useRef({});
+  const imgRef = useRef(null);
+
+  function drawCrop(key, i) {
+    const canvas = cropCanvasRefs.current[key];
+    const img = imgRef.current;
+    if (!canvas || !img || !padPositions[i]) return;
+    const ctx = canvas.getContext("2d");
+    const size = 40;
+    canvas.width = size;
+    canvas.height = size;
+    const [nx, ny] = padPositions[i];
+    const cropSizePx = estimatePadSpacingPx(padPositions, img, i) * 0.4;
+    const cx = nx * img.naturalWidth;
+    const cy = ny * img.naturalHeight;
+    ctx.drawImage(img, cx - cropSizePx / 2, cy - cropSizePx / 2, cropSizePx, cropSizePx, 0, 0, size, size);
+  }
+
+  function drawAllCrops() {
+    paramOrder.forEach((key, i) => drawCrop(key, i));
+  }
+
+  useEffect(() => {
+    const img = new Image();
+    img.onload = () => { imgRef.current = img; drawAllCrops(); };
+    img.src = photoDataUrl;
+    // eslint-disable-next-line
+  }, [photoDataUrl]);
+
+  function move(i, delta) {
+    setPositions((prev) => {
+      const next = prev.slice();
+      const maxIdx = Math.max(0, stripEchelleLength(echelles, paramOrder[i]) - 1);
+      next[i] = Math.max(0, Math.min(maxIdx, next[i] + delta));
+      return next;
+    });
+  }
+
+  function handleConfirmAll() {
+    const results = {};
+    paramOrder.forEach((key, i) => {
+      const valeurs = (echelles[key] && echelles[key].valeurs) || [];
+      results[key] = { value: valeurs[positions[i]], padPoint: padPositions[i], padIndex: i };
+    });
+    onConfirm(results);
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ fontSize: 13, color: "var(--brand-text-strong)", background: "#eef6f3", border: "1px solid #b9dcd0", borderRadius: 8, padding: "8px 12px" }}>
+        {t("strip_arrow_instruction")}
+      </div>
+      {paramOrder.map((key, i) => {
+        const echelle = echelles[key] || {};
+        const valeurs = echelle.valeurs || [];
+        const idx = positions[i];
+        const value = valeurs[idx];
+        return (
+          <div key={key} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", background: "#f8fafa", borderRadius: 8, flexWrap: "wrap" }}>
+            <canvas
+              ref={(el) => { cropCanvasRefs.current[key] = el; if (el) drawCrop(key, i); }}
+              style={{ width: 36, height: 36, borderRadius: 6, border: "1px solid #ccc", flex: "none" }}
+            />
+            <div style={{ minWidth: 40, fontWeight: 700, fontSize: 13 }}>{key}</div>
+            <button
+              type="button"
+              onClick={() => move(i, -1)}
+              disabled={idx <= 0}
+              style={{ border: "1px solid #b9dcd0", background: "#fff", borderRadius: 6, width: 28, height: 28, cursor: idx > 0 ? "pointer" : "default", opacity: idx > 0 ? 1 : 0.4 }}
+            >
+              ◀
+            </button>
+            <div style={{ minWidth: 56, textAlign: "center", fontWeight: 600, fontSize: 13 }}>
+              {value}{echelle.unite ? ` ${echelle.unite}` : ""}
+            </div>
+            <button
+              type="button"
+              onClick={() => move(i, 1)}
+              disabled={idx >= valeurs.length - 1}
+              style={{ border: "1px solid #b9dcd0", background: "#fff", borderRadius: 6, width: 28, height: 28, cursor: idx < valeurs.length - 1 ? "pointer" : "default", opacity: idx < valeurs.length - 1 ? 1 : 0.4 }}
+            >
+              ▶
+            </button>
+            {(echelle.teinte_min || echelle.teinte_max) && (
+              <div style={{ fontSize: 10.5, color: "#8b98a3" }}>
+                {echelle.teinte_min || "?"} → {echelle.teinte_max || "?"}
+              </div>
+            )}
+          </div>
+        );
+      })}
+      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
+        {onCancel && (
+          <button type="button" onClick={onCancel} style={{ border: "1px solid #ccc", background: "#fff", borderRadius: 8, padding: "8px 14px", cursor: "pointer" }}>
+            {t("strip_arrow_cancel")}
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={handleConfirmAll}
+          style={{ border: "none", borderRadius: 8, padding: "8px 16px", cursor: "pointer", background: "var(--brand-primary)", color: "#fff", fontWeight: 600 }}
+        >
+          {t("strip_arrow_confirm")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// v1.100.0 — Correspondance libellés internes des fiches stripModels
+// ("ordre_bas_vers_haut"/"echelles", voir spec bandelettes section 10.2) →
+// clés d'état internes d'AddMeasureModal. Deux conventions différentes et
+// non alignées : les fiches utilisent un jeu d'abréviations fixe et réduit
+// (pH/Cl/TCl/Alc/CyA/TH), l'app utilise ses clés canoniques habituelles
+// (pH/fCl/tCl/tac/cya/hard). Cette table n'existait nulle part ailleurs —
+// le flux IA n'en avait pas besoin, cette traduction se faisant dans le
+// raisonnement du prompt (l'IA reçoit "ordre_bas_vers_haut" en contexte
+// mais produit déjà ses valeurs sous les clés app-natives en sortie).
+const STRIP_FICHE_LABEL_TO_PARAM_KEY = { pH: "pH", Cl: "fCl", TCl: "tCl", Alc: "tac", CyA: "cya", TH: "hard" };
+
+// v1.100.0 — Sous-flux "Bandelette guidée" (gratuit, sans IA) : identifie un
+// modèle connu — sélection temporaire dans un menu déroulant en attendant
+// l'écran d'identification complet (code-barres + recherche par nom, pas
+// encore construit) — puis enchaîne marquage (StripMarker) et lecture par
+// comparaison manuelle (StripArrowReader). Échantillonne et écrit
+// calibrationPoints (clé = identifiant de fiche curatée, ex. "mareva_mv3028"
+// — choix assumé de ne PAS réutiliser le "stripModel" texte libre du
+// mécanisme "Lot B", lié au nom de produit en stock : la fiche curatée
+// donne une clé stable, partagée entre tous les utilisateurs qui
+// identifient le même modèle, contrairement à un texte libre qui dépend de
+// l'orthographe exacte saisie par chacun — réconciliation avec Lot B à
+// traiter séparément, plus tard). Renvoie les valeurs choisies (traduites
+// en clés app via STRIP_FICHE_LABEL_TO_PARAM_KEY) à l'appelant, qui les
+// applique à la mesure réelle.
+function GuidedStripFlow({ onClose, onComplete, lang }) {
+  const t = useT(lang || "fr");
+  const [knownModels, setKnownModels] = useState(null); // null = chargement, [] = vide/échec
+  const [loadError, setLoadError] = useState(null);
+  const [selectedModelId, setSelectedModelId] = useState("");
+  const [photoDataUrl, setPhotoDataUrl] = useState(null);
+  const [markResult, setMarkResult] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
+  const [checkingOrientation, setCheckingOrientation] = useState(false);
+  const [orientationWarning, setOrientationWarning] = useState(null);
+  const [padPreviewConfirmed, setPadPreviewConfirmed] = useState(false);
+  const [padPositions, setPadPositions] = useState(null);
+  const [computingPositions, setComputingPositions] = useState(false);
+  const cameraInputRef = useRef(null);
+  const galleryInputRef = useRef(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const idToken = await window._fbAuth?.currentUser?.getIdToken();
+        if (!idToken) throw new Error(t("strip_guided_not_connected"));
+        const data = await getStripReferenceData({ idToken });
+        if (!cancelled) setKnownModels(data.stripModels || []);
+      } catch (e) {
+        if (!cancelled) { setLoadError(e.message); setKnownModels([]); }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const selectedModel = (knownModels || []).find((m) => m.modele_id === selectedModelId) || null;
+
+  function handleFile(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => { setPhotoDataUrl(ev.target.result); setMarkResult(null); setOrientationWarning(null); setPadPreviewConfirmed(false); setPadPositions(null); };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  }
+
+  async function handleMarkConfirm(r) {
+    setCheckingOrientation(true);
+    const sig = selectedModel && selectedModel.indices_orientation && selectedModel.indices_orientation.signature_extremites;
+    const resolved = await resolveStripMarkOrientation(photoDataUrl, r.startPoint, r.endPoint, sig);
+    setCheckingOrientation(false);
+    if (resolved.ambiguous) {
+      setOrientationWarning(t("strip_guided_orientation_warning", { bas: sig.bas, haut: sig.haut }));
+      return;
+    }
+    setOrientationWarning(null);
+    setPadPreviewConfirmed(false);
+    const finalPoints = resolved.swapped ? { startPoint: r.endPoint, endPoint: r.startPoint } : r;
+    setMarkResult(finalPoints);
+    if (!selectedModel) return;
+    setComputingPositions(true);
+    try {
+      // v1.101.0 — Position apprise par le modèle (voir
+      // computeStripPadPositionsWithLearning) : best-effort, un échec ou une
+      // absence de données (modèle jamais corrigé assez de fois) laisse
+      // simplement l'interpolation uniforme inchangée.
+      let learnedT = {};
+      try {
+        const idToken = await window._fbAuth?.currentUser?.getIdToken();
+        if (idToken) learnedT = await FB.getStripPadPositionModel(idToken, selectedModel.modele_id);
+      } catch (e) {
+        learnedT = {};
+      }
+      const positions = computeStripPadPositionsWithLearning(finalPoints.startPoint, finalPoints.endPoint, selectedModel.nb_parametres, learnedT);
+      setPadPositions(positions);
+    } finally {
+      setComputingPositions(false);
+    }
+  }
+
+  // v1.101.0 — Reçoit les positions finales (éventuellement corrigées à la
+  // loupe, voir StripPadPreview) et la liste des index effectivement
+  // corrigés. Chaque correction alimente stripPadPositionSamples — best-
+  // effort, fire-and-forget, ne bloque jamais la suite du flux.
+  function handlePadPreviewConfirm(finalPositions, correctedIndices) {
+    setPadPositions(finalPositions);
+    setPadPreviewConfirmed(true);
+    if (selectedModel && markResult && correctedIndices && correctedIndices.length) {
+      const normalizedModel = normalizeStripModel(selectedModel.modele_id);
+      correctedIndices.forEach((i) => {
+        const t = projectPointToLineT(finalPositions[i], markResult.startPoint, markResult.endPoint);
+        FB.addStripPadPositionSample({
+          stripModel: normalizedModel,
+          padIndex: i,
+          t,
+          capturedAt: new Date().toISOString(),
+        }).catch(() => {});
+      });
+    }
+  }
+
+  async function handleArrowConfirm(results) {
+    setSaving(true);
+    setSaveError(null);
+    try {
+      await sampleAndStoreStripCalibrationPoints({
+        photoDataUrl,
+        stripModel: selectedModel.modele_id,
+        results,
+        padPositions,
+      });
+      const paramValues = {};
+      Object.keys(results).forEach((ficheLabel) => {
+        const appKey = STRIP_FICHE_LABEL_TO_PARAM_KEY[ficheLabel];
+        const value = results[ficheLabel].value;
+        if (appKey && typeof value === "number") paramValues[appKey] = value;
+      });
+      onComplete(paramValues);
+    } catch (e) {
+      setSaveError(e.message);
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div style={{ background: "#fff", borderRadius: 14, padding: 18, maxWidth: 460, width: "100%", maxHeight: "90vh", overflowY: "auto" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <strong style={{ fontSize: 14 }}>🎯 {t("strip_guided_title")}</strong>
+          <button type="button" onClick={onClose} style={{ border: "none", background: "none", cursor: "pointer", padding: 4 }}>
+            <X size={18} />
+          </button>
+        </div>
+
+        {knownModels === null && <div style={{ fontSize: 13, color: "#666" }}>{t("strip_guided_loading")}</div>}
+        {loadError && <div style={{ fontSize: 13, color: "#c0392b", marginBottom: 8 }}>{t("strip_guided_error_prefix")}{loadError}</div>}
+
+        {knownModels && knownModels.length > 0 && !selectedModel && (
+          <div>
+            <div style={{ fontSize: 13, marginBottom: 10, color: "var(--brand-text-strong)" }}>
+              {t("strip_guided_pick_model")}
+            </div>
+            <select
+              style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid #ccc", fontSize: 13.5 }}
+              value={selectedModelId}
+              onChange={(e) => setSelectedModelId(e.target.value)}
+            >
+              <option value="">{t("strip_guided_choose_placeholder")}</option>
+              {knownModels.map((m) => (
+                <option key={m.modele_id} value={m.modele_id}>
+                  {m.nom_marque || m.modele_id}{m.code_produit ? ` (${m.code_produit})` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {knownModels && knownModels.length === 0 && !loadError && (
+          <div style={{ fontSize: 13, color: "#666" }}>{t("strip_guided_no_models")}</div>
+        )}
+
+        {selectedModel && !photoDataUrl && (
+          <div style={{ display: "flex", gap: 8 }}>
+            <button type="button" onClick={() => cameraInputRef.current && cameraInputRef.current.click()} style={{ flex: 1, padding: 10, borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer" }}>
+              📷 {t("camera_btn")}
+            </button>
+            <button type="button" onClick={() => galleryInputRef.current && galleryInputRef.current.click()} style={{ flex: 1, padding: 10, borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer" }}>
+              🖼️ {t("gallery_btn")}
+            </button>
+            <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFile} style={{ display: "none" }} />
+            <input ref={galleryInputRef} type="file" accept="image/*" onChange={handleFile} style={{ display: "none" }} />
+          </div>
+        )}
+
+        {selectedModel && photoDataUrl && !markResult && (
+          <>
+            <StripMarker
+              photoDataUrl={photoDataUrl}
+              onCancel={() => setPhotoDataUrl(null)}
+              onConfirm={handleMarkConfirm}
+              orientationWarning={orientationWarning}
+              lang={lang}
+            />
+            {checkingOrientation && <div style={{ marginTop: 8, fontSize: 12.5, color: "#666" }}>⏳ {t("strip_guided_checking_orientation")}</div>}
+          </>
+        )}
+
+        {selectedModel && photoDataUrl && markResult && computingPositions && (
+          <div style={{ fontSize: 13, color: "#666" }}>⏳ {t("strip_guided_positioning")}</div>
+        )}
+
+        {selectedModel && photoDataUrl && markResult && padPositions && !padPreviewConfirmed && (
+          <StripPadPreview
+            photoDataUrl={photoDataUrl}
+            padPositions={padPositions}
+            paramOrder={selectedModel.ordre_bas_vers_haut}
+            onBack={() => { setMarkResult(null); setPadPositions(null); }}
+            onConfirm={handlePadPreviewConfirm}
+            lang={lang}
+          />
+        )}
+
+        {selectedModel && photoDataUrl && markResult && padPositions && padPreviewConfirmed && (
+          <>
+            {saveError && (
+              <div style={{ marginBottom: 8, fontSize: 12.5, color: "#c0392b" }}>{t("strip_guided_save_error_prefix")}{saveError}</div>
+            )}
+            <StripArrowReader
+              photoDataUrl={photoDataUrl}
+              padPositions={padPositions}
+              paramOrder={selectedModel.ordre_bas_vers_haut}
+              echelles={selectedModel.echelles}
+              onCancel={() => setPadPreviewConfirmed(false)}
+              onConfirm={handleArrowConfirm}
+              lang={lang}
+            />
+            {saving && <div style={{ marginTop: 8, fontSize: 12.5, color: "#666" }}>⏳ {t("strip_guided_saving")}</div>}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ---------- Modal Ajout mesure ----------
 function AddMeasureModal({ measure, application, products, manageStock, onSaveApplication, onClose, onSave, isPremium, onWantPremium, apiKey, apiProvider, activeParamKeys, lang, onRequestPhotoAccess, authUid, measureDevice, stripProducts, calibrationContribution, stripTester }) {
   const t = useT(lang || "fr");
@@ -12805,6 +14130,18 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
   const [copper, setCopper] = useState(measure?.copper ?? "");
   const [iron, setIron] = useState(measure?.iron ?? "");
   const [note, setNote] = useState(measure?.note || "");
+  // v1.100.0 — "Bandelette guidée" (gratuit, sans IA) : voir GuidedStripFlow.
+  const [showGuidedStrip, setShowGuidedStrip] = useState(false);
+  function handleGuidedStripComplete(paramValues) {
+    if (paramValues.pH !== undefined) setPH(String(paramValues.pH));
+    if (paramValues.fCl !== undefined) setFCl(String(paramValues.fCl));
+    if (paramValues.tCl !== undefined) setTCl(String(paramValues.tCl));
+    if (paramValues.tac !== undefined) setTac(String(paramValues.tac));
+    if (paramValues.cya !== undefined) setCya(String(paramValues.cya));
+    if (paramValues.hard !== undefined) setHard(String(paramValues.hard));
+    setMethod("bandelette");
+    setShowGuidedStrip(false);
+  }
   const [photos, setPhotos] = useState(
     measure?.photo ? [measure.photo] : (measure?.photos || [])
   );
@@ -13150,7 +14487,8 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
                 { point: crBest.borne_inf.point, valeur: crBest.borne_inf.valeur },
                 { point: crBest.borne_sup.point, valeur: crBest.borne_sup.valeur },
                 { tampon: crBest.tampon_hex, inf: crBest.borne_inf.hex, sup: crBest.borne_sup.hex },
-                allResults[best.photoIdx]?.zone_blanche?.point ?? null
+                allResults[best.photoIdx]?.zone_blanche?.point ?? null,
+                best.samplePoints?.padSizeFraction ?? null
               );
             } catch (e) {
               computed = null; // best-effort — repli silencieux sur la confiance IA
@@ -13221,7 +14559,8 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
                 { point: cr.borne_inf.point, valeur: cr.borne_inf.valeur },
                 { point: cr.borne_sup.point, valeur: cr.borne_sup.valeur },
                 { tampon: cr.tampon_hex, inf: cr.borne_inf.hex, sup: cr.borne_sup.hex },
-                allResults[bCand.photoIdx]?.zone_blanche?.point ?? null
+                allResults[bCand.photoIdx]?.zone_blanche?.point ?? null,
+                bCand.samplePoints?.padSizeFraction ?? null
               );
             } catch (e) {
               sampleComputed = null;
@@ -13707,10 +15046,37 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
           {analyzeError && <div style={{ ...styles.analyzeNoteError, marginTop: 8 }}>{analyzeError}</div>}
         </div>
       ) : (
-        <button style={styles.photoLockedBtn} onClick={onWantPremium}>
-          <Lock size={16} />
-          <span>{t("analyze_locked")}</span>
-        </button>
+        <div>
+          {/* v1.101.2 — "Bandelette guidée" : affiché quel que soit "method",
+              car en gratuit il n'existe aucune analyse photomètre (réservée
+              au Premium) — la seule alternative gratuite à la saisie manuelle
+              est donc toujours une lecture bandelette. Auparavant gated sur
+              method === "bandelette", ce qui masquait le bouton pour tout
+              bassin dont measureDevice par défaut n'était pas "bandelette". */}
+          <button
+            type="button"
+            onClick={() => setShowGuidedStrip(true)}
+            style={{
+              display: "flex", alignItems: "center", gap: 8, width: "100%", justifyContent: "center",
+              padding: "12px 14px", borderRadius: 12, border: "1px solid var(--brand-primary)",
+              background: "#fff", color: "var(--brand-primary)", fontWeight: 600, fontSize: 13.5,
+              cursor: "pointer", marginBottom: 8,
+            }}
+          >
+            🎯 {t("strip_guided_free_btn")}
+          </button>
+          <button style={styles.photoLockedBtn} onClick={onWantPremium}>
+            <Lock size={16} />
+            <span>{t("analyze_locked")}</span>
+          </button>
+        </div>
+      )}
+      {showGuidedStrip && (
+        <GuidedStripFlow
+          onClose={() => setShowGuidedStrip(false)}
+          onComplete={handleGuidedStripComplete}
+          lang={lang}
+        />
       )}
 
       {/* Note de fiabilité étoiles — affichée même si les photos ont été retirées */}
