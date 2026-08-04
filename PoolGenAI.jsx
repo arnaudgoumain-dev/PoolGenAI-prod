@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.101.3";
+const APP_VERSION = "1.106.1";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -260,6 +260,8 @@ const TRANSLATIONS = {
     quantity: "Quantité",
     effect_variation: "Effet (variation)",
     for_x_m3: "Pour X m³",
+    active_chlorine_percent_label: "% de chlore actif (optionnel)",
+    active_chlorine_percent_hint: "Indiqué sur l'étiquette du produit. Laisse vide si tu ne sais pas — le dosage est recalculé automatiquement s'il diffère de la référence.",
     wait_hours: "Délai d'attente avant le traitement suivant (heures)",
     container_size: "Taille du contenant",
     current_stock: "Stock actuel",
@@ -341,12 +343,36 @@ const TRANSLATIONS = {
     strip_guided_pick_model: "Quel modèle de bandelette utilises-tu ? (sélection temporaire — la reconnaissance par code-barres arrive bientôt)",
     strip_guided_choose_placeholder: "— Choisir —",
     strip_guided_no_models: "Aucun modèle connu pour l'instant.",
+    strip_guided_change_model_btn: "Changer",
+    strip_guided_unmatched_model_warning: "Modèle non reconnu — choisis-en un dans la liste, ou utilise \"Ajouter un modèle non référencé\" ci-dessous.",
+    strip_guided_add_model_btn: "Ajouter un modèle non référencé",
+    strip_guided_add_model_intro: "Envoie quelques photos de ton tube de bandelettes pour qu'on puisse l'ajouter à la liste des modèles reconnus.",
+    strip_guided_add_model_barcode_label: "Code-barres du tube",
+    strip_guided_add_model_barcode_hint: "Optionnel mais très utile : une photo nette du code-barres permettra une reconnaissance automatique future.",
+    strip_guided_add_model_tube_label: "Tube entier, marque bien visible",
+    strip_guided_add_model_tube_hint: "Le tube complet, avec le nom de la marque et du modèle lisible.",
+    strip_guided_add_model_scales_label: "Échelles de teintes",
+    strip_guided_add_model_scales_hint: "Une ou plusieurs photos des échelles de couleur (au dos du tube ou sur la notice) — prends plusieurs photos si toutes les échelles ne tiennent pas sur une seule image.",
+    strip_guided_add_model_add_scale_photo_btn: "Ajouter une photo",
+    strip_guided_add_model_remove_photo: "Retirer",
+    strip_guided_add_model_submit_btn: "Envoyer",
+    strip_guided_add_model_sending: "Envoi en cours…",
+    strip_guided_add_model_success: "Merci ! Tes photos ont bien été envoyées, on va les étudier pour ajouter ce modèle.",
+    strip_guided_add_model_error_prefix: "Erreur lors de l'envoi : ",
+    strip_guided_add_model_missing_tube: "Ajoute une photo du tube entier avant d'envoyer.",
+    strip_guided_add_model_missing_scale: "Ajoute au moins une photo d'échelle avant d'envoyer.",
+    strip_guided_scan_barcode_btn: "Scanner le code-barres",
+    strip_guided_barcode_scanning: "Analyse du code-barres…",
+    strip_guided_barcode_not_detected: "Code-barres non détecté. Réessaie avec une photo plus nette, ou choisis dans la liste.",
+    strip_guided_or_separator: "— ou —",
     strip_guided_checking_orientation: "Vérification du sens…",
     strip_guided_positioning: "Positionnement des tampons…",
     strip_guided_save_error_prefix: "Échec de l'enregistrement : ",
     strip_guided_saving: "Enregistrement…",
-    strip_guided_orientation_warning: "Le sens du tracé n'est pas clair. Repars du tampon proche de la zone de préhension (attendu : {bas}) jusqu'au tampon opposé (attendu : {haut}).",
+    strip_manual_placement_instruction: "La reconnaissance automatique des tampons n'a pas pu être faite pour cette bandelette. Fais glisser chaque repère (à gauche) jusqu'au tampon correspondant sur la photo.",
     strip_guided_not_connected: "Non connecté",
+    strip_guided_estimating: "Estimation des valeurs…",
+    strip_arrow_estimated_badge: "estimé",
     filtration_type: "Type de filtration",
     manage_stock_label: "Gestion du stock",
     manage_stock_desc: "Suit la consommation des produits et l\'affiche dans le rapport.",
@@ -493,6 +519,8 @@ const TRANSLATIONS = {
     continue_google: "Continuer avec Google",
     or: "ou",
     password: "Mot de passe",
+    show_password: "Afficher le mot de passe",
+    hide_password: "Masquer le mot de passe",
     no_account: "Pas encore de compte ? S'inscrire",
     already_account: "Déjà un compte ? Se connecter",
     forgot_password: "Mot de passe oublié ?",
@@ -1016,6 +1044,8 @@ const TRANSLATIONS = {
     quantity: "Quantity",
     effect_variation: "Effect (change)",
     for_x_m3: "Per X m³",
+    active_chlorine_percent_label: "% active chlorine (optional)",
+    active_chlorine_percent_hint: "Shown on the product label. Leave blank if unsure — the dose is recalculated automatically if it differs from the reference.",
     wait_hours: "Wait time before next treatment (hours)",
     container_size: "Container size",
     current_stock: "Current stock",
@@ -1095,12 +1125,36 @@ const TRANSLATIONS = {
     strip_guided_pick_model: "Which test strip model are you using? (temporary selection — barcode recognition is coming soon)",
     strip_guided_choose_placeholder: "— Choose —",
     strip_guided_no_models: "No known models yet.",
+    strip_guided_change_model_btn: "Change",
+    strip_guided_unmatched_model_warning: "Model not recognized — pick one from the list, or use \"Add an unlisted model\" below.",
+    strip_guided_add_model_btn: "Add an unlisted model",
+    strip_guided_add_model_intro: "Send a few photos of your test strip tube so we can add it to the list of recognized models.",
+    strip_guided_add_model_barcode_label: "Tube barcode",
+    strip_guided_add_model_barcode_hint: "Optional but very useful: a sharp photo of the barcode will enable automatic recognition in the future.",
+    strip_guided_add_model_tube_label: "Whole tube, brand clearly visible",
+    strip_guided_add_model_tube_hint: "The full tube, with the brand and model name readable.",
+    strip_guided_add_model_scales_label: "Color scales",
+    strip_guided_add_model_scales_hint: "One or more photos of the color scales (on the back of the tube or the leaflet) — take several photos if all scales don't fit in one image.",
+    strip_guided_add_model_add_scale_photo_btn: "Add a photo",
+    strip_guided_add_model_remove_photo: "Remove",
+    strip_guided_add_model_submit_btn: "Send",
+    strip_guided_add_model_sending: "Sending…",
+    strip_guided_add_model_success: "Thanks! Your photos were sent — we'll review them to add this model.",
+    strip_guided_add_model_error_prefix: "Error while sending: ",
+    strip_guided_add_model_missing_tube: "Add a photo of the whole tube before sending.",
+    strip_guided_add_model_missing_scale: "Add at least one scale photo before sending.",
+    strip_guided_scan_barcode_btn: "Scan the barcode",
+    strip_guided_barcode_scanning: "Scanning barcode…",
+    strip_guided_barcode_not_detected: "Barcode not detected. Try a sharper photo, or pick from the list.",
+    strip_guided_or_separator: "— or —",
     strip_guided_checking_orientation: "Checking direction…",
     strip_guided_positioning: "Positioning pads…",
     strip_guided_save_error_prefix: "Save failed: ",
     strip_guided_saving: "Saving…",
-    strip_guided_orientation_warning: "The direction of the trace isn't clear. Start again from the pad near the grip area (expected: {bas}) to the opposite pad (expected: {haut}).",
+    strip_manual_placement_instruction: "Automatic pad recognition wasn't possible for this strip. Drag each marker (on the left) onto its matching pad in the photo.",
     strip_guided_not_connected: "Not signed in",
+    strip_guided_estimating: "Estimating values…",
+    strip_arrow_estimated_badge: "estimated",
     filtration_type: "Filtration type",
     manage_stock_label: "Stock management",
     manage_stock_desc: "Tracks product consumption and displays it in the report.",
@@ -1242,6 +1296,8 @@ const TRANSLATIONS = {
     continue_google: "Continue with Google",
     or: "or",
     password: "Password",
+    show_password: "Show password",
+    hide_password: "Hide password",
     no_account: "No account? Sign up",
     already_account: "Already have an account? Sign in",
     forgot_password: "Forgot password?",
@@ -1762,6 +1818,8 @@ const TRANSLATIONS = {
     quantity: "Menge",
     effect_variation: "Wirkung (Änderung)",
     for_x_m3: "Pro X m³",
+    active_chlorine_percent_label: "% Aktivchlor (optional)",
+    active_chlorine_percent_hint: "Steht auf dem Produktetikett. Leer lassen, wenn unbekannt — die Dosis wird automatisch neu berechnet, falls abweichend von der Referenz.",
     wait_hours: "Wartezeit vor nächster Behandlung (Stunden)",
     container_size: "Behältergröße",
     current_stock: "Aktueller Lagerbestand",
@@ -1840,12 +1898,36 @@ const TRANSLATIONS = {
     strip_guided_pick_model: "Welches Teststreifenmodell verwendest du? (vorübergehende Auswahl — Barcode-Erkennung kommt bald)",
     strip_guided_choose_placeholder: "— Auswählen —",
     strip_guided_no_models: "Noch keine bekannten Modelle.",
+    strip_guided_change_model_btn: "Ändern",
+    strip_guided_unmatched_model_warning: "Modell nicht erkannt — wähle eines aus der Liste oder nutze unten \"Nicht gelistetes Modell hinzufügen\".",
+    strip_guided_add_model_btn: "Nicht gelistetes Modell hinzufügen",
+    strip_guided_add_model_intro: "Schick uns ein paar Fotos deiner Teststreifen-Dose, damit wir sie zur Liste der erkannten Modelle hinzufügen können.",
+    strip_guided_add_model_barcode_label: "Barcode der Dose",
+    strip_guided_add_model_barcode_hint: "Optional, aber sehr hilfreich: ein scharfes Foto des Barcodes ermöglicht künftig die automatische Erkennung.",
+    strip_guided_add_model_tube_label: "Ganze Dose, Marke gut sichtbar",
+    strip_guided_add_model_tube_hint: "Die komplette Dose, mit lesbarem Marken- und Modellnamen.",
+    strip_guided_add_model_scales_label: "Farbskalen",
+    strip_guided_add_model_scales_hint: "Ein oder mehrere Fotos der Farbskalen (auf der Rückseite der Dose oder der Packungsbeilage) — mach mehrere Fotos, wenn nicht alle Skalen auf ein Bild passen.",
+    strip_guided_add_model_add_scale_photo_btn: "Foto hinzufügen",
+    strip_guided_add_model_remove_photo: "Entfernen",
+    strip_guided_add_model_submit_btn: "Senden",
+    strip_guided_add_model_sending: "Wird gesendet…",
+    strip_guided_add_model_success: "Danke! Deine Fotos wurden gesendet — wir prüfen sie, um dieses Modell hinzuzufügen.",
+    strip_guided_add_model_error_prefix: "Fehler beim Senden: ",
+    strip_guided_add_model_missing_tube: "Füge ein Foto der ganzen Dose hinzu, bevor du sendest.",
+    strip_guided_add_model_missing_scale: "Füge mindestens ein Foto einer Skala hinzu, bevor du sendest.",
+    strip_guided_scan_barcode_btn: "Barcode scannen",
+    strip_guided_barcode_scanning: "Barcode wird analysiert…",
+    strip_guided_barcode_not_detected: "Barcode nicht erkannt. Versuch es mit einem schärferen Foto oder wähle aus der Liste.",
+    strip_guided_or_separator: "— oder —",
     strip_guided_checking_orientation: "Richtung wird geprüft…",
     strip_guided_positioning: "Tupfer werden positioniert…",
     strip_guided_save_error_prefix: "Speichern fehlgeschlagen: ",
     strip_guided_saving: "Wird gespeichert…",
-    strip_guided_orientation_warning: "Die Richtung des Strichs ist nicht eindeutig. Beginne erneut beim Tupfer nahe dem Griffbereich (erwartet: {bas}) bis zum gegenüberliegenden Tupfer (erwartet: {haut}).",
+    strip_manual_placement_instruction: "Die automatische Tupfer-Erkennung war für diesen Streifen nicht möglich. Ziehe jede Markierung (links) auf den passenden Tupfer im Foto.",
     strip_guided_not_connected: "Nicht angemeldet",
+    strip_guided_estimating: "Werte werden geschätzt…",
+    strip_arrow_estimated_badge: "geschätzt",
     filtration_type: "Filtrationsart",
     manage_stock_label: "Lagerverwaltung",
     manage_stock_desc: "Verfolgt den Produktverbrauch und zeigt ihn im Bericht an.",
@@ -1990,6 +2072,8 @@ const TRANSLATIONS = {
     continue_google: "Mit Google fortfahren",
     or: "oder",
     password: "Passwort",
+    show_password: "Passwort anzeigen",
+    hide_password: "Passwort verbergen",
     no_account: "Kein Konto? Registrieren",
     already_account: "Bereits ein Konto? Anmelden",
     forgot_password: "Passwort vergessen?",
@@ -2509,6 +2593,8 @@ const TRANSLATIONS = {
     quantity: "Quantità",
     effect_variation: "Effetto (variazione)",
     for_x_m3: "Per X m³",
+    active_chlorine_percent_label: "% di cloro attivo (opzionale)",
+    active_chlorine_percent_hint: "Indicato sull'etichetta del prodotto. Lascia vuoto se non lo conosci — il dosaggio viene ricalcolato automaticamente se diverso dal riferimento.",
     wait_hours: "Tempo di attesa prima del trattamento successivo (ore)",
     container_size: "Dimensione contenitore",
     current_stock: "Stock attuale",
@@ -2587,12 +2673,36 @@ const TRANSLATIONS = {
     strip_guided_pick_model: "Quale modello di striscia reattiva usi? (selezione temporanea — il riconoscimento tramite codice a barre arriva presto)",
     strip_guided_choose_placeholder: "— Scegli —",
     strip_guided_no_models: "Nessun modello noto per ora.",
+    strip_guided_change_model_btn: "Cambia",
+    strip_guided_unmatched_model_warning: "Modello non riconosciuto — scegline uno dalla lista, oppure usa \"Aggiungi un modello non elencato\" qui sotto.",
+    strip_guided_add_model_btn: "Aggiungi un modello non elencato",
+    strip_guided_add_model_intro: "Invia alcune foto del tuo tubo di strisce reattive per aggiungerlo alla lista dei modelli riconosciuti.",
+    strip_guided_add_model_barcode_label: "Codice a barre del tubo",
+    strip_guided_add_model_barcode_hint: "Facoltativo ma molto utile: una foto nitida del codice a barre permetterà il riconoscimento automatico in futuro.",
+    strip_guided_add_model_tube_label: "Tubo intero, marchio ben visibile",
+    strip_guided_add_model_tube_hint: "Il tubo completo, con il nome del marchio e del modello leggibile.",
+    strip_guided_add_model_scales_label: "Scale dei colori",
+    strip_guided_add_model_scales_hint: "Una o più foto delle scale dei colori (sul retro del tubo o nel foglietto illustrativo) — scatta più foto se non tutte le scale entrano in una sola immagine.",
+    strip_guided_add_model_add_scale_photo_btn: "Aggiungi una foto",
+    strip_guided_add_model_remove_photo: "Rimuovi",
+    strip_guided_add_model_submit_btn: "Invia",
+    strip_guided_add_model_sending: "Invio in corso…",
+    strip_guided_add_model_success: "Grazie! Le tue foto sono state inviate — le esamineremo per aggiungere questo modello.",
+    strip_guided_add_model_error_prefix: "Errore durante l'invio: ",
+    strip_guided_add_model_missing_tube: "Aggiungi una foto del tubo intero prima di inviare.",
+    strip_guided_add_model_missing_scale: "Aggiungi almeno una foto di una scala prima di inviare.",
+    strip_guided_scan_barcode_btn: "Scansiona il codice a barre",
+    strip_guided_barcode_scanning: "Analisi del codice a barre…",
+    strip_guided_barcode_not_detected: "Codice a barre non rilevato. Riprova con una foto più nitida, oppure scegli dalla lista.",
+    strip_guided_or_separator: "— oppure —",
     strip_guided_checking_orientation: "Verifica del verso…",
     strip_guided_positioning: "Posizionamento dei tamponi…",
     strip_guided_save_error_prefix: "Salvataggio fallito: ",
     strip_guided_saving: "Salvataggio…",
-    strip_guided_orientation_warning: "Il verso del tracciato non è chiaro. Riparti dal tampone vicino alla zona di presa (atteso: {bas}) fino al tampone opposto (atteso: {haut}).",
+    strip_manual_placement_instruction: "Il riconoscimento automatico dei tamponi non è stato possibile per questa striscia. Trascina ogni segno (a sinistra) sul tampone corrispondente nella foto.",
     strip_guided_not_connected: "Non connesso",
+    strip_guided_estimating: "Stima dei valori…",
+    strip_arrow_estimated_badge: "stimato",
     filtration_type: "Tipo di filtrazione",
     manage_stock_label: "Gestione stock",
     manage_stock_desc: "Tiene traccia del consumo dei prodotti e lo mostra nel rapporto.",
@@ -2734,6 +2844,8 @@ const TRANSLATIONS = {
     continue_google: "Continua con Google",
     or: "o",
     password: "Password",
+    show_password: "Mostra password",
+    hide_password: "Nascondi password",
     no_account: "Nessun account? Registrati",
     already_account: "Hai già un account? Accedi",
     forgot_password: "Password dimenticata?",
@@ -3253,6 +3365,8 @@ const TRANSLATIONS = {
     quantity: "Cantidad",
     effect_variation: "Efecto (variación)",
     for_x_m3: "Por X m³",
+    active_chlorine_percent_label: "% de cloro activo (opcional)",
+    active_chlorine_percent_hint: "Indicado en la etiqueta del producto. Déjalo vacío si no lo sabes — la dosis se recalcula automáticamente si difiere de la referencia.",
     wait_hours: "Tiempo de espera antes del siguiente tratamiento (horas)",
     container_size: "Tamaño del envase",
     current_stock: "Stock actual",
@@ -3331,12 +3445,36 @@ const TRANSLATIONS = {
     strip_guided_pick_model: "¿Qué modelo de tira reactiva usas? (selección temporal — el reconocimiento por código de barras llega pronto)",
     strip_guided_choose_placeholder: "— Elegir —",
     strip_guided_no_models: "Ningún modelo conocido por ahora.",
+    strip_guided_change_model_btn: "Cambiar",
+    strip_guided_unmatched_model_warning: "Modelo no reconocido — elige uno de la lista, o usa \"Añadir un modelo no listado\" abajo.",
+    strip_guided_add_model_btn: "Añadir un modelo no listado",
+    strip_guided_add_model_intro: "Envía algunas fotos de tu tubo de tiras reactivas para poder añadirlo a la lista de modelos reconocidos.",
+    strip_guided_add_model_barcode_label: "Código de barras del tubo",
+    strip_guided_add_model_barcode_hint: "Opcional pero muy útil: una foto nítida del código de barras permitirá el reconocimiento automático en el futuro.",
+    strip_guided_add_model_tube_label: "Tubo entero, marca bien visible",
+    strip_guided_add_model_tube_hint: "El tubo completo, con el nombre de la marca y el modelo legibles.",
+    strip_guided_add_model_scales_label: "Escalas de color",
+    strip_guided_add_model_scales_hint: "Una o más fotos de las escalas de color (en el reverso del tubo o en el prospecto) — toma varias fotos si no caben todas las escalas en una sola imagen.",
+    strip_guided_add_model_add_scale_photo_btn: "Añadir una foto",
+    strip_guided_add_model_remove_photo: "Quitar",
+    strip_guided_add_model_submit_btn: "Enviar",
+    strip_guided_add_model_sending: "Enviando…",
+    strip_guided_add_model_success: "¡Gracias! Tus fotos se han enviado — las revisaremos para añadir este modelo.",
+    strip_guided_add_model_error_prefix: "Error al enviar: ",
+    strip_guided_add_model_missing_tube: "Añade una foto del tubo entero antes de enviar.",
+    strip_guided_add_model_missing_scale: "Añade al menos una foto de escala antes de enviar.",
+    strip_guided_scan_barcode_btn: "Escanear el código de barras",
+    strip_guided_barcode_scanning: "Analizando el código de barras…",
+    strip_guided_barcode_not_detected: "Código de barras no detectado. Prueba con una foto más nítida, o elige de la lista.",
+    strip_guided_or_separator: "— o —",
     strip_guided_checking_orientation: "Comprobando el sentido…",
     strip_guided_positioning: "Posicionando los tampones…",
     strip_guided_save_error_prefix: "Error al guardar: ",
     strip_guided_saving: "Guardando…",
-    strip_guided_orientation_warning: "El sentido del trazo no está claro. Vuelve a empezar desde el tampón cerca de la zona de agarre (esperado: {bas}) hasta el tampón opuesto (esperado: {haut}).",
+    strip_manual_placement_instruction: "No fue posible el reconocimiento automático de los tampones para esta tira. Arrastra cada marca (a la izquierda) hasta el tampón correspondiente en la foto.",
     strip_guided_not_connected: "No conectado",
+    strip_guided_estimating: "Estimando los valores…",
+    strip_arrow_estimated_badge: "estimado",
     filtration_type: "Tipo de filtración",
     manage_stock_label: "Gestión de stock",
     manage_stock_desc: "Hace seguimiento del consumo de productos y lo muestra en el informe.",
@@ -3478,6 +3616,8 @@ const TRANSLATIONS = {
     continue_google: "Continuar con Google",
     or: "o",
     password: "Contraseña",
+    show_password: "Mostrar contraseña",
+    hide_password: "Ocultar contraseña",
     no_account: "¿Sin cuenta? Regístrate",
     already_account: "¿Ya tienes cuenta? Inicia sesión",
     forgot_password: "¿Olvidaste tu contraseña?",
@@ -3997,6 +4137,8 @@ const TRANSLATIONS = {
     quantity: "Quantidade",
     effect_variation: "Efeito (variação)",
     for_x_m3: "Por X m³",
+    active_chlorine_percent_label: "% de cloro ativo (opcional)",
+    active_chlorine_percent_hint: "Indicado no rótulo do produto. Deixe em branco se não souber — a dose é recalculada automaticamente se diferir da referência.",
     wait_hours: "Tempo de espera antes do próximo tratamento (horas)",
     container_size: "Tamanho do recipiente",
     current_stock: "Estoque atual",
@@ -4075,12 +4217,36 @@ const TRANSLATIONS = {
     strip_guided_pick_model: "Qual modelo de tira de teste você usa? (seleção temporária — o reconhecimento por código de barras chega em breve)",
     strip_guided_choose_placeholder: "— Escolher —",
     strip_guided_no_models: "Nenhum modelo conhecido por enquanto.",
+    strip_guided_change_model_btn: "Alterar",
+    strip_guided_unmatched_model_warning: "Modelo não reconhecido — escolhe um da lista, ou usa \"Adicionar um modelo não listado\" abaixo.",
+    strip_guided_add_model_btn: "Adicionar um modelo não listado",
+    strip_guided_add_model_intro: "Envia algumas fotos do teu tubo de tiras de teste para podermos adicioná-lo à lista de modelos reconhecidos.",
+    strip_guided_add_model_barcode_label: "Código de barras do tubo",
+    strip_guided_add_model_barcode_hint: "Opcional mas muito útil: uma foto nítida do código de barras permitirá o reconhecimento automático no futuro.",
+    strip_guided_add_model_tube_label: "Tubo inteiro, marca bem visível",
+    strip_guided_add_model_tube_hint: "O tubo completo, com o nome da marca e do modelo legível.",
+    strip_guided_add_model_scales_label: "Escalas de cor",
+    strip_guided_add_model_scales_hint: "Uma ou mais fotos das escalas de cor (na parte de trás do tubo ou na bula) — tira várias fotos se nem todas as escalas couberem numa só imagem.",
+    strip_guided_add_model_add_scale_photo_btn: "Adicionar uma foto",
+    strip_guided_add_model_remove_photo: "Remover",
+    strip_guided_add_model_submit_btn: "Enviar",
+    strip_guided_add_model_sending: "A enviar…",
+    strip_guided_add_model_success: "Obrigado! As tuas fotos foram enviadas — vamos analisá-las para adicionar este modelo.",
+    strip_guided_add_model_error_prefix: "Erro ao enviar: ",
+    strip_guided_add_model_missing_tube: "Adiciona uma foto do tubo inteiro antes de enviar.",
+    strip_guided_add_model_missing_scale: "Adiciona pelo menos uma foto de escala antes de enviar.",
+    strip_guided_scan_barcode_btn: "Escanear o código de barras",
+    strip_guided_barcode_scanning: "A analisar o código de barras…",
+    strip_guided_barcode_not_detected: "Código de barras não detetado. Tenta com uma foto mais nítida, ou escolhe da lista.",
+    strip_guided_or_separator: "— ou —",
     strip_guided_checking_orientation: "Verificando o sentido…",
     strip_guided_positioning: "Posicionando os tampões…",
     strip_guided_save_error_prefix: "Falha ao salvar: ",
     strip_guided_saving: "Salvando…",
-    strip_guided_orientation_warning: "O sentido do traço não está claro. Comece novamente a partir do tampão perto da área de preensão (esperado: {bas}) até o tampão oposto (esperado: {haut}).",
+    strip_manual_placement_instruction: "Não foi possível o reconhecimento automático dos tampões para esta tira. Arrasta cada marca (à esquerda) até o tampão correspondente na foto.",
     strip_guided_not_connected: "Não conectado",
+    strip_guided_estimating: "Estimando os valores…",
+    strip_arrow_estimated_badge: "estimado",
     filtration_type: "Tipo de filtração",
     manage_stock_label: "Gestão de estoque",
     manage_stock_desc: "Rastreia o consumo de produtos e o exibe no relatório.",
@@ -4219,6 +4385,8 @@ const TRANSLATIONS = {
     continue_google: "Continuar com Google",
     or: "ou",
     password: "Senha",
+    show_password: "Mostrar senha",
+    hide_password: "Ocultar senha",
     no_account: "Sem conta? Cadastre-se",
     already_account: "Já tem conta? Entrar",
     forgot_password: "Esqueceu a senha?",
@@ -4526,6 +4694,16 @@ const LANGUAGE_OPTIONS = [
   { value: "pt", label: "Português" },
 ];
 
+// v1.103.0 — Comptes de test/QA exemptés de la limite quotidienne de
+// mesures en gratuit (voir blockedByLimit dans PoolGenAIApp) — ex.
+// test-free@poolgenai.local, utilisé pour valider des flux gratuits
+// (bandelette guidée...) sans dépendre du Premium. Liste statique,
+// modifiable uniquement par redéploiement : usage interne QA, pas un
+// mécanisme de gestion d'abonnement/entitlement.
+const UNLIMITED_DAILY_MEASURE_EMAILS = ["test-free@poolgenai.local"];
+function hasUnlimitedDailyMeasures(email) {
+  return !!email && UNLIMITED_DAILY_MEASURE_EMAILS.includes(email.toLowerCase());
+}
 
 // Tous les paramètres possibles, tous traitements confondus
 const TARGETS = {
@@ -4685,6 +4863,13 @@ const DEFAULT_PRODUCTS = [
     containerAmount: 1000,
     containerUnit: "kg",
     stockPercent: 100,
+    // v1.102.0 — % de chlore actif de référence sur lequel doseAmount/
+    // effectAmount ci-dessus sont calibrés (hypochlorite de calcium type
+    // Chloryte, Bayrol : 70% de chlore actif — source : bayrol.com/products/
+    // manual-treatment/chloryte). Sert d'ancre pour CHLORE_REFERENCE_ACTIVE_PERCENT
+    // (voir scaleDoseForActiveChlorine) : un produit utilisateur avec un %
+    // différent voit son dosage recalculé proportionnellement.
+    activeChlorinePercent: 70,
     isDefault: true,
   },
   {
@@ -4956,6 +5141,19 @@ const DEFAULT_WAIT_HOURS = {
   "floculant": 24,
   "sel": 24,
 };
+
+// v1.102.0 — % de chlore actif de référence sur lequel doseAmount/effectAmount
+// du produit par défaut de l'action "chlore" sont calibrés (voir
+// DEFAULT_PRODUCTS "chlore-choc"). Un produit réel de l'utilisateur avec un %
+// différent (renseigné dans ProductModal) voit son dosage recalculé au
+// prorata — pas une formule chimique absolue, une mise à l'échelle relative
+// à cette référence, pour rester cohérent avec le système doseAmount/
+// effectAmount existant plutôt que de le remplacer.
+const CHLORE_REFERENCE_ACTIVE_PERCENT = 70;
+function scaleDoseForActiveChlorine(dose, doseSrc) {
+  if (dose == null || !doseSrc || typeof doseSrc.activeChlorinePercent !== "number" || doseSrc.activeChlorinePercent <= 0) return dose;
+  return Math.round(dose * (CHLORE_REFERENCE_ACTIVE_PERCENT / doseSrc.activeChlorinePercent));
+}
 
 // v1.50.0 — Actions dont la dose ne varie pas en fonction d'un écart mesuré
 // (contrairement à ph-, chlore, tac+... qui utilisent effectAmount/effectPer
@@ -5334,6 +5532,47 @@ function applyGrayWorldGain(color, gain) {
   };
 }
 
+// v1.102.0 — Correction de dominante LOCALE par tampon (flux "bandelette
+// guidée" gratuit) : contrairement à computeDeterministicStripReading (un
+// seul point neutre pour toute la photo, via zone_prehension/zone_blanche),
+// chaque tampon a ici sa PROPRE zone de référence — un patch de fond/
+// plastique échantillonné juste à côté de lui, perpendiculairement à l'axe
+// de la bandelette. Corrige les gradients d'éclairage/ombre qui varient le
+// long de la languette, qu'un point neutre unique et éloigné ne capterait
+// pas. Même hypothèse gray-world que computeGrayWorldGain (le patch est
+// supposé neutre R≈G≈B) — seule la source du point de référence change.
+function stripLineNormal(padPositions) {
+  if (!Array.isArray(padPositions) || padPositions.length < 2) return null;
+  const [x0, y0] = padPositions[0];
+  const [x1, y1] = padPositions[padPositions.length - 1];
+  const len = Math.hypot(x1 - x0, y1 - y0);
+  if (len === 0) return null;
+  return { nx: -(y1 - y0) / len, ny: (x1 - x0) / len };
+}
+
+// Best-effort : renvoie rawColor inchangée si la géométrie ne permet pas de
+// placer un patch voisin dans le cadre (bandelette collée à un bord de la
+// photo, par exemple) plutôt que d'échouer tout le calcul.
+async function sampleLocallyCorrectedPadColor(dataUrl, padPositions, index, dims, boxSize, rawColor) {
+  const normal = stripLineNormal(padPositions);
+  if (!normal || !dims) return rawColor;
+  const offsetPx = boxSize * 1.5;
+  let px = padPositions[index][0] + (normal.nx * offsetPx) / dims.naturalWidth;
+  let py = padPositions[index][1] + (normal.ny * offsetPx) / dims.naturalHeight;
+  if (px < 0.02 || px > 0.98 || py < 0.02 || py > 0.98) {
+    px = padPositions[index][0] - (normal.nx * offsetPx) / dims.naturalWidth;
+    py = padPositions[index][1] - (normal.ny * offsetPx) / dims.naturalHeight;
+  }
+  if (px < 0 || px > 1 || py < 0 || py > 1) return rawColor;
+  try {
+    const patchColor = await sampleColorAt(dataUrl, px, py, Math.max(4, Math.round(boxSize * 0.6)));
+    const gain = computeGrayWorldGain(patchColor);
+    return gain ? applyGrayWorldGain(rawColor, gain) : rawColor;
+  } catch (e) {
+    return rawColor;
+  }
+}
+
 function pixelAt(data, width, x, y) {
   const i = (y * width + x) * 4;
   return { r: data[i], g: data[i + 1], b: data[i + 2] };
@@ -5628,17 +5867,18 @@ async function resolveStripMarkOrientation(photoDataUrl, startPoint, endPoint, s
 // v1.100.0 — Dernière étape du flux "bandelette guidée" : échantillonne la
 // couleur réelle de chaque tampon (position déjà calculée) et l'associe à
 // la valeur choisie par l'utilisateur via StripArrowReader, dans
-// calibrationPoints. PAS de correction de dominante ici (contrairement au
-// calcul déterministe payant et au mécanisme "Lot B") : ce flux marque
-// seulement la zone à tampons, jamais la zone de préhension (exclue par
-// construction du geste, voir StripMarker) — donc pas de référence neutre
-// disponible pour l'instant. Amélioration à considérer plus tard, pas
-// bloquante pour une première version fonctionnelle.
-// PAS de "referenceColor" (champ du mécanisme "Lot B", une case de
-// référence photographiée qui n'existe pas dans ce flux — pas d'échelle
-// imprimée dans le cadre). Champs volontairement limités à ceux autorisés
-// par firestore.rules (allow create ... hasOnly([...])) : tout champ
-// supplémentaire ferait échouer l'écriture silencieusement côté client.
+// calibrationPoints.
+// v1.102.0 — Correction de dominante LOCALE désormais appliquée avant
+// stockage (voir sampleLocallyCorrectedPadColor) : "sampledColor" est déjà
+// corrigé, comme le fait le mécanisme "Lot B" côté Premium quand une
+// zone_blanche est disponible — même champ, même sémantique, donc
+// aggregateCalibrationModels (Worker) continue de fonctionner sans
+// modification. PAS de "referenceColor" (champ du mécanisme "Lot B", une
+// case de référence photographiée qui n'existe pas dans ce flux — pas
+// d'échelle imprimée dans le cadre). Champs volontairement limités à ceux
+// autorisés par firestore.rules (allow create ... hasOnly([...])) : tout
+// champ supplémentaire ferait échouer l'écriture silencieusement côté
+// client.
 async function sampleAndStoreStripCalibrationPoints({ photoDataUrl, stripModel, results, padPositions }) {
   const normalizedModel = normalizeStripModel(stripModel);
   const errors = [];
@@ -5660,10 +5900,13 @@ async function sampleAndStoreStripCalibrationPoints({ photoDataUrl, stripModel, 
         ? Math.max(4, Math.round(estimatePadSpacingPx(padPositions, dims, padIndex) * 0.5))
         : 8;
       const sample = await sampleColorAndQuality(photoDataUrl, padPoint[0], padPoint[1], colorBoxSize);
+      const correctedColor = (dims && typeof padIndex === "number" && Array.isArray(padPositions))
+        ? await sampleLocallyCorrectedPadColor(photoDataUrl, padPositions, padIndex, dims, colorBoxSize, sample.color)
+        : sample.color;
       await FB.addCalibrationPoint({
         stripModel: normalizedModel,
         param,
-        sampledColor: sample.color,
+        sampledColor: correctedColor,
         trueValue: value,
         capturedAt: new Date().toISOString(),
         sharpness: sample.sharpness,
@@ -6566,6 +6809,22 @@ async function signalUnrecognizedStripModel({ idToken, note }) {
   return res.json();
 }
 
+// v1.105.0 — Soumission de photos pour un modèle de bandelette non
+// référencé (voir AddStripModelModal) : contrairement à
+// signalUnrecognizedStripModel (compteur agrégé, sans photo), envoie les
+// photos elles-mêmes au Worker pour qu'Arnaud crée la fiche stripModels
+// manuellement. photos: [{ role: "barcode"|"tube"|"echelle", photoBase64 }].
+async function submitStripModelPhotos({ idToken, photos }) {
+  const res = await fetch(`${PROXY_BASE_URL}/strip-model-submission`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+    body: JSON.stringify({ photos }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Échec de l'envoi (${res.status})`);
+  return data;
+}
+
 // v1.100.0 — stripModels/calibrationModels/config (seuils de confiance)
 // servis par le Worker plutôt que lus directement en Firestore : ces
 // collections étaient lisibles par tout compte authentifié (voir
@@ -7052,6 +7311,10 @@ const FB = {
   getCalibrationModel: async (idToken, stripModel, param) => {
     return getStripCalibrationModel({ idToken, stripModel, param });
   },
+  // v1.105.0 — Voir submitStripModelPhotos.
+  submitStripModelPhotos: async (idToken, photos) => {
+    return submitStripModelPhotos({ idToken, photos });
+  },
   // v1.97.4 — Échantillons de confiance bandelette (spec bandelettes) :
   // collection RACINE, create-only, un document par paramètre analysé en
   // mode bandelette (déterminé ou non). Contrairement à calibrationPoints,
@@ -7142,6 +7405,7 @@ function LoginScreen({ lang, onSkip, onConsentChange, detectedLang }) {
   const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState("");
   const [pwd2, setPwd2] = useState("");
+  const [showPwd, setShowPwd] = useState(false);
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [busy, setBusy] = useState(false);
@@ -7445,12 +7709,22 @@ By creating an account, the user acknowledges having read this document in full 
             {mode !== "reset" && (
               <>
                 <FieldLabel required style={{ fontSize: 12, fontWeight: 600, color: "var(--brand-text-secondary)", display: "block", marginBottom: 4 }}>{t("password")}</FieldLabel>
-                <input
-                  type="password" value={pwd} onChange={e => setPwd(e.target.value)}
-                  style={{ width: "100%", padding: "11px 14px", borderRadius: 10, border: "1.5px solid #d0e4f5", fontSize: 14, marginBottom: 10, boxSizing: "border-box" }}
-                  placeholder={mode === "signup" ? t("pwd_min6") : "••••••••"}
-                  onKeyDown={e => e.key === "Enter" && mode === "login" && handleSubmit()}
-                />
+                <div style={{ position: "relative", marginBottom: 10 }}>
+                  <input
+                    type={showPwd ? "text" : "password"} value={pwd} onChange={e => setPwd(e.target.value)}
+                    style={{ width: "100%", padding: "11px 44px 11px 14px", borderRadius: 10, border: "1.5px solid #d0e4f5", fontSize: 14, boxSizing: "border-box" }}
+                    placeholder={mode === "signup" ? t("pwd_min6") : "••••••••"}
+                    onKeyDown={e => e.key === "Enter" && mode === "login" && handleSubmit()}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPwd(v => !v)}
+                    aria-label={showPwd ? t("hide_password") : t("show_password")}
+                    style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", border: "none", background: "none", cursor: "pointer", padding: 4, display: "flex", color: "var(--brand-text-secondary)" }}
+                  >
+                    {showPwd ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </>
             )}
 
@@ -9317,7 +9591,7 @@ function PoolGenAIApp() {
     const activeIds = new Set(activePools.map((p) => p.id));
     return measures.filter((m) => activeIds.has(m.poolId || "default"));
   }, [measures, activePools]);
-  const blockedByLimit = !effectiveIsPremium && hasMeasureToday(visibleMeasuresForLimit);
+  const blockedByLimit = !effectiveIsPremium && hasMeasureToday(visibleMeasuresForLimit) && !hasUnlimitedDailyMeasures(authUser?.email);
 
   const tFn = (key, vars) => {
     const dict = TRANSLATIONS[lang] || TRANSLATIONS.fr;
@@ -11988,7 +12262,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       const prod = findProduct("chlore");
       const dp = defaultProd("chlore");
       const doseSrc = prod || dp;
-      const computedDose = doseSrc ? Math.round(doseSrc.doseAmount * (volume / doseSrc.effectPer) * (diff / doseSrc.effectAmount)) : null;
+      const computedDose = doseSrc ? scaleDoseForActiveChlorine(Math.round(doseSrc.doseAmount * (volume / doseSrc.effectPer) * (diff / doseSrc.effectAmount)), doseSrc) : null;
       steps.push({
         action: "chlore",
         title: _("reco_cl_combined", { val: combined.toFixed(2) }),
@@ -12011,7 +12285,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       const prod = findProduct("chlore");
       const dp = defaultProd("chlore");
       const doseSrc = prod || dp;
-      const computedDose = doseSrc ? Math.round(doseSrc.doseAmount * (volume / doseSrc.effectPer) * (diff / doseSrc.effectAmount)) : null;
+      const computedDose = doseSrc ? scaleDoseForActiveChlorine(Math.round(doseSrc.doseAmount * (volume / doseSrc.effectPer) * (diff / doseSrc.effectAmount)), doseSrc) : null;
       steps.push({
         action: "chlore",
         title: _("reco_cl_low", { val: fCl }),
@@ -13274,7 +13548,7 @@ function drawStripMagnifier(ctx, canvas, img, pt, color) {
   ctx.stroke();
 }
 
-function StripMarker({ photoDataUrl, onConfirm, onCancel, orientationWarning, lang }) {
+function StripMarker({ photoDataUrl, onConfirm, onCancel, lang }) {
   const t = useT(lang || "fr");
   const canvasRef = useRef(null);
   const imgRef = useRef(null);
@@ -13399,15 +13673,9 @@ function StripMarker({ photoDataUrl, onConfirm, onCancel, orientationWarning, la
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      {orientationWarning ? (
-        <div style={{ fontSize: 13, color: "#8a5a00", background: "#fff4e0", border: "1px solid #f0c675", borderRadius: 8, padding: "8px 12px" }}>
-          ⚠ {orientationWarning}
-        </div>
-      ) : (
-        <div style={{ fontSize: 13, color: "var(--brand-text-strong)", background: "#eef6f3", border: "1px solid #b9dcd0", borderRadius: 8, padding: "8px 12px" }}>
-          {t("strip_marker_instruction")}
-        </div>
-      )}
+      <div style={{ fontSize: 13, color: "var(--brand-text-strong)", background: "#eef6f3", border: "1px solid #b9dcd0", borderRadius: 8, padding: "8px 12px" }}>
+        {t("strip_marker_instruction")}
+      </div>
       <div style={{ position: "relative", width: "100%", borderRadius: 10, overflow: "hidden", background: "#111", touchAction: "none" }}>
         <canvas
           ref={canvasRef}
@@ -13635,6 +13903,156 @@ function StripPadPreview({ photoDataUrl, padPositions, paramOrder, onConfirm, on
   );
 }
 
+// v1.105.1 — Repli quand la détection automatique du sens de la bandelette
+// est ambiguë (voir handleMarkConfirm) : plutôt que de redemander le même
+// tracé (fondé sur l'heuristique de couleur qui vient justement d'échouer,
+// voir resolveStripMarkOrientation), bascule sur un placement 100% manuel —
+// un repère par paramètre, empilés au bord gauche de la photo, que
+// l'utilisateur fait glisser un par un sur le bon tampon. Même mécanique de
+// glisser-déposer et de loupe que StripPadPreview, mais sans position de
+// départ devinée (aucune ligne, aucune interpolation) : cette fois, aucune
+// heuristique n'intervient, juste le repérage visuel de l'utilisateur.
+function StripManualPadPlacement({ photoDataUrl, paramOrder, initialPositions, onConfirm, onCancel, lang }) {
+  const t = useT(lang || "fr");
+  const canvasRef = useRef(null);
+  const imgRef = useRef(null);
+  const stateRef = useRef({ points: null, dragging: null });
+
+  useEffect(() => {
+    const img = new Image();
+    img.onload = () => {
+      imgRef.current = img;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const maxDisplay = 640;
+      const scale = Math.min(1, maxDisplay / img.naturalWidth);
+      canvas.width = Math.round(img.naturalWidth * scale);
+      canvas.height = Math.round(img.naturalHeight * scale);
+      const n = paramOrder.length;
+      const marginX = canvas.width * 0.08;
+      // v1.105.1 — Réouverture depuis "Corriger les repères" (voir
+      // GuidedStripFlow.manualPlacementIsCorrection) : reprend les positions
+      // déjà placées plutôt que de tout réinitialiser à la pile de gauche.
+      const points = (Array.isArray(initialPositions) && initialPositions.length === n)
+        ? initialPositions.map(([nx, ny]) => ({ x: nx * canvas.width, y: ny * canvas.height }))
+        : paramOrder.map((_, i) => ({ x: marginX, y: canvas.height * ((i + 1) / (n + 1)) }));
+      stateRef.current = { points, dragging: null };
+      draw();
+    };
+    img.src = photoDataUrl;
+    // eslint-disable-next-line
+  }, [photoDataUrl, paramOrder, initialPositions]);
+
+  function canvasPoint(e) {
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+      x: Math.max(0, Math.min(canvas.width, (e.clientX - rect.left) * scaleX)),
+      y: Math.max(0, Math.min(canvas.height, (e.clientY - rect.top) * scaleY)),
+    };
+  }
+
+  function handleRadius() {
+    const { points } = stateRef.current;
+    if (!points || points.length < 2) return 22;
+    let minDist = Infinity;
+    for (let i = 1; i < points.length; i++) minDist = Math.min(minDist, distPt(points[i], points[i - 1]));
+    return Math.max(14, Math.min(28, minDist * 0.5));
+  }
+
+  function draw() {
+    const canvas = canvasRef.current;
+    const img = imgRef.current;
+    const { points, dragging } = stateRef.current;
+    if (!canvas || !img || !points) return;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    points.forEach((pt, i) => {
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 11, 0, Math.PI * 2);
+      ctx.fillStyle = dragging === i ? "rgba(61,219,217,0.95)" : "rgba(255,255,255,0.92)";
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#0d1214";
+      ctx.stroke();
+      ctx.fillStyle = "#0d1214";
+      ctx.font = "bold 10px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText((paramOrder && paramOrder[i]) || String(i + 1), pt.x, pt.y);
+    });
+    if (typeof dragging === "number" && points[dragging]) {
+      drawStripMagnifier(ctx, canvas, img, points[dragging], "#3ddbd9");
+    }
+  }
+
+  function handlePointerDown(e) {
+    const { points } = stateRef.current;
+    if (!points) return;
+    const p = canvasPoint(e);
+    const r = handleRadius();
+    let closest = -1, closestDist = Infinity;
+    points.forEach((pt, i) => {
+      const d = distPt(p, pt);
+      if (d < r && d < closestDist) { closest = i; closestDist = d; }
+    });
+    if (closest !== -1) {
+      stateRef.current.dragging = closest;
+      draw();
+    }
+    e.preventDefault();
+  }
+
+  function handlePointerMove(e) {
+    const st = stateRef.current;
+    if (typeof st.dragging !== "number") return;
+    st.points[st.dragging] = canvasPoint(e);
+    draw();
+    e.preventDefault();
+  }
+
+  function handlePointerUp() {
+    const st = stateRef.current;
+    if (typeof st.dragging !== "number") return;
+    st.dragging = null;
+    draw();
+  }
+
+  function handleConfirmClick() {
+    const canvas = canvasRef.current;
+    const { points } = stateRef.current;
+    if (!canvas || !points) return;
+    onConfirm(points.map((pt) => [pt.x / canvas.width, pt.y / canvas.height]));
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ fontSize: 13, color: "#8a5a00", background: "#fff4e0", border: "1px solid #f0c675", borderRadius: 8, padding: "8px 12px" }}>
+        ⚠ {t("strip_manual_placement_instruction")}
+      </div>
+      <div style={{ position: "relative", width: "100%", borderRadius: 10, overflow: "hidden", background: "#111", touchAction: "none" }}>
+        <canvas
+          ref={canvasRef}
+          style={{ display: "block", width: "100%", height: "auto" }}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+        />
+      </div>
+      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+        <button type="button" onClick={onCancel} style={{ border: "1px solid #ccc", background: "#fff", borderRadius: 8, padding: "8px 14px", cursor: "pointer" }}>
+          {t("strip_marker_restart")}
+        </button>
+        <button type="button" onClick={handleConfirmClick} style={{ border: "none", borderRadius: 8, padding: "8px 16px", cursor: "pointer", background: "var(--brand-primary)", color: "#fff", fontWeight: 600 }}>
+          {t("strip_pad_preview_confirm")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // v1.100.0 — Lecture bandelette par comparaison manuelle (flux "bandelette
 // guidée" gratuit, sans IA) : un widget flèches gauche/droite par
 // paramètre, parcourant les valeurs IMPRIMÉES de la fiche du modèle
@@ -13653,11 +14071,20 @@ function StripPadPreview({ photoDataUrl, padPositions, paramOrder, onConfirm, on
 // plutôt que de tout réinitialiser depuis StripMarker : un carré mal centré
 // se corrige à la loupe sans reprendre tout le tracé (voir
 // GuidedStripFlow, onCancel={() => setPadPreviewConfirmed(false)}).
-function StripArrowReader({ photoDataUrl, padPositions, paramOrder, echelles, onConfirm, onCancel, lang }) {
+function StripArrowReader({ photoDataUrl, padPositions, paramOrder, echelles, onConfirm, onCancel, lang, autoEstimates }) {
   const t = useT(lang || "fr");
+  // v1.102.0 — Position initiale = estimation automatique (calibrationModels
+  // communautaire, voir GuidedStripFlow.computeAutoEstimates) quand elle est
+  // disponible pour ce paramètre, sinon repli sur le milieu de l'échelle
+  // (comportement d'avant, ex. modèle jamais assez calibré). L'utilisateur
+  // garde toujours la main pour corriger via les flèches — aucune valeur
+  // n'est jamais imposée sans qu'il puisse la voir/l'ajuster.
   const [positions, setPositions] = useState(() =>
     paramOrder.map((key) => {
       const len = stripEchelleLength(echelles, key);
+      if (len > 0 && autoEstimates && autoEstimates[key] && typeof autoEstimates[key].index === "number") {
+        return Math.max(0, Math.min(len - 1, autoEstimates[key].index));
+      }
       return len > 0 ? Math.floor((len - 1) / 2) : 0;
     })
   );
@@ -13725,6 +14152,11 @@ function StripArrowReader({ photoDataUrl, padPositions, paramOrder, echelles, on
               style={{ width: 36, height: 36, borderRadius: 6, border: "1px solid #ccc", flex: "none" }}
             />
             <div style={{ minWidth: 40, fontWeight: 700, fontSize: 13 }}>{key}</div>
+            {autoEstimates && autoEstimates[key] && (
+              <div style={{ fontSize: 9.5, fontWeight: 700, color: "var(--brand-primary)", background: "#eef6f3", borderRadius: 5, padding: "2px 5px", flex: "none" }}>
+                {t("strip_arrow_estimated_badge")}
+              </div>
+            )}
             <button
               type="button"
               onClick={() => move(i, -1)}
@@ -13795,22 +14227,236 @@ const STRIP_FICHE_LABEL_TO_PARAM_KEY = { pH: "pH", Cl: "fCl", TCl: "tCl", Alc: "
 // traiter séparément, plus tard). Renvoie les valeurs choisies (traduites
 // en clés app via STRIP_FICHE_LABEL_TO_PARAM_KEY) à l'appelant, qui les
 // applique à la mesure réelle.
+// v1.102.0 — Libellé affiché/recherché pour un modèle connu (autocomplétion
+// StripModel), partagé entre l'input et sa datalist.
+function stripModelLabel(m) {
+  return `${m.nom_marque || m.modele_id}${m.code_produit ? ` (${m.code_produit})` : ""}`;
+}
+
+// v1.105.0 — Capture de photos pour un modèle de bandelette non référencé
+// (code-barres optionnel, tube entier + échelles de teintes requis, une ou
+// plusieurs photos d'échelle possibles). Envoie les photos au Worker (voir
+// handleStripModelSubmission côté poolgenai-proxy-dev.js) pour création
+// manuelle ultérieure de la fiche stripModels par Arnaud — pas de
+// parsing/création automatique ici (reste pour plus tard, cf. spec
+// bandelettes).
+function AddStripModelModal({ onClose, onSubmitted, lang, initialBarcodePhoto }) {
+  const t = useT(lang || "fr");
+  // v1.106.0 — Pré-rempli quand on arrive ici depuis un scan de code-barres
+  // sans correspondance (voir GuidedStripFlow.handleBarcodeScan) : la photo
+  // déjà prise sert directement de photo "barcode", pas besoin de la refaire.
+  const [barcodePhoto, setBarcodePhoto] = useState(initialBarcodePhoto || null);
+  const [tubePhoto, setTubePhoto] = useState(null);
+  const [scalePhotos, setScalePhotos] = useState([]);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState(null);
+  const [done, setDone] = useState(false);
+
+  const barcodeCameraRef = useRef(null);
+  const barcodeGalleryRef = useRef(null);
+  const tubeCameraRef = useRef(null);
+  const tubeGalleryRef = useRef(null);
+  const scaleCameraRef = useRef(null);
+  const scaleGalleryRef = useRef(null);
+
+  async function handleSingleFile(e, setter) {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    const dataUrl = await compressImageDataUrl(await fileToDataUrl(file));
+    setter(dataUrl);
+  }
+
+  async function handleScaleFile(e) {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    const dataUrl = await compressImageDataUrl(await fileToDataUrl(file));
+    setScalePhotos((prev) => [...prev, dataUrl]);
+  }
+
+  function stripDataUrlPrefix(dataUrl) {
+    const idx = dataUrl.indexOf(",");
+    return idx >= 0 ? dataUrl.slice(idx + 1) : dataUrl;
+  }
+
+  async function handleSubmit() {
+    setError(null);
+    if (!tubePhoto) { setError(t("strip_guided_add_model_missing_tube")); return; }
+    if (!scalePhotos.length) { setError(t("strip_guided_add_model_missing_scale")); return; }
+    setSending(true);
+    try {
+      const idToken = await window._fbAuth?.currentUser?.getIdToken();
+      if (!idToken) throw new Error(t("strip_guided_not_connected"));
+      const photos = [];
+      if (barcodePhoto) photos.push({ role: "barcode", photoBase64: stripDataUrlPrefix(barcodePhoto) });
+      photos.push({ role: "tube", photoBase64: stripDataUrlPrefix(tubePhoto) });
+      scalePhotos.forEach((p) => photos.push({ role: "echelle", photoBase64: stripDataUrlPrefix(p) }));
+      await FB.submitStripModelPhotos(idToken, photos);
+      setDone(true);
+    } catch (e) {
+      setError(`${t("strip_guided_add_model_error_prefix")}${e.message}`);
+    } finally {
+      setSending(false);
+    }
+  }
+
+  if (done) {
+    return (
+      <div>
+        <div style={{ fontSize: 13.5, marginBottom: 14 }}>✅ {t("strip_guided_add_model_success")}</div>
+        <button type="button" onClick={onSubmitted} style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer" }}>
+          {t("close")}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div style={{ fontSize: 13, marginBottom: 12, color: "var(--brand-text-strong)" }}>
+        {t("strip_guided_add_model_intro")}
+      </div>
+
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 12.5, fontWeight: 600, marginBottom: 4 }}>{t("strip_guided_add_model_barcode_label")}</div>
+        <div style={{ fontSize: 11.5, color: "#666", marginBottom: 6 }}>{t("strip_guided_add_model_barcode_hint")}</div>
+        {barcodePhoto ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <img src={barcodePhoto} alt="" style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 6 }} />
+            <button type="button" onClick={() => setBarcodePhoto(null)} style={{ fontSize: 12, color: "#c0392b", background: "none", border: "none", cursor: "pointer" }}>
+              {t("strip_guided_add_model_remove_photo")}
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: "flex", gap: 8 }}>
+            <button type="button" onClick={() => barcodeCameraRef.current && barcodeCameraRef.current.click()} style={{ flex: 1, padding: 8, borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer", fontSize: 12.5 }}>
+              📷 {t("camera_btn")}
+            </button>
+            <button type="button" onClick={() => barcodeGalleryRef.current && barcodeGalleryRef.current.click()} style={{ flex: 1, padding: 8, borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer", fontSize: 12.5 }}>
+              🖼️ {t("gallery_btn")}
+            </button>
+          </div>
+        )}
+        <input ref={barcodeCameraRef} type="file" accept="image/*" capture="environment" onChange={(e) => handleSingleFile(e, setBarcodePhoto)} style={{ display: "none" }} />
+        <input ref={barcodeGalleryRef} type="file" accept="image/*" onChange={(e) => handleSingleFile(e, setBarcodePhoto)} style={{ display: "none" }} />
+      </div>
+
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 12.5, fontWeight: 600, marginBottom: 4 }}>{t("strip_guided_add_model_tube_label")}</div>
+        <div style={{ fontSize: 11.5, color: "#666", marginBottom: 6 }}>{t("strip_guided_add_model_tube_hint")}</div>
+        {tubePhoto ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <img src={tubePhoto} alt="" style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 6 }} />
+            <button type="button" onClick={() => setTubePhoto(null)} style={{ fontSize: 12, color: "#c0392b", background: "none", border: "none", cursor: "pointer" }}>
+              {t("strip_guided_add_model_remove_photo")}
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: "flex", gap: 8 }}>
+            <button type="button" onClick={() => tubeCameraRef.current && tubeCameraRef.current.click()} style={{ flex: 1, padding: 8, borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer", fontSize: 12.5 }}>
+              📷 {t("camera_btn")}
+            </button>
+            <button type="button" onClick={() => tubeGalleryRef.current && tubeGalleryRef.current.click()} style={{ flex: 1, padding: 8, borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer", fontSize: 12.5 }}>
+              🖼️ {t("gallery_btn")}
+            </button>
+          </div>
+        )}
+        <input ref={tubeCameraRef} type="file" accept="image/*" capture="environment" onChange={(e) => handleSingleFile(e, setTubePhoto)} style={{ display: "none" }} />
+        <input ref={tubeGalleryRef} type="file" accept="image/*" onChange={(e) => handleSingleFile(e, setTubePhoto)} style={{ display: "none" }} />
+      </div>
+
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 12.5, fontWeight: 600, marginBottom: 4 }}>{t("strip_guided_add_model_scales_label")}</div>
+        <div style={{ fontSize: 11.5, color: "#666", marginBottom: 6 }}>{t("strip_guided_add_model_scales_hint")}</div>
+        {scalePhotos.length > 0 && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
+            {scalePhotos.map((p, i) => (
+              <div key={i} style={{ position: "relative" }}>
+                <img src={p} alt="" style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 6 }} />
+                <button
+                  type="button"
+                  onClick={() => setScalePhotos((prev) => prev.filter((_, idx) => idx !== i))}
+                  style={{ position: "absolute", top: -6, right: -6, width: 20, height: 20, borderRadius: "50%", border: "none", background: "#c0392b", color: "#fff", cursor: "pointer", fontSize: 12, lineHeight: "20px", padding: 0 }}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <div style={{ display: "flex", gap: 8 }}>
+          <button type="button" onClick={() => scaleCameraRef.current && scaleCameraRef.current.click()} style={{ flex: 1, padding: 8, borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer", fontSize: 12.5 }}>
+            📷 {t("strip_guided_add_model_add_scale_photo_btn")}
+          </button>
+          <button type="button" onClick={() => scaleGalleryRef.current && scaleGalleryRef.current.click()} style={{ flex: 1, padding: 8, borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer", fontSize: 12.5 }}>
+            🖼️ {t("gallery_btn")}
+          </button>
+        </div>
+        <input ref={scaleCameraRef} type="file" accept="image/*" capture="environment" onChange={handleScaleFile} style={{ display: "none" }} />
+        <input ref={scaleGalleryRef} type="file" accept="image/*" onChange={handleScaleFile} style={{ display: "none" }} />
+      </div>
+
+      {error && <div style={{ fontSize: 12.5, color: "#c0392b", marginBottom: 10 }}>{error}</div>}
+
+      <div style={{ display: "flex", gap: 8 }}>
+        <button type="button" onClick={onClose} disabled={sending} style={{ flex: 1, padding: 10, borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer" }}>
+          {t("cancel")}
+        </button>
+        <button type="button" onClick={handleSubmit} disabled={sending} style={{ flex: 1, padding: 10, borderRadius: 8, border: "none", background: "var(--brand-primary, #2980b9)", color: "#fff", cursor: "pointer" }}>
+          {sending ? t("strip_guided_add_model_sending") : t("strip_guided_add_model_submit_btn")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function GuidedStripFlow({ onClose, onComplete, lang }) {
   const t = useT(lang || "fr");
   const [knownModels, setKnownModels] = useState(null); // null = chargement, [] = vide/échec
   const [loadError, setLoadError] = useState(null);
   const [selectedModelId, setSelectedModelId] = useState("");
+  const [modelSearchText, setModelSearchText] = useState("");
   const [photoDataUrl, setPhotoDataUrl] = useState(null);
   const [markResult, setMarkResult] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [checkingOrientation, setCheckingOrientation] = useState(false);
-  const [orientationWarning, setOrientationWarning] = useState(null);
+  // v1.105.1 — Détection automatique du sens ambiguë (voir handleMarkConfirm) :
+  // bascule sur StripManualPadPlacement plutôt que de redemander le même
+  // tracé (remplace l'ancien orientationWarning, qui redemandait un tracé
+  // fondé sur l'heuristique de couleur qui venait justement d'échouer).
+  const [manualPlacement, setManualPlacement] = useState(false);
+  // v1.105.1 — Distingue une entrée en placement manuel depuis l'ambiguïté
+  // initiale (aucune position connue, repères empilés à gauche) d'une
+  // réouverture depuis "Corriger les repères" côté StripArrowReader (les
+  // positions déjà placées doivent être reprises telles quelles, pas
+  // réinitialisées).
+  const [manualPlacementIsCorrection, setManualPlacementIsCorrection] = useState(false);
   const [padPreviewConfirmed, setPadPreviewConfirmed] = useState(false);
   const [padPositions, setPadPositions] = useState(null);
   const [computingPositions, setComputingPositions] = useState(false);
+  // v1.102.0 — Estimation automatique par tampon (voir computeAutoEstimates),
+  // basée sur le modèle de calibration communautaire (calibrationModels).
+  // autoEstimates: { [ficheLabel]: { index, predicted } } — un paramètre
+  // absent de l'objet n'a simplement pas d'estimation disponible.
+  const [autoEstimates, setAutoEstimates] = useState({});
+  const [computingEstimates, setComputingEstimates] = useState(false);
+  // v1.105.0 — "Ajouter un modèle non référencé" : bascule vers
+  // AddStripModelModal plutôt que le picker/la capture habituels.
+  const [showAddModel, setShowAddModel] = useState(false);
+  // v1.106.0 — Scan code-barres (voir handleBarcodeScan) : décodage local
+  // (ZXing, voir decodeBarcodeFromDataUrl) d'une photo du code-barres,
+  // rapproché du champ "code_barre" des fiches connues. Pas de correspondance
+  // → bascule sur AddStripModelModal en pré-remplissant la photo déjà prise
+  // comme photo "barcode" (voir barcodePhotoForNewModel), pour éviter de la
+  // reprendre.
+  const [scanningBarcode, setScanningBarcode] = useState(false);
+  const [barcodeScanError, setBarcodeScanError] = useState(null);
+  const [barcodePhotoForNewModel, setBarcodePhotoForNewModel] = useState(null);
   const cameraInputRef = useRef(null);
   const galleryInputRef = useRef(null);
+  const barcodeScanInputRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -13833,9 +14479,44 @@ function GuidedStripFlow({ onClose, onComplete, lang }) {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => { setPhotoDataUrl(ev.target.result); setMarkResult(null); setOrientationWarning(null); setPadPreviewConfirmed(false); setPadPositions(null); };
+    reader.onload = (ev) => { setPhotoDataUrl(ev.target.result); setMarkResult(null); setManualPlacement(false); setManualPlacementIsCorrection(false); setPadPreviewConfirmed(false); setPadPositions(null); };
     reader.readAsDataURL(file);
     e.target.value = "";
+  }
+
+  // v1.106.0 — Photo du code-barres → décodage local (ZXing) → rapprochement
+  // avec le champ "code_barre" des fiches connues (même mécanisme que pour
+  // les fiches produit, voir decodeBarcodeFromDataUrl). Correspondance
+  // trouvée : sélectionne directement le modèle (repli sur le picker
+  // classique sinon possible via "Changer"). Pas de correspondance : bascule
+  // sur "Ajouter un modèle non référencé" avec la photo déjà prise comme
+  // photo "barcode" — décision explicite d'Arnaud, pas de refaire scanner.
+  async function handleBarcodeScan(e) {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    setBarcodeScanError(null);
+    setScanningBarcode(true);
+    try {
+      const dataUrl = await compressImageDataUrl(await fileToDataUrl(file));
+      const decoded = await decodeBarcodeFromDataUrl(dataUrl);
+      if (!decoded) {
+        setBarcodeScanError(t("strip_guided_barcode_not_detected"));
+        return;
+      }
+      const match = (knownModels || []).find((m) => m.code_barre && m.code_barre === decoded);
+      if (match) {
+        setSelectedModelId(match.modele_id);
+        setModelSearchText(stripModelLabel(match));
+      } else {
+        setBarcodePhotoForNewModel(dataUrl);
+        setShowAddModel(true);
+      }
+    } catch (e) {
+      setBarcodeScanError(t("strip_guided_barcode_not_detected"));
+    } finally {
+      setScanningBarcode(false);
+    }
   }
 
   async function handleMarkConfirm(r) {
@@ -13844,10 +14525,12 @@ function GuidedStripFlow({ onClose, onComplete, lang }) {
     const resolved = await resolveStripMarkOrientation(photoDataUrl, r.startPoint, r.endPoint, sig);
     setCheckingOrientation(false);
     if (resolved.ambiguous) {
-      setOrientationWarning(t("strip_guided_orientation_warning", { bas: sig.bas, haut: sig.haut }));
+      // v1.105.1 — Repli manuel plutôt que redemander le même tracé (voir
+      // StripManualPadPlacement) : l'heuristique de couleur qui vient
+      // d'échouer ne changera pas de verdict sur un simple redessin.
+      setManualPlacement(true);
       return;
     }
-    setOrientationWarning(null);
     setPadPreviewConfirmed(false);
     const finalPoints = resolved.swapped ? { startPoint: r.endPoint, endPoint: r.startPoint } : r;
     setMarkResult(finalPoints);
@@ -13872,6 +14555,58 @@ function GuidedStripFlow({ onClose, onComplete, lang }) {
     }
   }
 
+  // v1.102.0 — Estimation automatique de la valeur de chaque paramètre à
+  // partir du modèle de calibration communautaire (calibrationModels, voir
+  // aggregateCalibrationModels côté Worker) : couleur du tampon corrigée
+  // localement (voir sampleLocallyCorrectedPadColor) puis régression
+  // couleur→valeur déjà entraînée pour ce modèle de bandelette + paramètre.
+  // Interroge par CLÉ APP (fCl, tCl...), pas libellé fiche (Cl, TCl...) —
+  // même homogénéisation que handleArrowConfirm, pour lire le même
+  // calibrationModels que celui alimenté par le mécanisme Lot B (Premium).
+  // Best-effort par paramètre : un échec ou l'absence de modèle entraîné
+  // (pas encore assez de calibrationPoints pour ce modèle) laisse
+  // simplement ce paramètre sans estimation — StripArrowReader retombe
+  // alors sur le milieu de l'échelle, comme avant cette fonctionnalité.
+  async function computeAutoEstimates(finalPositions) {
+    setComputingEstimates(true);
+    const estimates = {};
+    try {
+      const dims = await loadImageDims(photoDataUrl);
+      const idToken = await window._fbAuth?.currentUser?.getIdToken();
+      if (idToken && selectedModel) {
+        for (let i = 0; i < selectedModel.ordre_bas_vers_haut.length; i++) {
+          const ficheLabel = selectedModel.ordre_bas_vers_haut[i];
+          const appKey = STRIP_FICHE_LABEL_TO_PARAM_KEY[ficheLabel];
+          if (!appKey) continue;
+          try {
+            const boxSize = Math.max(4, Math.round(estimatePadSpacingPx(finalPositions, dims, i) * 0.5));
+            const raw = await sampleColorAt(photoDataUrl, finalPositions[i][0], finalPositions[i][1], boxSize);
+            const corrected = await sampleLocallyCorrectedPadColor(photoDataUrl, finalPositions, i, dims, boxSize, raw);
+            const model = await FB.getCalibrationModel(idToken, selectedModel.modele_id, appKey);
+            if (!model || !model.coefficients) continue;
+            const { a, b, c, d } = model.coefficients;
+            const predicted = a * corrected.r + b * corrected.g + c * corrected.b + d;
+            const valeurs = (selectedModel.echelles[ficheLabel] && selectedModel.echelles[ficheLabel].valeurs) || [];
+            if (!valeurs.length) continue;
+            let bestIdx = 0, bestDist = Infinity;
+            valeurs.forEach((v, vi) => {
+              const dd = Math.abs(v - predicted);
+              if (dd < bestDist) { bestDist = dd; bestIdx = vi; }
+            });
+            estimates[ficheLabel] = { index: bestIdx, predicted };
+          } catch (e) {
+            // pas d'estimation pour ce paramètre — repli manuel (voir StripArrowReader)
+          }
+        }
+      }
+    } catch (e) {
+      // pas d'estimation du tout (image illisible, non connecté...) — repli manuel
+    } finally {
+      setAutoEstimates(estimates);
+      setComputingEstimates(false);
+    }
+  }
+
   // v1.101.0 — Reçoit les positions finales (éventuellement corrigées à la
   // loupe, voir StripPadPreview) et la liste des index effectivement
   // corrigés. Chaque correction alimente stripPadPositionSamples — best-
@@ -13879,6 +14614,7 @@ function GuidedStripFlow({ onClose, onComplete, lang }) {
   function handlePadPreviewConfirm(finalPositions, correctedIndices) {
     setPadPositions(finalPositions);
     setPadPreviewConfirmed(true);
+    computeAutoEstimates(finalPositions);
     if (selectedModel && markResult && correctedIndices && correctedIndices.length) {
       const normalizedModel = normalizeStripModel(selectedModel.modele_id);
       correctedIndices.forEach((i) => {
@@ -13893,14 +14629,41 @@ function GuidedStripFlow({ onClose, onComplete, lang }) {
     }
   }
 
+  // v1.105.1 — Confirmation du placement 100% manuel (voir
+  // StripManualPadPlacement) : pas de ligne tracée, donc pas de "t" à
+  // projeter pour stripPadPositionSamples (voir handlePadPreviewConfirm
+  // ci-dessus) — chaque position vient directement de l'utilisateur, rien à
+  // apprendre de plus.
+  function handleManualPlacementConfirm(finalPositions) {
+    setPadPositions(finalPositions);
+    setPadPreviewConfirmed(true);
+    setManualPlacement(false);
+    setManualPlacementIsCorrection(false);
+    computeAutoEstimates(finalPositions);
+  }
+
   async function handleArrowConfirm(results) {
     setSaving(true);
     setSaveError(null);
     try {
+      // v1.102.0 — Homogénéisation avec le mécanisme "Lot B" (Premium) :
+      // calibrationPoints.param utilisait jusqu'ici le libellé fiche brut
+      // (Cl, TCl, Alc...) alors que Lot B utilise les clés app (fCl, tCl,
+      // tac...) — deux modèles de calibration SÉPARÉS pour le même
+      // paramètre réel, aucune mutualisation des données entre les deux
+      // canaux. Reclé sur les clés app via STRIP_FICHE_LABEL_TO_PARAM_KEY
+      // avant l'écriture, pour que les deux canaux alimentent enfin le même
+      // calibrationModels. Les points déjà écrits avec l'ancien libellé
+      // restent en base tels quels (collection immuable) — legacy, pas migré.
+      const resultsByAppKey = {};
+      Object.keys(results).forEach((ficheLabel) => {
+        const appKey = STRIP_FICHE_LABEL_TO_PARAM_KEY[ficheLabel];
+        if (appKey) resultsByAppKey[appKey] = results[ficheLabel];
+      });
       await sampleAndStoreStripCalibrationPoints({
         photoDataUrl,
         stripModel: selectedModel.modele_id,
-        results,
+        results: resultsByAppKey,
         padPositions,
       });
       const paramValues = {};
@@ -13929,61 +14692,155 @@ function GuidedStripFlow({ onClose, onComplete, lang }) {
         {knownModels === null && <div style={{ fontSize: 13, color: "#666" }}>{t("strip_guided_loading")}</div>}
         {loadError && <div style={{ fontSize: 13, color: "#c0392b", marginBottom: 8 }}>{t("strip_guided_error_prefix")}{loadError}</div>}
 
-        {knownModels && knownModels.length > 0 && !selectedModel && (
+        {showAddModel && (
+          <AddStripModelModal
+            lang={lang}
+            initialBarcodePhoto={barcodePhotoForNewModel}
+            onClose={() => { setShowAddModel(false); setBarcodePhotoForNewModel(null); }}
+            onSubmitted={() => { setShowAddModel(false); setBarcodePhotoForNewModel(null); }}
+          />
+        )}
+
+        {!showAddModel && knownModels && knownModels.length > 0 && !selectedModel && (
           <div>
             <div style={{ fontSize: 13, marginBottom: 10, color: "var(--brand-text-strong)" }}>
               {t("strip_guided_pick_model")}
             </div>
-            <select
-              style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid #ccc", fontSize: 13.5 }}
-              value={selectedModelId}
-              onChange={(e) => setSelectedModelId(e.target.value)}
+            <button
+              type="button"
+              onClick={() => barcodeScanInputRef.current && barcodeScanInputRef.current.click()}
+              disabled={scanningBarcode}
+              style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: scanningBarcode ? "default" : "pointer", fontSize: 13, marginBottom: 8 }}
             >
-              <option value="">{t("strip_guided_choose_placeholder")}</option>
+              📷 {scanningBarcode ? t("strip_guided_barcode_scanning") : t("strip_guided_scan_barcode_btn")}
+            </button>
+            <input ref={barcodeScanInputRef} type="file" accept="image/*" capture="environment" onChange={handleBarcodeScan} style={{ display: "none" }} />
+            {barcodeScanError && (
+              <div style={{ fontSize: 12.5, color: "#c0392b", marginBottom: 8 }}>{barcodeScanError}</div>
+            )}
+            <div style={{ fontSize: 11.5, color: "#999", textAlign: "center", margin: "4px 0 10px" }}>
+              {t("strip_guided_or_separator")}
+            </div>
+            {/* v1.102.0 — Autocomplétion (datalist native) à la place du menu
+                déroulant brut : suggestions filtrées au fur et à mesure de la
+                saisie parmi les modèles connus. */}
+            <input
+              type="text"
+              list="strip-guided-model-list"
+              style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid #ccc", fontSize: 13.5, boxSizing: "border-box" }}
+              value={modelSearchText}
+              placeholder={t("strip_guided_choose_placeholder")}
+              onChange={(e) => {
+                const val = e.target.value;
+                setModelSearchText(val);
+                const match = knownModels.find((m) => stripModelLabel(m) === val);
+                setSelectedModelId(match ? match.modele_id : "");
+              }}
+            />
+            <datalist id="strip-guided-model-list">
               {knownModels.map((m) => (
-                <option key={m.modele_id} value={m.modele_id}>
-                  {m.nom_marque || m.modele_id}{m.code_produit ? ` (${m.code_produit})` : ""}
-                </option>
+                <option key={m.modele_id} value={stripModelLabel(m)} />
               ))}
-            </select>
+            </datalist>
+            {/* v1.104.1 — texte non vide sans correspondance : selectedModelId
+                reste vide (voir onChange ci-dessus), l'utilisateur restait
+                bloqué sans comprendre pourquoi. */}
+            {modelSearchText.trim() && !selectedModel && (
+              <div style={{ fontSize: 12.5, color: "#c0392b", marginTop: 6 }}>
+                {t("strip_guided_unmatched_model_warning")}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => setShowAddModel(true)}
+              style={{ width: "100%", marginTop: 10, padding: 10, borderRadius: 8, border: "1px dashed #999", background: "#fff", cursor: "pointer", fontSize: 13 }}
+            >
+              ➕ {t("strip_guided_add_model_btn")}
+            </button>
           </div>
         )}
 
-        {knownModels && knownModels.length === 0 && !loadError && (
-          <div style={{ fontSize: 13, color: "#666" }}>{t("strip_guided_no_models")}</div>
-        )}
-
-        {selectedModel && !photoDataUrl && (
-          <div style={{ display: "flex", gap: 8 }}>
-            <button type="button" onClick={() => cameraInputRef.current && cameraInputRef.current.click()} style={{ flex: 1, padding: 10, borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer" }}>
-              📷 {t("camera_btn")}
+        {!showAddModel && knownModels && knownModels.length === 0 && !loadError && (
+          <div style={{ fontSize: 13, color: "#666" }}>
+            {t("strip_guided_no_models")}
+            <button
+              type="button"
+              onClick={() => barcodeScanInputRef.current && barcodeScanInputRef.current.click()}
+              disabled={scanningBarcode}
+              style={{ width: "100%", marginTop: 10, padding: 10, borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: scanningBarcode ? "default" : "pointer", fontSize: 13 }}
+            >
+              📷 {scanningBarcode ? t("strip_guided_barcode_scanning") : t("strip_guided_scan_barcode_btn")}
             </button>
-            <button type="button" onClick={() => galleryInputRef.current && galleryInputRef.current.click()} style={{ flex: 1, padding: 10, borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer" }}>
-              🖼️ {t("gallery_btn")}
+            <input ref={barcodeScanInputRef} type="file" accept="image/*" capture="environment" onChange={handleBarcodeScan} style={{ display: "none" }} />
+            {barcodeScanError && (
+              <div style={{ fontSize: 12.5, color: "#c0392b", marginTop: 8 }}>{barcodeScanError}</div>
+            )}
+            <button
+              type="button"
+              onClick={() => setShowAddModel(true)}
+              style={{ width: "100%", marginTop: 8, padding: 10, borderRadius: 8, border: "1px dashed #999", background: "#fff", cursor: "pointer", fontSize: 13 }}
+            >
+              ➕ {t("strip_guided_add_model_btn")}
             </button>
-            <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFile} style={{ display: "none" }} />
-            <input ref={galleryInputRef} type="file" accept="image/*" onChange={handleFile} style={{ display: "none" }} />
           </div>
         )}
 
-        {selectedModel && photoDataUrl && !markResult && (
+        {!showAddModel && selectedModel && !photoDataUrl && (
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, fontSize: 13 }}>
+              <span>🎯 <strong>{stripModelLabel(selectedModel)}</strong></span>
+              <button
+                type="button"
+                onClick={() => { setSelectedModelId(""); setModelSearchText(""); }}
+                style={{ border: "none", background: "none", color: "var(--brand-primary, #2980b9)", cursor: "pointer", fontSize: 12.5, textDecoration: "underline", padding: 0 }}
+              >
+                {t("strip_guided_change_model_btn")}
+              </button>
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button type="button" onClick={() => cameraInputRef.current && cameraInputRef.current.click()} style={{ flex: 1, padding: 10, borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer" }}>
+                📷 {t("camera_btn")}
+              </button>
+              <button type="button" onClick={() => galleryInputRef.current && galleryInputRef.current.click()} style={{ flex: 1, padding: 10, borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer" }}>
+                🖼️ {t("gallery_btn")}
+              </button>
+              <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFile} style={{ display: "none" }} />
+              <input ref={galleryInputRef} type="file" accept="image/*" onChange={handleFile} style={{ display: "none" }} />
+            </div>
+          </div>
+        )}
+
+        {selectedModel && photoDataUrl && !markResult && !manualPlacement && !padPositions && (
           <>
             <StripMarker
               photoDataUrl={photoDataUrl}
               onCancel={() => setPhotoDataUrl(null)}
               onConfirm={handleMarkConfirm}
-              orientationWarning={orientationWarning}
               lang={lang}
             />
             {checkingOrientation && <div style={{ marginTop: 8, fontSize: 12.5, color: "#666" }}>⏳ {t("strip_guided_checking_orientation")}</div>}
           </>
         )}
 
+        {selectedModel && photoDataUrl && manualPlacement && (
+          <StripManualPadPlacement
+            photoDataUrl={photoDataUrl}
+            paramOrder={selectedModel.ordre_bas_vers_haut}
+            initialPositions={manualPlacementIsCorrection ? padPositions : null}
+            onConfirm={handleManualPlacementConfirm}
+            onCancel={() => {
+              setManualPlacement(false);
+              if (manualPlacementIsCorrection) { setManualPlacementIsCorrection(false); setPadPreviewConfirmed(true); }
+            }}
+            lang={lang}
+          />
+        )}
+
         {selectedModel && photoDataUrl && markResult && computingPositions && (
           <div style={{ fontSize: 13, color: "#666" }}>⏳ {t("strip_guided_positioning")}</div>
         )}
 
-        {selectedModel && photoDataUrl && markResult && padPositions && !padPreviewConfirmed && (
+        {selectedModel && photoDataUrl && markResult && padPositions && !padPreviewConfirmed && !manualPlacement && (
           <StripPadPreview
             photoDataUrl={photoDataUrl}
             padPositions={padPositions}
@@ -13994,7 +14851,11 @@ function GuidedStripFlow({ onClose, onComplete, lang }) {
           />
         )}
 
-        {selectedModel && photoDataUrl && markResult && padPositions && padPreviewConfirmed && (
+        {selectedModel && photoDataUrl && padPositions && padPreviewConfirmed && computingEstimates && !manualPlacement && (
+          <div style={{ fontSize: 13, color: "#666" }}>⏳ {t("strip_guided_estimating")}</div>
+        )}
+
+        {selectedModel && photoDataUrl && padPositions && padPreviewConfirmed && !computingEstimates && !manualPlacement && (
           <>
             {saveError && (
               <div style={{ marginBottom: 8, fontSize: 12.5, color: "#c0392b" }}>{t("strip_guided_save_error_prefix")}{saveError}</div>
@@ -14004,9 +14865,17 @@ function GuidedStripFlow({ onClose, onComplete, lang }) {
               padPositions={padPositions}
               paramOrder={selectedModel.ordre_bas_vers_haut}
               echelles={selectedModel.echelles}
-              onCancel={() => setPadPreviewConfirmed(false)}
+              onCancel={() => {
+                if (markResult) {
+                  setPadPreviewConfirmed(false);
+                } else {
+                  setManualPlacementIsCorrection(true);
+                  setManualPlacement(true);
+                }
+              }}
               onConfirm={handleArrowConfirm}
               lang={lang}
+              autoEstimates={autoEstimates}
             />
             {saving && <div style={{ marginTop: 8, fontSize: 12.5, color: "#666" }}>⏳ {t("strip_guided_saving")}</div>}
           </>
@@ -16569,6 +17438,13 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
   const [doseUnit, setDoseUnit] = useState(product?.doseUnit || "g");
   const [effectAmount, setEffectAmount] = useState(product?.effectAmount ?? "");
   const [effectPer, setEffectPer] = useState(product?.effectPer ?? "");
+  // v1.102.0 — % de chlore actif réel du produit (uniquement pertinent pour
+  // l'action "chlore" : les autres produits n'ont pas cette variabilité de
+  // concentration entre marques) — voir scaleDoseForActiveChlorine, qui
+  // recalcule le dosage au prorata de CHLORE_REFERENCE_ACTIVE_PERCENT quand
+  // ce champ diffère de la référence. Vide = pas de recalcul (comportement
+  // d'avant, dose du produit prise telle quelle).
+  const [activeChlorinePercent, setActiveChlorinePercent] = useState(product?.activeChlorinePercent ?? "");
   const [waitHours, setWaitHours] = useState(product?.waitHours ?? DEFAULT_WAIT_HOURS[product?.action || "ph-"] ?? 2);
   // v1.50.0 — Catégories de dosage sans effet mesuré à faire varier (voir
   // FIXED_DOSE_ACTIONS/PHYSICS_DOSE_ACTIONS) : dérivées de `action`, donc
@@ -16938,6 +17814,13 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
       doseUnit,
       effectAmount: (isTool || isFixedDose || isPhysicsDose) ? 0 : parseFloat(effectAmount),
       effectPer: (isTool || isPhysicsDose) ? 0 : parseFloat(effectPer),
+      // v1.102.0 — Voir scaleDoseForActiveChlorine. null = pas de recalcul
+      // (comportement d'avant), jamais 0 par défaut (une valeur 0 fausserait
+      // le calcul par division par zéro protégée en amont, mais reste sans
+      // signification physique pour un % de concentration).
+      activeChlorinePercent: (action === "chlore" && activeChlorinePercent !== "" && !Number.isNaN(parseFloat(activeChlorinePercent)))
+        ? parseFloat(activeChlorinePercent)
+        : null,
       waitHours: isTool ? 0 : (parseFloat(waitHours) || 0),
       note,
       photo,
@@ -17228,6 +18111,27 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
                   placeholder={aiSuggestion?.effectPer != null ? String(aiSuggestion.effectPer) : ""}
                 />
               </div>
+            </div>
+          )}
+          {/* v1.102.0 — % de chlore actif réel (étiquette du produit) : optionnel,
+              ne concerne que l'action "chlore" (concentration très variable selon
+              les marques, contrairement au chlore stabilisé en galets, plus
+              standardisé). Différent de la référence (voir
+              CHLORE_REFERENCE_ACTIVE_PERCENT) → dosage recalculé au prorata. */}
+          {action === "chlore" && (
+            <div>
+              <label style={styles.fieldLabel}>{t("active_chlorine_percent_label")}</label>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <input
+                  type="number"
+                  style={{ ...styles.input, flex: 1 }}
+                  value={activeChlorinePercent}
+                  onChange={(e) => setActiveChlorinePercent(e.target.value)}
+                  placeholder={`${CHLORE_REFERENCE_ACTIVE_PERCENT}`}
+                />
+                <span style={{ fontSize: 13, color: "var(--brand-text-muted)", minWidth: 12 }}>%</span>
+              </div>
+              <div style={{ fontSize: 11, color: "var(--brand-text-muted)", marginTop: 2 }}>{t("active_chlorine_percent_hint")}</div>
             </div>
           )}
           {formError && <div ref={formErrorRef} style={{ ...styles.analyzeNoteError, marginTop: 8 }}>{formError}</div>}

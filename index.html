@@ -123,6 +123,12 @@
 <!-- jsPDF + html2canvas pour génération PDF rapport -->
 <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<!-- v1.106.0 — ZXing (lecture code-barres locale, voir decodeBarcodeFromDataUrl
+     dans PoolGenAI.jsx) : référencé depuis v1.98.8 mais jamais chargé ici,
+     donc window.ZXing était toujours indéfini et la détection retombait
+     silencieusement sur null à chaque appel (best-effort, jamais d'erreur
+     visible) — corrigé ici. -->
+<script src="https://unpkg.com/@zxing/library@0.23.0/umd/index.min.js"></script>
 <!-- Icônes (shim local, pas de dépendance CDN fragile) -->
 <script src="lucide-shim.js"></script>
 <!-- v1.57.1 — Google Identity Services : remplace signInWithPopup/signInWithRedirect
