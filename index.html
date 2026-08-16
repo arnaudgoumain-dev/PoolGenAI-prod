@@ -5,6 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <title>PoolGenAI</title>
 
+<!-- v1.108.2 — Premier lancement (juste après install Play Store) : le
+     réseau/DNS de l'appareil est parfois encore "froid", ce qui ralentit la
+     toute première connexion aux CDN ci-dessous. Ces hints démarrent la
+     résolution DNS + handshake TLS avant même que les balises script
+     correspondantes ne soient atteintes, sans attendre le parsing HTML. -->
+<link rel="preconnect" href="https://unpkg.com" crossorigin />
+<link rel="dns-prefetch" href="https://unpkg.com" />
+<link rel="preconnect" href="https://accounts.google.com" crossorigin />
+<link rel="dns-prefetch" href="https://accounts.google.com" />
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+<link rel="dns-prefetch" href="https://www.gstatic.com" />
+
 <!-- PWA manifest & ic&#244;nes -->
 <link rel="manifest" href="manifest.json" />
 <meta name="theme-color" content="#0b3f3a" />
@@ -147,7 +159,22 @@
 <div id="root"></div>
 
 <script>
+  // v1.108.2 \u2014 Premier lancement juste apr\u00e8s install (r\u00e9seau/DNS "froid") :
+  // un \u00e9chec de boot y est souvent transitoire plut\u00f4t qu'une vraie panne.
+  // Avant d'afficher l'\u00e9cran d'erreur, on retente une fois un rechargement
+  // complet de la page (budget d'un seul essai par session d'app, via
+  // sessionStorage \u2014 remis \u00e0 z\u00e9ro d\u00e8s qu'un boot r\u00e9ussit, voir
+  // loadPoolGenAIApp ci-dessous). Un vrai probl\u00e8me persistant (fichier
+  // manquant sur le d\u00e9p\u00f4t, etc.) \u00e9chouera quand m\u00eame au 2e essai et
+  // affichera l'\u00e9cran d'erreur normalement.
   window.__showBootError = function () {
+    var alreadyRetried = false;
+    try { alreadyRetried = sessionStorage.getItem("poolgenai_boot_retried") === "1"; } catch (e) {}
+    if (!alreadyRetried) {
+      try { sessionStorage.setItem("poolgenai_boot_retried", "1"); } catch (e) {}
+      window.location.reload();
+      return;
+    }
     var loader = document.getElementById("boot-loader");
     var detail = document.getElementById("boot-error-detail");
     if (!loader || !detail) return;
@@ -157,21 +184,21 @@
     detail.textContent = window.__bootErrors.join("\n\n");
   };
 
-  // Si rien ne s'est pass&#233; apr&#232;s 8 secondes (root toujours vide), c'est
+  // Si rien ne s'est pass&#233; apr&#232;s 12 secondes (root toujours vide), c'est
   // qu'un script a &#233;chou&#233; sans d&#233;clencher d'erreur JS classique (ex: CDN
   // bloqu&#233;/lent). On le signale plut&#244;t que de laisser un &#233;cran fig&#233;.
   setTimeout(function () {
     var root = document.getElementById("root");
     if (root && root.children.length === 0) {
       window.__bootErrors.push(
-        "Timeout : l'application n'a pas d\u00e9marr\u00e9 apr\u00e8s 8 secondes.\n" +
+        "Timeout : l'application n'a pas d\u00e9marr\u00e9 apr\u00e8s 12 secondes.\n" +
         "V\u00e9rifie ta connexion internet (les librairies React/Recharts se chargent depuis unpkg.com).\n" +
         "Si le probl\u00e8me persiste, v\u00e9rifie que les fichiers PoolGenAI.jsx et lucide-shim.js sont bien" +
         " pr\u00e9sents \u00e0 la racine du d\u00e9p\u00f4t GitHub."
       );
       window.__showBootError();
     }
-  }, 8000);
+  }, 12000);
 </script>
 
 <script>
@@ -473,6 +500,9 @@
         });
         // eslint-disable-next-line no-eval
         (0, eval)(result.code);
+        // Boot réussi : on rend son budget de retry au prochain lancement
+        // (voir window.__showBootError plus haut).
+        try { sessionStorage.removeItem("poolgenai_boot_retried"); } catch (e) {}
       })
       .catch((err) => {
         window.__bootErrors.push("Erreur de chargement/transformation de PoolGenAI.jsx :\n" + err.message);
