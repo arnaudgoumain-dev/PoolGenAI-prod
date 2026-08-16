@@ -1271,6 +1271,115 @@ async function handleStripModelSignal(request, env, origin) {
   return jsonResponse({ success: true }, 200, origin);
 }
 __name(handleStripModelSignal, "handleStripModelSignal");
+// ---------- Emails de notification (soumission nouveau modèle bandelette) ----------
+// v1.105.0 — Contrairement à /strip-model-signal (compteur agrégé, pas de
+// photo), ici l'utilisateur a explicitement fourni des photos pour qu'Arnaud
+// crée une fiche stripModels manuellement. Un email par soumission (pas
+// d'agrégation) : c'est un acte volontaire de l'utilisateur, pas un simple
+// signal de fond.
+async function sendStripModelSubmissionEmail(env, submissionId, photoCount) {
+  const html = `
+    <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+      <h2>Nouvelle soumission de modèle de bandelette</h2>
+      <p>Soumission <strong>${submissionId}</strong> — ${photoCount} photo(s) reçue(s).</p>
+      <p>Photos dans le bucket R2 PRODUCT_PHOTOS, préfixe <code>stripmodel-submissions/${submissionId}/</code>.</p>
+      <p>Doc Firestore : stripModelSubmissions/${submissionId}</p>
+    </div>
+  `;
+  const response = await fetch(RESEND_API_URL, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: RESEND_FROM,
+      to: SUPPORT_EMAIL,
+      subject: "PoolGenAI — Nouvelle soumission de modèle de bandelette",
+      html
+    })
+  });
+  if (!response.ok) throw new Error(`Échec d'envoi Resend : ${await response.text()}`);
+}
+__name(sendStripModelSubmissionEmail, "sendStripModelSubmissionEmail");
+// ---------- Route : POST /strip-model-submission ----------
+// v1.105.0 — Spec bandelettes, brique "créer un nouveau tube par saisie si
+// pas présent dans la liste" (limitée pour l'instant à la capture de photos,
+// pas de parsing/création automatique de fiche). Photos stockées dans R2
+// (binding PRODUCT_PHOTOS, réutilisé — pas de nouveau bucket pour un usage
+// encore à faible volume) + un document de suivi stripModelSubmissions (écrit
+// via le compte de service, comme calibrationModels/commonProducts — hors
+// périmètre de firestore.rules, aucune règle à modifier pour cette route).
+// Arnaud crée ensuite la fiche stripModels manuellement à partir des photos
+// (consultables directement dans le dashboard R2 Cloudflare).
+async function handleStripModelSubmission(request, env, origin) {
+  const authHeader = request.headers.get("Authorization") || "";
+  const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (!idToken) return jsonError("Authentification requise", 401, origin);
+  let payload;
+  try {
+    payload = await verifyFirebaseIdToken(idToken);
+  } catch (e) {
+    return jsonError(`Token invalide : ${e.message}`, 401, origin);
+  }
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return jsonError("Corps de requête invalide", 400, origin);
+  }
+  const photos = Array.isArray(body.photos) ? body.photos : [];
+  const ALLOWED_ROLES = ["barcode", "tube", "echelle"];
+  const MAX_PHOTOS = 10;
+  if (!photos.length || photos.length > MAX_PHOTOS) {
+    return jsonError(`Entre 1 et ${MAX_PHOTOS} photos attendues`, 400, origin);
+  }
+  if (photos.some((p) => !ALLOWED_ROLES.includes(p.role) || typeof p.photoBase64 !== "string" || !p.photoBase64)) {
+    return jsonError("Photo invalide (role ou photoBase64 manquant)", 400, origin);
+  }
+  if (!photos.some((p) => p.role === "tube") || !photos.some((p) => p.role === "echelle")) {
+    return jsonError("Au moins une photo du tube entier et une photo d'échelle sont requises", 400, origin);
+  }
+  const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
+  const decoded = [];
+  for (const p of photos) {
+    let bytes;
+    try {
+      const binary = atob(p.photoBase64);
+      bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    } catch (e) {
+      return jsonError("photoBase64 invalide", 400, origin);
+    }
+    if (bytes.length > MAX_PHOTO_BYTES) return jsonError("Photo trop volumineuse", 413, origin);
+    decoded.push({ role: p.role, bytes });
+  }
+  const submissionId = `sub_${crypto.randomUUID()}`;
+  const photoKeys = [];
+  try {
+    for (let i = 0; i < decoded.length; i++) {
+      const key = `stripmodel-submissions/${submissionId}/${i}_${decoded[i].role}.jpg`;
+      await env.PRODUCT_PHOTOS.put(key, decoded[i].bytes, { httpMetadata: { contentType: "image/jpeg" } });
+      photoKeys.push(key);
+    }
+  } catch (e) {
+    return jsonError(`Échec d'upload R2 : ${e.message}`, 500, origin);
+  }
+  try {
+    await firestoreCreateDoc(env, "stripModelSubmissions", submissionId, {
+      uid: payload.sub,
+      createdAt: new Date(),
+      photoKeys,
+      status: "pending"
+    });
+  } catch (e) {
+    return jsonError(`Échec d'enregistrement : ${e.message}`, 500, origin);
+  }
+  try {
+    await sendStripModelSubmissionEmail(env, submissionId, photoKeys.length);
+  } catch (e) {
+    console.error(`Échec d'envoi email soumission mod\xE8le bandelette : ${e.message}`);
+  }
+  return jsonResponse({ success: true, submissionId }, 200, origin);
+}
+__name(handleStripModelSubmission, "handleStripModelSubmission");
 // v1.100.0 — stripModels/calibrationModels/config (seuils de confiance) ne
 // sont plus lus directement en Firestore côté client (firestore.rules les
 // rendait lisibles à tout compte authentifié, y compris gratuit — savoir
@@ -2440,6 +2549,9 @@ var poolgenai_proxy_default = {
     }
     if (url.pathname === "/strip-model-signal") {
       return handleStripModelSignal(request, env, origin);
+    }
+    if (url.pathname === "/strip-model-submission") {
+      return handleStripModelSubmission(request, env, origin);
     }
     if (url.pathname === "/stripe/create-checkout-session") {
       return handleStripeCreateCheckoutSession(request, env, origin);
