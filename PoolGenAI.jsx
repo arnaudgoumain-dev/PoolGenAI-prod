@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.108.2";
+const APP_VERSION = "1.108.3";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -415,6 +415,7 @@ const TRANSLATIONS = {
     measure_after: "Attendre {h}h avant de mesurer à nouveau",
     missing_product: "non disponible dans tes produits",
     missing_product_tip: "Aucun produit {action} dans ta liste — ajoutes-en un dans l'onglet Produits.",
+    dose_anomaly_warning: "Dose inhabituelle — vérifie la fiche de ce produit (quantité, effet, pour X m³).",
     see_dosage: "Voir dosage",
     // Paywall
     paywall_title: "Passer à la version Premium",
@@ -1195,6 +1196,7 @@ const TRANSLATIONS = {
     measure_after: "Wait {h}h before testing again",
     missing_product: "not available in your products",
     missing_product_tip: "No {action} product in your list — add one in the Products tab.",
+    dose_anomaly_warning: "Unusual dose — check this product's sheet (quantity, effect, per X m³).",
     see_dosage: "See dosage",
     paywall_title: "Go Premium",
     paywall_desc: "Unlimited readings · AI strip analysis · PDF report · Stock management",
@@ -1968,6 +1970,7 @@ const TRANSLATIONS = {
     measure_after: "{h}h warten vor erneuter Messung",
     missing_product: "nicht in deinen Produkten verfügbar",
     missing_product_tip: "Kein {action}-Produkt in deiner Liste — füge eines im Produkte-Tab hinzu.",
+    dose_anomaly_warning: "Ungewöhnliche Dosis — überprüfe das Produktblatt (Menge, Wirkung, pro X m³).",
     see_dosage: "Dosierung anzeigen",
     paywall_title: "Zu Premium wechseln",
     paywall_desc: "Unbegrenzte Messungen · KI-Streifenanalyse · PDF-Bericht · Lagerverwaltung",
@@ -2743,6 +2746,7 @@ const TRANSLATIONS = {
     measure_after: "Attendere {h}h prima di misurare di nuovo",
     missing_product: "non disponibile nei tuoi prodotti",
     missing_product_tip: "Nessun prodotto {action} nella tua lista — aggiungine uno nella scheda Prodotti.",
+    dose_anomaly_warning: "Dose insolita — controlla la scheda di questo prodotto (quantità, effetto, per X m³).",
     see_dosage: "Vedi dosaggio",
     paywall_title: "Passa a Premium",
     paywall_desc: "Misurazioni illimitate · Analisi IA strisce · Rapporto PDF · Gestione stock",
@@ -3515,6 +3519,7 @@ const TRANSLATIONS = {
     measure_after: "Esperar {h}h antes de medir de nuevo",
     missing_product: "no disponible en tus productos",
     missing_product_tip: "Sin producto {action} en tu lista — añade uno en la pestaña Productos.",
+    dose_anomaly_warning: "Dosis inusual — revisa la ficha de este producto (cantidad, efecto, por X m³).",
     see_dosage: "Ver dosaje",
     paywall_title: "Pasar a Premium",
     ai_timer_hint: "A análise pode levar até 30 segundos.",
@@ -4287,6 +4292,7 @@ const TRANSLATIONS = {
     measure_after: "Aguardar {h}h antes de medir novamente",
     missing_product: "não disponível nos seus produtos",
     missing_product_tip: "Nenhum produto {action} na sua lista — adicione um na aba Produtos.",
+    dose_anomaly_warning: "Dose incomum — verifica a ficha deste produto (quantidade, efeito, por X m³).",
     see_dosage: "Ver dosagem",
     paywall_title: "Passar para Premium",
     paywall_desc: "Medições ilimitadas · Análise IA de tiras · Relatório PDF · Gestão de estoque",
@@ -12031,6 +12037,15 @@ function RecoCard({ reco, isLast, manageStock, products, lang }) {
         );
       })()}
       {reco.doseText && <div style={styles.recoDose}>{reco.doseText}</div>}
+      {/* v1.108.3 — Garde-fou dose anormale (voir isDoseRateAnomalous) :
+          avertissement non bloquant si la dose calculée s'écarte fortement
+          du produit de référence pour cette action — n'empêche jamais
+          d'appliquer le plan, signale juste une fiche produit à vérifier. */}
+      {reco.doseAnomaly && (
+        <div style={styles.recoAnomalyWarning}>
+          <AlertTriangle size={12} /> {t("dose_anomaly_warning")}
+        </div>
+      )}
       {reco.missingTip && <div style={styles.recoNote}>{reco.missingTip}</div>}
       {reco.timingTip && <div style={{ fontSize: 12.5, color: "#3a5a78", marginTop: 4 }}>🌙 {reco.timingTip}</div>}
 
@@ -12065,6 +12080,29 @@ function formatDose(amount, unit) {
     return `${Number.isInteger(L) ? L : L.toFixed(2).replace(/\.?0+$/, "")} L`;
   }
   return `${amount} ${unit}`;
+}
+
+// v1.108.3 — Garde-fou dose anormale : compare le taux d'un produit
+// utilisateur (doseAmount/effectPer/effectAmount) à celui du produit de
+// référence DEFAULT_PRODUCTS pour la même action, pour repérer une fiche
+// mal paramétrée (ex. incident "Alcafix" TAC+ : effectAmount=1 au lieu de
+// 10, facteur ×10 sur la dose calculée → 56 kg au lieu de 5,6 kg). N'importe
+// jamais bloquant, sert uniquement à afficher un avertissement — les
+// produits réels ont légitimement des rendements différents, ce garde-fou
+// vise les erreurs grossières (facteur ≥5), pas les variations normales.
+const DOSE_RATE_ANOMALY_FACTOR = 5;
+function productDoseRate(p, useEffectAmount) {
+  if (!p || !p.doseAmount || !p.effectPer) return null;
+  if (useEffectAmount && !p.effectAmount) return null;
+  return p.doseAmount / p.effectPer / (useEffectAmount ? p.effectAmount : 1);
+}
+function isDoseRateAnomalous(prod, referenceProd, useEffectAmount = true) {
+  if (!prod || !referenceProd || prod.doseUnit !== referenceProd.doseUnit) return false;
+  const rate = productDoseRate(prod, useEffectAmount);
+  const refRate = productDoseRate(referenceProd, useEffectAmount);
+  if (!rate || !refRate) return false;
+  const ratio = rate / refRate;
+  return ratio > DOSE_RATE_ANOMALY_FACTOR || ratio < 1 / DOSE_RATE_ANOMALY_FACTOR;
 }
 
 // ---------- Logique de recommandation ----------
@@ -12136,6 +12174,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       missingTip: !prod ? _("missing_product_tip", { action: "tac+" }) : null,
       computedDoseAmount: computedDose,
       doseUnit: doseSrc?.doseUnit || null,
+      doseAnomaly: isDoseRateAnomalous(prod, dp),
       note: prodNote(prod, "reco_note_tac"),
       waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["tac+"],
     });
@@ -12164,6 +12203,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       missingTip: !prod ? _("missing_product_tip", { action: "tac-" }) : null,
       computedDoseAmount: computedDose,
       doseUnit: doseSrc?.doseUnit || null,
+      doseAnomaly: isDoseRateAnomalous(prod, dp),
       note: prodNote(prod, "reco_note_tac_minus"),
       waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["tac-"],
     });
@@ -12192,6 +12232,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
         missingTip: !prod ? _("missing_product_tip", { action: "ph-" }) : null,
         computedDoseAmount: computedDose,
         doseUnit: doseSrc?.doseUnit || null,
+        doseAnomaly: isDoseRateAnomalous(prod, dp),
         note: prodNote(prod, "note_ph_minus"),
         waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["ph-"],
       });
@@ -12213,6 +12254,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
         missingTip: !prod ? _("missing_product_tip", { action: "ph+" }) : null,
         computedDoseAmount: computedDose,
         doseUnit: doseSrc?.doseUnit || null,
+        doseAnomaly: isDoseRateAnomalous(prod, dp),
         note: prodNote(prod, "note_ph_plus"),
         waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["ph+"],
       });
@@ -12275,6 +12317,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
         missingTip: !prod ? _("missing_product_tip", { action: "chlore" }) : null,
         computedDoseAmount: computedDose,
         doseUnit: doseSrc?.doseUnit || null,
+        doseAnomaly: isDoseRateAnomalous(prod, dp),
         note: _("reco_note_combined"),
         timingTip: _("chlore_timing_tip"),
         waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["chlore"],
@@ -12298,6 +12341,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
         missingTip: !prod ? _("missing_product_tip", { action: "chlore" }) : null,
         computedDoseAmount: computedDose,
         doseUnit: doseSrc?.doseUnit || null,
+        doseAnomaly: isDoseRateAnomalous(prod, dp),
         // v1.40.0 — Fix : cette branche (chlore libre bas, PAS de problème de
         // combiné) affichait par erreur la note "reco_note_combined" (chloramines,
         // désinfection insuffisante) — copié-collé de la branche ci-dessus. Cette
@@ -12350,6 +12394,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
         missingTip: !prod ? _("missing_product_tip", { action: "brome" }) : null,
         computedDoseAmount: computedDose,
         doseUnit: doseSrc?.doseUnit || null,
+        doseAnomaly: isDoseRateAnomalous(prod, dp),
         note: _("reco_note_brome"),
         waitHours: prod?.waitHours ?? 6,
       });
@@ -12380,6 +12425,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
         missingTip: !prod ? _("missing_product_tip", { action: "o2" }) : null,
         computedDoseAmount: computedDose,
         doseUnit: doseSrc?.doseUnit || null,
+        doseAnomaly: isDoseRateAnomalous(prod, dp),
         note: _("reco_note_o2"),
         waitHours: prod?.waitHours ?? 4,
       });
@@ -12437,6 +12483,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
         missingTip: !prod ? _("missing_product_tip", { action: "hard+" }) : null,
         computedDoseAmount: computedDose,
         doseUnit: doseSrc?.doseUnit || "g",
+        doseAnomaly: isDoseRateAnomalous(prod, dp),
         note: prodNote(prod, "note_calcium"),
         waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["hard+"],
       });
@@ -12474,6 +12521,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       missingTip: !prod ? _("missing_product_tip", { action: "phos-" }) : null,
       computedDoseAmount: computedDose,
       doseUnit: doseSrc?.doseUnit || "mL",
+      doseAnomaly: isDoseRateAnomalous(prod, dp),
       note: prodNote(prod, "note_anti_phos"),
       waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["phos-"],
     });
@@ -12496,6 +12544,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       missingTip: !prod ? _("missing_product_tip", { action: "sequestrant" }) : null,
       computedDoseAmount: computedDose,
       doseUnit: doseSrc?.doseUnit || "mL",
+      doseAnomaly: isDoseRateAnomalous(prod, dp, false),
       note: prodNote(prod, "note_sequestrant"),
       waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["sequestrant"],
     });
@@ -12518,6 +12567,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       missingTip: !prod ? _("missing_product_tip", { action: "sequestrant" }) : null,
       computedDoseAmount: computedDose,
       doseUnit: doseSrc?.doseUnit || "mL",
+      doseAnomaly: isDoseRateAnomalous(prod, dp, false),
       note: prodNote(prod, "note_sequestrant"),
       waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["sequestrant"],
     });
@@ -17732,6 +17782,22 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
   // manuelle — le masquage de champs ne dépend que de l'action choisie.
   const isFixedDose = FIXED_DOSE_ACTIONS.has(action);
   const isPhysicsDose = PHYSICS_DOSE_ACTIONS.has(action);
+  // v1.108.3 — Garde-fou dose anormale (voir isDoseRateAnomalous, même
+  // logique que le plan de traitement) : avertit dès la saisie/l'IA si le
+  // taux implicite (doseAmount/effectPer/effectAmount) s'écarte fortement
+  // du produit de référence DEFAULT_PRODUCTS pour cette action — n'empêche
+  // jamais l'enregistrement, voir incident TAC+ "Alcafix" (×10).
+  const doseAnomalyWarning = useMemo(() => {
+    if (action === "outil-mesure" || isPhysicsDose) return false;
+    const dp = DEFAULT_PRODUCTS.find((p) => p.action === action);
+    const candidate = {
+      doseAmount: parseFloat(doseAmount),
+      effectPer: parseFloat(effectPer),
+      effectAmount: isFixedDose ? null : parseFloat(effectAmount),
+      doseUnit,
+    };
+    return isDoseRateAnomalous(candidate, dp, !isFixedDose);
+  }, [action, doseAmount, effectPer, effectAmount, doseUnit, isFixedDose, isPhysicsDose]);
   const [note, setNote] = useState(product?.note || "");
   // v1.49.0 — Remplace l'ancien état "photo" unique par un tableau : capture
   // multi-photos (face / code-barre / notice), un seul bouton, envoyées
@@ -18412,6 +18478,13 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
                 <span style={{ fontSize: 13, color: "var(--brand-text-muted)", minWidth: 12 }}>%</span>
               </div>
               <div style={{ fontSize: 11, color: "var(--brand-text-muted)", marginTop: 2 }}>{t("active_chlorine_percent_hint")}</div>
+            </div>
+          )}
+          {/* v1.108.3 — Garde-fou dose anormale : non bloquant, voir
+              doseAnomalyWarning ci-dessus. */}
+          {doseAnomalyWarning && (
+            <div style={styles.recoAnomalyWarning}>
+              <AlertTriangle size={12} /> {t("dose_anomaly_warning")}
             </div>
           )}
           {formError && <div ref={formErrorRef} style={{ ...styles.analyzeNoteError, marginTop: 8 }}>{formError}</div>}
@@ -21579,6 +21652,23 @@ const styles = {
     marginTop: 7,
   },
   recoNote: { fontSize: 11.5, color: "var(--brand-text-muted)", marginTop: 6, lineHeight: 1.4 },
+  // v1.108.3 — Garde-fou dose anormale (voir isDoseRateAnomalous) : même
+  // famille visuelle que recoInfoTiming mais en ambre (avertissement, pas
+  // une simple info) plutôt que rouge (recoMissingTag, réservé aux erreurs
+  // bloquantes comme un produit manquant).
+  recoAnomalyWarning: {
+    display: "flex",
+    alignItems: "center",
+    gap: 5,
+    fontSize: 11.5,
+    fontWeight: 700,
+    color: "#a8721a",
+    background: "#fdf3e0",
+    border: "1px solid #f0d9a8",
+    borderRadius: 8,
+    padding: "5px 8px",
+    marginTop: 7,
+  },
   emptyState: {
     display: "flex",
     flexDirection: "column",
