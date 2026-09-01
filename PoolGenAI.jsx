@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.108.3";
+const APP_VERSION = "1.109.3";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -293,6 +293,7 @@ const TRANSLATIONS = {
     wizard_now: "Maintenant",
     wizard_in: "Dans",
     wizard_at: "à",
+    wizard_next_step_from: "À partir de {h}h après le traitement précédent, soit à partir du {date}",
     wizard_scheduled: "Prévu",
     wizard_earliest: "Au plus tôt",
     chlore_timing_tip: "Pour une meilleure efficacité, applique de préférence le soir, après la dernière baignade et au coucher du soleil.",
@@ -416,6 +417,7 @@ const TRANSLATIONS = {
     missing_product: "non disponible dans tes produits",
     missing_product_tip: "Aucun produit {action} dans ta liste — ajoutes-en un dans l'onglet Produits.",
     dose_anomaly_warning: "Dose inhabituelle — vérifie la fiche de ce produit (quantité, effet, pour X m³).",
+    reco_ph_reduced_by_tac_note: "Dose réduite : le TAC+ appliqué juste avant remonte aussi un peu le pH (estimation). Tu peux remesurer le pH avant d'appliquer pour ajuster si besoin.",
     see_dosage: "Voir dosage",
     // Paywall
     paywall_title: "Passer à la version Premium",
@@ -1077,6 +1079,7 @@ const TRANSLATIONS = {
     wizard_now: "Now",
     wizard_in: "In",
     wizard_at: "at",
+    wizard_next_step_from: "From {h}h after the previous treatment, i.e. from {date}",
     wizard_scheduled: "Scheduled",
     wizard_earliest: "Earliest",
     chlore_timing_tip: "For best results, apply preferably in the evening, after the last swim and at sunset.",
@@ -1197,6 +1200,7 @@ const TRANSLATIONS = {
     missing_product: "not available in your products",
     missing_product_tip: "No {action} product in your list — add one in the Products tab.",
     dose_anomaly_warning: "Unusual dose — check this product's sheet (quantity, effect, per X m³).",
+    reco_ph_reduced_by_tac_note: "Dose reduced: the TAC+ applied just before also slightly raises pH (estimate). You can re-measure pH before applying, to adjust if needed.",
     see_dosage: "See dosage",
     paywall_title: "Go Premium",
     paywall_desc: "Unlimited readings · AI strip analysis · PDF report · Stock management",
@@ -1851,6 +1855,7 @@ const TRANSLATIONS = {
     wizard_now: "Jetzt",
     wizard_in: "In",
     wizard_at: "um",
+    wizard_next_step_from: "Ab {h}h nach der vorherigen Behandlung, also ab {date}",
     wizard_scheduled: "Geplant",
     wizard_earliest: "Frühestens",
     chlore_timing_tip: "Für beste Wirksamkeit am besten abends anwenden, nach dem letzten Bad und bei Sonnenuntergang.",
@@ -1971,6 +1976,7 @@ const TRANSLATIONS = {
     missing_product: "nicht in deinen Produkten verfügbar",
     missing_product_tip: "Kein {action}-Produkt in deiner Liste — füge eines im Produkte-Tab hinzu.",
     dose_anomaly_warning: "Ungewöhnliche Dosis — überprüfe das Produktblatt (Menge, Wirkung, pro X m³).",
+    reco_ph_reduced_by_tac_note: "Dosis reduziert: Der zuvor zugegebene KH+ erhöht auch leicht den pH-Wert (Schätzung). Du kannst den pH-Wert vor der Anwendung neu messen, um bei Bedarf anzupassen.",
     see_dosage: "Dosierung anzeigen",
     paywall_title: "Zu Premium wechseln",
     paywall_desc: "Unbegrenzte Messungen · KI-Streifenanalyse · PDF-Bericht · Lagerverwaltung",
@@ -2627,6 +2633,7 @@ const TRANSLATIONS = {
     wizard_now: "Adesso",
     wizard_in: "Tra",
     wizard_at: "alle",
+    wizard_next_step_from: "A partire da {h}h dopo il trattamento precedente, quindi a partire dal {date}",
     wizard_scheduled: "Previsto",
     wizard_earliest: "Al più presto",
     chlore_timing_tip: "Per una migliore efficacia, applica preferibilmente la sera, dopo l'ultimo bagno e al tramonto.",
@@ -2747,6 +2754,7 @@ const TRANSLATIONS = {
     missing_product: "non disponibile nei tuoi prodotti",
     missing_product_tip: "Nessun prodotto {action} nella tua lista — aggiungine uno nella scheda Prodotti.",
     dose_anomaly_warning: "Dose insolita — controlla la scheda di questo prodotto (quantità, effetto, per X m³).",
+    reco_ph_reduced_by_tac_note: "Dose ridotta: il TAC+ applicato appena prima fa salire leggermente anche il pH (stima). Puoi rimisurare il pH prima di applicare per correggere se necessario.",
     see_dosage: "Vedi dosaggio",
     paywall_title: "Passa a Premium",
     paywall_desc: "Misurazioni illimitate · Analisi IA strisce · Rapporto PDF · Gestione stock",
@@ -3400,6 +3408,7 @@ const TRANSLATIONS = {
     wizard_now: "Ahora",
     wizard_in: "En",
     wizard_at: "a las",
+    wizard_next_step_from: "A partir de {h}h después del tratamiento anterior, es decir a partir del {date}",
     wizard_scheduled: "Programado",
     wizard_earliest: "Lo antes posible",
     chlore_timing_tip: "Para una mejor eficacia, aplica preferiblemente por la noche, después del último baño y al atardecer.",
@@ -3520,6 +3529,7 @@ const TRANSLATIONS = {
     missing_product: "no disponible en tus productos",
     missing_product_tip: "Sin producto {action} en tu lista — añade uno en la pestaña Productos.",
     dose_anomaly_warning: "Dosis inusual — revisa la ficha de este producto (cantidad, efecto, por X m³).",
+    reco_ph_reduced_by_tac_note: "Dosis reducida: el TAC+ aplicado justo antes también sube ligeramente el pH (estimación). Puedes volver a medir el pH antes de aplicar para ajustar si hace falta.",
     see_dosage: "Ver dosaje",
     paywall_title: "Pasar a Premium",
     ai_timer_hint: "A análise pode levar até 30 segundos.",
@@ -4173,6 +4183,7 @@ const TRANSLATIONS = {
     wizard_now: "Agora",
     wizard_in: "Em",
     wizard_at: "às",
+    wizard_next_step_from: "A partir de {h}h após o tratamento anterior, ou seja a partir de {date}",
     wizard_scheduled: "Previsto",
     wizard_earliest: "O mais cedo possível",
     chlore_timing_tip: "Para melhor eficácia, aplica de preferência à noite, após o último banho e ao pôr do sol.",
@@ -4293,6 +4304,7 @@ const TRANSLATIONS = {
     missing_product: "não disponível nos seus produtos",
     missing_product_tip: "Nenhum produto {action} na sua lista — adicione um na aba Produtos.",
     dose_anomaly_warning: "Dose incomum — verifica a ficha deste produto (quantidade, efeito, por X m³).",
+    reco_ph_reduced_by_tac_note: "Dose reduzida: o TAC+ aplicado logo antes também sobe um pouco o pH (estimativa). Podes voltar a medir o pH antes de aplicar para ajustar se necessário.",
     see_dosage: "Ver dosagem",
     paywall_title: "Passar para Premium",
     paywall_desc: "Medições ilimitadas · Análise IA de tiras · Relatório PDF · Gestão de estoque",
@@ -6630,7 +6642,7 @@ Informations à renseigner, dans les deux cas :
 - Son action principale (une seule valeur parmi : "ph-", "ph+", "chlore", "chlore-stabilise", "tac+", "tac-", "brome", "o2", "sel", "hard+", "phos-", "sequestrant")
   - "chlore" = chlore choc/non stabilisé, "chlore-stabilise" = galets/pastilles au chlore stabilisé (contient de l'acide cyanurique/CYA)
   - "tac-" = acide utilisé pour baisser l'alcalinité (acide chlorhydrique, bisulfate de sodium) — à distinguer de "ph-" même si c'est parfois le même produit physique : choisis "tac-" seulement si l'étiquette ou la notice présente explicitement ce produit comme correcteur de TAC/alcalinité
-- La dose conseillée et son unité (g, kg, ml ou L) — dose de TRAITEMENT, pas la taille du contenant
+- La dose conseillée et son unité (g, kg, mL ou L) — dose de TRAITEMENT, pas la taille du contenant
 - L'effet annoncé sur le paramètre concerné pour un volume d'eau donné (ex : "20g augmente le pH de 0,1 pour 10m³")
 - Le délai d'attente avant baignade recommandé en heures
 - La taille TOTALE du contenant/emballage tel que vendu (ex : "5 kg", "25 kg", "1 L", "20 L")
@@ -6639,7 +6651,7 @@ Informations à renseigner, dans les deux cas :
 - Si conditionnement "galets" : le ratio d'entretien continu annoncé par le fabricant, tel qu'affiché sur l'emballage ou trouvé sur le web (ex : "1 galet / 30 m³ / 7-10 jours") — nombre d'unités, volume en m³, et nombre de jours entre deux ajouts. Ce ratio est différent de la dose de traitement correctif : ne pas le confondre ni le déduire, uniquement le rapporter s'il est explicitement indiqué${barcodeNote}
 
 Réponds UNIQUEMENT en JSON valide, sans texte avant ou après, sans markdown :
-{"name": "nom du produit ou null", "barcode": "numéro EAN/UPC en chaîne de caractères ou null", "activeSubstance": "nom chimique ou null", "action": "une des valeurs listées ci-dessus ou null", "doseAmount": nombre ou null, "doseUnit": "g" ou "kg" ou "ml" ou "L" ou null, "effectAmount": nombre ou null, "effectPer": nombre de m³ ou null, "waitHours": nombre ou null, "containerAmount": nombre ou null, "containerUnit": "g" ou "kg" ou "ml" ou "L" ou null, "packagingType": "galets" ou "vrac" ou null, "unitWeight": nombre en grammes ou null, "maintenanceUnits": nombre ou null, "maintenanceVolumePer": nombre de m³ ou null, "maintenanceDays": nombre ou null, "productImageUrl": "URL directe de la photo officielle trouvée en ligne, ou null si aucune", "source": "web" ou "etiquette", "confidence": "haute" ou "moyenne" ou "basse", "note": "une phrase en français sur ce qui a été trouvé, en précisant si ça vient de la recherche web ou de la lecture d'étiquette"}
+{"name": "nom du produit ou null", "barcode": "numéro EAN/UPC en chaîne de caractères ou null", "activeSubstance": "nom chimique ou null", "action": "une des valeurs listées ci-dessus ou null", "doseAmount": nombre ou null, "doseUnit": "g" ou "kg" ou "mL" ou "L" ou null, "effectAmount": nombre ou null, "effectPer": nombre de m³ ou null, "waitHours": nombre ou null, "containerAmount": nombre ou null, "containerUnit": "g" ou "kg" ou "mL" ou "L" ou null, "packagingType": "galets" ou "vrac" ou null, "unitWeight": nombre en grammes ou null, "maintenanceUnits": nombre ou null, "maintenanceVolumePer": nombre de m³ ou null, "maintenanceDays": nombre ou null, "productImageUrl": "URL directe de la photo officielle trouvée en ligne, ou null si aucune", "source": "web" ou "etiquette", "confidence": "haute" ou "moyenne" ou "basse", "note": "une phrase en français sur ce qui a été trouvé, en précisant si ça vient de la recherche web ou de la lecture d'étiquette"}
 
 Règles strictes :
 - null pour toute information absente ou illisible, ne devine jamais une valeur non présente
@@ -9721,8 +9733,9 @@ function PoolGenAIApp() {
           if (!step || !prod.containerAmount) return prod;
           const cUnit = prod.containerUnit || "kg";
           let appliedInContainerUnit = step.appliedAmount;
-          if (cUnit === "kg" && step.doseUnit === "g") appliedInContainerUnit = step.appliedAmount / 1000;
-          if (cUnit === "L" && step.doseUnit === "mL") appliedInContainerUnit = step.appliedAmount / 1000;
+          const stepDoseUnit = normalizeDoseUnit(step.doseUnit);
+          if (cUnit === "kg" && stepDoseUnit === "g") appliedInContainerUnit = step.appliedAmount / 1000;
+          if (cUnit === "L" && stepDoseUnit === "mL") appliedInContainerUnit = step.appliedAmount / 1000;
           const consumed = (appliedInContainerUnit / prod.containerAmount) * 100;
           const prevStock = prod.stockPercent ?? 100;
           const newStock = Math.max(0, prevStock - consumed);
@@ -9773,6 +9786,7 @@ function PoolGenAIApp() {
   // measureId, marquée type: "manual" pour être reconnue dans l'historique
   // et le rapport PDF sans se substituer aux applications liées à une mesure.
   function saveManualApplication(product, amount, doseUnit, appliedAt) {
+    doseUnit = normalizeDoseUnit(doseUnit);
     track("manual_application", { product: product.name });
     if (product.containerAmount) {
       const cUnit = product.containerUnit || "kg";
@@ -9824,6 +9838,7 @@ function PoolGenAIApp() {
 
     function applyDelta(list, productName, amount, doseUnit, sign) {
       if (!amount) return list;
+      doseUnit = normalizeDoseUnit(doseUnit);
       return list.map((p) => {
         if (p.name !== productName || !p.containerAmount) return p;
         const cUnit = p.containerUnit || "kg";
@@ -12046,6 +12061,14 @@ function RecoCard({ reco, isLast, manageStock, products, lang }) {
           <AlertTriangle size={12} /> {t("dose_anomaly_warning")}
         </div>
       )}
+      {/* v1.109.0 — Voir estimatedPhRiseFromTacPlus dans computeRecommendations :
+          dose pH+ déjà réduite d'une estimation, mais invite à remesurer
+          plutôt que de faire confiance aveuglément au chiffre affiché. */}
+      {reco.phAdjustedForTac && (
+        <div style={styles.recoInfoTiming}>
+          <Info size={12} /> {t("reco_ph_reduced_by_tac_note")}
+        </div>
+      )}
       {reco.missingTip && <div style={styles.recoNote}>{reco.missingTip}</div>}
       {reco.timingTip && <div style={{ fontSize: 12.5, color: "#3a5a78", marginTop: 4 }}>🌙 {reco.timingTip}</div>}
 
@@ -12068,9 +12091,33 @@ function RecoCard({ reco, isLast, manageStock, products, lang }) {
   );
 }
 
+// v1.109.2 — Normalise la casse d'une unité de dose ("ml" → "mL", etc.).
+// Root cause d'un bug réel (surdosage fantôme ×1000, ex. "500 L de pH moins"
+// dans un rapport) : le prompt d'analyse IA autorisait "ml" minuscule comme
+// valeur valide (voir analyzeProductPhoto), alors que toutes les comparaisons
+// du code testent strictement "mL" majuscule (toDisplayUnit, toBaseUnit,
+// formatDose...). Un produit scanné pouvait donc hériter d'un doseUnit "ml"
+// en base, cassant la conversion mL↔L à un endroit du Wizard mais pas à un
+// autre (populate vs submit lisant des sources différentes) → dose finale
+// multipliée par 1000. Corrige à la fois les données déjà en base
+// (comparaison insensible à la casse, partout où "mL"/"g"/"kg"/"L" sont
+// comparés) et coupe la source (voir handleAnalyzePhoto, qui normalise
+// désormais aussi la suggestion IA avant de l'appliquer).
+function normalizeDoseUnit(u) {
+  if (!u) return u;
+  const s = String(u).trim();
+  const low = s.toLowerCase();
+  if (low === "ml") return "mL";
+  if (low === "kg") return "kg";
+  if (low === "l") return "L";
+  if (low === "g") return "g";
+  return s;
+}
+
 // Formate une dose avec conversion automatique g→kg et mL→L
 function formatDose(amount, unit) {
   if (!amount && amount !== 0) return `? ${unit}`;
+  unit = normalizeDoseUnit(unit);
   if (unit === "g" && amount >= 1000) {
     const kg = amount / 1000;
     return `${Number.isInteger(kg) ? kg : kg.toFixed(2).replace(/\.?0+$/, "")} kg`;
@@ -12097,7 +12144,7 @@ function productDoseRate(p, useEffectAmount) {
   return p.doseAmount / p.effectPer / (useEffectAmount ? p.effectAmount : 1);
 }
 function isDoseRateAnomalous(prod, referenceProd, useEffectAmount = true) {
-  if (!prod || !referenceProd || prod.doseUnit !== referenceProd.doseUnit) return false;
+  if (!prod || !referenceProd || normalizeDoseUnit(prod.doseUnit) !== normalizeDoseUnit(referenceProd.doseUnit)) return false;
   const rate = productDoseRate(prod, useEffectAmount);
   const refRate = productDoseRate(referenceProd, useEffectAmount);
   if (!rate || !refRate) return false;
@@ -12209,6 +12256,21 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
     });
   }
 
+  // v1.109.0 — Le bicarbonate de sodium (TAC+) remonte aussi légèrement le pH
+  // en plus du TAC (effet secondaire confirmé par la littérature technique,
+  // ex. bulletin CPO : +30 ppm de TAC ≈ +0,1 pH). Sans ce correctif, une
+  // étape TAC+ suivie d'une étape pH+ dans le même plan surdosait le pH+ en
+  // ignorant la remontée déjà apportée par le TAC+. Estimation volontairement
+  // prudente (littérature très dispersée sur ce ratio, ×10 d'écart selon les
+  // sources, et la vraie réponse dépend de la chimie propre à chaque bassin)
+  // — voir reco_ph_reduced_by_tac_note affiché sur la carte pH+ concernée,
+  // qui invite à remesurer plutôt que faire confiance aveuglément au chiffre.
+  const TAC_PLUS_PH_RISE_PER_TAC_PPM = 0.1 / 30;
+  const estimatedPhRiseFromTacPlus =
+    has("tac") && !Number.isNaN(tac) && targetsLower.tac && tac < targetsLower.tac.min
+      ? (((targetsLower.tac.min + targetsLower.tac.max) / 2) - tac) * TAC_PLUS_PH_RISE_PER_TAC_PPM
+      : 0;
+
   // pH
   const phVal = parseFloat(latestLower.ph);
   if (has("ph") && !Number.isNaN(phVal) && targetsLower.ph) {
@@ -12237,7 +12299,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
         waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["ph-"],
       });
     } else if (phVal < phTargets.min) {
-      const diff = targetMid - phVal;
+      const diff = Math.max(0, (targetMid - phVal) - estimatedPhRiseFromTacPlus);
       const prod = findProduct("ph+");
       const dp = defaultProd("ph+");
       const doseSrc = prod || dp;
@@ -12255,6 +12317,9 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
         computedDoseAmount: computedDose,
         doseUnit: doseSrc?.doseUnit || null,
         doseAnomaly: isDoseRateAnomalous(prod, dp),
+        // v1.109.0 — Voir estimatedPhRiseFromTacPlus ci-dessus : invite à
+        // remesurer plutôt que de faire confiance à une correction estimée.
+        phAdjustedForTac: estimatedPhRiseFromTacPlus > 0.01,
         note: prodNote(prod, "note_ph_plus"),
         waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["ph+"],
       });
@@ -15228,6 +15293,7 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
     return (products || []).find((p) => p.name === name) || DEFAULT_PRODUCTS.find((p) => p.name === name) || null;
   }
   function toDispUnitForEdit(amount, unit, product) {
+    unit = normalizeDoseUnit(unit);
     if (product?.packagingType === "galets" && product?.unitWeight > 0 && unit === "g") {
       const v = amount != null ? Math.round(amount / product.unitWeight) : "";
       return { value: v, unit: t("unit_galets") };
@@ -15245,6 +15311,7 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
   function toBaseAmtForEdit(value, dispUnit, baseUnit, product) {
     const v = parseFloat(value);
     if (isNaN(v)) return null;
+    baseUnit = normalizeDoseUnit(baseUnit);
     if (product?.packagingType === "galets" && product?.unitWeight > 0 && baseUnit === "g") {
       return Math.round(v) * product.unitWeight;
     }
@@ -16631,7 +16698,7 @@ function PlanStatusCard({ plan, onResume, lang }) {
             {remaining !== null
               ? isReady
                 ? t("countdown_done")
-                : `${t("wizard_in")} ${formatCountdown(remaining)} — ${t("wizard_at")} ${new Date(currentStep.scheduledAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+                : `${t("wizard_in")} ${formatCountdown(remaining)} — ${t("wizard_at")} ${new Date(currentStep.scheduledAt).toLocaleString(lang, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}`
               : t("wizard_now")}
           </div>
         </div>
@@ -16726,6 +16793,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   }, [plan?.currentStepIdx]);
 
   function toDisplayUnit(amount, unit, product) {
+    unit = normalizeDoseUnit(unit);
     // v1.61.0 — Produit conditionné en galets/sticks : affichage en nombre
     // d'unités (arrondi), converti depuis la dose calculée en grammes.
     if (product?.packagingType === "galets" && product?.unitWeight > 0 && unit === "g") {
@@ -16747,6 +16815,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   function toBaseUnit(value, displayUnit, baseUnit, product) {
     const v = parseFloat(value);
     if (isNaN(v)) return null;
+    baseUnit = normalizeDoseUnit(baseUnit);
     // v1.61.0 — Conversion inverse nombre de galets → grammes.
     if (product?.packagingType === "galets" && product?.unitWeight > 0 && baseUnit === "g") {
       return Math.round(v) * product.unitWeight;
@@ -16775,6 +16844,15 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   const totalSteps = plan.steps.length;
   const doneCount = plan.steps.filter((s) => s.appliedAt || s.skipped).length;
   const isMaintenance = step.mode === "entretien";
+  // v1.109.3 — Étape "renouvellement d'eau partiel" (action=renouvellement,
+  // doseUnit="%") : ce n'est pas un produit, il n'y a donc jamais de candidat
+  // réel ni générique pour cette action, ce qui faisait systématiquement
+  // tomber sur le repli de saisie libre kg/unités (voir plus bas) — un
+  // pourcentage de renouvellement (ex. 29 pour "29%") s'affichait et se
+  // stockait comme "29 kg", et à la validation était même multiplié par
+  // 1000 comme s'il s'agissait d'un poids. Traité à part : aucune notion de
+  // produit/stock, juste le pourcentage calculé, éditable sans conversion.
+  const isPercentDose = step.doseUnit === "%";
   const baseUnit = step.doseUnit || "g";
   // v1.61.0 — Candidats produits pour cette étape (triés, filtrés sur stock
   // réel) et produit effectivement sélectionné (dropdown ou défaut trié).
@@ -16792,6 +16870,21 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
     if (isMaintenance) {
       // Carte informative : rien à saisir, ferme et termine le plan.
       onApplyStep(currentIdx, null, new Date().toISOString(), null);
+      return;
+    }
+    if (isPercentDose) {
+      // v1.109.3 — Pourcentage de renouvellement d'eau : ni kg, ni conversion,
+      // la valeur saisie EST le pourcentage.
+      const v = parseFloat(editAmount);
+      const amount = isNaN(v) ? null : v;
+      let appliedAt = new Date().toISOString();
+      if (editTime) {
+        const [h, m] = editTime.split(":").map(Number);
+        const d = new Date();
+        d.setHours(h, m, 0, 0);
+        appliedAt = d.toISOString();
+      }
+      onApplyStep(currentIdx, amount, appliedAt, null);
       return;
     }
     if (manageStock && sortedCandidates.length === 0 && genericCandidates.length === 0) {
@@ -16887,7 +16980,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
               </div>
             </div>
             <div style={{ textAlign: "right", fontSize: 12, color: "var(--brand-text-secondary)" }}>
-              {t("wizard_at")} {new Date(step.scheduledAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              {t("wizard_at")} {new Date(step.scheduledAt).toLocaleString(lang, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
             </div>
           </div>
         )}
@@ -16998,7 +17091,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
         {/* Quantité — masquée pour la carte entretien (rien à saisir).
             Dernier repli : aucun produit réel NI générique pour cette action
             (cas très rare, catalogue générique ne couvre pas l'action). */}
-        {!isMaintenance && manageStock && sortedCandidates.length === 0 && genericCandidates.length === 0 && (
+        {!isMaintenance && !isPercentDose && manageStock && sortedCandidates.length === 0 && genericCandidates.length === 0 && (
           <div style={{ marginBottom: 6 }}>
             <div style={{ fontSize: 12, color: "#c0392b", marginBottom: 8 }}>{t("no_stock_category_hint")}</div>
             <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
@@ -17027,10 +17120,12 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
                 value={editAmount ?? ""}
                 onChange={(e) => setEditAmount(e.target.value)}
                 style={{ flex: 1, fontSize: 22, fontWeight: 700, color: "var(--brand-text-strong)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 12px", textAlign: "center", outline: "none" }}
-                step={(manageStock && sortedCandidates.length === 0 && genericCandidates.length === 0 && freeUnitMode === "unites") || selectedProductObj?.packagingType === "galets" ? "1" : "0.01"}
+                step={isPercentDose ? "1" : (manageStock && sortedCandidates.length === 0 && genericCandidates.length === 0 && freeUnitMode === "unites") || selectedProductObj?.packagingType === "galets" ? "1" : "0.01"}
               />
               <div style={{ fontSize: 16, fontWeight: 700, color: "var(--brand-text-secondary)", minWidth: 32 }}>
-                {manageStock && sortedCandidates.length === 0 && genericCandidates.length === 0
+                {isPercentDose
+                  ? "%"
+                  : manageStock && sortedCandidates.length === 0 && genericCandidates.length === 0
                   ? t(freeUnitMode === "kg" ? "quantity_unit_mode_kg" : "quantity_unit_mode_units")
                   : displayUnit}
               </div>
@@ -17154,15 +17249,31 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
         {plan.steps.slice(currentIdx + 1).some((s) => !s.skipped && !s.appliedAt) && (
           <div style={{ marginTop: 16, borderTop: "1px solid #eaf4fb", paddingTop: 12 }}>
             <div style={{ fontSize: 11, color: "var(--brand-text-muted)", fontWeight: 600, marginBottom: 8 }}>ÉTAPES SUIVANTES</div>
-            {plan.steps.slice(currentIdx + 1).filter((s) => !s.skipped && !s.appliedAt).map((s, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", borderBottom: "1px solid var(--brand-bg-tint)" }}>
-                <Clock size={13} color="#b0c8e0" />
-                <span style={{ fontSize: 12, color: "var(--brand-text-secondary)", flex: 1 }}>{s.productName || s.title}</span>
-                <span style={{ fontSize: 11, color: "var(--brand-text-muted)" }}>
-                  {s.scheduledAt ? new Date(s.scheduledAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
-                </span>
-              </div>
-            ))}
+            {/* v1.109.1 — Index réel dans plan.steps conservé (pas juste celui du
+                tableau filtré) pour retrouver waitHours de l'étape PRÉCÉDENTE
+                (celle qui détermine le délai avant celle-ci) — scheduledAt est
+                déjà recalculé dynamiquement depuis l'heure réelle d'application
+                de l'étape précédente (voir applyWizardStep), on ne fait
+                qu'expliciter ce délai dans le texte affiché. */}
+            {plan.steps.map((s, idx) => ({ s, idx })).slice(currentIdx + 1).filter(({ s }) => !s.skipped && !s.appliedAt).map(({ s, idx }) => {
+              const prevWaitHours = plan.steps[idx - 1]?.waitHours || 0;
+              return (
+                <div key={idx} style={{ padding: "6px 0", borderBottom: "1px solid var(--brand-bg-tint)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <Clock size={13} color="#b0c8e0" />
+                    <span style={{ fontSize: 12, color: "var(--brand-text-secondary)", flex: 1 }}>{s.productName || s.title}</span>
+                  </div>
+                  {s.scheduledAt && (
+                    <div style={{ fontSize: 11, color: "var(--brand-text-muted)", marginLeft: 21 }}>
+                      {t("wizard_next_step_from", {
+                        h: prevWaitHours,
+                        date: new Date(s.scheduledAt).toLocaleString(lang, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }),
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -17269,6 +17380,7 @@ function ManualApplyModal({ products, onClose, onSave, lang }) {
 function ValidateApplicationModal({ measure, recs, existingApplication, onClose, onSave, preselected, products, manageStock, onWantAddProduct, lang }) {
   const t = useT(lang || "fr");
   function toDisplayUnit(amount, unit) {
+    unit = normalizeDoseUnit(unit);
     if (amount == null) return { value: "", displayUnit: unit };
     if (unit === "g" && amount >= 1000) return { value: parseFloat((amount / 1000).toFixed(3)), displayUnit: "kg" };
     if (unit === "mL" && amount >= 1000) return { value: parseFloat((amount / 1000).toFixed(3)), displayUnit: "L" };
@@ -17277,6 +17389,7 @@ function ValidateApplicationModal({ measure, recs, existingApplication, onClose,
   function toBaseUnit(value, displayUnit, baseUnit) {
     const v = parseFloat(value);
     if (isNaN(v)) return null;
+    baseUnit = normalizeDoseUnit(baseUnit);
     if (displayUnit === "kg" && baseUnit === "g") return v * 1000;
     if (displayUnit === "L" && baseUnit === "mL") return v * 1000;
     return v;
@@ -17602,6 +17715,7 @@ function ProductsView({ products, onEdit, onAddNew, onDelete, onResetAll, isPrem
 // données stockées séparément.
 function remainingInDoseUnit(prod, doseUnit) {
   if (!prod?.containerAmount) return null;
+  doseUnit = normalizeDoseUnit(doseUnit);
   const cUnit = prod.containerUnit || "kg";
   let remaining = prod.containerAmount * ((prod.stockPercent ?? 100) / 100); // en containerUnit
   if (cUnit === "kg" && doseUnit === "g") remaining *= 1000;
@@ -17994,7 +18108,12 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
       // kg/L (réservés à la taille du contenant), toujours en g/mL. Si l'IA
       // renvoie kg ou L pour la dose, on convertit avant de suggérer.
       let suggDoseAmount = result.doseAmount ?? null;
-      let suggDoseUnit = result.doseUnit ?? null;
+      // v1.109.2 — Normalise la casse avant tout (l'IA peut renvoyer "ml" au
+      // lieu de "mL" malgré la consigne du prompt) : sans ça, un doseUnit "ml"
+      // stocké tel quel casse silencieusement les conversions mL↔L ailleurs
+      // dans l'app (voir normalizeDoseUnit) — c'est la cause exacte d'un
+      // surdosage fantôme ×1000 déjà observé (rapport testeur, TAC+/pH-).
+      let suggDoseUnit = normalizeDoseUnit(result.doseUnit ?? null);
       if (suggDoseAmount != null && suggDoseUnit === "kg") { suggDoseAmount *= 1000; suggDoseUnit = "g"; }
       if (suggDoseAmount != null && suggDoseUnit === "L") { suggDoseAmount *= 1000; suggDoseUnit = "mL"; }
       if (suggDoseUnit) setDoseUnit(suggDoseUnit);
@@ -18597,7 +18716,7 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
             <label style={styles.fieldLabel}>{t("last_consumptions")}</label>
             <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
               {history.map((h, i) => {
-                const unit = h.unit || "g";
+                const unit = normalizeDoseUnit(h.unit || "g");
                 const amt = h.amount;
                 const displayAmt = (unit === "g" && amt >= 1000)
                   ? `${(amt/1000).toFixed(2).replace(/\.?0+$/, "")} kg`
@@ -20180,7 +20299,23 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
       const topPad = showValues ? 4 : 0; // v1.68.0 — place pour les valeurs au-dessus des points
       const gW = cW - gAxisW * 2;
       const gX = mL + gAxisW, gY = y + topPad;
-      const leftAxisMax = 10, rightAxisMax = 110;
+      // v1.109.2 — Axes dynamiques : un plafond fixe (110 à droite) coupait
+      // silencieusement toute valeur au-dessus — ex. TH à 334 mg/L (cible
+      // 200-400, largement au-delà de 110). Le point se retrouvait plaqué
+      // en haut du graphique (voir le clamp plus bas) au lieu d'être
+      // positionné proportionnellement à sa vraie valeur, donc visuellement
+      // mal placé. On calcule maintenant le vrai maximum tracé sur chaque
+      // axe, avec un plancher (10/110) pour ne rien changer aux cas déjà
+      // corrects (ex. bassin sans TH/Phos suivi).
+      const axisMaxOf = (axis, floor) => {
+        const keys = chartParams.filter((cp) => cp.axis === axis && activeReportParams.includes(cp.key)).map((cp) => cp.key);
+        const dataMax = chartData.reduce((m, d) => {
+          keys.forEach((k) => { if (d[k] != null && d[k] > m) m = d[k]; });
+          return m;
+        }, 0);
+        return Math.max(floor, dataMax);
+      };
+      const leftAxisMax = axisMaxOf("left", 10), rightAxisMax = axisMaxOf("right", 110);
 
       // Fond graphique
       pdf.setFillColor(250,252,251);
@@ -20340,7 +20475,11 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
 
         // Cellule fusionnée (paramCols) : date + libellé entretien manuel
         pdf.setTextColor(30,30,30);
-        pdf.text(`${dateStr} · 🔧 ${t("reason_manual_maintenance")}`, paramStartX + 0.8, y + 3.8, { maxWidth: (prodStartX - paramStartX) - 1.5 });
+        // v1.109.2 — jsPDF/Helvetica ne sait pas afficher les emoji (glyphes
+        // hors Latin) : un 🔧 ici tournait en caractères illisibles dans le
+        // PDF ("Ø=ÜÝ..."), contrairement au rendu à l'écran (JSX) qui, lui,
+        // affiche l'emoji normalement. Retiré uniquement côté PDF.
+        pdf.text(`${dateStr} · ${t("reason_manual_maintenance")}`, paramStartX + 0.8, y + 3.8, { maxWidth: (prodStartX - paramStartX) - 1.5 });
 
         const stockVal = (() => {
           if (!manageStock || !prod) return "—";
@@ -20428,7 +20567,10 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           prod:    step ? step.productName : rec ? rec.productName : "—",
           advised: step ? (step.computedDoseAmount != null ? formatDose(step.computedDoseAmount, step.doseUnit||"g") : "—")
                         : rec ? formatDose(rec.computedDoseAmount, rec.doseUnit||"g") : "—",
-          qty:     step ? formatDose(step.appliedAmount, step.doseUnit||"g") : "—",
+          // v1.109.2 — Une étape jamais confirmée (appliedAmount null, ex.
+          // plan en cours) affichait "? g" (voir formatDose) au lieu de "—"
+          // comme les autres cellules vides du rapport.
+          qty:     step && step.appliedAmount != null ? formatDose(step.appliedAmount, step.doseUnit||"g") : "—",
           stock:   stockVal,
         };
 
@@ -20456,7 +20598,8 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
         pdf.setFillColor(240, 246, 251);
         pdf.rect(prodStartX, y, cW - (prodStartX - mL), rowH, "F");
         pdf.setFontSize(5.5); pdf.setFont("helvetica","italic"); pdf.setTextColor(74,100,128);
-        pdf.text(`📝 ${m.note}`, prodStartX + 1, y + 3.8, { maxWidth: cW - (prodStartX - mL) - 2 });
+        // v1.109.2 — Idem : 📝 illisible en PDF (voir plus haut), retiré.
+        pdf.text(m.note, prodStartX + 1, y + 3.8, { maxWidth: cW - (prodStartX - mL) - 2 });
         pdf.setFont("helvetica","normal"); pdf.setTextColor(30,30,30);
         pdf.setDrawColor(200,212,228); pdf.setLineWidth(0.1);
         pdf.line(mL, y+rowH, mL+cW, y+rowH);
