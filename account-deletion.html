@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PoolGenAI – Suppression de compte</title>
+<style>
+  :root {
+    --bg: #F5FAFA;
+    --panel: #FFFFFF;
+    --border: #D7E6E6;
+    --text: #14302E;
+    --muted: #4B6B69;
+    --accent: #0E7C86;
+    --accent-dark: #0B646C;
+    --table-head: #EAF4F4;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+  }
+  header {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+  }
+  .brand {
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: var(--accent-dark);
+    letter-spacing: -0.01em;
+  }
+  .lang-switcher {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .lang-switcher button {
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .lang-switcher button:hover {
+    border-color: var(--accent);
+    color: var(--accent-dark);
+  }
+  .lang-switcher button[aria-pressed="true"] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #FFFFFF;
+  }
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+  h1 {
+    font-size: 1.9rem;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .updated {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin: 0 0 32px;
+  }
+  h2 {
+    font-size: 1.15rem;
+    margin: 40px 0 12px;
+    padding-left: 12px;
+    border-left: 3px solid var(--accent);
+  }
+  p, li {
+    max-width: 68ch;
+  }
+  ul, ol {
+    padding-left: 20px;
+  }
+  li {
+    margin-bottom: 8px;
+  }
+  a { color: var(--accent-dark); }
+  .box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin: 16px 0;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 16px 0;
+    font-size: 0.95rem;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  th {
+    background: var(--table-head);
+    color: var(--accent-dark);
+  }
+  .lang-section[hidden] { display: none; }
+  footer {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 24px 60px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">PoolGenAI</div>
+  <div class="lang-switcher" role="group" aria-label="Choix de la langue / Language selector">
+    <button type="button" data-lang="fr">FR</button>
+    <button type="button" data-lang="en">EN</button>
+    <button type="button" data-lang="de">DE</button>
+    <button type="button" data-lang="it">IT</button>
+    <button type="button" data-lang="es">ES</button>
+    <button type="button" data-lang="pt">PT</button>
+  </div>
+</header>
+
+<main>
+
+<!-- ===================== FR ===================== -->
+<section class="lang-section" data-lang="fr" lang="fr">
+  <h1>Suppression de compte</h1>
+  <p class="updated">Dernière mise à jour : 4 septembre 2026 — PoolGenAI, éditée par Arnaud Goumain</p>
+
+  <h2>1. Bloquer l'accès à votre compte (immédiat)</h2>
+  <div class="box">
+    <p>Dans l'application : <strong>Réglages → Zone sensible → Supprimer mon compte</strong>.</p>
+    <p>Cette action bloque immédiatement l'accès à l'application avec ce compte et vous déconnecte. <strong>Elle n'efface pas encore vos données</strong> : vos mesures, produits, historique et diagnostics restent conservés, au cas où vous souhaiteriez reprendre l'utilisation de l'application avec la même adresse email.</p>
+  </div>
+
+  <h2>2. Demander l'effacement définitif de vos données</h2>
+  <p>Pour effacer réellement et définitivement vos données, deux méthodes :</p>
+  <ol>
+    <li>Depuis l'application (si vous y avez encore accès) : <strong>Réglages → Récupération ou suppression des données → "Effacer toutes mes données"</strong>.</li>
+    <li>Par email, si vous n'avez plus accès à l'application ou à votre compte : écrivez à <a href="mailto:support@poolgenai.com">support@poolgenai.com</a> depuis l'adresse email associée à votre compte, en précisant votre demande de suppression définitive.</li>
+  </ol>
+  <p>Ces demandes sont traitées manuellement et confirmées par email, <strong>dans un délai maximum de 30 jours</strong>.</p>
+
+  <h2>3. Données supprimées</h2>
+  <table>
+    <tr><th>Donnée</th><th>Sort</th></tr>
+    <tr><td>Compte (email, mot de passe)</td><td>Supprimé</td></tr>
+    <tr><td>Bassins, mesures de chimie de l'eau, historique</td><td>Supprimé</td></tr>
+    <tr><td>Produits enregistrés, stocks</td><td>Supprimé</td></tr>
+    <tr><td>Photos personnelles (mesures, produits, bassin)</td><td>Supprimé</td></tr>
+    <tr><td>Diagnostics IA, historique d'usage</td><td>Supprimé</td></tr>
+  </table>
+
+  <h2>4. Données conservées après suppression</h2>
+  <ul>
+    <li><strong>Photo de produit déjà contribuée à la base commune</strong> (partagée entre utilisateurs) : conservée, car elle n'est jamais liée à votre compte dès sa contribution — aucune information ne permet de la relier à vous après suppression. Elle ne peut pas être retirée individuellement.</li>
+    <li><strong>Données de calibration bandelette contribuées</strong> : conservées, car déjà anonymes au moment de la contribution (aucune photo, aucun identifiant de compte).</li>
+    <li><strong>Historique de paiement</strong> : Stripe et Google Play Billing conservent leurs propres enregistrements de transaction selon leurs obligations légales respectives, indépendamment de PoolGenAI.</li>
+  </ul>
+
+  <h2>5. Contact</h2>
+  <p>Pour toute question sur la suppression de votre compte ou de vos données : <a href="mailto:support@poolgenai.com">support@poolgenai.com</a></p>
+</section>
+
+<!-- ===================== EN ===================== -->
+<section class="lang-section" data-lang="en" lang="en" hidden>
+  <h1>Account Deletion</h1>
+  <p class="updated">Last updated: 4 September 2026 — PoolGenAI, published by Arnaud Goumain</p>
+
+  <h2>1. Block access to your account (immediate)</h2>
+  <div class="box">
+    <p>In the app: <strong>Settings → Sensitive zone → Delete my account</strong>.</p>
+    <p>This immediately blocks access to the app with this account and signs you out. <strong>It does not yet erase your data</strong>: your measurements, products, history, and diagnostics are kept, in case you wish to resume using the app with the same email address.</p>
+  </div>
+
+  <h2>2. Request permanent erasure of your data</h2>
+  <p>To actually and permanently erase your data, two methods:</p>
+  <ol>
+    <li>From the app (if you still have access): <strong>Settings → Data recovery or deletion → "Erase all my data"</strong>.</li>
+    <li>By email, if you no longer have access to the app or your account: write to <a href="mailto:support@poolgenai.com">support@poolgenai.com</a> from the email address associated with your account, stating your request for permanent deletion.</li>
+  </ol>
+  <p>These requests are processed manually and confirmed by email, <strong>within a maximum of 30 days</strong>.</p>
+
+  <h2>3. Data deleted</h2>
+  <table>
+    <tr><th>Data</th><th>Outcome</th></tr>
+    <tr><td>Account (email, password)</td><td>Deleted</td></tr>
+    <tr><td>Pools, water chemistry measurements, history</td><td>Deleted</td></tr>
+    <tr><td>Registered products, stock levels</td><td>Deleted</td></tr>
+    <tr><td>Personal photos (measurements, products, pool)</td><td>Deleted</td></tr>
+    <tr><td>AI diagnostics, usage history</td><td>Deleted</td></tr>
+  </table>
+
+  <h2>4. Data retained after deletion</h2>
+  <ul>
+    <li><strong>Product photo already contributed to the shared database</strong> (shared between users): retained, as it is never linked to your account from the moment it is contributed — no information can link it back to you after deletion. It cannot be individually withdrawn.</li>
+    <li><strong>Contributed test strip calibration data</strong>: retained, as it is already anonymous at the time of contribution (no photo, no account identifier).</li>
+    <li><strong>Payment history</strong>: Stripe and Google Play Billing keep their own transaction records under their respective legal obligations, independently of PoolGenAI.</li>
+  </ul>
+
+  <h2>5. Contact</h2>
+  <p>For any question about deleting your account or your data: <a href="mailto:support@poolgenai.com">support@poolgenai.com</a></p>
+</section>
+
+<!-- ===================== DE ===================== -->
+<section class="lang-section" data-lang="de" lang="de" hidden>
+  <h1>Kontolöschung</h1>
+  <p class="updated">Zuletzt aktualisiert: 4. September 2026 — PoolGenAI, herausgegeben von Arnaud Goumain</p>
+
+  <h2>1. Zugriff auf Ihr Konto sperren (sofort)</h2>
+  <div class="box">
+    <p>In der App: <strong>Einstellungen → Sensibler Bereich → Konto löschen</strong>.</p>
+    <p>Dies sperrt sofort den Zugriff auf die App mit diesem Konto und meldet Sie ab. <strong>Ihre Daten werden dabei noch nicht gelöscht</strong>: Ihre Messungen, Produkte, Verlauf und Diagnosen bleiben erhalten, falls Sie die App später mit derselben E-Mail-Adresse wieder nutzen möchten.</p>
+  </div>
+
+  <h2>2. Endgültige Löschung Ihrer Daten beantragen</h2>
+  <p>Um Ihre Daten tatsächlich und endgültig zu löschen, gibt es zwei Wege:</p>
+  <ol>
+    <li>In der App (falls noch zugänglich): <strong>Einstellungen → Datenwiederherstellung oder -löschung → "Alle meine Daten löschen"</strong>.</li>
+    <li>Per E-Mail, falls Sie keinen Zugriff mehr auf die App oder Ihr Konto haben: Schreiben Sie an <a href="mailto:support@poolgenai.com">support@poolgenai.com</a> von der mit Ihrem Konto verknüpften E-Mail-Adresse und geben Sie Ihren Wunsch nach endgültiger Löschung an.</li>
+  </ol>
+  <p>Diese Anfragen werden manuell bearbeitet und per E-Mail bestätigt, <strong>innerhalb von maximal 30 Tagen</strong>.</p>
+
+  <h2>3. Gelöschte Daten</h2>
+  <table>
+    <tr><th>Daten</th><th>Ergebnis</th></tr>
+    <tr><td>Konto (E-Mail, Passwort)</td><td>Gelöscht</td></tr>
+    <tr><td>Pools, Wasserchemie-Messwerte, Verlauf</td><td>Gelöscht</td></tr>
+    <tr><td>Registrierte Produkte, Lagerbestände</td><td>Gelöscht</td></tr>
+    <tr><td>Persönliche Fotos (Messungen, Produkte, Pool)</td><td>Gelöscht</td></tr>
+    <tr><td>KI-Diagnosen, Nutzungsverlauf</td><td>Gelöscht</td></tr>
+  </table>
+
+  <h2>4. Nach der Löschung erhaltene Daten</h2>
+  <ul>
+    <li><strong>Bereits zur gemeinsamen Datenbank beigetragenes Produktfoto</strong> (zwischen Nutzern geteilt): bleibt erhalten, da es ab dem Zeitpunkt des Beitrags nie mit Ihrem Konto verknüpft ist — keine Information erlaubt eine Rückverfolgung zu Ihnen nach der Löschung. Es kann nicht einzeln zurückgezogen werden.</li>
+    <li><strong>Beigetragene Teststreifen-Kalibrierungsdaten</strong>: bleiben erhalten, da sie zum Zeitpunkt des Beitrags bereits anonym sind (kein Foto, keine Konto-Kennung).</li>
+    <li><strong>Zahlungsverlauf</strong>: Stripe und Google Play Billing bewahren ihre eigenen Transaktionsaufzeichnungen gemäß ihren jeweiligen gesetzlichen Pflichten, unabhängig von PoolGenAI.</li>
+  </ul>
+
+  <h2>5. Kontakt</h2>
+  <p>Bei Fragen zur Löschung Ihres Kontos oder Ihrer Daten: <a href="mailto:support@poolgenai.com">support@poolgenai.com</a></p>
+</section>
+
+<!-- ===================== IT ===================== -->
+<section class="lang-section" data-lang="it" lang="it" hidden>
+  <h1>Eliminazione dell'account</h1>
+  <p class="updated">Ultimo aggiornamento: 4 settembre 2026 — PoolGenAI, pubblicata da Arnaud Goumain</p>
+
+  <h2>1. Bloccare l'accesso al tuo account (immediato)</h2>
+  <div class="box">
+    <p>Nell'app: <strong>Impostazioni → Zona sensibile → Elimina account</strong>.</p>
+    <p>Questa azione blocca immediatamente l'accesso all'app con questo account e ti disconnette. <strong>Non elimina ancora i tuoi dati</strong>: le tue misurazioni, prodotti, cronologia e diagnosi vengono conservati, nel caso desiderassi riprendere l'uso dell'app con lo stesso indirizzo email.</p>
+  </div>
+
+  <h2>2. Richiedere la cancellazione definitiva dei tuoi dati</h2>
+  <p>Per cancellare effettivamente e definitivamente i tuoi dati, due metodi:</p>
+  <ol>
+    <li>Dall'app (se hai ancora accesso): <strong>Impostazioni → Recupero o eliminazione dei dati → "Elimina tutti i miei dati"</strong>.</li>
+    <li>Via email, se non hai più accesso all'app o al tuo account: scrivi a <a href="mailto:support@poolgenai.com">support@poolgenai.com</a> dall'indirizzo email associato al tuo account, specificando la tua richiesta di cancellazione definitiva.</li>
+  </ol>
+  <p>Queste richieste vengono elaborate manualmente e confermate via email, <strong>entro un massimo di 30 giorni</strong>.</p>
+
+  <h2>3. Dati cancellati</h2>
+  <table>
+    <tr><th>Dato</th><th>Esito</th></tr>
+    <tr><td>Account (email, password)</td><td>Cancellato</td></tr>
+    <tr><td>Piscine, misurazioni della chimica dell'acqua, cronologia</td><td>Cancellato</td></tr>
+    <tr><td>Prodotti registrati, livelli di scorta</td><td>Cancellato</td></tr>
+    <tr><td>Foto personali (misurazioni, prodotti, piscina)</td><td>Cancellato</td></tr>
+    <tr><td>Diagnosi IA, cronologia di utilizzo</td><td>Cancellato</td></tr>
+  </table>
+
+  <h2>4. Dati conservati dopo la cancellazione</h2>
+  <ul>
+    <li><strong>Foto di prodotto già contribuita al database comune</strong> (condiviso tra utenti): viene conservata, poiché non è mai collegata al tuo account dal momento del contributo — nessuna informazione permette di ricollegarla a te dopo la cancellazione. Non può essere ritirata individualmente.</li>
+    <li><strong>Dati di calibrazione delle strisce reattive contribuiti</strong>: vengono conservati, poiché già anonimi al momento del contributo (nessuna foto, nessun identificativo dell'account).</li>
+    <li><strong>Cronologia dei pagamenti</strong>: Stripe e Google Play Billing conservano i propri registri delle transazioni secondo i rispettivi obblighi legali, indipendentemente da PoolGenAI.</li>
+  </ul>
+
+  <h2>5. Contatto</h2>
+  <p>Per qualsiasi domanda sulla cancellazione del tuo account o dei tuoi dati: <a href="mailto:support@poolgenai.com">support@poolgenai.com</a></p>
+</section>
+
+<!-- ===================== ES ===================== -->
+<section class="lang-section" data-lang="es" lang="es" hidden>
+  <h1>Eliminación de cuenta</h1>
+  <p class="updated">Última actualización: 4 de septiembre de 2026 — PoolGenAI, publicada por Arnaud Goumain</p>
+
+  <h2>1. Bloquear el acceso a tu cuenta (inmediato)</h2>
+  <div class="box">
+    <p>En la aplicación: <strong>Ajustes → Zona sensible → Eliminar mi cuenta</strong>.</p>
+    <p>Esta acción bloquea de inmediato el acceso a la aplicación con esta cuenta y te desconecta. <strong>Todavía no elimina tus datos</strong>: tus mediciones, productos, historial y diagnósticos se conservan, por si deseas retomar el uso de la aplicación con la misma dirección de correo.</p>
+  </div>
+
+  <h2>2. Solicitar la eliminación definitiva de tus datos</h2>
+  <p>Para eliminar tus datos de forma real y definitiva, hay dos métodos:</p>
+  <ol>
+    <li>Desde la aplicación (si aún tienes acceso): <strong>Ajustes → Recuperación o eliminación de datos → "Eliminar todos mis datos"</strong>.</li>
+    <li>Por correo electrónico, si ya no tienes acceso a la aplicación o a tu cuenta: escribe a <a href="mailto:support@poolgenai.com">support@poolgenai.com</a> desde la dirección de correo asociada a tu cuenta, indicando tu solicitud de eliminación definitiva.</li>
+  </ol>
+  <p>Estas solicitudes se procesan manualmente y se confirman por correo electrónico, <strong>en un plazo máximo de 30 días</strong>.</p>
+
+  <h2>3. Datos eliminados</h2>
+  <table>
+    <tr><th>Dato</th><th>Resultado</th></tr>
+    <tr><td>Cuenta (correo, contraseña)</td><td>Eliminado</td></tr>
+    <tr><td>Piscinas, mediciones de la química del agua, historial</td><td>Eliminado</td></tr>
+    <tr><td>Productos registrados, niveles de stock</td><td>Eliminado</td></tr>
+    <tr><td>Fotos personales (mediciones, productos, piscina)</td><td>Eliminado</td></tr>
+    <tr><td>Diagnósticos de IA, historial de uso</td><td>Eliminado</td></tr>
+  </table>
+
+  <h2>4. Datos conservados tras la eliminación</h2>
+  <ul>
+    <li><strong>Foto de producto ya aportada a la base común</strong> (compartida entre usuarios): se conserva, ya que nunca queda vinculada a tu cuenta desde el momento en que se aporta — ninguna información permite relacionarla contigo tras la eliminación. No puede retirarse de forma individual.</li>
+    <li><strong>Datos de calibración de tiras reactivas aportados</strong>: se conservan, ya que son anónimos desde el momento de la aportación (sin foto, sin identificador de cuenta).</li>
+    <li><strong>Historial de pagos</strong>: Stripe y Google Play Billing conservan sus propios registros de transacciones conforme a sus respectivas obligaciones legales, con independencia de PoolGenAI.</li>
+  </ul>
+
+  <h2>5. Contacto</h2>
+  <p>Para cualquier pregunta sobre la eliminación de tu cuenta o tus datos: <a href="mailto:support@poolgenai.com">support@poolgenai.com</a></p>
+</section>
+
+<!-- ===================== PT ===================== -->
+<section class="lang-section" data-lang="pt" lang="pt" hidden>
+  <h1>Eliminação de conta</h1>
+  <p class="updated">Última atualização: 4 de setembro de 2026 — PoolGenAI, publicada por Arnaud Goumain</p>
+
+  <h2>1. Bloquear o acesso à sua conta (imediato)</h2>
+  <div class="box">
+    <p>Na aplicação: <strong>Definições → Zona sensível → Eliminar minha conta</strong>.</p>
+    <p>Esta ação bloqueia imediatamente o acesso à aplicação com esta conta e termina a sua sessão. <strong>Ainda não elimina os seus dados</strong>: as suas medições, produtos, histórico e diagnósticos são conservados, caso deseje retomar a utilização da aplicação com o mesmo endereço de email.</p>
+  </div>
+
+  <h2>2. Solicitar a eliminação definitiva dos seus dados</h2>
+  <p>Para eliminar os seus dados de forma real e definitiva, existem dois métodos:</p>
+  <ol>
+    <li>A partir da aplicação (se ainda tiver acesso): <strong>Definições → Recuperação ou eliminação de dados → "Apagar todos os meus dados"</strong>.</li>
+    <li>Por email, se já não tiver acesso à aplicação ou à sua conta: escreva para <a href="mailto:support@poolgenai.com">support@poolgenai.com</a> a partir do endereço de email associado à sua conta, indicando o seu pedido de eliminação definitiva.</li>
+  </ol>
+  <p>Estes pedidos são processados manualmente e confirmados por email, <strong>num prazo máximo de 30 dias</strong>.</p>
+
+  <h2>3. Dados eliminados</h2>
+  <table>
+    <tr><th>Dado</th><th>Resultado</th></tr>
+    <tr><td>Conta (email, palavra-passe)</td><td>Eliminado</td></tr>
+    <tr><td>Piscinas, medições da química da água, histórico</td><td>Eliminado</td></tr>
+    <tr><td>Produtos registados, níveis de stock</td><td>Eliminado</td></tr>
+    <tr><td>Fotografias pessoais (medições, produtos, piscina)</td><td>Eliminado</td></tr>
+    <tr><td>Diagnósticos de IA, histórico de utilização</td><td>Eliminado</td></tr>
+  </table>
+
+  <h2>4. Dados conservados após a eliminação</h2>
+  <ul>
+    <li><strong>Fotografia de produto já contribuída para a base comum</strong> (partilhada entre utilizadores): é conservada, pois nunca fica associada à sua conta a partir do momento da contribuição — nenhuma informação permite relacioná-la consigo após a eliminação. Não pode ser retirada individualmente.</li>
+    <li><strong>Dados de calibração de tiras de teste contribuídos</strong>: são conservados, pois já são anónimos no momento da contribuição (sem fotografia, sem identificador de conta).</li>
+    <li><strong>Histórico de pagamentos</strong>: a Stripe e o Google Play Billing conservam os seus próprios registos de transações de acordo com as respetivas obrigações legais, independentemente da PoolGenAI.</li>
+  </ul>
+
+  <h2>5. Contacto</h2>
+  <p>Para qualquer questão sobre a eliminação da sua conta ou dos seus dados: <a href="mailto:support@poolgenai.com">support@poolgenai.com</a></p>
+</section>
+
+</main>
+
+<footer>
+  PoolGenAI — <a href="https://app.poolgenai.com">app.poolgenai.com</a> — <a href="https://app.poolgenai.com/privacy-policy.html">Politique de confidentialité</a>
+</footer>
+
+<script>
+  (function () {
+    var supported = ['fr', 'en', 'de', 'it', 'es', 'pt'];
+    var sections = document.querySelectorAll('.lang-section');
+    var buttons = document.querySelectorAll('.lang-switcher button');
+
+    function activate(code) {
+      if (supported.indexOf(code) === -1) code = 'fr';
+      sections.forEach(function (el) {
+        el.hidden = el.getAttribute('data-lang') !== code;
+      });
+      buttons.forEach(function (btn) {
+        btn.setAttribute('aria-pressed', btn.getAttribute('data-lang') === code ? 'true' : 'false');
+      });
+      document.documentElement.lang = code;
+      var visible = document.querySelector('.lang-section[data-lang="' + code + '"] h1');
+      if (visible) document.title = 'PoolGenAI – ' + visible.textContent;
+      try { localStorage.setItem('poolgenai-privacy-lang', code); } catch (e) {}
+    }
+
+    buttons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        activate(btn.getAttribute('data-lang'));
+      });
+    });
+
+    var saved = null;
+    try { saved = localStorage.getItem('poolgenai-privacy-lang'); } catch (e) {}
+    var browserLang = (navigator.language || 'fr').slice(0, 2).toLowerCase();
+    activate(saved || (supported.indexOf(browserLang) !== -1 ? browserLang : 'fr'));
+  })();
+</script>
+
+</body>
+</html>
