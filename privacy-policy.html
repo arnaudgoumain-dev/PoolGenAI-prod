@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PoolGenAI – Politique de confidentialité</title>
+<style>
+  :root {
+    --bg: #F5FAFA;
+    --panel: #FFFFFF;
+    --border: #D7E6E6;
+    --text: #14302E;
+    --muted: #4B6B69;
+    --accent: #0E7C86;
+    --accent-dark: #0B646C;
+    --table-head: #EAF4F4;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+  }
+  header {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+  }
+  .brand {
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: var(--accent-dark);
+    letter-spacing: -0.01em;
+  }
+  .lang-switcher {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .lang-switcher button {
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .lang-switcher button:hover {
+    border-color: var(--accent);
+    color: var(--accent-dark);
+  }
+  .lang-switcher button[aria-pressed="true"] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #FFFFFF;
+  }
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+  h1 {
+    font-size: 1.9rem;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .updated {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin: 0 0 32px;
+  }
+  h2 {
+    font-size: 1.15rem;
+    margin: 40px 0 12px;
+    padding-left: 12px;
+    border-left: 3px solid var(--accent);
+  }
+  p, li {
+    max-width: 68ch;
+  }
+  ul {
+    padding-left: 20px;
+  }
+  li {
+    margin-bottom: 8px;
+  }
+  a { color: var(--accent-dark); }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 16px 0;
+    font-size: 0.95rem;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  th {
+    background: var(--table-head);
+    color: var(--accent-dark);
+  }
+  .lang-section[hidden] { display: none; }
+  footer {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 24px 60px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">PoolGenAI</div>
+  <div class="lang-switcher" role="group" aria-label="Choix de la langue / Language selector">
+    <button type="button" data-lang="fr">FR</button>
+    <button type="button" data-lang="en">EN</button>
+    <button type="button" data-lang="de">DE</button>
+    <button type="button" data-lang="it">IT</button>
+    <button type="button" data-lang="es">ES</button>
+    <button type="button" data-lang="pt">PT</button>
+  </div>
+</header>
+
+<main>
+
+<!-- ===================== FR ===================== -->
+<section class="lang-section" data-lang="fr" lang="fr">
+  <h1>Politique de confidentialité</h1>
+  <p class="updated">Dernière mise à jour : 4 septembre 2026</p>
+
+  <h2>1. Qui sommes-nous</h2>
+  <p>PoolGenAI est éditée par Arnaud Goumain, particulier — non représenté par une société.<br>Contact : <a href="mailto:support@poolgenai.com">support@poolgenai.com</a></p>
+
+  <h2>2. Données que nous collectons</h2>
+  <ul>
+    <li><strong>Compte utilisateur</strong> : adresse email et mot de passe (gérés par Firebase Authentication, un service Google).</li>
+    <li><strong>Données d'usage de l'application</strong> : piscines enregistrées, mesures de chimie de l'eau (chlore, pH, alcalinité, etc.), invités associés à une piscine, historique des mesures.</li>
+    <li><strong>Photos et codes-barres</strong> : photos de produits ou de bandelettes de test envoyées pour la reconnaissance automatique et l'analyse par intelligence artificielle. Si un produit photographié n'a pas encore de photo dans la base commune partagée entre utilisateurs, cette photo peut y être ajoutée pour illustrer la fiche produit, visible par tous les utilisateurs — sans lien conservé avec votre compte.</li>
+    <li><strong>Données de calibration bandelette</strong> : lorsqu'une mesure comporte à la fois une photo de photomètre et une photo de bandelette pour un même paramètre, une donnée de calibration anonyme (couleur mesurée, valeur de référence, type de bandelette) peut être extraite et partagée avec l'ensemble des utilisateurs pour améliorer la précision de l'interprétation des bandelettes. Aucune photo ni identifiant de compte n'y est associé. Désactivable à tout moment dans les réglages de l'application.</li>
+    <li><strong>Localisation du bassin</strong> : si vous renseignez une adresse pour votre bassin, la recherche est effectuée via le service public OpenStreetMap/Nominatim.</li>
+    <li><strong>Données de paiement</strong> : gérées directement par Stripe (paiement web) et Google Play Billing (paiement Android). PoolGenAI ne stocke aucune donnée bancaire ; seul le statut de l'abonnement (actif/inactif) est conservé.</li>
+    <li><strong>Données techniques et de mesure d'audience</strong> : journaux de connexion et d'erreurs (via notre infrastructure Cloudflare) et statistiques d'usage de l'application (via Firebase Analytics), à des fins de sécurité, de débogage et d'amélioration du service.</li>
+  </ul>
+
+  <h2>3. Pourquoi nous utilisons ces données</h2>
+  <ul>
+    <li>Fournir le service : suivi de la chimie de l'eau, recommandations de traitement, historique.</li>
+    <li>Gérer votre compte et votre abonnement.</li>
+    <li>Assurer la sécurité et le bon fonctionnement technique de l'application.</li>
+    <li>Améliorer la reconnaissance automatique des produits et bandelettes, y compris via les contributions anonymes et désactivables décrites ci-dessus.</li>
+  </ul>
+
+  <h2>4. Partage avec des tiers</h2>
+  <p>Nous faisons appel aux sous-traitants suivants, chacun n'ayant accès qu'aux données nécessaires à son rôle :</p>
+  <table>
+    <tr><th>Prestataire</th><th>Rôle</th></tr>
+    <tr><td>Firebase (Google)</td><td>Authentification, base de données et mesure d'audience</td></tr>
+    <tr><td>Cloudflare</td><td>Proxy technique et stockage des photos de produits</td></tr>
+    <tr><td>GitHub Pages (Microsoft)</td><td>Hébergement du site et de l'application</td></tr>
+    <tr><td>Resend</td><td>Envoi d'emails transactionnels (invitations, notifications de compte)</td></tr>
+    <tr><td>OpenStreetMap / Nominatim</td><td>Recherche et géocodage de l'adresse du bassin</td></tr>
+    <tr><td>Stripe</td><td>Paiement par carte (version web)</td></tr>
+    <tr><td>Google Play Billing</td><td>Paiement (version Android)</td></tr>
+    <tr><td>Anthropic</td><td>Analyse IA des mesures et photos envoyées</td></tr>
+  </table>
+  <p>Nous ne vendons ni ne louons vos données à des tiers à des fins publicitaires.</p>
+
+  <h2>5. Transferts hors Union européenne</h2>
+  <p>Certains de nos prestataires (Google, Anthropic, Stripe, Cloudflare) peuvent traiter des données en dehors de l'Union européenne, notamment aux États-Unis. Ces transferts sont encadrés par les clauses contractuelles types de la Commission européenne ou un mécanisme équivalent propre à chaque prestataire.</p>
+
+  <h2>6. Durée de conservation</h2>
+  <p>Vos données sont conservées tant que votre compte est actif. Vous pouvez demander la suppression de votre compte et de vos données à tout moment (voir section 8).</p>
+
+  <h2>7. Sécurité</h2>
+  <p>Toutes les communications entre l'application et nos serveurs sont chiffrées (HTTPS/TLS). L'accès aux données est protégé par des règles de sécurité au niveau de la base de données. Votre mot de passe n'est jamais stocké en clair : son traitement est délégué à Firebase Authentication.</p>
+
+  <h2>8. Vos droits</h2>
+  <p>Conformément au RGPD, vous disposez d'un droit d'accès, de rectification, de suppression, de portabilité et d'opposition sur vos données personnelles. Pour exercer ces droits, contactez-nous à <a href="mailto:support@poolgenai.com">support@poolgenai.com</a>. Vous pouvez également déposer une réclamation auprès de la CNIL : <a href="https://www.cnil.fr">www.cnil.fr</a></p>
+
+  <h2>9. Stockage local sur votre appareil</h2>
+  <p>PoolGenAI fonctionne aussi hors ligne grâce à un stockage local sur votre appareil (IndexedDB / localStorage). Ce stockage sert uniquement au fonctionnement de l'application et non à des fins publicitaires ou de suivi.</p>
+
+  <h2>10. Mineurs</h2>
+  <p>PoolGenAI n'est pas destinée à être utilisée sans supervision par des mineurs de moins de 15 ans.</p>
+
+  <h2>11. Modification de cette politique</h2>
+  <p>Cette politique peut être mise à jour. La date de dernière modification est indiquée en haut de ce document.</p>
+
+  <h2>12. Contact</h2>
+  <p>Pour toute question relative à cette politique de confidentialité : <a href="mailto:support@poolgenai.com">support@poolgenai.com</a></p>
+</section>
+
+<!-- ===================== EN ===================== -->
+<section class="lang-section" data-lang="en" lang="en" hidden>
+  <h1>Privacy Policy</h1>
+  <p class="updated">Last updated: 4 September 2026</p>
+
+  <h2>1. Who we are</h2>
+  <p>PoolGenAI is published by Arnaud Goumain, a private individual — not operating through a registered company.<br>Contact: <a href="mailto:support@poolgenai.com">support@poolgenai.com</a></p>
+
+  <h2>2. Data we collect</h2>
+  <ul>
+    <li><strong>Account</strong>: email address and password (managed by Firebase Authentication, a Google service).</li>
+    <li><strong>App usage data</strong>: registered pools, water chemistry measurements (chlorine, pH, alkalinity, etc.), guests linked to a pool, measurement history.</li>
+    <li><strong>Photos and barcodes</strong>: photos of products or test strips submitted for automatic recognition and AI-based analysis. If a photographed product does not yet have a photo in the shared product database, that photo may be added there to illustrate the product entry, visible to all users — with no link kept to your account.</li>
+    <li><strong>Test strip calibration data</strong>: when a measurement includes both a photometer photo and a test strip photo for the same parameter, an anonymous calibration data point (measured colour, reference value, strip type) may be extracted and shared with all users to improve strip-reading accuracy. No photo or account identifier is attached. Can be disabled at any time in the app's settings.</li>
+    <li><strong>Pool location</strong>: if you enter an address for your pool, the search is performed via the public OpenStreetMap/Nominatim service.</li>
+    <li><strong>Payment data</strong>: handled directly by Stripe (web payments) and Google Play Billing (Android payments). PoolGenAI does not store any banking details; only the subscription status (active/inactive) is kept.</li>
+    <li><strong>Technical and analytics data</strong>: connection and error logs (via our Cloudflare infrastructure) and app usage statistics (via Firebase Analytics), for security, debugging, and service improvement purposes.</li>
+  </ul>
+
+  <h2>3. Why we use this data</h2>
+  <ul>
+    <li>To provide the service: water chemistry tracking, treatment recommendations, history.</li>
+    <li>To manage your account and subscription.</li>
+    <li>To ensure the security and proper technical functioning of the app.</li>
+    <li>To improve automatic recognition of products and test strips, including through the anonymous, opt-out contributions described above.</li>
+  </ul>
+
+  <h2>4. Sharing with third parties</h2>
+  <p>We rely on the following subprocessors, each with access only to the data required for its role:</p>
+  <table>
+    <tr><th>Provider</th><th>Role</th></tr>
+    <tr><td>Firebase (Google)</td><td>Authentication, database, and analytics</td></tr>
+    <tr><td>Cloudflare</td><td>Technical proxy and product photo storage</td></tr>
+    <tr><td>GitHub Pages (Microsoft)</td><td>Hosting of the site and app</td></tr>
+    <tr><td>Resend</td><td>Transactional emails (invitations, account notifications)</td></tr>
+    <tr><td>OpenStreetMap / Nominatim</td><td>Pool address search and geocoding</td></tr>
+    <tr><td>Stripe</td><td>Card payments (web version)</td></tr>
+    <tr><td>Google Play Billing</td><td>Payments (Android version)</td></tr>
+    <tr><td>Anthropic</td><td>AI analysis of submitted measurements and photos</td></tr>
+  </table>
+  <p>We do not sell or rent your data to third parties for advertising purposes.</p>
+
+  <h2>5. Transfers outside the EU</h2>
+  <p>Some of our providers (Google, Anthropic, Stripe, Cloudflare) may process data outside the European Union, including in the United States. These transfers are governed by the European Commission's standard contractual clauses or an equivalent mechanism specific to each provider.</p>
+
+  <h2>6. Data retention</h2>
+  <p>Your data is kept for as long as your account remains active. You may request the deletion of your account and data at any time (see section 8).</p>
+
+  <h2>7. Security</h2>
+  <p>All communications between the app and our servers are encrypted (HTTPS/TLS). Access to data is protected by database-level security rules. Your password is never stored in plain text: it is handled entirely by Firebase Authentication.</p>
+
+  <h2>8. Your rights</h2>
+  <p>Under the GDPR, you have the right to access, rectify, delete, port, and object to the processing of your personal data. To exercise these rights, contact us at <a href="mailto:support@poolgenai.com">support@poolgenai.com</a>. You may also file a complaint with your national data protection authority (in France: <a href="https://www.cnil.fr">www.cnil.fr</a>).</p>
+
+  <h2>9. Local storage on your device</h2>
+  <p>PoolGenAI also works offline thanks to local storage on your device (IndexedDB / localStorage). This storage is used solely for the app to function and not for advertising or tracking purposes.</p>
+
+  <h2>10. Minors</h2>
+  <p>PoolGenAI is not intended to be used without supervision by minors under the age of 15.</p>
+
+  <h2>11. Changes to this policy</h2>
+  <p>This policy may be updated from time to time. The date of the last update is shown at the top of this document.</p>
+
+  <h2>12. Contact</h2>
+  <p>For any question regarding this privacy policy: <a href="mailto:support@poolgenai.com">support@poolgenai.com</a></p>
+</section>
+
+<!-- ===================== DE ===================== -->
+<section class="lang-section" data-lang="de" lang="de" hidden>
+  <h1>Datenschutzerklärung</h1>
+  <p class="updated">Zuletzt aktualisiert: 4. September 2026</p>
+
+  <h2>1. Wer wir sind</h2>
+  <p>PoolGenAI wird von Arnaud Goumain als Privatperson herausgegeben — nicht über ein eingetragenes Unternehmen.<br>Kontakt: <a href="mailto:support@poolgenai.com">support@poolgenai.com</a></p>
+
+  <h2>2. Daten, die wir erheben</h2>
+  <ul>
+    <li><strong>Benutzerkonto</strong>: E-Mail-Adresse und Passwort (verwaltet über Firebase Authentication, einen Dienst von Google).</li>
+    <li><strong>Nutzungsdaten der App</strong>: registrierte Pools, Wasserchemie-Messwerte (Chlor, pH-Wert, Alkalität usw.), einem Pool zugeordnete Gäste, Messverlauf.</li>
+    <li><strong>Fotos und Barcodes</strong>: Fotos von Produkten oder Teststreifen, die zur automatischen Erkennung und KI-gestützten Analyse übermittelt werden. Wenn ein fotografiertes Produkt noch kein Foto in der gemeinsamen Produktdatenbank hat, kann dieses Foto dort hinzugefügt werden, um den Produkteintrag zu illustrieren, sichtbar für alle Nutzer — ohne verbleibende Verknüpfung zu Ihrem Konto.</li>
+    <li><strong>Teststreifen-Kalibrierungsdaten</strong>: Enthält eine Messung sowohl ein Fotometer-Foto als auch ein Teststreifen-Foto für denselben Parameter, kann ein anonymer Kalibrierungsdatenpunkt (gemessene Farbe, Referenzwert, Streifentyp) extrahiert und mit allen Nutzern geteilt werden, um die Genauigkeit der Teststreifen-Auswertung zu verbessern. Kein Foto und keine Konto-Kennung sind damit verknüpft. Jederzeit in den App-Einstellungen deaktivierbar.</li>
+    <li><strong>Standort des Pools</strong>: Wenn Sie eine Adresse für Ihren Pool angeben, erfolgt die Suche über den öffentlichen Dienst OpenStreetMap/Nominatim.</li>
+    <li><strong>Zahlungsdaten</strong>: werden direkt von Stripe (Zahlungen im Web) und Google Play Billing (Zahlungen unter Android) verarbeitet. PoolGenAI speichert keine Bankdaten; lediglich der Abonnementstatus (aktiv/inaktiv) wird gespeichert.</li>
+    <li><strong>Technische Daten und Nutzungsstatistiken</strong>: Verbindungs- und Fehlerprotokolle (über unsere Cloudflare-Infrastruktur) sowie App-Nutzungsstatistiken (über Firebase Analytics), zu Sicherheits-, Debugging- und Verbesserungszwecken.</li>
+  </ul>
+
+  <h2>3. Warum wir diese Daten verwenden</h2>
+  <ul>
+    <li>Zur Bereitstellung des Dienstes: Wasserchemie-Tracking, Behandlungsempfehlungen, Verlauf.</li>
+    <li>Zur Verwaltung Ihres Kontos und Abonnements.</li>
+    <li>Zur Sicherheit und zum reibungslosen technischen Betrieb der App.</li>
+    <li>Zur Verbesserung der automatischen Erkennung von Produkten und Teststreifen, auch durch die oben beschriebenen anonymen, abwählbaren Beiträge.</li>
+  </ul>
+
+  <h2>4. Weitergabe an Dritte</h2>
+  <p>Wir arbeiten mit folgenden Auftragsverarbeitern zusammen, die jeweils nur Zugriff auf die für ihre Rolle notwendigen Daten haben:</p>
+  <table>
+    <tr><th>Anbieter</th><th>Rolle</th></tr>
+    <tr><td>Firebase (Google)</td><td>Authentifizierung, Datenbank und Nutzungsstatistiken</td></tr>
+    <tr><td>Cloudflare</td><td>Technischer Proxy und Speicherung von Produktfotos</td></tr>
+    <tr><td>GitHub Pages (Microsoft)</td><td>Hosting der Website und App</td></tr>
+    <tr><td>Resend</td><td>Transaktions-E-Mails (Einladungen, Kontobenachrichtigungen)</td></tr>
+    <tr><td>OpenStreetMap / Nominatim</td><td>Suche und Geokodierung der Pool-Adresse</td></tr>
+    <tr><td>Stripe</td><td>Kartenzahlungen (Web-Version)</td></tr>
+    <tr><td>Google Play Billing</td><td>Zahlungen (Android-Version)</td></tr>
+    <tr><td>Anthropic</td><td>KI-Analyse übermittelter Messwerte und Fotos</td></tr>
+  </table>
+  <p>Wir verkaufen oder vermieten Ihre Daten nicht zu Werbezwecken an Dritte.</p>
+
+  <h2>5. Übermittlungen außerhalb der EU</h2>
+  <p>Einige unserer Dienstleister (Google, Anthropic, Stripe, Cloudflare) können Daten außerhalb der Europäischen Union verarbeiten, unter anderem in den USA. Diese Übermittlungen erfolgen auf Grundlage der Standardvertragsklauseln der Europäischen Kommission oder eines vergleichbaren, anbieterspezifischen Mechanismus.</p>
+
+  <h2>6. Speicherdauer</h2>
+  <p>Ihre Daten werden so lange gespeichert, wie Ihr Konto aktiv ist. Sie können jederzeit die Löschung Ihres Kontos und Ihrer Daten beantragen (siehe Abschnitt 8).</p>
+
+  <h2>7. Sicherheit</h2>
+  <p>Sämtliche Kommunikation zwischen der App und unseren Servern ist verschlüsselt (HTTPS/TLS). Der Zugriff auf Daten ist durch Sicherheitsregeln auf Datenbankebene geschützt. Ihr Passwort wird niemals im Klartext gespeichert: Es wird vollständig von Firebase Authentication verwaltet.</p>
+
+  <h2>8. Ihre Rechte</h2>
+  <p>Gemäß der DSGVO haben Sie das Recht auf Auskunft, Berichtigung, Löschung, Datenübertragbarkeit und Widerspruch bezüglich Ihrer personenbezogenen Daten. Um diese Rechte auszuüben, kontaktieren Sie uns unter <a href="mailto:support@poolgenai.com">support@poolgenai.com</a>. Sie können auch eine Beschwerde bei Ihrer Datenschutzbehörde einreichen (in Frankreich: <a href="https://www.cnil.fr">www.cnil.fr</a>).</p>
+
+  <h2>9. Lokale Speicherung auf Ihrem Gerät</h2>
+  <p>PoolGenAI funktioniert dank lokaler Speicherung auf Ihrem Gerät (IndexedDB / localStorage) auch offline. Diese Speicherung dient ausschließlich dem Betrieb der App und nicht Werbe- oder Tracking-Zwecken.</p>
+
+  <h2>10. Minderjährige</h2>
+  <p>PoolGenAI ist nicht dafür vorgesehen, ohne Aufsicht von Minderjährigen unter 15 Jahren genutzt zu werden.</p>
+
+  <h2>11. Änderungen dieser Richtlinie</h2>
+  <p>Diese Richtlinie kann von Zeit zu Zeit aktualisiert werden. Das Datum der letzten Aktualisierung ist oben in diesem Dokument angegeben.</p>
+
+  <h2>12. Kontakt</h2>
+  <p>Bei Fragen zu dieser Datenschutzerklärung: <a href="mailto:support@poolgenai.com">support@poolgenai.com</a></p>
+</section>
+
+<!-- ===================== IT ===================== -->
+<section class="lang-section" data-lang="it" lang="it" hidden>
+  <h1>Informativa sulla privacy</h1>
+  <p class="updated">Ultimo aggiornamento: 4 settembre 2026</p>
+
+  <h2>1. Chi siamo</h2>
+  <p>PoolGenAI è pubblicata da Arnaud Goumain, privato — non tramite una società registrata.<br>Contatto: <a href="mailto:support@poolgenai.com">support@poolgenai.com</a></p>
+
+  <h2>2. Dati che raccogliamo</h2>
+  <ul>
+    <li><strong>Account utente</strong>: indirizzo email e password (gestiti tramite Firebase Authentication, un servizio Google).</li>
+    <li><strong>Dati di utilizzo dell'app</strong>: piscine registrate, misurazioni della chimica dell'acqua (cloro, pH, alcalinità, ecc.), ospiti associati a una piscina, cronologia delle misurazioni.</li>
+    <li><strong>Foto e codici a barre</strong>: foto di prodotti o strisce reattive inviate per il riconoscimento automatico e l'analisi tramite intelligenza artificiale. Se un prodotto fotografato non ha ancora una foto nel database comune condiviso tra utenti, questa foto può essere aggiunta per illustrare la scheda prodotto, visibile a tutti gli utenti — senza alcun collegamento conservato con il tuo account.</li>
+    <li><strong>Dati di calibrazione delle strisce reattive</strong>: quando una misurazione include sia una foto del fotometro sia una foto della striscia reattiva per lo stesso parametro, un dato di calibrazione anonimo (colore misurato, valore di riferimento, tipo di striscia) può essere estratto e condiviso con tutti gli utenti per migliorare la precisione di lettura delle strisce. Nessuna foto né identificativo dell'account è associato. Disattivabile in qualsiasi momento nelle impostazioni dell'app.</li>
+    <li><strong>Localizzazione della piscina</strong>: se inserisci un indirizzo per la tua piscina, la ricerca viene effettuata tramite il servizio pubblico OpenStreetMap/Nominatim.</li>
+    <li><strong>Dati di pagamento</strong>: gestiti direttamente da Stripe (pagamenti web) e Google Play Billing (pagamenti Android). PoolGenAI non memorizza alcun dato bancario; viene conservato solo lo stato dell'abbonamento (attivo/inattivo).</li>
+    <li><strong>Dati tecnici e statistiche di utilizzo</strong>: log di connessione ed errori (tramite la nostra infrastruttura Cloudflare) e statistiche di utilizzo dell'app (tramite Firebase Analytics), a fini di sicurezza, debug e miglioramento del servizio.</li>
+  </ul>
+
+  <h2>3. Perché utilizziamo questi dati</h2>
+  <ul>
+    <li>Per fornire il servizio: monitoraggio della chimica dell'acqua, raccomandazioni di trattamento, cronologia.</li>
+    <li>Per gestire il tuo account e il tuo abbonamento.</li>
+    <li>Per garantire la sicurezza e il corretto funzionamento tecnico dell'app.</li>
+    <li>Per migliorare il riconoscimento automatico di prodotti e strisce reattive, anche tramite i contributi anonimi e disattivabili descritti sopra.</li>
+  </ul>
+
+  <h2>4. Condivisione con terze parti</h2>
+  <p>Ci avvaliamo dei seguenti fornitori, ciascuno con accesso solo ai dati necessari al proprio ruolo:</p>
+  <table>
+    <tr><th>Fornitore</th><th>Ruolo</th></tr>
+    <tr><td>Firebase (Google)</td><td>Autenticazione, database e statistiche di utilizzo</td></tr>
+    <tr><td>Cloudflare</td><td>Proxy tecnico e archiviazione delle foto dei prodotti</td></tr>
+    <tr><td>GitHub Pages (Microsoft)</td><td>Hosting del sito e dell'app</td></tr>
+    <tr><td>Resend</td><td>Invio di email transazionali (inviti, notifiche account)</td></tr>
+    <tr><td>OpenStreetMap / Nominatim</td><td>Ricerca e geocodifica dell'indirizzo della piscina</td></tr>
+    <tr><td>Stripe</td><td>Pagamenti con carta (versione web)</td></tr>
+    <tr><td>Google Play Billing</td><td>Pagamenti (versione Android)</td></tr>
+    <tr><td>Anthropic</td><td>Analisi IA delle misurazioni e delle foto inviate</td></tr>
+  </table>
+  <p>Non vendiamo né affittiamo i tuoi dati a terzi per finalità pubblicitarie.</p>
+
+  <h2>5. Trasferimenti fuori dall'UE</h2>
+  <p>Alcuni dei nostri fornitori (Google, Anthropic, Stripe, Cloudflare) possono trattare i dati al di fuori dell'Unione Europea, inclusi gli Stati Uniti. Questi trasferimenti sono disciplinati dalle clausole contrattuali standard della Commissione Europea o da un meccanismo equivalente specifico di ciascun fornitore.</p>
+
+  <h2>6. Periodo di conservazione</h2>
+  <p>I tuoi dati vengono conservati finché il tuo account rimane attivo. Puoi richiedere la cancellazione del tuo account e dei tuoi dati in qualsiasi momento (vedi sezione 8).</p>
+
+  <h2>7. Sicurezza</h2>
+  <p>Tutte le comunicazioni tra l'app e i nostri server sono crittografate (HTTPS/TLS). L'accesso ai dati è protetto da regole di sicurezza a livello di database. La tua password non viene mai memorizzata in chiaro: è gestita interamente da Firebase Authentication.</p>
+
+  <h2>8. I tuoi diritti</h2>
+  <p>Ai sensi del GDPR, hai diritto di accesso, rettifica, cancellazione, portabilità e opposizione riguardo ai tuoi dati personali. Per esercitare questi diritti, contattaci all'indirizzo <a href="mailto:support@poolgenai.com">support@poolgenai.com</a>. Puoi anche presentare un reclamo all'autorità di protezione dei dati (in Francia: <a href="https://www.cnil.fr">www.cnil.fr</a>).</p>
+
+  <h2>9. Archiviazione locale sul dispositivo</h2>
+  <p>PoolGenAI funziona anche offline grazie all'archiviazione locale sul tuo dispositivo (IndexedDB / localStorage). Questa archiviazione serve unicamente al funzionamento dell'app e non a fini pubblicitari o di tracciamento.</p>
+
+  <h2>10. Minori</h2>
+  <p>PoolGenAI non è destinata a essere utilizzata senza supervisione da minori di 15 anni.</p>
+
+  <h2>11. Modifiche alla presente informativa</h2>
+  <p>La presente informativa può essere aggiornata periodicamente. La data dell'ultimo aggiornamento è indicata all'inizio di questo documento.</p>
+
+  <h2>12. Contatto</h2>
+  <p>Per qualsiasi domanda relativa a questa informativa sulla privacy: <a href="mailto:support@poolgenai.com">support@poolgenai.com</a></p>
+</section>
+
+<!-- ===================== ES ===================== -->
+<section class="lang-section" data-lang="es" lang="es" hidden>
+  <h1>Política de privacidad</h1>
+  <p class="updated">Última actualización: 4 de septiembre de 2026</p>
+
+  <h2>1. Quiénes somos</h2>
+  <p>PoolGenAI está publicada por Arnaud Goumain, particular — no a través de una sociedad registrada.<br>Contacto: <a href="mailto:support@poolgenai.com">support@poolgenai.com</a></p>
+
+  <h2>2. Datos que recopilamos</h2>
+  <ul>
+    <li><strong>Cuenta de usuario</strong>: dirección de correo electrónico y contraseña (gestionadas mediante Firebase Authentication, un servicio de Google).</li>
+    <li><strong>Datos de uso de la aplicación</strong>: piscinas registradas, mediciones de la química del agua (cloro, pH, alcalinidad, etc.), invitados asociados a una piscina, historial de mediciones.</li>
+    <li><strong>Fotos y códigos de barras</strong>: fotos de productos o tiras reactivas enviadas para el reconocimiento automático y el análisis mediante inteligencia artificial. Si un producto fotografiado aún no tiene foto en la base común compartida entre usuarios, esa foto puede añadirse allí para ilustrar la ficha del producto, visible para todos los usuarios — sin ningún vínculo conservado con tu cuenta.</li>
+    <li><strong>Datos de calibración de tiras reactivas</strong>: cuando una medición incluye tanto una foto de fotómetro como una foto de tira reactiva para el mismo parámetro, puede extraerse un dato de calibración anónimo (color medido, valor de referencia, tipo de tira) y compartirse con todos los usuarios para mejorar la precisión de lectura de las tiras. No se asocia ninguna foto ni identificador de cuenta. Se puede desactivar en cualquier momento en los ajustes de la aplicación.</li>
+    <li><strong>Localización de la piscina</strong>: si introduces una dirección para tu piscina, la búsqueda se realiza a través del servicio público OpenStreetMap/Nominatim.</li>
+    <li><strong>Datos de pago</strong>: gestionados directamente por Stripe (pagos web) y Google Play Billing (pagos Android). PoolGenAI no almacena ningún dato bancario; solo se conserva el estado de la suscripción (activa/inactiva).</li>
+    <li><strong>Datos técnicos y estadísticas de uso</strong>: registros de conexión y errores (a través de nuestra infraestructura Cloudflare) y estadísticas de uso de la aplicación (mediante Firebase Analytics), con fines de seguridad, depuración y mejora del servicio.</li>
+  </ul>
+
+  <h2>3. Por qué utilizamos estos datos</h2>
+  <ul>
+    <li>Para prestar el servicio: seguimiento de la química del agua, recomendaciones de tratamiento, historial.</li>
+    <li>Para gestionar tu cuenta y tu suscripción.</li>
+    <li>Para garantizar la seguridad y el correcto funcionamiento técnico de la aplicación.</li>
+    <li>Para mejorar el reconocimiento automático de productos y tiras reactivas, incluso mediante las contribuciones anónimas y desactivables descritas arriba.</li>
+  </ul>
+
+  <h2>4. Compartición con terceros</h2>
+  <p>Trabajamos con los siguientes proveedores, cada uno con acceso únicamente a los datos necesarios para su función:</p>
+  <table>
+    <tr><th>Proveedor</th><th>Función</th></tr>
+    <tr><td>Firebase (Google)</td><td>Autenticación, base de datos y estadísticas de uso</td></tr>
+    <tr><td>Cloudflare</td><td>Proxy técnico y almacenamiento de fotos de productos</td></tr>
+    <tr><td>GitHub Pages (Microsoft)</td><td>Alojamiento del sitio y la aplicación</td></tr>
+    <tr><td>Resend</td><td>Envío de correos transaccionales (invitaciones, notificaciones de cuenta)</td></tr>
+    <tr><td>OpenStreetMap / Nominatim</td><td>Búsqueda y geocodificación de la dirección de la piscina</td></tr>
+    <tr><td>Stripe</td><td>Pagos con tarjeta (versión web)</td></tr>
+    <tr><td>Google Play Billing</td><td>Pagos (versión Android)</td></tr>
+    <tr><td>Anthropic</td><td>Análisis mediante IA de las mediciones y fotos enviadas</td></tr>
+  </table>
+  <p>No vendemos ni alquilamos tus datos a terceros con fines publicitarios.</p>
+
+  <h2>5. Transferencias fuera de la UE</h2>
+  <p>Algunos de nuestros proveedores (Google, Anthropic, Stripe, Cloudflare) pueden tratar datos fuera de la Unión Europea, incluido Estados Unidos. Estas transferencias se rigen por las cláusulas contractuales tipo de la Comisión Europea o un mecanismo equivalente propio de cada proveedor.</p>
+
+  <h2>6. Duración de conservación</h2>
+  <p>Tus datos se conservan mientras tu cuenta permanezca activa. Puedes solicitar la eliminación de tu cuenta y tus datos en cualquier momento (véase la sección 8).</p>
+
+  <h2>7. Seguridad</h2>
+  <p>Todas las comunicaciones entre la aplicación y nuestros servidores están cifradas (HTTPS/TLS). El acceso a los datos está protegido mediante reglas de seguridad a nivel de base de datos. Tu contraseña nunca se almacena en texto claro: su gestión está totalmente delegada a Firebase Authentication.</p>
+
+  <h2>8. Tus derechos</h2>
+  <p>De conformidad con el RGPD, tienes derecho de acceso, rectificación, supresión, portabilidad y oposición sobre tus datos personales. Para ejercer estos derechos, contáctanos en <a href="mailto:support@poolgenai.com">support@poolgenai.com</a>. También puedes presentar una reclamación ante la autoridad de protección de datos (en Francia: <a href="https://www.cnil.fr">www.cnil.fr</a>).</p>
+
+  <h2>9. Almacenamiento local en tu dispositivo</h2>
+  <p>PoolGenAI también funciona sin conexión gracias al almacenamiento local en tu dispositivo (IndexedDB / localStorage). Este almacenamiento se utiliza únicamente para el funcionamiento de la aplicación y no con fines publicitarios o de seguimiento.</p>
+
+  <h2>10. Menores</h2>
+  <p>PoolGenAI no está destinada a ser utilizada sin supervisión por menores de 15 años.</p>
+
+  <h2>11. Modificaciones de esta política</h2>
+  <p>Esta política puede actualizarse periódicamente. La fecha de la última actualización se indica en la parte superior de este documento.</p>
+
+  <h2>12. Contacto</h2>
+  <p>Para cualquier pregunta relativa a esta política de privacidad: <a href="mailto:support@poolgenai.com">support@poolgenai.com</a></p>
+</section>
+
+<!-- ===================== PT ===================== -->
+<section class="lang-section" data-lang="pt" lang="pt" hidden>
+  <h1>Política de privacidade</h1>
+  <p class="updated">Última atualização: 4 de setembro de 2026</p>
+
+  <h2>1. Quem somos</h2>
+  <p>A PoolGenAI é publicada por Arnaud Goumain, particular — não através de uma sociedade registada.<br>Contacto: <a href="mailto:support@poolgenai.com">support@poolgenai.com</a></p>
+
+  <h2>2. Dados que recolhemos</h2>
+  <ul>
+    <li><strong>Conta de utilizador</strong>: endereço de email e palavra-passe (geridos através do Firebase Authentication, um serviço da Google).</li>
+    <li><strong>Dados de utilização da aplicação</strong>: piscinas registadas, medições da química da água (cloro, pH, alcalinidade, etc.), convidados associados a uma piscina, histórico de medições.</li>
+    <li><strong>Fotografias e códigos de barras</strong>: fotografias de produtos ou tiras de teste enviadas para reconhecimento automático e análise por inteligência artificial. Se um produto fotografado ainda não tiver foto na base comum partilhada entre utilizadores, essa foto pode ser adicionada para ilustrar a ficha de produto, visível a todos os utilizadores — sem qualquer ligação conservada à sua conta.</li>
+    <li><strong>Dados de calibração de tiras de teste</strong>: quando uma medição inclui simultaneamente uma foto de fotómetro e uma foto de tira de teste para o mesmo parâmetro, um dado de calibração anónimo (cor medida, valor de referência, tipo de tira) pode ser extraído e partilhado com todos os utilizadores para melhorar a precisão da leitura das tiras. Nenhuma foto nem identificador de conta é associado. Pode ser desativado a qualquer momento nas definições da aplicação.</li>
+    <li><strong>Localização da piscina</strong>: se indicar um endereço para a sua piscina, a pesquisa é efetuada através do serviço público OpenStreetMap/Nominatim.</li>
+    <li><strong>Dados de pagamento</strong>: geridos diretamente pela Stripe (pagamentos web) e pelo Google Play Billing (pagamentos Android). A PoolGenAI não armazena quaisquer dados bancários; é conservado apenas o estado da subscrição (ativa/inativa).</li>
+    <li><strong>Dados técnicos e estatísticas de utilização</strong>: registos de ligação e de erros (através da nossa infraestrutura Cloudflare) e estatísticas de utilização da aplicação (através do Firebase Analytics), para fins de segurança, depuração e melhoria do serviço.</li>
+  </ul>
+
+  <h2>3. Porque utilizamos estes dados</h2>
+  <ul>
+    <li>Para prestar o serviço: acompanhamento da química da água, recomendações de tratamento, histórico.</li>
+    <li>Para gerir a sua conta e subscrição.</li>
+    <li>Para garantir a segurança e o correto funcionamento técnico da aplicação.</li>
+    <li>Para melhorar o reconhecimento automático de produtos e tiras de teste, incluindo através das contribuições anónimas e desativáveis descritas acima.</li>
+  </ul>
+
+  <h2>4. Partilha com terceiros</h2>
+  <p>Recorremos aos seguintes subcontratantes, cada um com acesso apenas aos dados necessários à sua função:</p>
+  <table>
+    <tr><th>Fornecedor</th><th>Função</th></tr>
+    <tr><td>Firebase (Google)</td><td>Autenticação, base de dados e estatísticas de utilização</td></tr>
+    <tr><td>Cloudflare</td><td>Proxy técnico e armazenamento de fotografias de produtos</td></tr>
+    <tr><td>GitHub Pages (Microsoft)</td><td>Alojamento do site e da aplicação</td></tr>
+    <tr><td>Resend</td><td>Envio de emails transacionais (convites, notificações de conta)</td></tr>
+    <tr><td>OpenStreetMap / Nominatim</td><td>Pesquisa e geocodificação do endereço da piscina</td></tr>
+    <tr><td>Stripe</td><td>Pagamentos por cartão (versão web)</td></tr>
+    <tr><td>Google Play Billing</td><td>Pagamentos (versão Android)</td></tr>
+    <tr><td>Anthropic</td><td>Análise por IA das medições e fotografias enviadas</td></tr>
+  </table>
+  <p>Não vendemos nem alugamos os seus dados a terceiros para fins publicitários.</p>
+
+  <h2>5. Transferências fora da UE</h2>
+  <p>Alguns dos nossos fornecedores (Google, Anthropic, Stripe, Cloudflare) podem tratar dados fora da União Europeia, nomeadamente nos Estados Unidos. Estas transferências são regidas pelas cláusulas contratuais-tipo da Comissão Europeia ou por um mecanismo equivalente próprio de cada fornecedor.</p>
+
+  <h2>6. Duração de conservação</h2>
+  <p>Os seus dados são conservados enquanto a sua conta permanecer ativa. Pode solicitar a eliminação da sua conta e dos seus dados a qualquer momento (ver secção 8).</p>
+
+  <h2>7. Segurança</h2>
+  <p>Todas as comunicações entre a aplicação e os nossos servidores são encriptadas (HTTPS/TLS). O acesso aos dados é protegido por regras de segurança ao nível da base de dados. A sua palavra-passe nunca é armazenada em texto simples: a sua gestão é totalmente delegada ao Firebase Authentication.</p>
+
+  <h2>8. Os seus direitos</h2>
+  <p>Nos termos do RGPD, tem direito de acesso, retificação, eliminação, portabilidade e oposição relativamente aos seus dados pessoais. Para exercer estes direitos, contacte-nos através de <a href="mailto:support@poolgenai.com">support@poolgenai.com</a>. Pode também apresentar uma reclamação junto da autoridade de proteção de dados (em França: <a href="https://www.cnil.fr">www.cnil.fr</a>).</p>
+
+  <h2>9. Armazenamento local no seu dispositivo</h2>
+  <p>A PoolGenAI também funciona offline graças ao armazenamento local no seu dispositivo (IndexedDB / localStorage). Este armazenamento serve unicamente para o funcionamento da aplicação e não para fins publicitários ou de rastreamento.</p>
+
+  <h2>10. Menores</h2>
+  <p>A PoolGenAI não se destina a ser utilizada sem supervisão por menores de 15 anos.</p>
+
+  <h2>11. Alterações a esta política</h2>
+  <p>Esta política pode ser atualizada periodicamente. A data da última atualização é indicada no topo deste documento.</p>
+
+  <h2>12. Contacto</h2>
+  <p>Para qualquer questão relativa a esta política de privacidade: <a href="mailto:support@poolgenai.com">support@poolgenai.com</a></p>
+</section>
+
+</main>
+
+<footer>
+  PoolGenAI — <a href="https://app.poolgenai.com">app.poolgenai.com</a>
+</footer>
+
+<script>
+  (function () {
+    var supported = ['fr', 'en', 'de', 'it', 'es', 'pt'];
+    var sections = document.querySelectorAll('.lang-section');
+    var buttons = document.querySelectorAll('.lang-switcher button');
+
+    function activate(code) {
+      if (supported.indexOf(code) === -1) code = 'fr';
+      sections.forEach(function (el) {
+        el.hidden = el.getAttribute('data-lang') !== code;
+      });
+      buttons.forEach(function (btn) {
+        btn.setAttribute('aria-pressed', btn.getAttribute('data-lang') === code ? 'true' : 'false');
+      });
+      document.documentElement.lang = code;
+      var visible = document.querySelector('.lang-section[data-lang="' + code + '"] h1');
+      if (visible) document.title = 'PoolGenAI – ' + visible.textContent;
+      try { localStorage.setItem('poolgenai-privacy-lang', code); } catch (e) {}
+    }
+
+    buttons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        activate(btn.getAttribute('data-lang'));
+      });
+    });
+
+    var saved = null;
+    try { saved = localStorage.getItem('poolgenai-privacy-lang'); } catch (e) {}
+    var browserLang = (navigator.language || 'fr').slice(0, 2).toLowerCase();
+    activate(saved || (supported.indexOf(browserLang) !== -1 ? browserLang : 'fr'));
+  })();
+</script>
+
+</body>
+</html>
