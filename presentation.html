@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PoolGenAI</title>
+<meta name="description" content="PoolGenAI analyse l'eau de votre piscine par photo, génère un plan de traitement guidé et suit votre historique — gratuit pour démarrer.">
+<link rel="icon" href="icon-192.png">
+<style>
+  :root {
+    --bg: #F5FAFA;
+    --panel: #FFFFFF;
+    --border: #D7E6E6;
+    --text: #14302E;
+    --muted: #4B6B69;
+    --accent: #0E7C86;
+    --accent-dark: #0B646C;
+    --deep: #0b3f3a;
+    --amber: #a8721a;
+    --amber-bg: #fdf3e0;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+  }
+  img { max-width: 100%; display: block; }
+  a { color: var(--accent-dark); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  header {
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+  .nav {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    font-size: 1.15rem;
+    color: var(--deep);
+    text-decoration: none;
+  }
+  .brand img { width: 30px; height: 30px; border-radius: 8px; }
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    font-size: 0.92rem;
+    font-weight: 600;
+  }
+  .nav-links a:not(.btn) { color: var(--muted); text-decoration: none; }
+  .nav-links a:not(.btn):hover { color: var(--accent-dark); }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: #fff !important;
+    font-weight: 700;
+    font-size: 0.92rem;
+    padding: 10px 20px;
+    border-radius: 999px;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--accent-dark); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--deep) !important;
+    border: 1.5px solid var(--border);
+  }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent-dark) !important; }
+
+  /* Hero */
+  .hero {
+    background: linear-gradient(160deg, var(--deep) 0%, #0d5a54 55%, var(--accent) 100%);
+    color: #eaf6f4;
+    padding: 64px 0 90px;
+    overflow: hidden;
+    position: relative;
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 40px;
+    align-items: center;
+  }
+  .eyebrow {
+    display: inline-block;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.25);
+    padding: 5px 14px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    margin-bottom: 18px;
+  }
+  .hero h1 {
+    font-size: 2.5rem;
+    line-height: 1.15;
+    margin: 0 0 18px;
+    letter-spacing: -0.02em;
+  }
+  .hero p.lead {
+    font-size: 1.1rem;
+    color: #cfe9e6;
+    max-width: 46ch;
+    margin: 0 0 30px;
+  }
+  .hero-cta { display: flex; gap: 12px; flex-wrap: wrap; }
+  .hero .btn { background: #fff; color: var(--deep) !important; }
+  .hero .btn:hover { background: #eaf6f4; }
+  .hero .btn-ghost { background: transparent; border-color: rgba(255,255,255,0.4); color: #fff !important; }
+  .hero .btn-ghost:hover { background: rgba(255,255,255,0.08); border-color: #fff; }
+
+  .phone {
+    background: #fff;
+    border-radius: 22px;
+    box-shadow: 0 30px 70px -20px rgba(0,0,0,0.45);
+    overflow: hidden;
+    border: 6px solid #0a2624;
+    max-width: 280px;
+    margin: 0 auto;
+    transform: rotate(1.5deg);
+  }
+  .phone img { border-radius: 0; }
+
+  /* Sections */
+  section { padding: 72px 0; }
+  .section-head { text-align: center; max-width: 620px; margin: 0 auto 44px; }
+  .section-head h2 {
+    font-size: 1.9rem;
+    letter-spacing: -0.01em;
+    margin: 0 0 10px;
+    color: var(--deep);
+  }
+  .section-head p { color: var(--muted); margin: 0; font-size: 1.02rem; }
+
+  .features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .feature-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 26px 22px;
+  }
+  .feature-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: #eaf4f4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    margin-bottom: 14px;
+  }
+  .feature-card h3 {
+    font-size: 1.05rem;
+    margin: 0 0 8px;
+    color: var(--deep);
+  }
+  .feature-card p { margin: 0; color: var(--muted); font-size: 0.92rem; }
+  .badge-premium {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: var(--amber);
+    background: var(--amber-bg);
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  .showcase-row {
+    display: grid;
+    grid-template-columns: 0.85fr 1.15fr;
+    gap: 48px;
+    align-items: center;
+    margin-bottom: 76px;
+  }
+  .showcase-row:last-child { margin-bottom: 0; }
+  .showcase-row.reverse { grid-template-columns: 1.15fr 0.85fr; }
+  .showcase-row.reverse .showcase-text { order: 2; }
+  .showcase-row.reverse .showcase-img { order: 1; }
+  .showcase-text .step {
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+  }
+  .showcase-text h3 {
+    font-size: 1.5rem;
+    color: var(--deep);
+    margin: 0 0 12px;
+    letter-spacing: -0.01em;
+  }
+  .showcase-text p { color: var(--muted); font-size: 1rem; max-width: 46ch; }
+  .showcase-img img {
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: 0 18px 40px -18px rgba(11,63,58,0.35);
+  }
+
+  .cta-band {
+    background: var(--deep);
+    color: #eaf6f4;
+    border-radius: 24px;
+    padding: 56px 40px;
+    text-align: center;
+  }
+  .cta-band h2 { margin: 0 0 12px; font-size: 1.7rem; }
+  .cta-band p { color: #cfe9e6; margin: 0 0 26px; }
+  .cta-band .btn { background: #fff; color: var(--deep) !important; }
+  .cta-band .btn:hover { background: #eaf6f4; }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 36px 0 50px;
+    color: var(--muted);
+    font-size: 0.88rem;
+  }
+  .footer-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .footer-links { display: flex; gap: 20px; flex-wrap: wrap; }
+  .footer-links a { color: var(--muted); text-decoration: none; }
+  .footer-links a:hover { color: var(--accent-dark); }
+
+  @media (max-width: 820px) {
+    .hero-grid { grid-template-columns: 1fr; }
+    .hero .phone { margin-top: 40px; max-width: 240px; }
+    .features { grid-template-columns: 1fr 1fr; }
+    .showcase-row, .showcase-row.reverse {
+      grid-template-columns: 1fr;
+    }
+    .showcase-row.reverse .showcase-text,
+    .showcase-row.reverse .showcase-img,
+    .showcase-text, .showcase-img { order: initial; }
+    .showcase-img { order: -1; }
+    .nav-links { gap: 12px; }
+    .nav-links span.sep { display: none; }
+  }
+  @media (max-width: 560px) {
+    .features { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 2rem; }
+    .nav-links a:not(.btn) { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a class="brand" href="#top">
+      <img src="icon-192.png" alt="">
+      PoolGenAI
+    </a>
+    <div class="nav-links">
+      <a href="#fonctionnalites">Fonctionnalités</a>
+      <a href="#apercu">Aperçu</a>
+      <a href="https://app.poolgenai.com" class="btn">Ouvrir l'application</a>
+    </div>
+  </div>
+</header>
+
+<div id="top"></div>
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">💧 Gratuit pour démarrer</span>
+      <h1>Le pilote automatique de votre piscine</h1>
+      <p class="lead">Prenez votre bassin en photo, PoolGenAI lit vos mesures, calcule le bon dosage de produit et vous guide étape par étape — sans calcul, sans doute.</p>
+      <div class="hero-cta">
+        <a href="https://app.poolgenai.com" class="btn">Ouvrir l'application →</a>
+        <a href="#fonctionnalites" class="btn btn-ghost">Découvrir les fonctionnalités</a>
+      </div>
+    </div>
+    <div class="phone">
+      <img src="screenshots/screenshot-dashboard-narrow.png" alt="Tableau de bord PoolGenAI : mesures pH, chlore, plan de traitement">
+    </div>
+  </div>
+</section>
+
+<section id="fonctionnalites">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Tout ce qu'il faut pour une eau saine</h2>
+      <p>Du premier test à l'application du bon produit, PoolGenAI s'occupe du calcul.</p>
+    </div>
+    <div class="features">
+      <div class="feature-card">
+        <div class="feature-icon">📷</div>
+        <h3>Analyse par photo <span class="badge-premium">Premium</span></h3>
+        <p>Photographiez votre photomètre ou votre bandelette de test : l'intelligence artificielle lit les valeurs à votre place.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🧪</div>
+        <h3>Plan de traitement guidé</h3>
+        <p>pH, chlore, alcalinité... PoolGenAI calcule les bons dosages selon le volume de votre bassin et l'ordre à respecter.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📦</div>
+        <h3>Gestion des produits & du stock</h3>
+        <p>Suivez vos produits, leur dosage réel et votre stock restant — l'app vous prévient avant la rupture.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📈</div>
+        <h3>Historique & rapport PDF</h3>
+        <p>Visualisez l'évolution de chaque paramètre dans le temps et exportez un rapport complet en un clic.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🏊</div>
+        <h3>Plusieurs bassins, plusieurs invités</h3>
+        <p>Gérez plusieurs piscines et partagez l'accès à votre bassin avec la famille ou un professionnel.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🌍</div>
+        <h3>Disponible en 6 langues</h3>
+        <p>Français, anglais, allemand, italien, espagnol, portugais — l'app s'adapte à votre langue automatiquement.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="apercu" style="background:var(--panel); border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Un aperçu de l'application</h2>
+      <p>Simple à utiliser, précis dans les résultats.</p>
+    </div>
+
+    <div class="showcase-row">
+      <div class="showcase-text">
+        <div class="step">Étape 1</div>
+        <h3>Mesurez en un instant</h3>
+        <p>Saisissez vos valeurs manuellement ou laissez l'IA les lire depuis une photo de votre photomètre ou de votre bandelette de test.</p>
+      </div>
+      <div class="showcase-img">
+        <img src="screenshots/screenshot-analyse-ia-narrow.png" alt="Analyse par IA d'une bandelette de test PoolGenAI">
+      </div>
+    </div>
+
+    <div class="showcase-row reverse">
+      <div class="showcase-text">
+        <div class="step">Étape 2</div>
+        <h3>Suivez le plan, étape par étape</h3>
+        <p>PoolGenAI détermine l'ordre de traitement optimal (le chlore combiné avant tout, le pH avant le TAC...) et vous guide produit par produit, avec les délais d'attente à respecter.</p>
+      </div>
+      <div class="showcase-img">
+        <img src="screenshots/screenshot-etape-traitement-narrow.png" alt="Étape de traitement guidée dans PoolGenAI">
+      </div>
+    </div>
+
+    <div class="showcase-row">
+      <div class="showcase-text">
+        <div class="step">Étape 3</div>
+        <h3>Gardez une vue d'ensemble</h3>
+        <p>Un graphique de l'évolution de chaque paramètre, l'historique complet des mesures et des produits appliqués, exportable en rapport PDF.</p>
+      </div>
+      <div class="showcase-img">
+        <img src="screenshots/screenshot-rapport-wide.png" alt="Rapport PDF PoolGenAI avec graphique d'évolution des paramètres">
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="cta-band">
+      <h2>Prêt à reprendre le contrôle de votre eau ?</h2>
+      <p>Gratuit pour démarrer — aucune carte bancaire requise.</p>
+      <a href="https://app.poolgenai.com" class="btn">Ouvrir PoolGenAI →</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap footer-row">
+    <div>© 2026 PoolGenAI — Arnaud Goumain</div>
+    <div class="footer-links">
+      <a href="https://app.poolgenai.com">app.poolgenai.com</a>
+      <a href="privacy-policy.html">Politique de confidentialité</a>
+      <a href="account-deletion.html">Suppression de compte</a>
+      <a href="mailto:support@poolgenai.com">support@poolgenai.com</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
