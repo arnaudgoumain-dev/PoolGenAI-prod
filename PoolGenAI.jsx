@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.109.3";
+const APP_VERSION = "1.109.4";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -9729,7 +9729,11 @@ function PoolGenAIApp() {
       if (stepsWithAmount.length > 0) {
         const justEmptied = [];
         setProducts((prev) => prev.map((prod) => {
-          const step = stepsWithAmount.find((s) => s.productName === prod.name);
+          // v1.109.4 — Match sur productRealName (voir buildFinalSteps),
+          // pas productName qui peut être le libellé générique traduit
+          // (nameKey) plutôt que le vrai nom du produit — sinon le stock
+          // n'est jamais décompté pour un produit renommé (ex. "Alcafix").
+          const step = stepsWithAmount.find((s) => (s.productRealName ?? s.productName) === prod.name);
           if (!step || !prod.containerAmount) return prod;
           const cUnit = prod.containerUnit || "kg";
           let appliedInContainerUnit = step.appliedAmount;
@@ -9893,6 +9897,12 @@ function PoolGenAIApp() {
     return steps.map(s => ({
       action: s.action, title: s.title,
       productName: s.appliedProductName || s.productName,
+      // v1.109.4 — Nom réel du produit pour le décompte de stock (voir
+      // saveApplication) : s.appliedProductName est déjà un vrai .name (choisi
+      // dans le sélecteur du Wizard) ; sinon on retombe sur productRealName
+      // calculé par computeRecommendations, puis sur productName en dernier
+      // recours (produit générique, sans fiche réelle).
+      productRealName: s.appliedProductName || s.productRealName || s.productName,
       computedDoseAmount: s.computedDoseAmount,
       appliedAmount: (s.appliedAt && !s.skipped) ? s.appliedAmount : null,
       doseUnit: s.doseUnit,
@@ -12028,8 +12038,17 @@ function RecoCard({ reco, isLast, manageStock, products, lang }) {
       )}
 
       {(() => {
+        // v1.109.4 — Match sur productRealName (le vrai .name en base), pas
+        // reco.productName (le libellé AFFICHÉ, qui peut être le nom
+        // générique traduit via nameKey plutôt que le nom réel du produit —
+        // voir prodName dans computeRecommendations). Un produit personnalisé
+        // par l'utilisateur mais resté "isDefault" avec nameKey (ex. un TAC+
+        // renommé "Alcafix", toujours affiché "Produit TAC+ (bicarbonate de
+        // sodium)") ne matchait donc jamais son propre stock réel — badge
+        // "stock épuisé" affiché à tort même à 87% de stock (signalé par un
+        // testeur, uid O5vagoCXWjgqBo7FthmStrwbWdx1).
         const missingFromStock = manageStock && products && reco.productAvailable &&
-          !products.find((p) => p.name === reco.productName && (p.stockPercent ?? 100) > 0);
+          !products.find((p) => p.name === (reco.productRealName ?? reco.productName) && (p.stockPercent ?? 100) > 0);
         return (
           <div style={styles.recoProductRow}>
             {reco.productPhoto && (
@@ -12214,6 +12233,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       title: _("reco_tac_low", { val: tac }),
       productName: prodName(prod, "reco_fallback_tac"),
       productAvailable: !!prod,
+      productRealName: prod?.name ?? null, // v1.109.4 — voir RecoCard.missingFromStock
       productPhoto: prod?.photo || null,
       doseText: doseSrc
         ? `${_("reco_dose_prefix")} ${formatDose(computedDose, doseSrc.doseUnit)} ${_("reco_target")} ${tacTargetMid.toFixed(0)}`
@@ -12243,6 +12263,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       title: _("reco_tac_high", { val: tac }),
       productName: prodName(prod, "reco_fallback_tac_minus"),
       productAvailable: !!prod,
+      productRealName: prod?.name ?? null, // v1.109.4 — voir RecoCard.missingFromStock
       productPhoto: prod?.photo || null,
       doseText: doseSrc
         ? `${_("reco_dose_prefix")} ${formatDose(computedDose, doseSrc.doseUnit)} ${_("reco_target")} ${tacTargetMid.toFixed(0)}`
@@ -12287,6 +12308,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
         title: _("reco_ph_high", { val: phVal }),
         productName: prodName(prod, "reco_fallback_ph_minus"),
         productAvailable: !!prod,
+      productRealName: prod?.name ?? null, // v1.109.4 — voir RecoCard.missingFromStock
         productPhoto: prod?.photo || null,
         doseText: doseSrc
           ? `${_("reco_dose_prefix")} ${formatDose(computedDose, doseSrc.doseUnit)} ${_("reco_target")} ${targetMid.toFixed(1)}`
@@ -12309,6 +12331,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
         title: _("reco_ph_low", { val: phVal }),
         productName: prodName(prod, "reco_fallback_ph_plus"),
         productAvailable: !!prod,
+      productRealName: prod?.name ?? null, // v1.109.4 — voir RecoCard.missingFromStock
         productPhoto: prod?.photo || null,
         doseText: doseSrc
           ? `${_("reco_dose_prefix")} ${formatDose(computedDose, doseSrc.doseUnit)} ${_("reco_target")} ${targetMid.toFixed(1)}`
@@ -12375,6 +12398,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
         title: _("reco_cl_combined", { val: combined.toFixed(2) }),
         productName: prodName(prod, "reco_fallback_chlore"),
         productAvailable: !!prod,
+      productRealName: prod?.name ?? null, // v1.109.4 — voir RecoCard.missingFromStock
         productPhoto: prod?.photo || null,
         doseText: doseSrc
           ? `${_("reco_dose_prefix")} ${formatDose(computedDose, doseSrc.doseUnit)} ${_("reco_cl_shock_text")}`
@@ -12399,6 +12423,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
         title: _("reco_cl_low", { val: fCl }),
         productName: prodName(prod, "reco_fallback_chlore"),
         productAvailable: !!prod,
+      productRealName: prod?.name ?? null, // v1.109.4 — voir RecoCard.missingFromStock
         productPhoto: prod?.photo || null,
         doseText: doseSrc
           ? `${_("reco_dose_prefix")} ${formatDose(computedDose, doseSrc.doseUnit)} ${_("reco_target")} ${targetFcl} mg/L`
@@ -12452,6 +12477,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
         title: _("reco_brome_low", { val: bromeVal }),
         productName: prodName(prod, "reco_fallback_brome"),
         productAvailable: !!prod,
+      productRealName: prod?.name ?? null, // v1.109.4 — voir RecoCard.missingFromStock
         productPhoto: prod?.photo || null,
         doseText: doseSrc
           ? `${_("reco_dose_prefix")} ${formatDose(computedDose, doseSrc.doseUnit)} ${_("reco_target")} ${(brT.min + brT.max) / 2} mg/L`
@@ -12483,6 +12509,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
         title: _("reco_o2_low", { val: o2Val }),
         productName: prodName(prod, "reco_fallback_o2"),
         productAvailable: !!prod,
+      productRealName: prod?.name ?? null, // v1.109.4 — voir RecoCard.missingFromStock
         productPhoto: prod?.photo || null,
         doseText: doseSrc
           ? `${_("reco_dose_prefix")} ${formatDose(computedDose, doseSrc.doseUnit)}`
@@ -12517,6 +12544,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
         title: _("reco_sel_low", { val: selVal }),
         productName: prodName(prod, "reco_fallback_sel"),
         productAvailable: !!prod,
+      productRealName: prod?.name ?? null, // v1.109.4 — voir RecoCard.missingFromStock
         productPhoto: prod?.photo || null,
         doseText: _("reco_water_renewal_text", { pct: selKg }).replace("{pct}", selKg) ||
           `${_("reco_dose_prefix")} ${selKg} kg ${_("reco_target")} ${Math.round((selT.min + selT.max) / 2)} mg/L`,
@@ -12543,6 +12571,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
         title: _("reco_hard_low", { val: hardVal }),
         productName: prodName(prod, "reco_fallback_hard"),
         productAvailable: !!prod,
+      productRealName: prod?.name ?? null, // v1.109.4 — voir RecoCard.missingFromStock
         productPhoto: prod?.photo || null,
         doseText: doseSrc ? `${_("reco_dose_prefix")} ${formatDose(computedDose, doseSrc.doseUnit)}` : null,
         missingTip: !prod ? _("missing_product_tip", { action: "hard+" }) : null,
@@ -12581,6 +12610,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       title: _("reco_phos_high", { val: phosVal }),
       productName: prodName(prod, "reco_fallback_phos"),
       productAvailable: !!prod,
+      productRealName: prod?.name ?? null, // v1.109.4 — voir RecoCard.missingFromStock
       productPhoto: prod?.photo || null,
       doseText: doseSrc ? `${_("reco_dose_prefix")} ${formatDose(computedDose, doseSrc.doseUnit)}` : null,
       missingTip: !prod ? _("missing_product_tip", { action: "phos-" }) : null,
@@ -12604,6 +12634,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       title: _("reco_copper_high", { val: copperVal }),
       productName: prodName(prod, "reco_fallback_sequestrant"),
       productAvailable: !!prod,
+      productRealName: prod?.name ?? null, // v1.109.4 — voir RecoCard.missingFromStock
       productPhoto: prod?.photo || null,
       doseText: doseSrc ? `${_("reco_dose_prefix")} ${formatDose(computedDose, doseSrc.doseUnit)}` : null,
       missingTip: !prod ? _("missing_product_tip", { action: "sequestrant" }) : null,
@@ -12627,6 +12658,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       title: _("reco_iron_high", { val: ironVal }),
       productName: prodName(prod, "reco_fallback_sequestrant"),
       productAvailable: !!prod,
+      productRealName: prod?.name ?? null, // v1.109.4 — voir RecoCard.missingFromStock
       productPhoto: prod?.photo || null,
       doseText: doseSrc ? `${_("reco_dose_prefix")} ${formatDose(computedDose, doseSrc.doseUnit)}` : null,
       missingTip: !prod ? _("missing_product_tip", { action: "sequestrant" }) : null,
@@ -16777,9 +16809,11 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
         const defaultProductName = sorted.length > 0 ? sorted[0].name
           : generic.length > 0 ? generic[0].name
           : step.productName;
+        // v1.109.4 — Match sur productRealName, pas productName (libellé
+        // générique possible via nameKey) — voir RecoCard.missingFromStock.
         const defaultProductObj = sorted.length > 0 ? sorted[0]
           : generic.length > 0 ? generic[0]
-          : products?.find((p) => p.name === step.productName);
+          : products?.find((p) => p.name === (step.productRealName ?? step.productName));
         const { value } = toDisplayUnit(amount, unit, defaultProductObj);
         setEditAmount(value != null && value !== "" ? String(value) : "");
         // Heure par défaut = maintenant en format HH:MM
@@ -16858,12 +16892,14 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   // réel) et produit effectivement sélectionné (dropdown ou défaut trié).
   const sortedCandidates = getSortedCandidates(step.action);
   const genericCandidates = getGenericCandidates(step.action);
-  const selectedProductObj = findAnyProduct(selectedProduct || step.productName);
+  // v1.109.4 — productRealName plutôt que productName (libellé générique
+  // possible via nameKey) — voir RecoCard.missingFromStock.
+  const selectedProductObj = findAnyProduct(selectedProduct || step.productRealName || step.productName);
   const { displayUnit } = toDisplayUnit(step.computedDoseAmount || step.appliedAmount, baseUnit, selectedProductObj);
   const scheduled = step.scheduledAt ? new Date(step.scheduledAt).getTime() : null;
   const remaining = scheduled ? scheduled - now : null;
   const isReady = remaining === null || remaining <= 0;
-  const prod = products?.find((p) => p.name === step.productName);
+  const prod = products?.find((p) => p.name === (step.productRealName ?? step.productName));
   const stockEmpty = !isMaintenance && manageStock && prod && (prod.stockPercent ?? 100) <= 0;
 
   function handleApply() {
@@ -17771,7 +17807,8 @@ function ProductsToBuyView({ products, plan, latest, volume, effectiveTargets, a
     }
     pendingSteps.forEach((step) => {
       if (!step.productName || step.computedDoseAmount == null || !step.doseUnit) return;
-      const prod = products.find((p) => p.name === step.productName);
+      // v1.109.4 — productRealName plutôt que productName — voir RecoCard.missingFromStock.
+      const prod = products.find((p) => p.name === (step.productRealName ?? step.productName));
       if (!prod) return;
       const remaining = remainingInDoseUnit(prod, step.doseUnit);
       if (remaining != null && remaining < step.computedDoseAmount) {
@@ -20555,7 +20592,8 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
         const isStep = useSteps;
         const step = isStep ? item : null;
         const rec  = !isStep ? item : null;
-        const prod = step ? products.find(p => p.name === step.productName) : null;
+        // v1.109.4 — productRealName plutôt que productName — voir RecoCard.missingFromStock.
+        const prod = step ? products.find(p => p.name === (step.productRealName ?? step.productName)) : null;
 
         const stockVal = (() => {
           if (!manageStock || !prod) return "—";
@@ -21011,7 +21049,8 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                 const measureRows = Array.from({ length: rowCount }).map((_, j) => {
                   const step = useSteps ? (applied[j] || null) : null;
                   const rec  = !useSteps ? (recs[j] || null) : null;
-                  const prod = step ? products.find((p) => p.name === step.productName) : null;
+                  // v1.109.4 — productRealName plutôt que productName — voir RecoCard.missingFromStock.
+                  const prod = step ? products.find((p) => p.name === (step.productRealName ?? step.productName)) : null;
                   return (
                     <tr key={`${i}-${j}`} style={{ background: i % 2 === 0 ? "#f8fafd" : "#ffffff" }}>
                       {j === 0 && (
