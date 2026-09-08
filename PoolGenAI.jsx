@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.109.4";
+const APP_VERSION = "1.110.0";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -623,6 +623,7 @@ const TRANSLATIONS = {
     reco_fallback_ph_minus: "pH moins",
     reco_fallback_ph_plus: "pH plus",
     reco_fallback_chlore: "Chlore choc non stabilisé",
+    reco_fallback_chlore_stabilise: "Chlore stabilisé (galets)",
     reco_fallback_brome: "Brome (pastilles ou granulés)",
     reco_fallback_o2: "Oxygène actif (peroxyde d'hydrogène stabilisé)",
     reco_fallback_sel: "Sel de piscine (NaCl pur)",
@@ -1403,6 +1404,7 @@ const TRANSLATIONS = {
     reco_fallback_ph_minus: "pH minus",
     reco_fallback_ph_plus: "pH plus",
     reco_fallback_chlore: "Unstabilised shock chlorine",
+    reco_fallback_chlore_stabilise: "Stabilised chlorine (tablets)",
     reco_fallback_brome: "Bromine (tablets or granules)",
     reco_fallback_o2: "Active oxygen (stabilised hydrogen peroxide)",
     reco_fallback_sel: "Pool salt (pure NaCl)",
@@ -2182,6 +2184,7 @@ const TRANSLATIONS = {
     reco_fallback_ph_minus: "pH-Senker",
     reco_fallback_ph_plus: "pH-Heber",
     reco_fallback_chlore: "Nicht stabilisiertes Schockchlor",
+    reco_fallback_chlore_stabilise: "Stabilisiertes Chlor (Tabletten)",
     reco_fallback_brome: "Brom (Tabletten oder Granulat)",
     reco_fallback_o2: "Aktivsauerstoff (stabilisiertes Wasserstoffperoxid)",
     reco_fallback_sel: "Poolsalz (reines NaCl)",
@@ -2957,6 +2960,7 @@ const TRANSLATIONS = {
     reco_fallback_ph_minus: "pH meno",
     reco_fallback_ph_plus: "pH più",
     reco_fallback_chlore: "Cloro shock non stabilizzato",
+    reco_fallback_chlore_stabilise: "Cloro stabilizzato (pastiglie)",
     reco_fallback_brome: "Bromo (pastiglie o granuli)",
     reco_fallback_o2: "Ossigeno attivo (perossido di idrogeno stabilizzato)",
     reco_fallback_sel: "Sale da piscina (NaCl puro)",
@@ -3732,6 +3736,7 @@ const TRANSLATIONS = {
     reco_fallback_ph_minus: "pH menos",
     reco_fallback_ph_plus: "pH más",
     reco_fallback_chlore: "Cloro shock no estabilizado",
+    reco_fallback_chlore_stabilise: "Cloro estabilizado (pastillas)",
     reco_fallback_brome: "Bromo (pastillas o gránulos)",
     reco_fallback_o2: "Oxígeno activo (peróxido de hidrógeno estabilizado)",
     reco_fallback_sel: "Sal de piscina (NaCl puro)",
@@ -4504,6 +4509,7 @@ const TRANSLATIONS = {
     reco_fallback_ph_minus: "pH menos",
     reco_fallback_ph_plus: "pH mais",
     reco_fallback_chlore: "Cloro shock não estabilizado",
+    reco_fallback_chlore_stabilise: "Cloro estabilizado (pastilhas)",
     reco_fallback_brome: "Bromo (pastilhas ou grânulos)",
     reco_fallback_o2: "Oxigênio ativo (peróxido de hidrogênio estabilizado)",
     reco_fallback_sel: "Sal de piscina (NaCl puro)",
@@ -12414,21 +12420,34 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
     } else if (fCl < fclT.min) {
       const targetFcl = (fclT.min + fclT.max) / 2;
       const diff = targetFcl - fCl;
-      const prod = findProduct("chlore");
-      const dp = defaultProd("chlore");
+      // v1.110.0 — Chlore libre bas SANS contamination (pas de combiné, pas
+      // d'urgence) : si le bassin a un régime chlore stabilisé configuré
+      // (galets, action "chlore-stabilise"), c'est l'usage réel de ce
+      // bassin — proposer ce produit plutôt que le choc non stabilisé, sauf
+      // si le CYA est déjà à/au-dessus de la cible (le galet en ajoute à
+      // chaque usage, voir note_galets : "à éviter si CYA déjà > 50 mg/L").
+      // La branche "combiné élevé" ci-dessus reste toujours sur le choc non
+      // stabilisé, quel que soit le régime — c'est une urgence sanitaire,
+      // pas une question d'habitude.
+      const cyaValForChlore = parseFloat(latestLower.cya);
+      const cyaAtCeiling = has("cya") && !Number.isNaN(cyaValForChlore) && targetsLower.cya && cyaValForChlore >= targetsLower.cya.max;
+      const stabiliseProd = !cyaAtCeiling ? findProduct("chlore-stabilise") : null;
+      const chosenAction = stabiliseProd ? "chlore-stabilise" : "chlore";
+      const prod = stabiliseProd || findProduct("chlore");
+      const dp = defaultProd(chosenAction);
       const doseSrc = prod || dp;
       const computedDose = doseSrc ? scaleDoseForActiveChlorine(Math.round(doseSrc.doseAmount * (volume / doseSrc.effectPer) * (diff / doseSrc.effectAmount)), doseSrc) : null;
       steps.push({
-        action: "chlore",
+        action: chosenAction,
         title: _("reco_cl_low", { val: fCl }),
-        productName: prodName(prod, "reco_fallback_chlore"),
+        productName: prodName(prod, chosenAction === "chlore-stabilise" ? "reco_fallback_chlore_stabilise" : "reco_fallback_chlore"),
         productAvailable: !!prod,
-      productRealName: prod?.name ?? null, // v1.109.4 — voir RecoCard.missingFromStock
+        productRealName: prod?.name ?? null, // v1.109.4 — voir RecoCard.missingFromStock
         productPhoto: prod?.photo || null,
         doseText: doseSrc
           ? `${_("reco_dose_prefix")} ${formatDose(computedDose, doseSrc.doseUnit)} ${_("reco_target")} ${targetFcl} mg/L`
           : null,
-        missingTip: !prod ? _("missing_product_tip", { action: "chlore" }) : null,
+        missingTip: !prod ? _("missing_product_tip", { action: chosenAction }) : null,
         computedDoseAmount: computedDose,
         doseUnit: doseSrc?.doseUnit || null,
         doseAnomaly: isDoseRateAnomalous(prod, dp),
@@ -12439,8 +12458,11 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
         // si l'utilisateur en a saisi une, sinon pas de note plutôt qu'un message
         // trompeur.
         note: prod ? ((prod.noteKey ? _(prod.noteKey) : prod.note) || null) : null,
-        timingTip: _("chlore_timing_tip"),
-        waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["chlore"],
+        // v1.110.0 — "Applique le soir" est un conseil UV, propre au chlore
+        // NON stabilisé (voir chlore_timing_tip) — sans objet pour un galet
+        // stabilisé, conçu au contraire pour résister aux UV en continu.
+        timingTip: chosenAction === "chlore" ? _("chlore_timing_tip") : null,
+        waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS[chosenAction],
       });
     } else if (fCl > fclT.max) {
       steps.push({
