@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.110.0";
+const APP_VERSION = "1.110.1";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -312,6 +312,8 @@ const TRANSLATIONS = {
     wizard_resume: "Reprendre le plan",
     wizard_completed: "Plan de traitement terminé ✓",
     wizard_partial: "Plan en cours",
+    wizard_completed_partial: "Plan terminé — {n} étape(s) non appliquée(s)",
+    applied_amount: "Appliqué : {amount}",
     countdown_done: "C'est l'heure !",
     treatment_at: "Traitement appliqué à",
     edit_treatment_section_title: "Traitement appliqué",
@@ -1099,6 +1101,8 @@ const TRANSLATIONS = {
     wizard_resume: "Resume plan",
     wizard_completed: "Treatment plan completed ✓",
     wizard_partial: "Plan in progress",
+    wizard_completed_partial: "Plan completed — {n} step(s) not applied",
+    applied_amount: "Applied: {amount}",
     countdown_done: "Time to treat!",
     treatment_at: "Treatment applied at",
     edit_treatment_section_title: "Treatment applied",
@@ -1876,6 +1880,8 @@ const TRANSLATIONS = {
     wizard_resume: "Plan fortsetzen",
     wizard_completed: "Behandlungsplan abgeschlossen ✓",
     wizard_partial: "Plan läuft",
+    wizard_completed_partial: "Plan abgeschlossen — {n} Schritt/Schritte nicht angewendet",
+    applied_amount: "Angewendet: {amount}",
     countdown_done: "Zeit für die Behandlung!",
     treatment_at: "Behandlung angewendet um",
     edit_treatment_section_title: "Angewendete Behandlung",
@@ -2655,6 +2661,8 @@ const TRANSLATIONS = {
     wizard_resume: "Riprendi piano",
     wizard_completed: "Piano di trattamento completato ✓",
     wizard_partial: "Piano in corso",
+    wizard_completed_partial: "Piano completato — {n} passaggi non applicati",
+    applied_amount: "Applicato: {amount}",
     countdown_done: "È ora di trattare!",
     treatment_at: "Trattamento applicato alle",
     edit_treatment_section_title: "Trattamento applicato",
@@ -3431,6 +3439,8 @@ const TRANSLATIONS = {
     wizard_resume: "Reanudar plan",
     wizard_completed: "Plan de tratamiento completado ✓",
     wizard_partial: "Plan en curso",
+    wizard_completed_partial: "Plan completado — {n} paso(s) no aplicado(s)",
+    applied_amount: "Aplicado: {amount}",
     countdown_done: "¡Es hora de tratar!",
     treatment_at: "Tratamiento aplicado a las",
     edit_treatment_section_title: "Tratamiento aplicado",
@@ -4207,6 +4217,8 @@ const TRANSLATIONS = {
     wizard_resume: "Retomar plano",
     wizard_completed: "Plano de tratamento concluído ✓",
     wizard_partial: "Plano em andamento",
+    wizard_completed_partial: "Plano concluído — {n} etapa(s) não aplicada(s)",
+    applied_amount: "Aplicado: {amount}",
     countdown_done: "Hora do tratamento!",
     treatment_at: "Tratamento aplicado às",
     edit_treatment_section_title: "Tratamento aplicado",
@@ -9727,8 +9739,8 @@ function PoolGenAIApp() {
     }
   }
 
-  function saveApplication(measureId, steps, allApplied) {
-    track("treatment_applied", { steps_count: steps.length, all_applied: allApplied });
+  function saveApplication(measureId, steps, allApplied, allDone) {
+    track("treatment_applied", { steps_count: steps.length, all_applied: allApplied, all_done: allDone });
     // Stock décrémenté uniquement quand le plan est entièrement terminé
     if (allApplied) {
       const stepsWithAmount = steps.filter((s) => s.appliedAmount && !s.skipped);
@@ -9781,6 +9793,7 @@ function PoolGenAIApp() {
         measureId,
         appliedAt: new Date().toISOString(),
         allApplied: !!allApplied,
+        allDone: allDone != null ? !!allDone : !!allApplied,
         steps,
         createdBy: authUser?.uid || null,
       };
@@ -9978,7 +9991,7 @@ function PoolGenAIApp() {
     const finalSteps = buildFinalSteps(recalcSteps);
     // Sauvegarde intermédiaire dans l'historique à chaque étape
     const applied = finalSteps.filter(s => !s.skipped && s.appliedAt);
-    saveApplication(activePlan.measureId, finalSteps, allDone && applied.length === finalSteps.length);
+    saveApplication(activePlan.measureId, finalSteps, allDone && applied.length === finalSteps.length, allDone);
     if (allDone) {
       setActivePlan(null);
       setShowWizard(false);
@@ -9996,7 +10009,7 @@ function PoolGenAIApp() {
     const finalSteps = buildFinalSteps(newSteps);
     const allDone = newSteps.every(s => s.appliedAt || s.skipped);
     const applied = finalSteps.filter(s => !s.skipped && s.appliedAt);
-    saveApplication(activePlan.measureId, finalSteps, allDone && applied.length === finalSteps.length);
+    saveApplication(activePlan.measureId, finalSteps, allDone && applied.length === finalSteps.length, allDone);
     setActivePlan({ ...activePlan, steps: newSteps });
   }
 
@@ -10011,7 +10024,7 @@ function PoolGenAIApp() {
     const allDone = nextIdx >= newSteps.length;
     const finalSteps = buildFinalSteps(newSteps);
     // Sauvegarde intermédiaire
-    saveApplication(activePlan.measureId, finalSteps, false);
+    saveApplication(activePlan.measureId, finalSteps, false, allDone);
     if (allDone) {
       setActivePlan(null);
       setShowWizard(false);
@@ -11928,6 +11941,7 @@ Réponds directement en français, sans titre ni introduction.`;
                 manageStock={manageStock}
                 products={products}
                 lang={lang}
+                appliedStep={(planForLatest || applicationForLatest)?.steps?.[i] || null}
               />
             ))}
 
@@ -11937,7 +11951,7 @@ Réponds directement en français, sans titre ni introduction.`;
                   <div style={styles.applyConfirmedCard}>
                     <CheckCircle2 size={16} color="#1a8fd1" />
                     <span style={{ flex: 1 }}>
-                      {applicationForLatest.allApplied ? t("wizard_completed") : t("wizard_partial")}
+                      {wizardStatusLabel(applicationForLatest, t)}
                     </span>
                   </div>
                 );
@@ -12018,7 +12032,7 @@ function ParamCard({ param, value, effectiveTargets, lang }) {
   );
 }
 
-function RecoCard({ reco, isLast, manageStock, products, lang }) {
+function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep }) {
   const t = useT(lang || "fr");
   const isInfo = !!reco.noAction;
   return (
@@ -12077,6 +12091,15 @@ function RecoCard({ reco, isLast, manageStock, products, lang }) {
         );
       })()}
       {reco.doseText && <div style={styles.recoDose}>{reco.doseText}</div>}
+      {/* v1.110.1 — Quantité réellement appliquée pour cette étape (peut
+          différer de la dose suggérée ci-dessus si l'utilisateur l'a ajustée
+          dans le wizard). */}
+      {appliedStep && appliedStep.appliedAt && !appliedStep.skipped && appliedStep.appliedAmount != null && (
+        <div style={{ fontSize: 13, fontWeight: 600, color: "#1a8fd1", marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
+          <CheckCircle2 size={13} />
+          {t("applied_amount", { amount: formatDose(appliedStep.appliedAmount, appliedStep.doseUnit || reco.doseUnit || "g") })}
+        </div>
+      )}
       {/* v1.108.3 — Garde-fou dose anormale (voir isDoseRateAnomalous) :
           avertissement non bloquant si la dose calculée s'écarte fortement
           du produit de référence pour cette action — n'empêche jamais
@@ -12152,6 +12175,18 @@ function formatDose(amount, unit) {
     return `${Number.isInteger(L) ? L : L.toFixed(2).replace(/\.?0+$/, "")} L`;
   }
   return `${amount} ${unit}`;
+}
+
+// v1.110.1 — Libellé de statut d'un plan de traitement appliqué. Un plan
+// clos avec au moins une étape passée (ex. produit non configuré) ne
+// remplissait jamais allApplied et restait affiché "Plan en cours" pour
+// toujours, même une fois qu'il n'y avait plus rien à faire (voir allDone,
+// ajouté côté saveApplication/applyWizardStep/skipWizardStep/editWizardStep).
+function wizardStatusLabel(app, t) {
+  if (!app) return t("wizard_partial");
+  if (app.allApplied) return t("wizard_completed");
+  if (app.allDone) return t("wizard_completed_partial", { n: (app.steps || []).filter((s) => s.skipped).length });
+  return t("wizard_partial");
 }
 
 // v1.108.3 — Garde-fou dose anormale : compare le taux d'un produit
@@ -13610,7 +13645,7 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, applicat
                 </div>
               ))}
               <div style={{ fontSize: 11, color: "var(--brand-text-muted)", marginTop: 4 }}>
-                {application.allApplied ? t("wizard_completed") : t("wizard_partial")}
+                {wizardStatusLabel(application, t)}
               </div>
             </div>
           ) : (
