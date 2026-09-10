@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.111.0";
+const APP_VERSION = "1.111.1";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -12124,7 +12124,12 @@ function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep }) {
         // sodium)") ne matchait donc jamais son propre stock réel — badge
         // "stock épuisé" affiché à tort même à 87% de stock (signalé par un
         // testeur, uid O5vagoCXWjgqBo7FthmStrwbWdx1).
-        const missingFromStock = manageStock && products && reco.productAvailable &&
+        // v1.111.1 — Exclu pour une carte informative (isInfo, ex. "chlore
+        // trop haut : laisser dégrader au soleil") : reco.productName vaut
+        // alors un libellé générique ("Aucun produit nécessaire"), jamais le
+        // nom d'un vrai produit — le recherche échouait donc toujours et
+        // affichait "stock épuisé" alors qu'aucun produit n'est requis.
+        const missingFromStock = !isInfo && manageStock && products && reco.productAvailable &&
           !products.find((p) => p.name === (reco.productRealName ?? reco.productName) && (p.stockPercent ?? 100) > 0);
         return (
           <div style={styles.recoProductRow}>
