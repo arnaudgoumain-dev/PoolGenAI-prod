@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.110.1";
+const APP_VERSION = "1.110.2";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -307,6 +307,7 @@ const TRANSLATIONS = {
     wizard_next_step: "Prochaine étape",
     wizard_start: "Démarrer le plan",
     plan_in_progress: "Plan de traitement en cours",
+    wizard_apply_date: "Date d'application",
     wizard_apply_time: "Heure d'application",
     wizard_edit_prev: "Modifier l'étape précédente",
     wizard_resume: "Reprendre le plan",
@@ -1096,6 +1097,7 @@ const TRANSLATIONS = {
     wizard_next_step: "Next step",
     wizard_start: "Start plan",
     plan_in_progress: "Treatment plan in progress",
+    wizard_apply_date: "Application date",
     wizard_apply_time: "Application time",
     wizard_edit_prev: "Edit previous step",
     wizard_resume: "Resume plan",
@@ -1875,6 +1877,7 @@ const TRANSLATIONS = {
     wizard_next_step: "Nächster Schritt",
     wizard_start: "Plan starten",
     plan_in_progress: "Behandlungsplan läuft",
+    wizard_apply_date: "Anwendungsdatum",
     wizard_apply_time: "Anwendungszeitpunkt",
     wizard_edit_prev: "Vorherigen Schritt bearbeiten",
     wizard_resume: "Plan fortsetzen",
@@ -2656,6 +2659,7 @@ const TRANSLATIONS = {
     wizard_next_step: "Prossimo passo",
     wizard_start: "Avvia piano",
     plan_in_progress: "Piano di trattamento in corso",
+    wizard_apply_date: "Data di applicazione",
     wizard_apply_time: "Orario di applicazione",
     wizard_edit_prev: "Modifica fase precedente",
     wizard_resume: "Riprendi piano",
@@ -3434,6 +3438,7 @@ const TRANSLATIONS = {
     wizard_next_step: "Siguiente paso",
     wizard_start: "Iniciar plan",
     plan_in_progress: "Plan de tratamiento en curso",
+    wizard_apply_date: "Fecha de aplicación",
     wizard_apply_time: "Hora de aplicación",
     wizard_edit_prev: "Editar paso anterior",
     wizard_resume: "Reanudar plan",
@@ -4212,6 +4217,7 @@ const TRANSLATIONS = {
     wizard_next_step: "Próximo passo",
     wizard_start: "Iniciar plano",
     plan_in_progress: "Plano de tratamento em curso",
+    wizard_apply_date: "Data de aplicação",
     wizard_apply_time: "Hora de aplicação",
     wizard_edit_prev: "Editar etapa anterior",
     wizard_resume: "Retomar plano",
@@ -7144,7 +7150,15 @@ const FB = {
   // ── Applications sync ──
   saveApplication: async (uid, application) => {
     if (!window._fbDb || !window._fbSetDoc) return;
-    const ref = window._fbDoc(window._fbDb, "users", uid, "applications", application.measureId);
+    // v1.110.2 — Une application "manuelle" (measureId null, voir
+    // saveManualApplication) écrivait toujours au même chemin Firestore
+    // .../applications/null : chaque nouvel entretien manuel écrasait le
+    // précédent (ou échouait silencieusement), disparaissant au rechargement
+    // bien que visible dans le state React local. measureId reste la clé
+    // pour les plans liés à une mesure (comportement écrase-en-place voulu
+    // entre étapes intermédiaires du wizard) ; on ne retombe sur l'id unique
+    // de l'application que lorsqu'il n'y a pas de measureId.
+    const ref = window._fbDoc(window._fbDb, "users", uid, "applications", application.measureId || application.id);
     await window._fbSetDoc(ref, application);
   },
   deleteApplication: async (uid, measureId) => {
@@ -8627,7 +8641,7 @@ function PoolGenAIApp() {
     ]);
     await Promise.all([
       ...ms.map((m) => FB.deleteMeasure(uid, m.id).catch(() => {})),
-      ...apps.map((a) => FB.deleteApplication(uid, a.measureId).catch(() => {})),
+      ...apps.map((a) => FB.deleteApplication(uid, a.measureId || a.id).catch(() => {})),
       ...diags.map((d) => FB.deleteDiagnostic(uid, d.id).catch(() => {})),
       ...Object.keys(photos).map((id) => FB.deleteProductPhoto(uid, id).catch(() => {})),
     ]);
@@ -13213,7 +13227,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
         return (
           <div style={styles.chartCard}>
             <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={chartData} margin={{ top: showValues ? 18 : 8, right: 12, left: -10, bottom: 0 }}>
+              <LineChart data={chartData} margin={{ top: showValues ? 18 : 8, right: 12, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e6ebe9" />
                 <XAxis
                   dataKey="timestamp"
@@ -13232,7 +13246,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
             <YAxis
               yAxisId="left"
               tick={{ fontSize: 10, fill: "var(--brand-text-muted)" }}
-              width={28}
+              width={32}
             />
             <YAxis
               yAxisId="right"
@@ -13258,7 +13272,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
                   connectNulls
                   label={
                     showValues
-                      ? { fontSize: 10, fill: cp.color, position: "top", offset: 8 }
+                      ? { fontSize: 10, fill: cp.color, position: "top", offset: 8, formatter: (v) => (v == null ? "" : Number(v).toFixed(1)) }
                       : false
                   }
                 />
@@ -17395,6 +17409,10 @@ function ManualApplyModal({ products, onClose, onSave, lang }) {
   const selected = candidates.find((p) => p.name === selectedName) || null;
   const isGalets = selected?.packagingType === "galets" && selected?.unitWeight > 0;
   const [amount, setAmount] = useState("");
+  const [date, setDate] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getDate().toString().padStart(2, "0")}`;
+  });
   const [time, setTime] = useState(() => {
     const d = new Date();
     return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
@@ -17407,10 +17425,10 @@ function ManualApplyModal({ products, onClose, onSave, lang }) {
     const doseUnit = selected.doseUnit || "g";
     const finalAmount = isGalets ? Math.round(v) * selected.unitWeight : v * 1000;
     let appliedAt = new Date().toISOString();
-    if (time) {
+    if (date && time) {
+      const [y, mo, da] = date.split("-").map(Number);
       const [h, m] = time.split(":").map(Number);
-      const d = new Date();
-      d.setHours(h, m, 0, 0);
+      const d = new Date(y, mo - 1, da, h, m, 0, 0);
       appliedAt = d.toISOString();
     }
     onSave(selected, finalAmount, doseUnit, appliedAt);
@@ -17446,9 +17464,17 @@ function ManualApplyModal({ products, onClose, onSave, lang }) {
               step={isGalets ? "1" : "0.01"}
             />
             <div style={{ fontSize: 16, fontWeight: 700, color: "var(--brand-text-secondary)", minWidth: 32 }}>
-              {isGalets ? t("unit_galets") : "kg"}
+              {isGalets ? t("unit_galets") : (normalizeDoseUnit(selected?.doseUnit) === "mL" ? "L" : "kg")}
             </div>
           </div>
+
+          <label style={styles.fieldLabel}>{t("wizard_apply_date")}</label>
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            style={{ width: "100%", boxSizing: "border-box", fontSize: 16, fontWeight: 700, color: "var(--brand-primary)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 12px", outline: "none", marginBottom: 14 }}
+          />
 
           <label style={styles.fieldLabel}>{t("wizard_apply_time")}</label>
           <input
