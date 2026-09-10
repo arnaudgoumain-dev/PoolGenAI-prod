@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.110.2";
+const APP_VERSION = "1.111.0";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -315,6 +315,8 @@ const TRANSLATIONS = {
     wizard_partial: "Plan en cours",
     wizard_completed_partial: "Plan terminé — {n} étape(s) non appliquée(s)",
     applied_amount: "Appliqué : {amount}",
+    wizard_dose_split_note: "Déjà appliqué {applied} — reste environ {remaining} à compléter, une fois le délai de sécurité écoulé.",
+    dose_remaining: "Reste à appliquer : ≈ {amount}",
     countdown_done: "C'est l'heure !",
     treatment_at: "Traitement appliqué à",
     edit_treatment_section_title: "Traitement appliqué",
@@ -1105,6 +1107,8 @@ const TRANSLATIONS = {
     wizard_partial: "Plan in progress",
     wizard_completed_partial: "Plan completed — {n} step(s) not applied",
     applied_amount: "Applied: {amount}",
+    wizard_dose_split_note: "Already applied {applied} — about {remaining} left, once the safety wait has passed.",
+    dose_remaining: "Remaining: ≈ {amount}",
     countdown_done: "Time to treat!",
     treatment_at: "Treatment applied at",
     edit_treatment_section_title: "Treatment applied",
@@ -1885,6 +1889,8 @@ const TRANSLATIONS = {
     wizard_partial: "Plan läuft",
     wizard_completed_partial: "Plan abgeschlossen — {n} Schritt/Schritte nicht angewendet",
     applied_amount: "Angewendet: {amount}",
+    wizard_dose_split_note: "Bereits angewendet: {applied} — noch etwa {remaining} übrig, nach Ablauf der Sicherheitswartezeit.",
+    dose_remaining: "Noch übrig: ≈ {amount}",
     countdown_done: "Zeit für die Behandlung!",
     treatment_at: "Behandlung angewendet um",
     edit_treatment_section_title: "Angewendete Behandlung",
@@ -2667,6 +2673,8 @@ const TRANSLATIONS = {
     wizard_partial: "Piano in corso",
     wizard_completed_partial: "Piano completato — {n} passaggi non applicati",
     applied_amount: "Applicato: {amount}",
+    wizard_dose_split_note: "Già applicato {applied} — ne restano circa {remaining}, una volta trascorso il tempo di sicurezza.",
+    dose_remaining: "Rimanente: ≈ {amount}",
     countdown_done: "È ora di trattare!",
     treatment_at: "Trattamento applicato alle",
     edit_treatment_section_title: "Trattamento applicato",
@@ -3446,6 +3454,8 @@ const TRANSLATIONS = {
     wizard_partial: "Plan en curso",
     wizard_completed_partial: "Plan completado — {n} paso(s) no aplicado(s)",
     applied_amount: "Aplicado: {amount}",
+    wizard_dose_split_note: "Ya aplicado {applied} — quedan aprox. {remaining}, una vez transcurrido el tiempo de seguridad.",
+    dose_remaining: "Queda: ≈ {amount}",
     countdown_done: "¡Es hora de tratar!",
     treatment_at: "Tratamiento aplicado a las",
     edit_treatment_section_title: "Tratamiento aplicado",
@@ -4225,6 +4235,8 @@ const TRANSLATIONS = {
     wizard_partial: "Plano em andamento",
     wizard_completed_partial: "Plano concluído — {n} etapa(s) não aplicada(s)",
     applied_amount: "Aplicado: {amount}",
+    wizard_dose_split_note: "Já aplicado {applied} — falta cerca de {remaining}, após o tempo de segurança.",
+    dose_remaining: "Falta aplicar: ≈ {amount}",
     countdown_done: "Hora do tratamento!",
     treatment_at: "Tratamento aplicado às",
     edit_treatment_section_title: "Tratamento aplicado",
@@ -9938,6 +9950,10 @@ function PoolGenAIApp() {
       productRealName: s.appliedProductName || s.productRealName || s.productName,
       computedDoseAmount: s.computedDoseAmount,
       appliedAmount: (s.appliedAt && !s.skipped) ? s.appliedAmount : null,
+      // v1.110.3 — Reliquat d'une application partielle (voir applyWizardStep) :
+      // porté jusque dans l'application sauvegardée pour que RecoCard/PlanStatusCard
+      // puissent l'afficher même après fermeture du wizard.
+      remainingAmount: (s.appliedAt && !s.skipped && s.remainingAmount > 0) ? s.remainingAmount : null,
       doseUnit: s.doseUnit,
       appliedAt: s.appliedAt, skipped: s.skipped, scheduledAt: s.scheduledAt,
       mode: s.mode, doseText: s.doseText,
@@ -9950,19 +9966,36 @@ function PoolGenAIApp() {
     const now = appliedAt || new Date().toISOString();
     const newSteps = activePlan.steps.map((s, i) => {
       if (i !== stepIdx) return s;
+      // v1.110.3 — Application partielle : certains produits imposent une
+      // dose maximale par prise (ex. pH- liquide concentré : 500 mL max en
+      // une fois pour 50 m³) — l'utilisateur doit alors fractionner en
+      // plusieurs applications, espacées du délai de sécurité (waitHours).
+      // Si le montant saisi est inférieur au total calculé, on cumule sur
+      // les applications précédentes de CETTE étape et on garde un reliquat
+      // au lieu de considérer l'étape terminée — elle reste l'étape
+      // courante du plan, avec un nouveau délai avant de pouvoir compléter
+      // le reste. Tolérance de 2% (mini 1 unité) pour ignorer le bruit
+      // d'arrondi kg↔g / L↔mL et ne pas rester bloqué sur un reliquat infime.
+      const cumulative = (s.appliedAmount || 0) + (amount || 0);
+      const target = s.computedDoseAmount;
+      const canSplit = target != null && amount != null && s.mode !== "entretien" && s.doseUnit !== "%";
+      const rawRemainder = canSplit ? target - cumulative : 0;
+      const epsilon = canSplit ? Math.max(1, target * 0.02) : 0;
+      const remainingAmount = rawRemainder > epsilon ? rawRemainder : null;
       return {
         ...s,
         appliedAt: now,
-        appliedAmount: amount,
+        appliedAmount: amount != null ? cumulative : s.appliedAmount,
+        remainingAmount,
         skipped: false,
         ...(productName && productName !== s.productName ? { appliedProductName: productName } : {}),
+        ...(remainingAmount ? { scheduledAt: new Date(new Date(now).getTime() + (s.waitHours || 0) * 3600 * 1000).toISOString() } : {}),
       };
     });
     // Recalculer les scheduledAt des étapes suivantes
     let lastApplied = new Date(now);
     let recalcSteps = newSteps.map((s, i) => {
-      if (i < stepIdx) return s;
-      if (i === stepIdx) { lastApplied = new Date(now); return s; }
+      if (i <= stepIdx) return s;
       const scheduled = new Date(lastApplied.getTime() + (newSteps[i-1]?.waitHours || 0) * 3600 * 1000);
       lastApplied = scheduled;
       return { ...s, scheduledAt: scheduled.toISOString() };
@@ -9978,7 +10011,10 @@ function PoolGenAIApp() {
     const usedProductName = appliedStep.appliedProductName || appliedStep.productName;
     const usedProduct = poolProducts.find((p) => p.name === usedProductName);
     const alreadyHasMaintenanceCard = recalcSteps.some((s) => s.mode === "entretien");
-    if (!alreadyHasMaintenanceCard && usedProduct?.packagingType === "galets" && usedProduct?.maintenanceRatio?.units && usedProduct?.maintenanceRatio?.volumePer) {
+    // v1.110.3 — Pas de carte "entretien continu" tant que l'étape a un
+    // reliquat en attente (application partielle) : le produit n'est pas
+    // encore totalement appliqué, prématuré de clore le plan sur ce produit.
+    if (!appliedStep.remainingAmount && !alreadyHasMaintenanceCard && usedProduct?.packagingType === "galets" && usedProduct?.maintenanceRatio?.units && usedProduct?.maintenanceRatio?.volumePer) {
       const mr = usedProduct.maintenanceRatio;
       recalcSteps = [...recalcSteps, {
         action: "entretien-galets",
@@ -9998,13 +10034,20 @@ function PoolGenAIApp() {
       }];
     }
 
-    // Trouver la prochaine étape non traitée
-    let nextIdx = stepIdx + 1;
-    while (nextIdx < recalcSteps.length && (recalcSteps[nextIdx].appliedAt || recalcSteps[nextIdx].skipped)) nextIdx++;
-    const allDone = nextIdx >= recalcSteps.length;
+    // Trouver la prochaine étape non traitée — v1.110.3 : si l'étape qu'on
+    // vient d'appliquer a un reliquat (application partielle), on reste
+    // dessus (nextIdx = stepIdx) au lieu d'avancer, le temps du délai de
+    // sécurité avant de pouvoir compléter le reste.
+    const stepStillPartial = recalcSteps[stepIdx].remainingAmount > 0;
+    let nextIdx = stepIdx;
+    if (!stepStillPartial) {
+      nextIdx = stepIdx + 1;
+      while (nextIdx < recalcSteps.length && stepIsResolved(recalcSteps[nextIdx])) nextIdx++;
+    }
+    const allDone = !stepStillPartial && nextIdx >= recalcSteps.length;
     const finalSteps = buildFinalSteps(recalcSteps);
     // Sauvegarde intermédiaire dans l'historique à chaque étape
-    const applied = finalSteps.filter(s => !s.skipped && s.appliedAt);
+    const applied = finalSteps.filter(s => stepIsResolved(s) && !s.skipped);
     saveApplication(activePlan.measureId, finalSteps, allDone && applied.length === finalSteps.length, allDone);
     if (allDone) {
       setActivePlan(null);
@@ -10021,8 +10064,8 @@ function PoolGenAIApp() {
       i === stepIdx ? { ...s, appliedAmount: amount, appliedAt } : s
     );
     const finalSteps = buildFinalSteps(newSteps);
-    const allDone = newSteps.every(s => s.appliedAt || s.skipped);
-    const applied = finalSteps.filter(s => !s.skipped && s.appliedAt);
+    const allDone = newSteps.every(stepIsResolved);
+    const applied = finalSteps.filter(s => stepIsResolved(s) && !s.skipped);
     saveApplication(activePlan.measureId, finalSteps, allDone && applied.length === finalSteps.length, allDone);
     setActivePlan({ ...activePlan, steps: newSteps });
   }
@@ -10034,7 +10077,7 @@ function PoolGenAIApp() {
       i === stepIdx ? { ...s, skipped: true, appliedAt: new Date().toISOString() } : s
     );
     let nextIdx = stepIdx + 1;
-    while (nextIdx < newSteps.length && (newSteps[nextIdx].appliedAt || newSteps[nextIdx].skipped)) nextIdx++;
+    while (nextIdx < newSteps.length && stepIsResolved(newSteps[nextIdx])) nextIdx++;
     const allDone = nextIdx >= newSteps.length;
     const finalSteps = buildFinalSteps(newSteps);
     // Sauvegarde intermédiaire
@@ -12114,6 +12157,14 @@ function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep }) {
           {t("applied_amount", { amount: formatDose(appliedStep.appliedAmount, appliedStep.doseUnit || reco.doseUnit || "g") })}
         </div>
       )}
+      {/* v1.110.3 — Reliquat d'une application partielle (dose max par
+          prise, voir applyWizardStep) — reste à compléter après le délai
+          de sécurité. */}
+      {appliedStep && appliedStep.remainingAmount > 0 && (
+        <div style={{ fontSize: 12.5, color: "#a8721a", marginTop: 2 }}>
+          {t("dose_remaining", { amount: formatDose(appliedStep.remainingAmount, appliedStep.doseUnit || reco.doseUnit || "g") })}
+        </div>
+      )}
       {/* v1.108.3 — Garde-fou dose anormale (voir isDoseRateAnomalous) :
           avertissement non bloquant si la dose calculée s'écarte fortement
           du produit de référence pour cette action — n'empêche jamais
@@ -12201,6 +12252,18 @@ function wizardStatusLabel(app, t) {
   if (app.allApplied) return t("wizard_completed");
   if (app.allDone) return t("wizard_completed_partial", { n: (app.steps || []).filter((s) => s.skipped).length });
   return t("wizard_partial");
+}
+
+// v1.110.3 — Une étape est réellement résolue (ne bloque plus l'avancement
+// du plan) si elle a été passée, ou appliquée SANS reliquat en attente. Une
+// application partielle (dose max par prise dépassée, ex. pH- liquide
+// concentré : 500 mL max/50 m³, voir applyWizardStep) laisse remainingAmount
+// positif : l'étape reste "en cours" tant que le reliquat n'est pas
+// complété, même si appliedAt est déjà renseigné. Fonction top-level (pas
+// une closure de PoolGenAIApp) car utilisée aussi par PlanStatusCard et
+// TreatmentWizard, des composants séparés.
+function stepIsResolved(s) {
+  return !!s.skipped || (!!s.appliedAt && !(s.remainingAmount > 0));
 }
 
 // v1.108.3 — Garde-fou dose anormale : compare le taux d'un produit
@@ -16760,7 +16823,7 @@ function PlanStatusCard({ plan, onResume, lang }) {
 
   if (!plan) return null;
   const currentStep = plan.currentStepIdx >= 0 ? plan.steps[plan.currentStepIdx] : null;
-  const doneSteps = plan.steps.filter((s) => s.appliedAt && !s.skipped).length;
+  const doneSteps = plan.steps.filter((s) => stepIsResolved(s) && !s.skipped).length;
   const totalSteps = plan.steps.length;
 
   function formatCountdown(ms) {
@@ -16868,7 +16931,10 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
     if (plan && plan.currentStepIdx >= 0) {
       const step = plan.steps[plan.currentStepIdx];
       if (step) {
-        const amount = step.computedDoseAmount ?? step.appliedAmount;
+        // v1.110.3 — Application partielle en attente (voir applyWizardStep) :
+        // pré-remplit avec le reliquat restant, pas le total d'origine, pour
+        // que l'utilisateur complète naturellement la dose déjà entamée.
+        const amount = step.remainingAmount ?? step.computedDoseAmount ?? step.appliedAmount;
         const unit = step.doseUnit || "g";
         // v1.61.0 — Pré-sélection du produit à utiliser : le plus entamé
         // puis le plus ancien parmi les produits en stock de l'action (ou
@@ -16895,7 +16961,11 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
         setEditingPrev(false);
       }
     }
-  }, [plan?.currentStepIdx]);
+  // v1.110.3 — Une application partielle laisse currentStepIdx inchangé
+  // (voir applyWizardStep) : il faut aussi dépendre de remainingAmount pour
+  // que ce pré-remplissage se rafraîchisse après une application partielle
+  // sur la même étape (sinon le champ reste bloqué sur l'ancien total).
+  }, [plan?.currentStepIdx, plan?.steps?.[plan?.currentStepIdx]?.remainingAmount]);
 
   function toDisplayUnit(amount, unit, product) {
     unit = normalizeDoseUnit(unit);
@@ -16947,7 +17017,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   if (!step) return null;
 
   const totalSteps = plan.steps.length;
-  const doneCount = plan.steps.filter((s) => s.appliedAt || s.skipped).length;
+  const doneCount = plan.steps.filter(stepIsResolved).length;
   const isMaintenance = step.mode === "entretien";
   // v1.109.3 — Étape "renouvellement d'eau partiel" (action=renouvellement,
   // doseUnit="%") : ce n'est pas un produit, il n'y a donc jamais de candidat
@@ -17070,6 +17140,18 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
         </div>
         {step.title && step.productName && step.title !== step.productName && (
           <div style={{ fontSize: 13, color: "var(--brand-text-secondary)", marginBottom: 8 }}>{step.title}</div>
+        )}
+
+        {/* v1.110.3 — Application partielle : dose max par prise dépassée
+            (ex. pH- liquide concentré), déjà appliqué une partie, reste à
+            compléter après le délai de sécurité (voir applyWizardStep). */}
+        {step.remainingAmount > 0 && (
+          <div style={{ background: "#fff3e0", border: "1px solid #f0c987", borderRadius: 10, padding: "10px 14px", marginBottom: 12, fontSize: 13, color: "#8a5a00" }}>
+            {t("wizard_dose_split_note", {
+              applied: formatDose(step.appliedAmount, step.doseUnit || "g"),
+              remaining: formatDose(step.remainingAmount, step.doseUnit || "g"),
+            })}
+          </div>
         )}
 
         {/* Countdown / horaire */}
@@ -17884,7 +17966,7 @@ function ProductsToBuyView({ products, plan, latest, volume, effectiveTargets, a
     // les recommandations calculées sur la dernière mesure sans plan démarré).
     let pendingSteps = [];
     if (plan) {
-      pendingSteps = plan.steps.filter((s) => !s.appliedAt && !s.skipped && s.mode !== "entretien");
+      pendingSteps = plan.steps.filter((s) => !stepIsResolved(s) && s.mode !== "entretien");
     } else if (latest) {
       pendingSteps = computeRecommendations(latest, volume, products, effectiveTargets, activeParamKeys, null);
     }
