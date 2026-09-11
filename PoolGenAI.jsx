@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.116.0";
+const APP_VERSION = "1.116.1";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -5293,7 +5293,19 @@ function buildProjectedPoints(measure, steps, products, volume) {
     if (!isPh && !isFcl) return;
     const baseline = isPh ? currentPh : currentFcl;
     if (baseline == null) return;
+    // v1.116.1 — Sur les étapes historiques où productRealName n'a jamais été
+    // renseigné (cas fréquent, voir constaté sur le compte de Pierre) et où
+    // productName est un libellé générique ne correspondant à aucun produit
+    // réel, retomber directement sur DEFAULT_PRODUCTS pouvait fausser
+    // fortement la projection (un produit générique bien moins concentré que
+    // le produit réel de l'utilisateur pour la même action, ex. galets
+    // longue durée). Avant ce dernier repli, on tente le produit réel de
+    // l'utilisateur pour cette action — mais seulement s'il n'y a qu'un
+    // candidat : avec plusieurs produits réels pour la même action, on ne
+    // peut pas deviner lequel a été utilisé, donc on garde le repli générique.
+    const realCandidates = (products || []).filter((p) => p.action === s.action);
     const prod = (products || []).find((p) => p.name === (s.productRealName ?? s.productName))
+      || (realCandidates.length === 1 ? realCandidates[0] : null)
       || DEFAULT_PRODUCTS.find((p) => p.action === s.action);
     const delta = computeProjectedDelta(prod, s.appliedAmount, volume);
     if (delta == null || isNaN(delta)) return;
