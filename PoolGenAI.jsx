@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.111.5";
+const APP_VERSION = "1.111.6";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -20676,6 +20676,10 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
       { key: "prod",    label: t("product_col"),    w: 40 },
       { key: "advised", label: t("advised_col"),    w: 13 },
       { key: "qty",     label: t("applied_col"),    w: 13 },
+      // v1.111.6 — Horaire (date + heure) par étape appliquée : absent du PDF
+      // exporté jusqu'ici (seule la date/heure globale de la mesure, une fois
+      // par bloc, était visible) alors que l'aperçu à l'écran l'affiche déjà.
+      { key: "time",    label: t("time_col"),       w: 15 },
       ...(manageStock ? [{ key: "stock", label: t("stock_col"), w: 12 }] : []),
     ];
 
@@ -20702,8 +20706,8 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
     pdf.setFont("helvetica","normal"); pdf.setFontSize(6);
 
     // Colonnes paramètres mesure (fixes)
-    const paramCols = cols.filter(c => !["prod","advised","qty","stock"].includes(c.key));
-    const prodCols  = cols.filter(c => ["prod","advised","qty","stock"].includes(c.key));
+    const paramCols = cols.filter(c => !["prod","advised","qty","time","stock"].includes(c.key));
+    const prodCols  = cols.filter(c => ["prod","advised","qty","time","stock"].includes(c.key));
     const paramStartX = mL;
     const prodStartX  = paramCols.reduce((s,c) => s + c.w, mL);
 
@@ -20751,6 +20755,8 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           prod:    a.productName || "—",
           advised: "—",
           qty:     formatDose(a.appliedAmount, a.doseUnit || "g"),
+          // Date déjà visible dans la cellule fusionnée à gauche pour cette ligne.
+          time:    `${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`,
           stock:   stockVal,
         };
 
@@ -20832,6 +20838,13 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           // plan en cours) affichait "? g" (voir formatDose) au lieu de "—"
           // comme les autres cellules vides du rapport.
           qty:     step && step.appliedAmount != null ? formatDose(step.appliedAmount, step.doseUnit||"g") : "—",
+          // v1.111.6 — Date + heure propres à CETTE étape (peut différer de
+          // la date de la mesure affichée à gauche, ex. plan fractionné dans
+          // le temps ou application partielle avec reliquat).
+          time:    step?.appliedAt ? (() => {
+            const sd = new Date(step.appliedAt);
+            return `${sd.getDate().toString().padStart(2,"0")}/${(sd.getMonth()+1).toString().padStart(2,"0")} ${sd.getHours().toString().padStart(2,"0")}:${sd.getMinutes().toString().padStart(2,"0")}`;
+          })() : "—",
           stock:   stockVal,
         };
 
@@ -21306,7 +21319,11 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                         {step && !step.skipped ? formatDose(step.appliedAmount, step.doseUnit || "g") : "—"}
                       </td>
                       <td style={{ ...styles.reportTdCell, color: "var(--brand-text-secondary)" }}>
-                        {step?.appliedAt ? new Date(step.appliedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}
+                        {/* v1.111.6 — Date ajoutée à côté de l'heure : une étape peut être
+                            appliquée un autre jour que la date de la mesure affichée à
+                            gauche (plan fractionné dans le temps, voir application
+                            partielle/reliquat). */}
+                        {step?.appliedAt ? `${formatDateShort(step.appliedAt)} ${new Date(step.appliedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "—"}
                       </td>
                       {manageStock && <td style={{ ...styles.reportTdCell, color: prod && (prod.stockPercent ?? 100) <= 20 ? "#c0392b" : "var(--brand-text-secondary)", fontWeight: 600 }}>
                         {prod ? formatDose(Math.round((prod.stockPercent ?? 100) / 100 * (prod.containerAmount ?? 1) * 10) / 10, prod.containerUnit || "kg") : "—"}
