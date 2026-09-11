@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.115.1";
+const APP_VERSION = "1.116.0";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -20638,6 +20638,27 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
     [sortedMeasures]
   );
 
+  // v1.116.0 — Points projetés pH/fCl (pas mesurés) fusionnés dans le même
+  // tableau que les séries mesurées, comme dans l'onglet Historique (voir
+  // buildProjectedPoints / le commentaire équivalent sur chartDataWithProjections
+  // de HistoryView) : nécessaire pour que le Tooltip Recharts résolve la
+  // bonne valeur par série, et repris ici pour que le rapport (aperçu +
+  // PDF exporté) puisse aussi afficher ces paramètres.
+  const chartDataWithProjections = useMemo(() => {
+    const rowsMap = new Map(chartData.map((d) => [d.timestamp, { ...d }]));
+    sortedMeasures.forEach((m) => {
+      const app = (applications || []).find((a) => a.measureId === m.id);
+      if (!app) return;
+      Object.values(buildProjectedPoints(m, app.steps, products, pool?.volume || 0)).forEach((p) => {
+        const ts = new Date(p.appliedAt).getTime();
+        const row = rowsMap.get(ts) || { timestamp: ts, date: formatDateShort(p.appliedAt) };
+        row[p.param === "pH" ? "phProjected" : "fclProjected"] = Math.round(p.value * 10) / 10;
+        rowsMap.set(ts, row);
+      });
+    });
+    return [...rowsMap.values()].sort((a, b) => a.timestamp - b.timestamp);
+  }, [chartData, sortedMeasures, applications, products, pool?.volume]);
+
   const chartParams = [
     { key: "pH",     color: "#1a8fd1", label: "pH",                                          axis: "left"  },
     { key: "fCl",    color: "#2b7fd9", label: "FCL",                                         axis: "left"  },
@@ -20650,6 +20671,10 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
     { key: "copper", color: "#b5651d", label: t("copper_col"),                               axis: "right" },
     { key: "iron",   color: "#c0392b", label: t("iron_col"),                                 axis: "right" },
     { key: "temp",   color: "#e0578a", label: t("temp_col"),                                 axis: "right" },
+    // v1.116.0 — Paramètres projetés, chip indépendante comme dans l'onglet
+    // Historique (voir demande Arnaud).
+    { key: "phProjected",  color: "#1a8fd1", label: t("ph_projected_chart_label"),  axis: "left", dashed: true },
+    { key: "fclProjected", color: "#2b7fd9", label: t("fcl_projected_chart_label"), axis: "left", dashed: true },
   ];
 
   // v1.66.2 — Sélection des paramètres affichés sur le graphique du rapport
@@ -20787,7 +20812,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
     }
 
     // ── Graphique simplifié ──
-    if (chartData.length >= 2) {
+    if (chartDataWithProjections.length >= 2) {
       sectionTitle(t("params_evolution"));
       const gH = 45;
       const gAxisW = 9; // v1.66.2 — marge réservée aux libellés d'échelle gauche/droite
@@ -20804,7 +20829,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
       // corrects (ex. bassin sans TH/Phos suivi).
       const axisMaxOf = (axis, floor) => {
         const keys = chartParams.filter((cp) => cp.axis === axis && activeReportParams.includes(cp.key)).map((cp) => cp.key);
-        const dataMax = chartData.reduce((m, d) => {
+        const dataMax = chartDataWithProjections.reduce((m, d) => {
           keys.forEach((k) => { if (d[k] != null && d[k] > m) m = d[k]; });
           return m;
         }, 0);
@@ -20834,13 +20859,17 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
       }
       pdf.setTextColor(0,0,0);
 
-      const timestamps = chartData.map(d => d.timestamp);
+      const timestamps = chartDataWithProjections.map(d => d.timestamp);
       const tMin = Math.min(...timestamps), tMax = Math.max(...timestamps);
       const tRange = tMax - tMin || 1;
 
       // Dessiner chaque paramètre
+      // v1.116.0 — Paramètres projetés (cp.dashed) tracés en pointillé, avec
+      // leur étiquette de valeur sous le point (au lieu d'au-dessus, comme le
+      // paramètre mesuré correspondant) pour rester lisible quand les deux
+      // courbes sont proches — voir le fix équivalent côté aperçu HTML.
       chartParams.filter((cp) => activeReportParams.includes(cp.key)).forEach(cp => {
-        const pts = chartData.map((d, i) => {
+        const pts = chartDataWithProjections.map((d, i) => {
           const v = d[cp.key];
           return v == null ? null : { x: i, t: d.timestamp, v };
         }).filter(Boolean);
@@ -20850,6 +20879,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
         const vMax = cp.axis === "left" ? leftAxisMax : rightAxisMax;
         const [r,g,b] = hexToRgb(cp.color);
         pdf.setDrawColor(r,g,b); pdf.setLineWidth(0.5);
+        if (cp.dashed) pdf.setLineDashPattern([1, 0.7], 0);
 
         let prev = null;
         pts.forEach(pt => {
@@ -20864,11 +20894,14 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           if (showValues) {
             pdf.setFontSize(5);
             pdf.setTextColor(r, g, b);
-            const labelY = Math.max(clampedPy - 1.4, gY - topPad + 2.5);
+            const labelY = cp.dashed
+              ? Math.min(clampedPy + 3.2, gY + gH - 0.5)
+              : Math.max(clampedPy - 1.4, gY - topPad + 2.5);
             pdf.text(String(pt.v), px, labelY, { align: "center" });
           }
           prev = { px, py: clampedPy };
         });
+        if (cp.dashed) pdf.setLineDashPattern([], 0);
       });
       pdf.setTextColor(0,0,0);
 
@@ -20877,7 +20910,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
       let lx = mL;
       pdf.setFontSize(6.5); pdf.setFont("helvetica","normal");
       chartParams.filter((cp) => activeReportParams.includes(cp.key)).forEach(cp => {
-        const hasData = chartData.some(d => d[cp.key] != null);
+        const hasData = chartDataWithProjections.some(d => d[cp.key] != null);
         if (!hasData) return;
         const [r,g,b] = hexToRgb(cp.color);
         pdf.setFillColor(r,g,b);
@@ -21389,8 +21422,8 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           <input type="checkbox" checked={showValues} onChange={(e) => setShowValues(e.target.checked)} />
           <span>{t("show_values")}</span>
         </label>
-        {chartData.length > 0 ? (() => {
-          const timestamps = chartData.map((d) => d.timestamp);
+        {chartDataWithProjections.length > 0 ? (() => {
+          const timestamps = chartDataWithProjections.map((d) => d.timestamp);
           const spanMs = timestamps.length > 1 ? Math.max(...timestamps) - Math.min(...timestamps) : 0;
           const showTime = spanMs < 86400000 * 2;
           return (
@@ -21398,7 +21431,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           <div style={styles.reportChartWrap} className="report-chart-wrap">
             <ResponsiveContainer width="100%" height={showValues ? 380 : 340}>
             <LineChart
-              data={chartData}
+              data={chartDataWithProjections}
               margin={{ top: showValues ? 24 : 8, right: 16, left: 0, bottom: 0 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#e6ebe9" />
@@ -21421,6 +21454,9 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                 tick={{ fontSize: 12, fill: "#2d4a6e" }}
                 width={30}
               />
+              {/* v1.116.0 — Paramètres projetés (cp.dashed) : trait pointillé et
+                  étiquette de valeur décalée sous le point (au-dessus pour les
+                  paramètres mesurés), voir le fix équivalent côté Historique. */}
               {chartParams.filter((cp) => activeReportParams.includes(cp.key)).map((cp) => (
                 <Line
                   key={cp.key}
@@ -21429,12 +21465,25 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                   dataKey={cp.key}
                   name={cp.label}
                   stroke={cp.color}
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
+                  strokeWidth={cp.dashed ? 1.5 : 2}
+                  strokeDasharray={cp.dashed ? "4 3" : undefined}
+                  dot={{ r: cp.dashed ? 1.5 : 2 }}
                   connectNulls
                   label={
                     showValues
-                      ? { fontSize: 11, fill: cp.color, position: "top", offset: 6 }
+                      ? (props) => {
+                          const { x, y, value } = props;
+                          if (value == null) return null;
+                          const text = Number(value).toFixed(1);
+                          const ty = y + (cp.dashed ? 15 : -8);
+                          const w = text.length * 6.5 + 6;
+                          return (
+                            <g>
+                              <rect x={x - w / 2} y={ty - 9} width={w} height={13} rx={3} fill="rgba(255,255,255,0.88)" />
+                              <text x={x} y={ty} textAnchor="middle" fontSize={11} fontWeight={600} fill={cp.color}>{text}</text>
+                            </g>
+                          );
+                        }
                       : false
                   }
                 />
@@ -21443,9 +21492,9 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
             </ResponsiveContainer>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "8px 16px", marginTop: 8, padding: "0 8px" }}>
-            {chartParams.filter(cp => activeReportParams.includes(cp.key) && chartData.some(d => d[cp.key] != null)).map((cp) => (
+            {chartParams.filter(cp => activeReportParams.includes(cp.key) && chartDataWithProjections.some(d => d[cp.key] != null)).map((cp) => (
               <div key={cp.key} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: "#2d4a6e" }}>
-                <svg width="16" height="4"><line x1="0" y1="2" x2="16" y2="2" stroke={cp.color} strokeWidth="2"/><circle cx="8" cy="2" r="2" fill={cp.color}/></svg>
+                <svg width="16" height="4"><line x1="0" y1="2" x2="16" y2="2" stroke={cp.color} strokeWidth="2" strokeDasharray={cp.dashed ? "3 2" : undefined}/><circle cx="8" cy="2" r="2" fill={cp.color}/></svg>
                 {cp.label}
               </div>
             ))}
