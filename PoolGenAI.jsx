@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.111.4";
+const APP_VERSION = "1.111.5";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -9765,52 +9765,41 @@ function PoolGenAIApp() {
     }
   }
 
+  // v1.111.5 — Applique un delta de stock pour un produit (sign=-1
+  // consommation, sign=+1 recrédit) et propose la suppression d'un produit
+  // utilisateur venant d'atteindre 0%. Wrapper de decrementProductStock (pur)
+  // pour le brancher sur setProducts + le prompt de confirmation.
+  function applyProductStockDelta(productRealName, amount, doseUnit, sign) {
+    let emptied = [];
+    setProducts((prev) => {
+      const { updated, justEmptied } = decrementProductStock(prev, productRealName, amount, doseUnit, sign);
+      emptied = justEmptied;
+      return updated;
+    });
+    if (emptied.length > 0) {
+      setTimeout(() => {
+        emptied.forEach((id) => {
+          setProducts((prev) => {
+            const p = prev.find((x) => x.id === id);
+            if (!p) return prev;
+            const ok = window.confirm(t("product_empty_delete_confirm", { name: p.name }));
+            return ok ? prev.filter((x) => x.id !== id) : prev;
+          });
+        });
+      }, 300);
+    }
+  }
+
+  // v1.111.5 — Le décompte de stock ne se fait plus ici : il est désormais
+  // fait au fil de l'eau, à chaque étape réellement appliquée (voir
+  // applyWizardStep/editWizardStep), plutôt qu'une seule fois quand tout le
+  // plan est marqué "entièrement appliqué". Avant ce changement, une étape
+  // informative jamais acquittée (ex. "chlore trop haut, rien à faire") ou
+  // une étape passée gelait le décompte pour TOUT le plan, y compris pour
+  // des produits réellement appliqués — signalé par un testeur (Pierre,
+  // pH Minus jamais décompté malgré une application réelle enregistrée).
   function saveApplication(measureId, steps, allApplied, allDone) {
     track("treatment_applied", { steps_count: steps.length, all_applied: allApplied, all_done: allDone });
-    // Stock décrémenté uniquement quand le plan est entièrement terminé
-    if (allApplied) {
-      const stepsWithAmount = steps.filter((s) => s.appliedAmount && !s.skipped);
-      if (stepsWithAmount.length > 0) {
-        const justEmptied = [];
-        setProducts((prev) => prev.map((prod) => {
-          // v1.109.4 — Match sur productRealName (voir buildFinalSteps),
-          // pas productName qui peut être le libellé générique traduit
-          // (nameKey) plutôt que le vrai nom du produit — sinon le stock
-          // n'est jamais décompté pour un produit renommé (ex. "Alcafix").
-          const step = stepsWithAmount.find((s) => (s.productRealName ?? s.productName) === prod.name);
-          if (!step || !prod.containerAmount) return prod;
-          const cUnit = prod.containerUnit || "kg";
-          let appliedInContainerUnit = step.appliedAmount;
-          const stepDoseUnit = normalizeDoseUnit(step.doseUnit);
-          if (cUnit === "kg" && stepDoseUnit === "g") appliedInContainerUnit = step.appliedAmount / 1000;
-          if (cUnit === "L" && stepDoseUnit === "mL") appliedInContainerUnit = step.appliedAmount / 1000;
-          const consumed = (appliedInContainerUnit / prod.containerAmount) * 100;
-          const prevStock = prod.stockPercent ?? 100;
-          const newStock = Math.max(0, prevStock - consumed);
-          const rounded = Math.round(newStock * 10) / 10;
-          // v1.29.8 — Un produit UTILISATEUR (pas standard) qui vient d'atteindre
-          // 0% est proposé à la suppression, pour ne pas laisser traîner un
-          // produit épuisé dans la liste. Les produits standard, eux, restent
-          // toujours en base à 0% (masqués), jamais supprimés.
-          if (!prod.isDefault && prevStock > 0 && rounded <= 0) {
-            justEmptied.push(prod.id);
-          }
-          return { ...prod, stockPercent: rounded };
-        }));
-        if (justEmptied.length > 0) {
-          setTimeout(() => {
-            justEmptied.forEach((id) => {
-              setProducts((prev) => {
-                const p = prev.find((x) => x.id === id);
-                if (!p) return prev;
-                const ok = window.confirm(t("product_empty_delete_confirm", { name: p.name }));
-                return ok ? prev.filter((x) => x.id !== id) : prev;
-              });
-            });
-          }, 300);
-        }
-      }
-    }
     setApplications((prev) => {
       const withoutThisMeasure = prev.filter((a) => a.measureId !== measureId);
       const newApp = {
@@ -9837,27 +9826,7 @@ function PoolGenAIApp() {
   function saveManualApplication(product, amount, doseUnit, appliedAt) {
     doseUnit = normalizeDoseUnit(doseUnit);
     track("manual_application", { product: product.name });
-    if (product.containerAmount) {
-      const cUnit = product.containerUnit || "kg";
-      let appliedInContainerUnit = amount;
-      if (cUnit === "kg" && doseUnit === "g") appliedInContainerUnit = amount / 1000;
-      if (cUnit === "L" && doseUnit === "mL") appliedInContainerUnit = amount / 1000;
-      const consumed = (appliedInContainerUnit / product.containerAmount) * 100;
-      const prevStock = product.stockPercent ?? 100;
-      const newStock = Math.max(0, prevStock - consumed);
-      const rounded = Math.round(newStock * 10) / 10;
-      setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, stockPercent: rounded } : p)));
-      if (!product.isDefault && prevStock > 0 && rounded <= 0) {
-        setTimeout(() => {
-          setProducts((prev) => {
-            const p = prev.find((x) => x.id === product.id);
-            if (!p) return prev;
-            const ok = window.confirm(t("product_empty_delete_confirm", { name: p.name }));
-            return ok ? prev.filter((x) => x.id !== product.id) : prev;
-          });
-        }, 300);
-      }
-    }
+    applyProductStockDelta(product.name, amount, doseUnit, -1);
     const newApp = {
       id: uid(),
       poolId: activePoolId,
@@ -10011,13 +9980,26 @@ function PoolGenAIApp() {
       return { ...s, scheduledAt: scheduled.toISOString() };
     });
 
+    const appliedStep = recalcSteps[stepIdx];
+    // v1.111.5 — Décompte du stock au moment même où l'étape est appliquée,
+    // pas seulement quand tout le plan est clos (voir saveApplication) :
+    // une étape informative jamais acquittée ou passée plus loin dans le
+    // même plan ne doit plus geler le décompte d'un produit déjà réellement
+    // appliqué (signalé par un testeur, pH Minus jamais décompté). On ne
+    // décompte que le delta de CE tour ("amount", pas le cumul) pour ne
+    // jamais compter deux fois un reliquat d'application partielle entre
+    // deux tours (voir remainingAmount ci-dessus).
+    if (amount != null && amount > 0 && originalStep?.doseUnit !== "%" && originalStep?.mode !== "entretien") {
+      const stockProductName = appliedStep.appliedProductName || appliedStep.productRealName || appliedStep.productName;
+      applyProductStockDelta(stockProductName, amount, appliedStep.doseUnit, -1);
+    }
+
     // v1.61.0 — Carte "entretien continu" : si le produit utilisé pour cette
     // étape est configuré en galets/sticks avec un ratio d'entretien
     // fabricant renseigné, on ajoute une carte informative en fin de plan
     // (une seule fois par plan — recalcSteps contient déjà la carte si elle
     // a été ajoutée à une étape précédente). Elle termine le plan : pas de
     // dose à saisir, pas de décompte de stock, juste l'information.
-    const appliedStep = recalcSteps[stepIdx];
     const usedProductName = appliedStep.appliedProductName || appliedStep.productName;
     const usedProduct = poolProducts.find((p) => p.name === usedProductName);
     const alreadyHasMaintenanceCard = recalcSteps.some((s) => s.mode === "entretien");
@@ -10070,9 +10052,17 @@ function PoolGenAIApp() {
   // Modifie un step déjà appliqué (quantité + heure)
   function editWizardStep(stepIdx, amount, appliedAt) {
     if (!activePlan) return;
+    const oldStep = activePlan.steps[stepIdx];
     const newSteps = activePlan.steps.map((s, i) =>
       i === stepIdx ? { ...s, appliedAmount: amount, appliedAt } : s
     );
+    // v1.111.5 — Corrige le stock en delta : recrédite l'ancien montant,
+    // décompte le nouveau (même produit/unité, seul le montant change ici).
+    if (oldStep?.doseUnit !== "%" && oldStep?.mode !== "entretien") {
+      const stockProductName = oldStep?.appliedProductName || oldStep?.productRealName || oldStep?.productName;
+      applyProductStockDelta(stockProductName, oldStep?.appliedAmount, oldStep?.doseUnit, +1);
+      applyProductStockDelta(stockProductName, amount, oldStep?.doseUnit, -1);
+    }
     const finalSteps = buildFinalSteps(newSteps);
     const allDone = newSteps.every(stepIsResolved);
     const applied = finalSteps.filter(s => stepIsResolved(s) && !s.skipped);
@@ -12240,6 +12230,39 @@ function normalizeDoseUnit(u) {
   if (low === "l") return "L";
   if (low === "g") return "g";
   return s;
+}
+
+// v1.111.5 — Décompte/recrédit de stock en delta pour UN produit (sign=-1
+// consommation, sign=+1 recrédit, ex. correction d'une étape déjà appliquée).
+// Centralise la conversion d'unité (g→kg, mL→L) et le seuil "produit épuisé"
+// à proposer en suppression, dupliqué jusqu'ici entre saveApplication et
+// saveManualApplication. Pure (prend/rend un tableau produits), pour rester
+// appelable depuis un updater setProducts(prev => ...).
+function decrementProductStock(prevProducts, productRealName, amount, doseUnit, sign) {
+  if (!amount || !productRealName) return { updated: prevProducts, justEmptied: [] };
+  doseUnit = normalizeDoseUnit(doseUnit);
+  const justEmptied = [];
+  const updated = prevProducts.map((prod) => {
+    if (prod.name !== productRealName || !prod.containerAmount) return prod;
+    const cUnit = prod.containerUnit || "kg";
+    let inContainerUnit = amount;
+    if (cUnit === "kg" && doseUnit === "g") inContainerUnit = amount / 1000;
+    if (cUnit === "L" && doseUnit === "mL") inContainerUnit = amount / 1000;
+    const pct = (inContainerUnit / prod.containerAmount) * 100;
+    const prevStock = prod.stockPercent ?? 100;
+    const next = Math.max(0, Math.min(100, prevStock + sign * pct));
+    const rounded = Math.round(next * 10) / 10;
+    // v1.29.8 — Un produit UTILISATEUR (pas standard) qui vient d'atteindre 0%
+    // est proposé à la suppression, pour ne pas laisser traîner un produit
+    // épuisé dans la liste. Les produits standard restent en base à 0%
+    // (masqués), jamais supprimés. Uniquement pertinent pour une consommation
+    // (sign<0) : un recrédit ne peut jamais vider un produit.
+    if (sign < 0 && !prod.isDefault && prevStock > 0 && rounded <= 0) {
+      justEmptied.push(prod.id);
+    }
+    return { ...prod, stockPercent: rounded };
+  });
+  return { updated, justEmptied };
 }
 
 // Formate une dose avec conversion automatique g→kg et mL→L
