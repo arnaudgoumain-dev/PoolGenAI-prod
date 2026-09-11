@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.111.1";
+const APP_VERSION = "1.111.2";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -17024,6 +17024,14 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   const totalSteps = plan.steps.length;
   const doneCount = plan.steps.filter(stepIsResolved).length;
   const isMaintenance = step.mode === "entretien";
+  // v1.111.2 — Carte purement informative (noAction: true, ex. "chlore trop
+  // haut, laisser dégrader au soleil" — voir computeRecommendations) : au
+  // même titre qu'une carte entretien, rien à appliquer. Sans ce flag, le
+  // wizard traitait ces étapes comme une action normale sans produit
+  // configuré : formulaire de saisie libre kg/unités affiché ("Aucun
+  // produit en stock dans cette catégorie") et avertissement "stock épuisé"
+  // sur un pseudo-produit qui n'existe pas — signalé par un testeur (Pierre).
+  const isInfoStep = isMaintenance || !!step.noAction;
   // v1.109.3 — Étape "renouvellement d'eau partiel" (action=renouvellement,
   // doseUnit="%") : ce n'est pas un produit, il n'y a donc jamais de candidat
   // réel ni générique pour cette action, ce qui faisait systématiquement
@@ -17046,10 +17054,10 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   const remaining = scheduled ? scheduled - now : null;
   const isReady = remaining === null || remaining <= 0;
   const prod = products?.find((p) => p.name === (step.productRealName ?? step.productName));
-  const stockEmpty = !isMaintenance && manageStock && prod && (prod.stockPercent ?? 100) <= 0;
+  const stockEmpty = !isInfoStep && manageStock && prod && (prod.stockPercent ?? 100) <= 0;
 
   function handleApply() {
-    if (isMaintenance) {
+    if (isInfoStep) {
       // Carte informative : rien à saisir, ferme et termine le plan.
       onApplyStep(currentIdx, null, new Date().toISOString(), null);
       return;
@@ -17109,8 +17117,8 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
       display: "flex", alignItems: "flex-end", justifyContent: "center",
     }}>
       <div style={{
-        background: isMaintenance ? "#fff" : "#fff7f2",
-        borderTop: isMaintenance ? "5px solid var(--brand-primary)" : "5px solid #c4502f",
+        background: isInfoStep ? "#fff" : "#fff7f2",
+        borderTop: isInfoStep ? "5px solid var(--brand-primary)" : "5px solid #c4502f",
         borderRadius: "20px 20px 0 0",
         width: "100%", maxWidth: 480,
         padding: "20px 18px 32px", boxSizing: "border-box",
@@ -17214,7 +17222,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
             puis le plus ancien en premier (proposé par défaut). Le
             sélecteur ne s'affiche que s'il y a un choix réel à faire (2+
             produits en stock) ; avec 0 ou 1 candidat, pas de sélecteur. */}
-        {!isMaintenance && manageStock && products && sortedCandidates.length > 1 && (() => {
+        {!isInfoStep && manageStock && products && sortedCandidates.length > 1 && (() => {
           const currentValue = selectedProduct || step.productName;
           const selectValue = sortedCandidates.some(p => p.name === currentValue)
             ? currentValue
@@ -17251,7 +17259,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
             Remplace l'ancienne saisie libre sans nom : le nom générique est
             enregistré dans l'historique/le rapport, sans jamais décompter de
             stock (aucun produit "products" ne porte ce nom). */}
-        {!isMaintenance && manageStock && sortedCandidates.length === 0 && genericCandidates.length > 0 && (() => {
+        {!isInfoStep && manageStock && sortedCandidates.length === 0 && genericCandidates.length > 0 && (() => {
           const currentValue = selectedProduct || step.productName;
           const selectValue = genericCandidates.some(p => p.name === currentValue)
             ? currentValue
@@ -17285,7 +17293,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
         {/* Quantité — masquée pour la carte entretien (rien à saisir).
             Dernier repli : aucun produit réel NI générique pour cette action
             (cas très rare, catalogue générique ne couvre pas l'action). */}
-        {!isMaintenance && !isPercentDose && manageStock && sortedCandidates.length === 0 && genericCandidates.length === 0 && (
+        {!isInfoStep && !isPercentDose && manageStock && sortedCandidates.length === 0 && genericCandidates.length === 0 && (
           <div style={{ marginBottom: 6 }}>
             <div style={{ fontSize: 12, color: "#c0392b", marginBottom: 8 }}>{t("no_stock_category_hint")}</div>
             <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
@@ -17303,7 +17311,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
             </div>
           </div>
         )}
-        {!isMaintenance && baseUnit && (
+        {!isInfoStep && baseUnit && (
           <div style={{ marginBottom: 12 }}>
             <label style={{ fontSize: 12, fontWeight: 600, color: "var(--brand-text-secondary)", display: "block", marginBottom: 6 }}>
               {t("quantity_applied")}
@@ -17326,7 +17334,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
             </div>
           </div>
         )}
-        {isMaintenance && step.doseText && (
+        {isInfoStep && step.doseText && (
           <div style={{ background: "#eaf4fb", borderRadius: 10, padding: "12px 14px", marginBottom: 12, fontSize: 14, fontWeight: 700, color: "var(--brand-primary)" }}>
             {step.doseText}
           </div>
