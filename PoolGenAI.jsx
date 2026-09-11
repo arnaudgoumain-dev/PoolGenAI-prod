@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.111.2";
+const APP_VERSION = "1.111.4";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -9993,7 +9993,17 @@ function PoolGenAIApp() {
       };
     });
     // Recalculer les scheduledAt des étapes suivantes
-    let lastApplied = new Date(now);
+    // v1.111.3 — Acquitter une étape informative (noAction) n'est pas une
+    // action chimique : ça ne doit pas avancer l'horloge pour la suite du
+    // plan. Le délai hérité de l'étape précédente doit continuer à
+    // s'appliquer à l'étape suivante, comme si l'étape informative n'existait
+    // pas — donc on garde son horaire prévu d'origine comme base (sauf s'il
+    // est déjà dans le passé, auquel cas "now" suffit).
+    const originalStep = activePlan.steps[stepIdx];
+    const isInfoStepJustApplied = !!originalStep?.noAction;
+    let lastApplied = isInfoStepJustApplied
+      ? new Date(Math.max(new Date(now).getTime(), new Date(originalStep.scheduledAt || now).getTime()))
+      : new Date(now);
     let recalcSteps = newSteps.map((s, i) => {
       if (i <= stepIdx) return s;
       const scheduled = new Date(lastApplied.getTime() + (newSteps[i-1]?.waitHours || 0) * 3600 * 1000);
@@ -17052,7 +17062,12 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   const { displayUnit } = toDisplayUnit(step.computedDoseAmount || step.appliedAmount, baseUnit, selectedProductObj);
   const scheduled = step.scheduledAt ? new Date(step.scheduledAt).getTime() : null;
   const remaining = scheduled ? scheduled - now : null;
-  const isReady = remaining === null || remaining <= 0;
+  // v1.111.3 — Une étape informative (isInfoStep) n'a rien à attendre : le
+  // délai hérité de l'étape précédente ne doit pas la bloquer, il doit
+  // s'appliquer à l'étape suivante (voir applyWizardStep) — voir demande
+  // testeur/Pierre sur "chlore trop haut" affichant un compte à rebours
+  // avant de pouvoir acquitter la carte.
+  const isReady = isInfoStep || remaining === null || remaining <= 0;
   const prod = products?.find((p) => p.name === (step.productRealName ?? step.productName));
   const stockEmpty = !isInfoStep && manageStock && prod && (prod.stockPercent ?? 100) <= 0;
 
@@ -17186,7 +17201,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
             </div>
           </div>
         )}
-        {isReady && (
+        {isReady && !isInfoStep && (
           <div style={{
             background: "#e8f8f0", borderRadius: 10, padding: "8px 14px",
             marginBottom: 14, fontSize: 13, fontWeight: 700, color: "#1a8fd1",
@@ -18911,6 +18926,13 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
                 onChange={(e) => setStockPercent(Number(e.target.value))} style={{ flex: 1 }} />
               <span style={{ ...styles.stockPercentLabel, color: stockPercent <= 20 ? "#c0392b" : "var(--brand-text-strong)", fontWeight: 700 }}>
                 {stockPercent} %
+                {/* v1.111.4 — Quantité restante en clair à côté du %, dans l'unité
+                    du contenant (déjà en kg/L, pas de conversion nécessaire). */}
+                {containerAmount && !isNaN(parseFloat(containerAmount)) && (() => {
+                  const remaining = (stockPercent / 100) * parseFloat(containerAmount);
+                  const remainingStr = Number.isInteger(remaining) ? remaining : remaining.toFixed(2).replace(/\.?0+$/, "");
+                  return ` (${remainingStr} ${containerUnit})`;
+                })()}
               </span>
             </div>
           )}
