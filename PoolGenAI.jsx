@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.111.6";
+const APP_VERSION = "1.115.1";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -315,8 +315,14 @@ const TRANSLATIONS = {
     wizard_partial: "Plan en cours",
     wizard_completed_partial: "Plan terminé — {n} étape(s) non appliquée(s)",
     applied_amount: "Appliqué : {amount}",
-    wizard_dose_split_note: "Déjà appliqué {applied} — reste environ {remaining} à compléter, une fois le délai de sécurité écoulé.",
-    dose_remaining: "Reste à appliquer : ≈ {amount}",
+    wizard_split_confirm_title: "Quantité incomplète",
+    wizard_split_confirm_body: "Vous avez appliqué moins que la quantité recommandée. Voulez-vous appliquer le complément plus tard ?",
+    wizard_split_confirm_yes: "Oui, ajouter une étape",
+    wizard_split_confirm_no: "Non, étape suivante",
+    ph_projected_label: "pH projeté : {value}",
+    fcl_projected_label: "Chlore libre projeté : {value}",
+    ph_projected_chart_label: "pH (projeté)",
+    fcl_projected_chart_label: "Cl libre (projeté)",
     countdown_done: "C'est l'heure !",
     treatment_at: "Traitement appliqué à",
     edit_treatment_section_title: "Traitement appliqué",
@@ -1107,8 +1113,14 @@ const TRANSLATIONS = {
     wizard_partial: "Plan in progress",
     wizard_completed_partial: "Plan completed — {n} step(s) not applied",
     applied_amount: "Applied: {amount}",
-    wizard_dose_split_note: "Already applied {applied} — about {remaining} left, once the safety wait has passed.",
-    dose_remaining: "Remaining: ≈ {amount}",
+    wizard_split_confirm_title: "Incomplete quantity",
+    wizard_split_confirm_body: "You applied less than the recommended amount. Do you want to apply the remainder later?",
+    wizard_split_confirm_yes: "Yes, add a step",
+    wizard_split_confirm_no: "No, next step",
+    ph_projected_label: "Projected pH: {value}",
+    fcl_projected_label: "Projected free chlorine: {value}",
+    ph_projected_chart_label: "pH (projected)",
+    fcl_projected_chart_label: "Free Cl (projected)",
     countdown_done: "Time to treat!",
     treatment_at: "Treatment applied at",
     edit_treatment_section_title: "Treatment applied",
@@ -1889,8 +1901,14 @@ const TRANSLATIONS = {
     wizard_partial: "Plan läuft",
     wizard_completed_partial: "Plan abgeschlossen — {n} Schritt/Schritte nicht angewendet",
     applied_amount: "Angewendet: {amount}",
-    wizard_dose_split_note: "Bereits angewendet: {applied} — noch etwa {remaining} übrig, nach Ablauf der Sicherheitswartezeit.",
-    dose_remaining: "Noch übrig: ≈ {amount}",
+    wizard_split_confirm_title: "Unvollständige Menge",
+    wizard_split_confirm_body: "Sie haben weniger als die empfohlene Menge angewendet. Möchten Sie den Rest später anwenden?",
+    wizard_split_confirm_yes: "Ja, Schritt hinzufügen",
+    wizard_split_confirm_no: "Nein, nächster Schritt",
+    ph_projected_label: "Projizierter pH-Wert: {value}",
+    fcl_projected_label: "Projiziertes freies Chlor: {value}",
+    ph_projected_chart_label: "pH (projiziert)",
+    fcl_projected_chart_label: "Freies Cl (projiziert)",
     countdown_done: "Zeit für die Behandlung!",
     treatment_at: "Behandlung angewendet um",
     edit_treatment_section_title: "Angewendete Behandlung",
@@ -2673,8 +2691,14 @@ const TRANSLATIONS = {
     wizard_partial: "Piano in corso",
     wizard_completed_partial: "Piano completato — {n} passaggi non applicati",
     applied_amount: "Applicato: {amount}",
-    wizard_dose_split_note: "Già applicato {applied} — ne restano circa {remaining}, una volta trascorso il tempo di sicurezza.",
-    dose_remaining: "Rimanente: ≈ {amount}",
+    wizard_split_confirm_title: "Quantità incompleta",
+    wizard_split_confirm_body: "Hai applicato meno della quantità consigliata. Vuoi applicare il resto più tardi?",
+    wizard_split_confirm_yes: "Sì, aggiungi una fase",
+    wizard_split_confirm_no: "No, fase successiva",
+    ph_projected_label: "pH previsto: {value}",
+    fcl_projected_label: "Cloro libero previsto: {value}",
+    ph_projected_chart_label: "pH (previsto)",
+    fcl_projected_chart_label: "Cl libero (previsto)",
     countdown_done: "È ora di trattare!",
     treatment_at: "Trattamento applicato alle",
     edit_treatment_section_title: "Trattamento applicato",
@@ -3454,8 +3478,14 @@ const TRANSLATIONS = {
     wizard_partial: "Plan en curso",
     wizard_completed_partial: "Plan completado — {n} paso(s) no aplicado(s)",
     applied_amount: "Aplicado: {amount}",
-    wizard_dose_split_note: "Ya aplicado {applied} — quedan aprox. {remaining}, una vez transcurrido el tiempo de seguridad.",
-    dose_remaining: "Queda: ≈ {amount}",
+    wizard_split_confirm_title: "Cantidad incompleta",
+    wizard_split_confirm_body: "Ha aplicado menos de la cantidad recomendada. ¿Desea aplicar el resto más tarde?",
+    wizard_split_confirm_yes: "Sí, añadir un paso",
+    wizard_split_confirm_no: "No, siguiente paso",
+    ph_projected_label: "pH proyectado: {value}",
+    fcl_projected_label: "Cloro libre proyectado: {value}",
+    ph_projected_chart_label: "pH (proyectado)",
+    fcl_projected_chart_label: "Cl libre (proyectado)",
     countdown_done: "¡Es hora de tratar!",
     treatment_at: "Tratamiento aplicado a las",
     edit_treatment_section_title: "Tratamiento aplicado",
@@ -4235,8 +4265,14 @@ const TRANSLATIONS = {
     wizard_partial: "Plano em andamento",
     wizard_completed_partial: "Plano concluído — {n} etapa(s) não aplicada(s)",
     applied_amount: "Aplicado: {amount}",
-    wizard_dose_split_note: "Já aplicado {applied} — falta cerca de {remaining}, após o tempo de segurança.",
-    dose_remaining: "Falta aplicar: ≈ {amount}",
+    wizard_split_confirm_title: "Quantidade incompleta",
+    wizard_split_confirm_body: "Você aplicou menos que a quantidade recomendada. Deseja aplicar o restante mais tarde?",
+    wizard_split_confirm_yes: "Sim, adicionar uma etapa",
+    wizard_split_confirm_no: "Não, próxima etapa",
+    ph_projected_label: "pH projetado: {value}",
+    fcl_projected_label: "Cloro livre projetado: {value}",
+    ph_projected_chart_label: "pH (projetado)",
+    fcl_projected_chart_label: "Cl livre (projetado)",
     countdown_done: "Hora do tratamento!",
     treatment_at: "Tratamento aplicado às",
     edit_treatment_section_title: "Tratamento aplicado",
@@ -5207,6 +5243,66 @@ const CHLORE_REFERENCE_ACTIVE_PERCENT = 70;
 function scaleDoseForActiveChlorine(dose, doseSrc) {
   if (dose == null || !doseSrc || typeof doseSrc.activeChlorinePercent !== "number" || doseSrc.activeChlorinePercent <= 0) return dose;
   return Math.round(dose * (CHLORE_REFERENCE_ACTIVE_PERCENT / doseSrc.activeChlorinePercent));
+}
+
+// v1.112.0 — Projection pH/fCl à partir d'une quantité réellement appliquée :
+// inverse de la formule normale de calcul de dose (doseAmount × (volume/
+// effectPer) × (diff/effectAmount)) — au lieu de calculer la dose à partir
+// d'un écart cible, on calcule l'écart obtenu à partir de la dose
+// effectivement appliquée. Ne modélise QUE l'effet direct du produit ciblant
+// le paramètre (pH-/pH+ pour pH, chlore/chlore-stabilisé pour fCl) — pas les
+// effets indirects d'autres produits (ex. TAC+ influence aussi le pH, non
+// pris en compte ici, sur demande explicite d'Arnaud : pas de coefficient
+// fiable disponible pour ces effets indirects).
+function computeProjectedDelta(product, appliedAmount, volume) {
+  if (!product || !appliedAmount || !volume || !product.doseAmount || !product.effectPer || !product.effectAmount) return null;
+  let rawDose = appliedAmount;
+  // Inverse de scaleDoseForActiveChlorine : la dose réellement appliquée a
+  // déjà été mise à l'échelle du % de chlore actif du produit au moment du
+  // calcul de suggestion — on la ramène à l'échelle de référence avant
+  // d'inverser la règle de trois.
+  if (typeof product.activeChlorinePercent === "number" && product.activeChlorinePercent > 0) {
+    rawDose = appliedAmount * (product.activeChlorinePercent / CHLORE_REFERENCE_ACTIVE_PERCENT);
+  }
+  return (rawDose * product.effectAmount * product.effectPer) / (product.doseAmount * volume);
+}
+
+const PROJECTABLE_PH_ACTIONS = ["ph-", "ph+"];
+const PROJECTABLE_FCL_ACTIONS = ["chlore", "chlore-stabilise"];
+
+// Construit, pour UNE mesure et son plan appliqué (steps), les points
+// projetés pH/fCl — indexés par position dans le tableau "steps" pour être
+// directement consommables au rendu. Part de la valeur MESURÉE comme
+// référence, puis enchaîne les applications successives visant le même
+// paramètre dans l'ordre chronologique réel (appliedAt) — sans les fusionner
+// en un seul chiffre final : chaque application produit son propre point,
+// qui sert de référence à la suivante.
+function buildProjectedPoints(measure, steps, products, volume) {
+  const byIndex = {};
+  let currentPh = measure?.pH !== undefined && measure.pH !== "" && measure.pH != null ? parseFloat(measure.pH) : null;
+  let currentFcl = measure?.fCl !== undefined && measure.fCl !== "" && measure.fCl != null ? parseFloat(measure.fCl) : null;
+  if (currentPh != null && isNaN(currentPh)) currentPh = null;
+  if (currentFcl != null && isNaN(currentFcl)) currentFcl = null;
+  const indexed = (steps || [])
+    .map((s, i) => ({ s, i }))
+    .filter(({ s }) => !s.skipped && s.appliedAmount != null && s.appliedAt)
+    .sort((a, b) => new Date(a.s.appliedAt) - new Date(b.s.appliedAt));
+  indexed.forEach(({ s, i }) => {
+    const isPh = PROJECTABLE_PH_ACTIONS.includes(s.action);
+    const isFcl = PROJECTABLE_FCL_ACTIONS.includes(s.action);
+    if (!isPh && !isFcl) return;
+    const baseline = isPh ? currentPh : currentFcl;
+    if (baseline == null) return;
+    const prod = (products || []).find((p) => p.name === (s.productRealName ?? s.productName))
+      || DEFAULT_PRODUCTS.find((p) => p.action === s.action);
+    const delta = computeProjectedDelta(prod, s.appliedAmount, volume);
+    if (delta == null || isNaN(delta)) return;
+    const sign = s.action === "ph-" ? -1 : 1;
+    const newVal = baseline + sign * delta;
+    if (isPh) currentPh = newVal; else currentFcl = newVal;
+    byIndex[i] = { param: isPh ? "pH" : "fCl", value: newVal, appliedAt: s.appliedAt };
+  });
+  return byIndex;
 }
 
 // v1.50.0 — Actions dont la dose ne varie pas en fonction d'un écart mesuré
@@ -9875,8 +9971,15 @@ function PoolGenAIApp() {
         const os = oldSteps[i];
         if (!os || ns.skipped || !ns.appliedAt) return;
         if (ns.productName === os.productName && ns.appliedAmount === os.appliedAmount) return;
-        updated = applyDelta(updated, os.productName, os.appliedAmount, os.doseUnit, +1); // recrédite l'ancien
-        updated = applyDelta(updated, ns.productName, ns.appliedAmount, ns.doseUnit, -1); // décompte le nouveau
+        // v1.113.0 — Match sur productRealName, pas productName (libellé
+        // générique possible via nameKey si aucun produit réel n'avait été
+        // choisi explicitement à l'application — voir RecoCard.missingFromStock/
+        // buildFinalSteps) : sinon le recrédit de l'ancien montant échouait
+        // silencieusement pour un produit resté sur son nom générique,
+        // laissant le stock décompté deux fois (nouveau décompté, ancien
+        // jamais recrédité).
+        updated = applyDelta(updated, os.productRealName ?? os.productName, os.appliedAmount, os.doseUnit, +1); // recrédite l'ancien
+        updated = applyDelta(updated, ns.productRealName ?? ns.productName, ns.appliedAmount, ns.doseUnit, -1); // décompte le nouveau
       });
       return updated;
     });
@@ -9919,10 +10022,6 @@ function PoolGenAIApp() {
       productRealName: s.appliedProductName || s.productRealName || s.productName,
       computedDoseAmount: s.computedDoseAmount,
       appliedAmount: (s.appliedAt && !s.skipped) ? s.appliedAmount : null,
-      // v1.110.3 — Reliquat d'une application partielle (voir applyWizardStep) :
-      // porté jusque dans l'application sauvegardée pour que RecoCard/PlanStatusCard
-      // puissent l'afficher même après fermeture du wizard.
-      remainingAmount: (s.appliedAt && !s.skipped && s.remainingAmount > 0) ? s.remainingAmount : null,
       doseUnit: s.doseUnit,
       appliedAt: s.appliedAt, skipped: s.skipped, scheduledAt: s.scheduledAt,
       mode: s.mode, doseText: s.doseText,
@@ -9930,37 +10029,58 @@ function PoolGenAIApp() {
   }
 
   // Valide une étape du wizard — version sans appel de setter dans setter
-  function applyWizardStep(stepIdx, amount, appliedAt, productName) {
+  function applyWizardStep(stepIdx, amount, appliedAt, productName, wantsSplit) {
     if (!activePlan) return;
     const now = appliedAt || new Date().toISOString();
+    const origStep = activePlan.steps[stepIdx];
+
+    // v1.113.0 — Application partielle : certains produits imposent une dose
+    // maximale par prise (ex. pH- liquide concentré : 500 mL max en une fois
+    // pour 50 m³). Si le montant saisi est inférieur au total calculé,
+    // l'utilisateur est d'abord invité (v1.114.0, voir TreatmentWizard) à
+    // confirmer s'il veut appliquer le complément plus tard. S'il confirme
+    // (wantsSplit), cette étape est validée telle quelle pour ce montant
+    // (pas de reliquat sur elle-même) et une NOUVELLE étape est insérée
+    // juste après, pour le reliquat, avec son propre délai de sécurité — le
+    // plan gagne une étape. Sinon (ou si l'utilisateur applique le total
+    // suggéré ou plus), pas de scission : le reliquat est abandonné et on
+    // passe directement à l'étape suivante déjà existante, pour un autre
+    // produit. Tolérance de 2% (mini 1 unité) pour ignorer le bruit
+    // d'arrondi kg↔g / L↔mL et ne pas déclencher de proposition de scission
+    // sur un reliquat infime.
+    const target = origStep.computedDoseAmount;
+    const canSplit = target != null && amount != null && origStep.mode !== "entretien" && origStep.doseUnit !== "%";
+    const epsilon = canSplit ? Math.max(1, target * 0.02) : 0;
+    const rawRemainder = canSplit ? target - amount : 0;
+    const needsSplit = rawRemainder > epsilon && !!wantsSplit;
+
     const newSteps = activePlan.steps.map((s, i) => {
       if (i !== stepIdx) return s;
-      // v1.110.3 — Application partielle : certains produits imposent une
-      // dose maximale par prise (ex. pH- liquide concentré : 500 mL max en
-      // une fois pour 50 m³) — l'utilisateur doit alors fractionner en
-      // plusieurs applications, espacées du délai de sécurité (waitHours).
-      // Si le montant saisi est inférieur au total calculé, on cumule sur
-      // les applications précédentes de CETTE étape et on garde un reliquat
-      // au lieu de considérer l'étape terminée — elle reste l'étape
-      // courante du plan, avec un nouveau délai avant de pouvoir compléter
-      // le reste. Tolérance de 2% (mini 1 unité) pour ignorer le bruit
-      // d'arrondi kg↔g / L↔mL et ne pas rester bloqué sur un reliquat infime.
-      const cumulative = (s.appliedAmount || 0) + (amount || 0);
-      const target = s.computedDoseAmount;
-      const canSplit = target != null && amount != null && s.mode !== "entretien" && s.doseUnit !== "%";
-      const rawRemainder = canSplit ? target - cumulative : 0;
-      const epsilon = canSplit ? Math.max(1, target * 0.02) : 0;
-      const remainingAmount = rawRemainder > epsilon ? rawRemainder : null;
       return {
         ...s,
         appliedAt: now,
-        appliedAmount: amount != null ? cumulative : s.appliedAmount,
-        remainingAmount,
+        appliedAmount: amount,
         skipped: false,
         ...(productName && productName !== s.productName ? { appliedProductName: productName } : {}),
-        ...(remainingAmount ? { scheduledAt: new Date(new Date(now).getTime() + (s.waitHours || 0) * 3600 * 1000).toISOString() } : {}),
       };
     });
+
+    let stepsWithSplit = newSteps;
+    if (needsSplit) {
+      const splitStep = {
+        ...origStep,
+        ...(newSteps[stepIdx].appliedProductName ? { appliedProductName: newSteps[stepIdx].appliedProductName } : {}),
+        computedDoseAmount: rawRemainder,
+        appliedAmount: null,
+        appliedAt: null,
+        skipped: false,
+        doseText: null,
+        scheduledAt: new Date(new Date(now).getTime() + (origStep.waitHours || 0) * 3600 * 1000).toISOString(),
+      };
+      stepsWithSplit = [...newSteps.slice(0, stepIdx + 1), splitStep, ...newSteps.slice(stepIdx + 1)];
+    }
+    const afterIdx = stepIdx + (needsSplit ? 1 : 0);
+
     // Recalculer les scheduledAt des étapes suivantes
     // v1.111.3 — Acquitter une étape informative (noAction) n'est pas une
     // action chimique : ça ne doit pas avancer l'horloge pour la suite du
@@ -9968,14 +10088,15 @@ function PoolGenAIApp() {
     // s'appliquer à l'étape suivante, comme si l'étape informative n'existait
     // pas — donc on garde son horaire prévu d'origine comme base (sauf s'il
     // est déjà dans le passé, auquel cas "now" suffit).
-    const originalStep = activePlan.steps[stepIdx];
-    const isInfoStepJustApplied = !!originalStep?.noAction;
+    const isInfoStepJustApplied = !needsSplit && !!origStep?.noAction;
     let lastApplied = isInfoStepJustApplied
-      ? new Date(Math.max(new Date(now).getTime(), new Date(originalStep.scheduledAt || now).getTime()))
+      ? new Date(Math.max(new Date(now).getTime(), new Date(origStep.scheduledAt || now).getTime()))
+      : needsSplit
+      ? new Date(stepsWithSplit[afterIdx].scheduledAt)
       : new Date(now);
-    let recalcSteps = newSteps.map((s, i) => {
-      if (i <= stepIdx) return s;
-      const scheduled = new Date(lastApplied.getTime() + (newSteps[i-1]?.waitHours || 0) * 3600 * 1000);
+    let recalcSteps = stepsWithSplit.map((s, i) => {
+      if (i <= afterIdx) return s;
+      const scheduled = new Date(lastApplied.getTime() + (stepsWithSplit[i-1]?.waitHours || 0) * 3600 * 1000);
       lastApplied = scheduled;
       return { ...s, scheduledAt: scheduled.toISOString() };
     });
@@ -9985,11 +10106,10 @@ function PoolGenAIApp() {
     // pas seulement quand tout le plan est clos (voir saveApplication) :
     // une étape informative jamais acquittée ou passée plus loin dans le
     // même plan ne doit plus geler le décompte d'un produit déjà réellement
-    // appliqué (signalé par un testeur, pH Minus jamais décompté). On ne
-    // décompte que le delta de CE tour ("amount", pas le cumul) pour ne
-    // jamais compter deux fois un reliquat d'application partielle entre
-    // deux tours (voir remainingAmount ci-dessus).
-    if (amount != null && amount > 0 && originalStep?.doseUnit !== "%" && originalStep?.mode !== "entretien") {
+    // appliqué (signalé par un testeur, pH Minus jamais décompté). Chaque
+    // étape (y compris un round d'application partielle, désormais sa propre
+    // étape — voir needsSplit) ne décompte que sa propre quantité.
+    if (amount != null && amount > 0 && origStep?.doseUnit !== "%" && origStep?.mode !== "entretien") {
       const stockProductName = appliedStep.appliedProductName || appliedStep.productRealName || appliedStep.productName;
       applyProductStockDelta(stockProductName, amount, appliedStep.doseUnit, -1);
     }
@@ -10003,10 +10123,10 @@ function PoolGenAIApp() {
     const usedProductName = appliedStep.appliedProductName || appliedStep.productName;
     const usedProduct = poolProducts.find((p) => p.name === usedProductName);
     const alreadyHasMaintenanceCard = recalcSteps.some((s) => s.mode === "entretien");
-    // v1.110.3 — Pas de carte "entretien continu" tant que l'étape a un
-    // reliquat en attente (application partielle) : le produit n'est pas
-    // encore totalement appliqué, prématuré de clore le plan sur ce produit.
-    if (!appliedStep.remainingAmount && !alreadyHasMaintenanceCard && usedProduct?.packagingType === "galets" && usedProduct?.maintenanceRatio?.units && usedProduct?.maintenanceRatio?.volumePer) {
+    // v1.113.0 — Pas de carte "entretien continu" si une étape de reliquat
+    // vient d'être insérée : le produit n'est pas encore totalement appliqué,
+    // prématuré de clore le plan sur ce produit.
+    if (!needsSplit && !alreadyHasMaintenanceCard && usedProduct?.packagingType === "galets" && usedProduct?.maintenanceRatio?.units && usedProduct?.maintenanceRatio?.volumePer) {
       const mr = usedProduct.maintenanceRatio;
       recalcSteps = [...recalcSteps, {
         action: "entretien-galets",
@@ -10026,17 +10146,12 @@ function PoolGenAIApp() {
       }];
     }
 
-    // Trouver la prochaine étape non traitée — v1.110.3 : si l'étape qu'on
-    // vient d'appliquer a un reliquat (application partielle), on reste
-    // dessus (nextIdx = stepIdx) au lieu d'avancer, le temps du délai de
-    // sécurité avant de pouvoir compléter le reste.
-    const stepStillPartial = recalcSteps[stepIdx].remainingAmount > 0;
-    let nextIdx = stepIdx;
-    if (!stepStillPartial) {
-      nextIdx = stepIdx + 1;
-      while (nextIdx < recalcSteps.length && stepIsResolved(recalcSteps[nextIdx])) nextIdx++;
-    }
-    const allDone = !stepStillPartial && nextIdx >= recalcSteps.length;
+    // Trouver la prochaine étape non traitée. v1.113.0 — plus besoin de cas
+    // particulier pour un reliquat : elle est désormais une vraie étape
+    // insérée à stepIdx+1, trouvée naturellement par cette recherche.
+    let nextIdx = stepIdx + 1;
+    while (nextIdx < recalcSteps.length && stepIsResolved(recalcSteps[nextIdx])) nextIdx++;
+    const allDone = nextIdx >= recalcSteps.length;
     const finalSteps = buildFinalSteps(recalcSteps);
     // Sauvegarde intermédiaire dans l'historique à chaque étape
     const applied = finalSteps.filter(s => stepIsResolved(s) && !s.skipped);
@@ -10865,6 +10980,7 @@ function PoolGenAIApp() {
             authUid={dataUid}
             pool={activePool}
             activePlan={activePlan}
+            products={poolProducts}
           />
         )}
         {tab === "products" && showProductsToBuy && (
@@ -11211,7 +11327,7 @@ function PoolGenAIApp() {
           products={poolProducts}
           manageStock={!!activePool?.manageStock}
           lang={lang}
-          onApplyStep={(idx, amount, appliedAt, productName) => { applyWizardStep(idx, amount, appliedAt, productName); }}
+          onApplyStep={(idx, amount, appliedAt, productName, wantsSplit) => { applyWizardStep(idx, amount, appliedAt, productName, wantsSplit); }}
           onSkipStep={(idx) => { skipWizardStep(idx); }}
           onEditPrevStep={editWizardStep}
           onClose={() => { setShowWizard(false); }}
@@ -12162,14 +12278,6 @@ function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep }) {
           {t("applied_amount", { amount: formatDose(appliedStep.appliedAmount, appliedStep.doseUnit || reco.doseUnit || "g") })}
         </div>
       )}
-      {/* v1.110.3 — Reliquat d'une application partielle (dose max par
-          prise, voir applyWizardStep) — reste à compléter après le délai
-          de sécurité. */}
-      {appliedStep && appliedStep.remainingAmount > 0 && (
-        <div style={{ fontSize: 12.5, color: "#a8721a", marginTop: 2 }}>
-          {t("dose_remaining", { amount: formatDose(appliedStep.remainingAmount, appliedStep.doseUnit || reco.doseUnit || "g") })}
-        </div>
-      )}
       {/* v1.108.3 — Garde-fou dose anormale (voir isDoseRateAnomalous) :
           avertissement non bloquant si la dose calculée s'écarte fortement
           du produit de référence pour cette action — n'empêche jamais
@@ -12292,16 +12400,14 @@ function wizardStatusLabel(app, t) {
   return t("wizard_partial");
 }
 
-// v1.110.3 — Une étape est réellement résolue (ne bloque plus l'avancement
-// du plan) si elle a été passée, ou appliquée SANS reliquat en attente. Une
-// application partielle (dose max par prise dépassée, ex. pH- liquide
-// concentré : 500 mL max/50 m³, voir applyWizardStep) laisse remainingAmount
-// positif : l'étape reste "en cours" tant que le reliquat n'est pas
-// complété, même si appliedAt est déjà renseigné. Fonction top-level (pas
-// une closure de PoolGenAIApp) car utilisée aussi par PlanStatusCard et
-// TreatmentWizard, des composants séparés.
+// v1.113.0 — Une étape est résolue (ne bloque plus l'avancement du plan) si
+// elle a été passée, ou appliquée. Une application partielle (dose max par
+// prise dépassée, voir applyWizardStep) insère désormais une VRAIE étape
+// distincte pour le reliquat plutôt que de laisser celle-ci "en cours" — plus
+// besoin de cas particulier ici. Fonction top-level (pas une closure de
+// PoolGenAIApp) car utilisée aussi par PlanStatusCard et TreatmentWizard.
 function stepIsResolved(s) {
-  return !!s.skipped || (!!s.appliedAt && !(s.remainingAmount > 0));
+  return !!s.skipped || !!s.appliedAt;
 }
 
 // v1.108.3 — Garde-fou dose anormale : compare le taux d'un produit
@@ -12941,7 +13047,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
 }
 
 // ---------- Historique ----------
-function HistoryView({ measures, onDelete, onEdit, onAdd, onAddPrefilled, onValidateApplication, applications, isPremium, poolName, onGenerateReport, onWantPremiumForReport, lang, apiKey, apiProvider, authUid, pool, activePlan }) {
+function HistoryView({ measures, onDelete, onEdit, onAdd, onAddPrefilled, onValidateApplication, applications, isPremium, poolName, onGenerateReport, onWantPremiumForReport, lang, apiKey, apiProvider, authUid, pool, activePlan, products }) {
   const t = useT(lang);
   const [diagText, setDiagText] = useState("");
   const [diagResult, setDiagResult] = useState(null);
@@ -13175,7 +13281,11 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
       setDiagLoading(false);
     }
   }
-  const [activeParams, setActiveParams] = useState(["pH", "fCl"]);
+  // v1.114.0 — Les paramètres projetés (pH/fCl) ont leur propre chip
+  // show/hide, indépendante de celle du paramètre mesuré correspondant
+  // (voir demande Arnaud : "afficher ou non les paramètres projetés comme
+  // les autres paramètres"), visibles par défaut comme pH/fCl mesurés.
+  const [activeParams, setActiveParams] = useState(["pH", "fCl", "phProjected", "fclProjected"]);
   const [showValues, setShowValues] = useState(false);
 
   const chartData = useMemo(() => {
@@ -13198,6 +13308,32 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
       }));
   }, [measures]);
 
+  // v1.113.2 — Points pH/fCl projetés (pas mesurés) à partir des quantités
+  // réellement appliquées, un point par application (voir buildProjectedPoints).
+  // v1.112.0 les rendait via deux <Line> avec leur PROPRE tableau "data",
+  // séparé de chartData — Recharts ne sait pas positionner correctement le
+  // Tooltip partagé quand les Line d'un même graphique ont des tableaux de
+  // données différents (index non alignés) : au survol, les deux courbes
+  // projetées affichaient la même valeur, prise au mauvais point (constaté :
+  // "pH projeté" affichait la valeur de "Cl libre projeté"). Corrigé en
+  // fusionnant les points projetés DANS chartData (mêmes objets, mêmes
+  // index/timestamps que les séries mesurées), pour que toutes les <Line>
+  // du graphique partagent exactement le même tableau.
+  const chartDataWithProjections = useMemo(() => {
+    const rows = new Map(chartData.map((d) => [d.timestamp, { ...d }]));
+    [...measures].sort((a, b) => new Date(a.date) - new Date(b.date)).forEach((m) => {
+      const app = (applications || []).find((a) => a.measureId === m.id);
+      if (!app) return;
+      Object.values(buildProjectedPoints(m, app.steps, products, pool?.volume || 0)).forEach((p) => {
+        const ts = new Date(p.appliedAt).getTime();
+        const row = rows.get(ts) || { timestamp: ts, date: formatDateShort(p.appliedAt) };
+        row[p.param === "pH" ? "phProjected" : "fclProjected"] = Math.round(p.value * 10) / 10;
+        rows.set(ts, row);
+      });
+    });
+    return [...rows.values()].sort((a, b) => a.timestamp - b.timestamp);
+  }, [chartData, measures, applications, products, pool?.volume]);
+
   const chartParams = [
     { key: "pH",    color: "#1a8fd1", label: "pH",                                  axis: "left" },
     { key: "fCl",   color: "#2b7fd9", label: t("param_fcl").replace(" (mg/L)", ""), axis: "left" },
@@ -13210,6 +13346,11 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
     { key: "copper",color: "#b8860b", label: t("copper_col"),                       axis: "left" },
     { key: "iron",  color: "#8b4513", label: t("iron_col"),                         axis: "left" },
     { key: "temp",  color: "#e0578a", label: t("temp_col"),                         axis: "right" },
+    // v1.114.0 — Chips indépendantes pour les paramètres projetés (pas
+    // mesurés) : voir demande Arnaud, remplace le couplage automatique à la
+    // chip du paramètre mesuré correspondant introduit en v1.113.2.
+    { key: "phProjected",  color: "#1a8fd1", label: t("ph_projected_chart_label"),  axis: "left", dashed: true },
+    { key: "fclProjected", color: "#2b7fd9", label: t("fcl_projected_chart_label"), axis: "left", dashed: true },
   ];
 
   const allKeys = chartParams.map((cp) => cp.key);
@@ -13322,13 +13463,13 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
 
       {/* Détermine si les mesures couvrent plus d'un jour */}
       {(() => {
-        const timestamps = chartData.map((d) => d.timestamp);
+        const timestamps = chartDataWithProjections.map((d) => d.timestamp);
         const spanMs = timestamps.length > 1 ? Math.max(...timestamps) - Math.min(...timestamps) : 0;
         const showTime = spanMs < 86400000 * 2; // moins de 2 jours → affiche heure
         return (
           <div style={styles.chartCard}>
             <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={chartData} margin={{ top: showValues ? 18 : 8, right: 12, left: 0, bottom: 0 }}>
+              <LineChart data={chartDataWithProjections} margin={{ top: showValues ? 18 : 8, right: 12, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e6ebe9" />
                 <XAxis
                   dataKey="timestamp"
@@ -13359,6 +13500,18 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
               labelFormatter={(ts) => formatDate(new Date(ts).toISOString())}
               contentStyle={{ fontSize: 12, borderRadius: 10, border: "1px solid #d0e4f5" }}
             />
+            {/* v1.113.2 — Les courbes projetées (pas mesurées) partagent
+                chartDataWithProjections avec toutes les autres <Line> (pas de
+                tableau "data" séparé), sinon le Tooltip partagé de Recharts
+                n'arrive pas à résoudre la bonne valeur par série. v1.114.0 —
+                chip show/hide indépendante (cp.key dédié), plus couplée à la
+                chip du paramètre mesuré correspondant. */}
+            {/* v1.115.1 — Étiquettes de valeurs en <g> custom (fond blanc semi-
+                opaque + décalage vertical opposé mesuré/projeté) plutôt que le
+                positionnement "top" fixe de Recharts : quand une courbe
+                mesurée et sa projection associée sont proches (dose faible),
+                les deux étiquettes se chevauchaient et devenaient illisibles
+                — voir capture Arnaud. */}
             {chartParams
               .filter((cp) => activeParams.includes(cp.key))
               .map((cp) => (
@@ -13367,13 +13520,27 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
                   yAxisId={cp.axis}
                   type="monotone"
                   dataKey={cp.key}
+                  name={cp.label}
                   stroke={cp.color}
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
+                  strokeWidth={cp.dashed ? 1.5 : 2}
+                  strokeDasharray={cp.dashed ? "4 3" : undefined}
+                  dot={{ r: cp.dashed ? 2 : 3 }}
                   connectNulls
                   label={
                     showValues
-                      ? { fontSize: 10, fill: cp.color, position: "top", offset: 8, formatter: (v) => (v == null ? "" : Number(v).toFixed(1)) }
+                      ? (props) => {
+                          const { x, y, value } = props;
+                          if (value == null) return null;
+                          const text = Number(value).toFixed(1);
+                          const ty = y + (cp.dashed ? 16 : -9);
+                          const w = text.length * 6 + 6;
+                          return (
+                            <g>
+                              <rect x={x - w / 2} y={ty - 9} width={w} height={13} rx={3} fill="rgba(255,255,255,0.88)" />
+                              <text x={x} y={ty} textAnchor="middle" fontSize={10} fontWeight={600} fill={cp.color}>{text}</text>
+                            </g>
+                          );
+                        }
                       : false
                   }
                 />
@@ -13431,6 +13598,8 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
                 lang={lang}
                 activePlan={activePlan}
                 authUid={authUid}
+                products={products}
+                volume={pool?.volume || 0}
               />
             ) : (
               <ManualApplicationRow key={item.a.id} app={item.a} lang={lang} />
@@ -13613,8 +13782,12 @@ function ManualApplicationRow({ app, lang }) {
   );
 }
 
-function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, application, isPremium, manageStock, lang, activePlan, authUid }) {
+function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, application, isPremium, manageStock, lang, activePlan, authUid, products, volume }) {
   const t = useT(lang || "fr");
+  // v1.112.0 — Valeurs pH/fCl projetées à partir des quantités réellement
+  // appliquées (voir buildProjectedPoints) — indexées par position dans
+  // application.steps pour affichage sous chaque étape concernée.
+  const projectedByIndex = application ? buildProjectedPoints(measure, application.steps, products, volume) : {};
   const [open, setOpen] = useState(false);
   // v1.39.0 — Les photos ne sont plus inline sur measure (voir FB.saveMeasure) :
   // elles vivent dans la sous-collection users/{uid}/measures/{id}/photos et
@@ -13754,6 +13927,15 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, applicat
                     {s.appliedAt && (
                       <div style={{ fontSize: 11, color: s.skipped ? "#b0c4d4" : "#4a8fd1", marginTop: 1 }}>
                         {s.skipped ? t("treatment_skipped") : t("treatment_at")} {new Date(s.appliedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </div>
+                    )}
+                    {/* v1.112.0 — Valeur pH/fCl projetée compte tenu de la quantité
+                        réellement appliquée (pas une mesure — voir buildProjectedPoints). */}
+                    {projectedByIndex[i] && (
+                      <div style={{ fontSize: 11, color: "#a8721a", marginTop: 1 }}>
+                        {t(projectedByIndex[i].param === "pH" ? "ph_projected_label" : "fcl_projected_label", {
+                          value: projectedByIndex[i].value.toFixed(1),
+                        })}
                       </div>
                     )}
                   </div>
@@ -15564,7 +15746,11 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
         d.setHours(h, m, 0, 0);
         appliedAt = d.toISOString();
       }
-      return { ...s, productName: ev.productName, appliedAmount: amount, appliedAt };
+      // v1.113.0 — productRealName mis à jour avec le produit réel sélectionné
+      // dans ce sélecteur (toujours un vrai .name, jamais un libellé générique
+      // traduit) — sinon le recrédit/décompte de stock (editHistoricalApplication)
+      // continuait de matcher l'ANCIEN produit quand celui-ci changeait ici.
+      return { ...s, productName: ev.productName, productRealName: ev.productName, appliedAmount: amount, appliedAt };
     });
   }
   const [date, setDate] = useState(
@@ -16921,6 +17107,10 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   const [prevAmount, setPrevAmount] = React.useState("");
   const [prevTime, setPrevTime] = React.useState("");
   const [selectedProduct, setSelectedProduct] = React.useState(null);
+  // v1.114.0 — Quand la quantité saisie est significativement inférieure à la
+  // recommandation, on demande confirmation avant d'insérer une étape de
+  // complément (voir finalizeApply) plutôt que de le faire automatiquement.
+  const [pendingSplit, setPendingSplit] = React.useState(null);
   // v1.61.0 — Quand aucun produit n'est en stock dans la catégorie : saisie
   // libre, avec un choix d'unité (kg ou unités) non lié à une fiche produit.
   const [freeUnitMode, setFreeUnitMode] = React.useState("kg");
@@ -16969,10 +17159,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
     if (plan && plan.currentStepIdx >= 0) {
       const step = plan.steps[plan.currentStepIdx];
       if (step) {
-        // v1.110.3 — Application partielle en attente (voir applyWizardStep) :
-        // pré-remplit avec le reliquat restant, pas le total d'origine, pour
-        // que l'utilisateur complète naturellement la dose déjà entamée.
-        const amount = step.remainingAmount ?? step.computedDoseAmount ?? step.appliedAmount;
+        const amount = step.computedDoseAmount ?? step.appliedAmount;
         const unit = step.doseUnit || "g";
         // v1.61.0 — Pré-sélection du produit à utiliser : le plus entamé
         // puis le plus ancien parmi les produits en stock de l'action (ou
@@ -16999,11 +17186,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
         setEditingPrev(false);
       }
     }
-  // v1.110.3 — Une application partielle laisse currentStepIdx inchangé
-  // (voir applyWizardStep) : il faut aussi dépendre de remainingAmount pour
-  // que ce pré-remplissage se rafraîchisse après une application partielle
-  // sur la même étape (sinon le champ reste bloqué sur l'ancien total).
-  }, [plan?.currentStepIdx, plan?.steps?.[plan?.currentStepIdx]?.remainingAmount]);
+  }, [plan?.currentStepIdx]);
 
   function toDisplayUnit(amount, unit, product) {
     unit = normalizeDoseUnit(unit);
@@ -17094,6 +17277,24 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   const prod = products?.find((p) => p.name === (step.productRealName ?? step.productName));
   const stockEmpty = !isInfoStep && manageStock && prod && (prod.stockPercent ?? 100) <= 0;
 
+  // v1.114.0 — Point de passage commun pour les applications susceptibles de
+  // déclencher une scission (produit avec dose calculée, hors % et hors
+  // entretien) : si la quantité saisie est significativement inférieure à la
+  // recommandation (même tolérance que côté applyWizardStep), on demande
+  // confirmation avant de conclure — voir demande Arnaud, remplace la
+  // scission automatique de la v1.113.0.
+  function finalizeApply(amount, appliedAt, productName) {
+    const target = step.computedDoseAmount;
+    const canSplit = target != null && amount != null && step.mode !== "entretien" && step.doseUnit !== "%";
+    const epsilon = canSplit ? Math.max(1, target * 0.02) : 0;
+    const rawRemainder = canSplit ? target - amount : 0;
+    if (rawRemainder > epsilon) {
+      setPendingSplit({ amount, appliedAt, productName });
+      return;
+    }
+    onApplyStep(currentIdx, amount, appliedAt, productName, false);
+  }
+
   function handleApply() {
     if (isInfoStep) {
       // Carte informative : rien à saisir, ferme et termine le plan.
@@ -17128,7 +17329,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
         d.setHours(h, m, 0, 0);
         appliedAt = d.toISOString();
       }
-      onApplyStep(currentIdx, amount, appliedAt, null);
+      finalizeApply(amount, appliedAt, null);
       return;
     }
     // Utiliser l'unité du produit sélectionné si différent du produit conseillé
@@ -17145,10 +17346,11 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
       d.setHours(h, m, 0, 0);
       appliedAt = d.toISOString();
     }
-    onApplyStep(currentIdx, amount, appliedAt, selectedProduct);
+    finalizeApply(amount, appliedAt, selectedProduct);
   }
 
   return (
+    <>
     <div style={{
       position: "fixed", inset: 0, zIndex: 400,
       background: "rgba(10,30,60,0.55)",
@@ -17191,18 +17393,6 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
         </div>
         {step.title && step.productName && step.title !== step.productName && (
           <div style={{ fontSize: 13, color: "var(--brand-text-secondary)", marginBottom: 8 }}>{step.title}</div>
-        )}
-
-        {/* v1.110.3 — Application partielle : dose max par prise dépassée
-            (ex. pH- liquide concentré), déjà appliqué une partie, reste à
-            compléter après le délai de sécurité (voir applyWizardStep). */}
-        {step.remainingAmount > 0 && (
-          <div style={{ background: "#fff3e0", border: "1px solid #f0c987", borderRadius: 10, padding: "10px 14px", marginBottom: 12, fontSize: 13, color: "#8a5a00" }}>
-            {t("wizard_dose_split_note", {
-              applied: formatDose(step.appliedAmount, step.doseUnit || "g"),
-              remaining: formatDose(step.remainingAmount, step.doseUnit || "g"),
-            })}
-          </div>
         )}
 
         {/* Countdown / horaire */}
@@ -17518,6 +17708,51 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
         )}
       </div>
     </div>
+    {/* v1.114.0 — Confirmation avant scission : demande si le complément
+        (reliquat non appliqué) doit être planifié en étape supplémentaire,
+        remplace la scission automatique de la v1.113.0 — voir finalizeApply. */}
+    {pendingSplit && (
+      <div style={{
+        position: "fixed", inset: 0, zIndex: 450,
+        background: "rgba(10,30,60,0.55)",
+        display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+      }}>
+        <div style={{
+          background: "#fff", borderRadius: 16, width: "100%", maxWidth: 380,
+          padding: "22px 20px", boxSizing: "border-box",
+        }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: "var(--brand-text-primary)", marginBottom: 8 }}>
+            {t("wizard_split_confirm_title")}
+          </div>
+          <div style={{ fontSize: 13, color: "var(--brand-text-secondary)", lineHeight: 1.5, marginBottom: 20 }}>
+            {t("wizard_split_confirm_body")}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <button
+              onClick={() => {
+                const { amount, appliedAt, productName } = pendingSplit;
+                setPendingSplit(null);
+                onApplyStep(currentIdx, amount, appliedAt, productName, true);
+              }}
+              style={{ width: "100%", padding: "12px 0", borderRadius: 12, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}
+            >
+              {t("wizard_split_confirm_yes")}
+            </button>
+            <button
+              onClick={() => {
+                const { amount, appliedAt, productName } = pendingSplit;
+                setPendingSplit(null);
+                onApplyStep(currentIdx, amount, appliedAt, productName, false);
+              }}
+              style={{ width: "100%", padding: "12px 0", borderRadius: 12, border: "1px solid var(--brand-bg-tint)", background: "none", color: "var(--brand-text-secondary)", fontWeight: 600, fontSize: 14, cursor: "pointer" }}
+            >
+              {t("wizard_split_confirm_no")}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
 
@@ -20755,8 +20990,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           prod:    a.productName || "—",
           advised: "—",
           qty:     formatDose(a.appliedAmount, a.doseUnit || "g"),
-          // Date déjà visible dans la cellule fusionnée à gauche pour cette ligne.
-          time:    `${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`,
+          time:    dateStr,
           stock:   stockVal,
         };
 
@@ -21266,7 +21500,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                       <td style={{ ...styles.reportTdCell, color: "var(--brand-text-secondary)" }}>—</td>
                       <td style={{ ...styles.reportTdCell, fontWeight: 700, color: "var(--brand-primary)" }}>{formatDose(a.appliedAmount, a.doseUnit || "g")}</td>
                       <td style={{ ...styles.reportTdCell, color: "var(--brand-text-secondary)" }}>
-                        {new Date(a.appliedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        {formatDateShort(a.appliedAt)} {new Date(a.appliedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                       </td>
                       {manageStock && <td style={{ ...styles.reportTdCell, color: prod && (prod.stockPercent ?? 100) <= 20 ? "#c0392b" : "var(--brand-text-secondary)", fontWeight: 600 }}>
                         {prod ? formatDose(Math.round((prod.stockPercent ?? 100) / 100 * (prod.containerAmount ?? 1) * 10) / 10, prod.containerUnit || "kg") : "—"}
