@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.117.5";
+const APP_VERSION = "1.117.6";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -13760,10 +13760,17 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
         const chartRenderData = chartDataWithProjections.length > 0
           ? chartDataWithProjections
           : [{ timestamp: domainStart }, { timestamp: domainEnd }];
+        // v1.117.6 — Recharts pouvait geler l'affichage (courbes/points
+        // écrasés sur le bord gauche, une seule graduation de date) après
+        // plusieurs allers-retours du curseur (glisser vers le passé puis
+        // revenir au présent) : un remount forcé via key (dépendant de la
+        // fenêtre et de ses bornes) évite que Recharts ne réutilise un état
+        // interne de transition/échelle devenu incohérent — voir demande
+        // Arnaud.
         return (
           <div style={styles.chartCard}>
             <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={chartRenderData} margin={{ top: showValues ? 18 : 8, right: 12, left: 0, bottom: 0 }}>
+              <LineChart key={`${zoomWindow}-${domainStart}-${domainEnd}`} data={chartRenderData} margin={{ top: showValues ? 18 : 8, right: 12, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e6ebe9" />
                 <XAxis
                   dataKey="timestamp"
@@ -21774,11 +21781,15 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           const chartRenderData = chartDataWithProjections.length > 0
             ? chartDataWithProjections
             : [{ timestamp: domainStart }, { timestamp: domainEnd }];
+          // v1.117.6 — Remount forcé (key) sur changement de fenêtre/bornes —
+          // voir le fix équivalent côté Historique (Recharts pouvait geler
+          // l'affichage après plusieurs allers-retours du curseur).
           return (
           <React.Fragment>
           <div style={styles.reportChartWrap} className="report-chart-wrap">
             <ResponsiveContainer width="100%" height={showValues ? 380 : 340}>
             <LineChart
+              key={`${zoomWindow}-${domainStart}-${domainEnd}`}
               data={chartRenderData}
               margin={{ top: showValues ? 24 : 8, right: 16, left: 0, bottom: 0 }}
             >
