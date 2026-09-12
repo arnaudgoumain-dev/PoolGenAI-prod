@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.117.1";
+const APP_VERSION = "1.117.2";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -13247,6 +13247,22 @@ function TimeCursorSlider({ windowKey, windowEnd, onWindowEndChange, minTs, maxT
   );
 }
 
+// v1.117.2 — Étiquette d'axe temporel sur 2 lignes (jj/mm puis hh:mm) — un
+// <tspan> par ligne, un tickFormatter renvoyant une simple chaîne ne peut
+// pas revenir à la ligne dans un <text> SVG. Partagé entre le graphique de
+// l'Historique et celui du rapport — voir demande Arnaud.
+function DateTimeAxisTick({ x, y, payload, fill, fontSize }) {
+  const d = new Date(payload.value);
+  const datePart = `${d.getDate().toString().padStart(2,"0")}/${(d.getMonth()+1).toString().padStart(2,"0")}`;
+  const timePart = `${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`;
+  return (
+    <text x={x} y={y} textAnchor="middle" fontSize={fontSize || 9} fill={fill || "var(--brand-text-muted)"}>
+      <tspan x={x} dy="0.9em">{datePart}</tspan>
+      <tspan x={x} dy="1.1em">{timePart}</tspan>
+    </text>
+  );
+}
+
 // ---------- Historique ----------
 function HistoryView({ measures, onDelete, onEdit, onAdd, onAddPrefilled, onValidateApplication, applications, isPremium, poolName, onGenerateReport, onWantPremiumForReport, lang, apiKey, apiProvider, authUid, pool, activePlan, products }) {
   const t = useT(lang);
@@ -13738,11 +13754,8 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
                   type="number"
                   domain={[domainStart, domainEnd]}
                   scale="time"
-                  tickFormatter={(ts) => {
-                    const d = new Date(ts);
-                    return `${d.getDate().toString().padStart(2,"0")}/${(d.getMonth()+1).toString().padStart(2,"0")} ${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`;
-                  }}
-                  tick={{ fontSize: 9, fill: "var(--brand-text-muted)" }}
+                  height={34}
+                  tick={<DateTimeAxisTick fontSize={9} fill="var(--brand-text-muted)" />}
                 />
             <YAxis
               yAxisId="left"
@@ -17358,7 +17371,7 @@ function PlanStatusCard({ plan, onResume, lang }) {
             {remaining !== null
               ? isReady
                 ? t("countdown_done")
-                : `${t("wizard_in")} ${formatCountdown(remaining)} — ${t("wizard_at")} ${new Date(currentStep.scheduledAt).toLocaleString(lang, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}`
+                : `${t("wizard_in")} ${formatCountdown(remaining)} — ${new Date(currentStep.scheduledAt).toLocaleDateString(lang, { day: "2-digit", month: "2-digit" })} ${t("wizard_at")} ${new Date(currentStep.scheduledAt).toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" })}`
               : t("wizard_now")}
           </div>
         </div>
@@ -17680,7 +17693,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
               </div>
             </div>
             <div style={{ textAlign: "right", fontSize: 12, color: "var(--brand-text-secondary)" }}>
-              {t("wizard_at")} {new Date(step.scheduledAt).toLocaleString(lang, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+              {new Date(step.scheduledAt).toLocaleDateString(lang, { day: "2-digit", month: "2-digit" })} {t("wizard_at")} {new Date(step.scheduledAt).toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" })}
             </div>
           </div>
         )}
@@ -21743,11 +21756,8 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                 type="number"
                 domain={[domainStart, domainEnd]}
                 scale="time"
-                tickFormatter={(ts) => {
-                  const d = new Date(ts);
-                  return `${d.getDate().toString().padStart(2,"0")}/${(d.getMonth()+1).toString().padStart(2,"0")} ${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`;
-                }}
-                tick={{ fontSize: 10, fill: "#2d4a6e" }}
+                height={36}
+                tick={<DateTimeAxisTick fontSize={10} fill="#2d4a6e" />}
               />
               <YAxis yAxisId="left" tick={{ fontSize: 12, fill: "#2d4a6e" }} width={30} />
               <YAxis
