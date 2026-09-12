@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.116.1";
+const APP_VERSION = "1.117.0";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -323,6 +323,11 @@ const TRANSLATIONS = {
     fcl_projected_label: "Chlore libre projeté : {value}",
     ph_projected_chart_label: "pH (projeté)",
     fcl_projected_chart_label: "Cl libre (projeté)",
+    zoom_all: "Tout",
+    zoom_7d: "7 j glissants",
+    zoom_14d: "14 j glissants",
+    zoom_1m: "1 mois glissant",
+    no_measures_in_period: "Aucune mesure sur cette période.",
     countdown_done: "C'est l'heure !",
     treatment_at: "Traitement appliqué à",
     edit_treatment_section_title: "Traitement appliqué",
@@ -1121,6 +1126,11 @@ const TRANSLATIONS = {
     fcl_projected_label: "Projected free chlorine: {value}",
     ph_projected_chart_label: "pH (projected)",
     fcl_projected_chart_label: "Free Cl (projected)",
+    zoom_all: "All",
+    zoom_7d: "7d rolling",
+    zoom_14d: "14d rolling",
+    zoom_1m: "1mo rolling",
+    no_measures_in_period: "No measurements in this period.",
     countdown_done: "Time to treat!",
     treatment_at: "Treatment applied at",
     edit_treatment_section_title: "Treatment applied",
@@ -1909,6 +1919,11 @@ const TRANSLATIONS = {
     fcl_projected_label: "Projiziertes freies Chlor: {value}",
     ph_projected_chart_label: "pH (projiziert)",
     fcl_projected_chart_label: "Freies Cl (projiziert)",
+    zoom_all: "Alle",
+    zoom_7d: "7 T gleitend",
+    zoom_14d: "14 T gleitend",
+    zoom_1m: "1 Monat gleitend",
+    no_measures_in_period: "Keine Messung in diesem Zeitraum.",
     countdown_done: "Zeit für die Behandlung!",
     treatment_at: "Behandlung angewendet um",
     edit_treatment_section_title: "Angewendete Behandlung",
@@ -2699,6 +2714,11 @@ const TRANSLATIONS = {
     fcl_projected_label: "Cloro libero previsto: {value}",
     ph_projected_chart_label: "pH (previsto)",
     fcl_projected_chart_label: "Cl libero (previsto)",
+    zoom_all: "Tutto",
+    zoom_7d: "7 gg mobili",
+    zoom_14d: "14 gg mobili",
+    zoom_1m: "1 mese mobile",
+    no_measures_in_period: "Nessuna misura in questo periodo.",
     countdown_done: "È ora di trattare!",
     treatment_at: "Trattamento applicato alle",
     edit_treatment_section_title: "Trattamento applicato",
@@ -3486,6 +3506,11 @@ const TRANSLATIONS = {
     fcl_projected_label: "Cloro libre proyectado: {value}",
     ph_projected_chart_label: "pH (proyectado)",
     fcl_projected_chart_label: "Cl libre (proyectado)",
+    zoom_all: "Todo",
+    zoom_7d: "7 d móviles",
+    zoom_14d: "14 d móviles",
+    zoom_1m: "1 mes móvil",
+    no_measures_in_period: "Ninguna medición en este período.",
     countdown_done: "¡Es hora de tratar!",
     treatment_at: "Tratamiento aplicado a las",
     edit_treatment_section_title: "Tratamiento aplicado",
@@ -4273,6 +4298,11 @@ const TRANSLATIONS = {
     fcl_projected_label: "Cloro livre projetado: {value}",
     ph_projected_chart_label: "pH (projetado)",
     fcl_projected_chart_label: "Cl livre (projetado)",
+    zoom_all: "Tudo",
+    zoom_7d: "7 d móveis",
+    zoom_14d: "14 d móveis",
+    zoom_1m: "1 mês móvel",
+    no_measures_in_period: "Nenhuma medição neste período.",
     countdown_done: "Hora do tratamento!",
     treatment_at: "Tratamento aplicado às",
     edit_treatment_section_title: "Tratamento aplicado",
@@ -13058,6 +13088,102 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
   return result;
 }
 
+// v1.117.0 — Zoom temporel du graphique d'évolution (onglet Historique et
+// rapport) : fenêtres glissantes prédéfinies ou "Tout", plus un curseur pour
+// déplacer la fenêtre dans l'historique complet quand elle est plus petite
+// que la période totale couverte par les mesures — voir demande Arnaud.
+const PERIOD_WINDOW_DAYS = { "7d": 7, "14d": 14, "1m": 30 };
+
+function getPeriodWindowMs(key) {
+  const days = PERIOD_WINDOW_DAYS[key];
+  return days ? days * 86400000 : null;
+}
+
+// Persistance locale à l'appareil (pas de sync Firestore, simple préférence
+// d'affichage), par bassin — voir demande Arnaud. Ne concerne que l'onglet
+// Historique : le rapport s'initialise dessus mais n'écrit jamais ici.
+function loadZoomPref(poolId) {
+  if (!poolId) return null;
+  try {
+    const raw = localStorage.getItem(`poolgenai_zoom_${poolId}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function saveZoomPref(poolId, pref) {
+  if (!poolId) return;
+  try {
+    localStorage.setItem(`poolgenai_zoom_${poolId}`, JSON.stringify(pref));
+  } catch (e) {
+    // Stockage indisponible (navigation privée, quota) — préférence non
+    // mémorisée, sans impact fonctionnel (retombe sur "Tout" au prochain
+    // chargement).
+  }
+}
+
+// Filtre un tableau d'objets datés (mesures ou entretiens manuels) sur la
+// fenêtre [windowEnd - windowMs, windowEnd]. "all" (ou windowEnd manquant)
+// retourne le tableau tel quel, sans filtrage.
+function filterByWindow(items, getDate, windowKey, windowEnd) {
+  const windowMs = getPeriodWindowMs(windowKey);
+  if (!windowMs || windowEnd == null) return items;
+  const start = windowEnd - windowMs;
+  return items.filter((it) => {
+    const ts = new Date(getDate(it)).getTime();
+    return !isNaN(ts) && ts >= start && ts <= windowEnd;
+  });
+}
+
+// Chips de fenêtre + curseur, partagés entre l'onglet Historique et le
+// rapport. Le curseur (input range natif — meilleur support tactile qu'un
+// composant de scroll/brush custom) n'est affiché que si la fenêtre choisie
+// est plus petite que la période totale couverte par les données.
+function PeriodZoomControl({ windowKey, onWindowKeyChange, windowEnd, onWindowEndChange, minTs, maxTs, t }) {
+  const windowMs = getPeriodWindowMs(windowKey);
+  const showSlider = windowMs != null && minTs != null && maxTs != null && (maxTs - minTs) > windowMs;
+  const options = [
+    { key: "all", label: t("zoom_all") },
+    { key: "7d", label: t("zoom_7d") },
+    { key: "14d", label: t("zoom_14d") },
+    { key: "1m", label: t("zoom_1m") },
+  ];
+  return (
+    <div style={{ marginBottom: 10 }}>
+      <div style={styles.chipsRow}>
+        {options.map((opt) => (
+          <button
+            key={opt.key}
+            onClick={() => onWindowKeyChange(opt.key)}
+            style={{
+              ...styles.chip,
+              background: windowKey === opt.key ? "var(--brand-primary)" : "#f1f4f3",
+              borderColor: windowKey === opt.key ? "var(--brand-primary)" : "#d0e4f5",
+              color: windowKey === opt.key ? "#ffffff" : "var(--brand-text-muted)",
+            }}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+      {showSlider && (
+        <input
+          type="range"
+          min={minTs}
+          max={maxTs}
+          step={3600000}
+          value={windowEnd ?? maxTs}
+          onChange={(e) => onWindowEndChange(Number(e.target.value))}
+          style={{ width: "100%", accentColor: "var(--brand-primary)" }}
+        />
+      )}
+    </div>
+  );
+}
+
 // ---------- Historique ----------
 function HistoryView({ measures, onDelete, onEdit, onAdd, onAddPrefilled, onValidateApplication, applications, isPremium, poolName, onGenerateReport, onWantPremiumForReport, lang, apiKey, apiProvider, authUid, pool, activePlan, products }) {
   const t = useT(lang);
@@ -13300,8 +13426,53 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
   const [activeParams, setActiveParams] = useState(["pH", "fCl", "phProjected", "fclProjected"]);
   const [showValues, setShowValues] = useState(false);
 
+  // v1.117.0 — Zoom temporel du graphique + Journal (voir demande Arnaud) :
+  // fenêtre ("all"/"7d"/"14d"/"1m") et position du curseur (timestamp de fin
+  // de fenêtre), mémorisées par bassin en local. Rechargées si le bassin
+  // actif change (l'utilisateur bascule d'un bassin à l'autre sans quitter
+  // l'onglet Historique).
+  const [zoomWindow, setZoomWindow] = useState(() => loadZoomPref(pool?.id)?.windowKey || "all");
+  const [zoomEnd, setZoomEnd] = useState(() => loadZoomPref(pool?.id)?.windowEnd ?? null);
+  useEffect(() => {
+    const pref = loadZoomPref(pool?.id);
+    setZoomWindow(pref?.windowKey || "all");
+    setZoomEnd(pref?.windowEnd ?? null);
+  }, [pool?.id]);
+
+  const allTimestamps = useMemo(
+    () => measures.map((m) => new Date(m.date).getTime()).filter((ts) => !isNaN(ts)),
+    [measures]
+  );
+  const minTs = allTimestamps.length ? Math.min(...allTimestamps) : null;
+  const maxTs = allTimestamps.length ? Math.max(...allTimestamps) : null;
+
+  function updateZoomWindow(key) {
+    setZoomWindow(key);
+    // Ancre par défaut la fenêtre sur les données les plus récentes.
+    const nextEnd = key === "all" ? null : maxTs;
+    setZoomEnd(nextEnd);
+    saveZoomPref(pool?.id, { windowKey: key, windowEnd: nextEnd });
+  }
+
+  function updateZoomEnd(ts) {
+    setZoomEnd(ts);
+    saveZoomPref(pool?.id, { windowKey: zoomWindow, windowEnd: ts });
+  }
+
+  // v1.117.0 — Mesures et entretiens manuels visibles selon la fenêtre de
+  // zoom : alimentent à la fois le graphique et le Journal en dessous, pour
+  // qu'ils montrent toujours la même période.
+  const visibleMeasures = useMemo(
+    () => filterByWindow(measures, (m) => m.date, zoomWindow, zoomEnd ?? maxTs),
+    [measures, zoomWindow, zoomEnd, maxTs]
+  );
+  const visibleManualApps = useMemo(
+    () => filterByWindow((applications || []).filter((a) => a.type === "manual"), (a) => a.appliedAt, zoomWindow, zoomEnd ?? maxTs),
+    [applications, zoomWindow, zoomEnd, maxTs]
+  );
+
   const chartData = useMemo(() => {
-    return [...measures]
+    return [...visibleMeasures]
       .sort((a, b) => new Date(a.date) - new Date(b.date))
       .map((m) => ({
         date: formatDateShort(m.date),
@@ -13318,7 +13489,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
         iron:   m.iron   !== undefined && m.iron   !== "" ? parseFloat(m.iron)   : null,
         temp:   m.temp   !== undefined && m.temp   !== "" ? parseFloat(m.temp)   : null,
       }));
-  }, [measures]);
+  }, [visibleMeasures]);
 
   // v1.113.2 — Points pH/fCl projetés (pas mesurés) à partir des quantités
   // réellement appliquées, un point par application (voir buildProjectedPoints).
@@ -13333,7 +13504,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
   // du graphique partagent exactement le même tableau.
   const chartDataWithProjections = useMemo(() => {
     const rows = new Map(chartData.map((d) => [d.timestamp, { ...d }]));
-    [...measures].sort((a, b) => new Date(a.date) - new Date(b.date)).forEach((m) => {
+    [...visibleMeasures].sort((a, b) => new Date(a.date) - new Date(b.date)).forEach((m) => {
       const app = (applications || []).find((a) => a.measureId === m.id);
       if (!app) return;
       Object.values(buildProjectedPoints(m, app.steps, products, pool?.volume || 0)).forEach((p) => {
@@ -13344,7 +13515,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
       });
     });
     return [...rows.values()].sort((a, b) => a.timestamp - b.timestamp);
-  }, [chartData, measures, applications, products, pool?.volume]);
+  }, [chartData, visibleMeasures, applications, products, pool?.volume]);
 
   const chartParams = [
     { key: "pH",    color: "#1a8fd1", label: "pH",                                  axis: "left" },
@@ -13459,6 +13630,16 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
         ))}
       </div>
 
+      <PeriodZoomControl
+        windowKey={zoomWindow}
+        onWindowKeyChange={updateZoomWindow}
+        windowEnd={zoomEnd}
+        onWindowEndChange={updateZoomEnd}
+        minTs={minTs}
+        maxTs={maxTs}
+        t={t}
+      />
+
       <p style={styles.axisLegend}>
         <span style={styles.axisLegendItem}>{t("axis_legend_u")}</span>
         <span style={styles.axisLegendItem}>{t("axis_legend_d")}</span>
@@ -13473,8 +13654,13 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
         <span>{t("show_values")}</span>
       </label>
 
-      {/* Détermine si les mesures couvrent plus d'un jour */}
-      {(() => {
+      {/* v1.117.0 — Fenêtre de zoom sans aucune mesure dedans (bassin actif
+          mais période choisie vide) : message plutôt qu'un graphique vide. */}
+      {chartDataWithProjections.length === 0 ? (
+        <p style={styles.helpTextSmall}>{t("no_measures_in_period")}</p>
+      ) : (
+      /* Détermine si les mesures couvrent plus d'un jour */
+      (() => {
         const timestamps = chartDataWithProjections.map((d) => d.timestamp);
         const spanMs = timestamps.length > 1 ? Math.max(...timestamps) - Math.min(...timestamps) : 0;
         const showTime = spanMs < 86400000 * 2; // moins de 2 jours → affiche heure
@@ -13561,7 +13747,8 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
         </ResponsiveContainer>
           </div>
         );
-      })()}
+      })()
+      )}
 
       <div style={styles.sectionRow}>
         <span style={styles.sectionLabel}>{t("journal")}</span>
@@ -13591,10 +13778,12 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
           // auparavant). Les entretiens manuels n'ont pas de measureId — ils
           // ne rentrent jamais en collision avec la logique existante de
           // MeasureRow/application liée à une mesure.
-          const manualApps = (applications || []).filter((a) => a.type === "manual");
+          // v1.117.0 — Filtré selon la fenêtre de zoom du graphique
+          // (visibleMeasures/visibleManualApps), pour que le Journal montre
+          // toujours la même période que le graphique au-dessus.
           const items = [
-            ...measures.map((m) => ({ kind: "measure", date: m.date, m })),
-            ...manualApps.map((a) => ({ kind: "manual", date: a.appliedAt, a })),
+            ...visibleMeasures.map((m) => ({ kind: "measure", date: m.date, m })),
+            ...visibleManualApps.map((a) => ({ kind: "manual", date: a.appliedAt, a })),
           ].sort((x, y) => new Date(y.date) - new Date(x.date));
           return items.map((item) =>
             item.kind === "measure" ? (
@@ -20630,9 +20819,34 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
     [measures]
   );
 
+  // v1.117.0 — Même zoom temporel que l'onglet Historique (voir
+  // PeriodZoomControl/filterByWindow) : initialisé depuis la préférence
+  // mémorisée pour ce bassin, ajustable ensuite indépendamment dans cet
+  // écran sans jamais réécrire cette préférence (elle appartient à
+  // l'Historique — voir demande Arnaud). Filtre le graphique, le tableau
+  // détaillé et les photos, à l'écran comme dans le PDF exporté.
+  const [zoomWindow, setZoomWindow] = useState(() => loadZoomPref(pool?.id)?.windowKey || "all");
+  const [zoomEnd, setZoomEnd] = useState(() => loadZoomPref(pool?.id)?.windowEnd ?? null);
+  const minTs = sortedMeasures.length ? new Date(sortedMeasures[0].date).getTime() : null;
+  const maxTs = sortedMeasures.length ? new Date(sortedMeasures[sortedMeasures.length - 1].date).getTime() : null;
+
+  function updateZoomWindow(key) {
+    setZoomWindow(key);
+    setZoomEnd(key === "all" ? null : maxTs);
+  }
+
+  const visibleMeasures = useMemo(
+    () => filterByWindow(sortedMeasures, (m) => m.date, zoomWindow, zoomEnd ?? maxTs),
+    [sortedMeasures, zoomWindow, zoomEnd, maxTs]
+  );
+  const visibleManualApps = useMemo(
+    () => filterByWindow((applications || []).filter((a) => a.type === "manual"), (a) => a.appliedAt, zoomWindow, zoomEnd ?? maxTs),
+    [applications, zoomWindow, zoomEnd, maxTs]
+  );
+
   const chartData = useMemo(
     () =>
-      sortedMeasures.map((m) => ({
+      visibleMeasures.map((m) => ({
         date: formatDateShort(m.date),
         timestamp: new Date(m.date).getTime(),
         pH:     m.pH     !== undefined && m.pH     !== "" ? parseFloat(m.pH)     : null,
@@ -20647,7 +20861,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
         iron:   m.iron   !== undefined && m.iron   !== "" ? parseFloat(m.iron)   : null,
         temp:   m.temp   !== undefined && m.temp   !== "" ? parseFloat(m.temp)   : null,
       })),
-    [sortedMeasures]
+    [visibleMeasures]
   );
 
   // v1.116.0 — Points projetés pH/fCl (pas mesurés) fusionnés dans le même
@@ -20658,7 +20872,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
   // PDF exporté) puisse aussi afficher ces paramètres.
   const chartDataWithProjections = useMemo(() => {
     const rowsMap = new Map(chartData.map((d) => [d.timestamp, { ...d }]));
-    sortedMeasures.forEach((m) => {
+    visibleMeasures.forEach((m) => {
       const app = (applications || []).find((a) => a.measureId === m.id);
       if (!app) return;
       Object.values(buildProjectedPoints(m, app.steps, products, pool?.volume || 0)).forEach((p) => {
@@ -20669,7 +20883,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
       });
     });
     return [...rowsMap.values()].sort((a, b) => a.timestamp - b.timestamp);
-  }, [chartData, sortedMeasures, applications, products, pool?.volume]);
+  }, [chartData, visibleMeasures, applications, products, pool?.volume]);
 
   const chartParams = [
     { key: "pH",     color: "#1a8fd1", label: "pH",                                          axis: "left"  },
@@ -20705,28 +20919,26 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
   const rows = useMemo(() => {
     const repTargets = getEffectiveTargets(pool?.treatmentType || "chlore");
     const repParams = getActiveParams(pool?.treatmentType || "chlore");
-    return sortedMeasures.map((m) => {
+    return visibleMeasures.map((m) => {
       const recs = computeRecommendations(m, pool?.volume || 0, products, repTargets, repParams, t);
       const application = applications.find((a) => a.measureId === m.id) || null;
       return { measure: m, recs, application };
     });
-  }, [sortedMeasures, pool, products, applications]);
+  }, [visibleMeasures, pool, products, applications]);
 
   // v1.63.0 — Journal fusionné pour le tableau détaillé du rapport : mesures
   // (rows, inchangé — toujours utilisé pour le graphique et les photos) +
   // applications manuelles hors plan.
   // v1.63.1 — Tri décroissant (le plus récent en premier), sur demande d'Arnaud.
   const journalRows = useMemo(() => {
-    const manualItems = (applications || [])
-      .filter((a) => a.type === "manual")
-      .map((a) => ({ manual: true, app: a }));
+    const manualItems = visibleManualApps.map((a) => ({ manual: true, app: a }));
     const measureItems = rows.map((r) => ({ manual: false, ...r }));
     return [...measureItems, ...manualItems].sort((a, b) => {
       const da = a.manual ? new Date(a.app.appliedAt) : new Date(a.measure.date);
       const db = b.manual ? new Date(b.app.appliedAt) : new Date(b.measure.date);
       return db - da;
     });
-  }, [rows, applications]);
+  }, [rows, visibleManualApps]);
 
   // v1.40.0 — Fix : la section photos du rapport n'affichait plus rien pour les
   // mesures synchronisées cloud, car measure.photos/poolPhotos sont vides
@@ -20995,10 +21207,8 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
     // décroissant (le plus récent en premier) — même logique que journalRows
     // côté aperçu écran, reconstruite ici car generatePdfBlob n'a pas accès
     // au useMemo du composant.
-    const manualEntries = (applications || [])
-      .filter((a) => a.type === "manual")
-      .map((a) => ({ manual: true, app: a }));
-    const measureEntries = sortedMeasures.map((m) => ({ manual: false, m }));
+    const manualEntries = visibleManualApps.map((a) => ({ manual: true, app: a }));
+    const measureEntries = visibleMeasures.map((m) => ({ manual: false, m }));
     const journalEntries = [...measureEntries, ...manualEntries].sort((a, b) => {
       const da = a.manual ? new Date(a.app.appliedAt) : new Date(a.m.date);
       const db = b.manual ? new Date(b.app.appliedAt) : new Date(b.m.date);
@@ -21426,6 +21636,17 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
             </button>
           ))}
         </div>
+        <div className="no-print">
+          <PeriodZoomControl
+            windowKey={zoomWindow}
+            onWindowKeyChange={updateZoomWindow}
+            windowEnd={zoomEnd}
+            onWindowEndChange={setZoomEnd}
+            minTs={minTs}
+            maxTs={maxTs}
+            t={t}
+          />
+        </div>
         <p className="no-print" style={styles.axisLegend}>
           <span style={styles.axisLegendItem}>{t("axis_legend_u")}</span>
           <span style={styles.axisLegendItem}>{t("axis_legend_d")}</span>
@@ -21434,7 +21655,9 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           <input type="checkbox" checked={showValues} onChange={(e) => setShowValues(e.target.checked)} />
           <span>{t("show_values")}</span>
         </label>
-        {chartDataWithProjections.length > 0 ? (() => {
+        {chartDataWithProjections.length === 0 ? (
+          <p style={styles.helpTextSmall}>{t("no_measures_in_period")}</p>
+        ) : (() => {
           const timestamps = chartDataWithProjections.map((d) => d.timestamp);
           const spanMs = timestamps.length > 1 ? Math.max(...timestamps) - Math.min(...timestamps) : 0;
           const showTime = spanMs < 86400000 * 2;
@@ -21513,9 +21736,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           </div>
           </React.Fragment>
           );
-        })() : (
-          <p style={styles.helpTextSmall}>{t("no_measures_report")}</p>
-        )}
+        })()}
 
         <div style={styles.reportSectionTitle}>{t("detailed_history")}</div>
         {journalRows.length === 0 ? (
