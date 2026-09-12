@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.117.0";
+const APP_VERSION = "1.117.1";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -13138,13 +13138,9 @@ function filterByWindow(items, getDate, windowKey, windowEnd) {
   });
 }
 
-// Chips de fenêtre + curseur, partagés entre l'onglet Historique et le
-// rapport. Le curseur (input range natif — meilleur support tactile qu'un
-// composant de scroll/brush custom) n'est affiché que si la fenêtre choisie
-// est plus petite que la période totale couverte par les données.
-function PeriodZoomControl({ windowKey, onWindowKeyChange, windowEnd, onWindowEndChange, minTs, maxTs, t }) {
-  const windowMs = getPeriodWindowMs(windowKey);
-  const showSlider = windowMs != null && minTs != null && maxTs != null && (maxTs - minTs) > windowMs;
+// Chips de fenêtre, partagées entre l'onglet Historique et le rapport —
+// voir aussi TimeCursorSlider (curseur, rendu séparément sous le graphique).
+function PeriodZoomControl({ windowKey, onWindowKeyChange, t }) {
   const options = [
     { key: "all", label: t("zoom_all") },
     { key: "7d", label: t("zoom_7d") },
@@ -13152,35 +13148,102 @@ function PeriodZoomControl({ windowKey, onWindowKeyChange, windowEnd, onWindowEn
     { key: "1m", label: t("zoom_1m") },
   ];
   return (
-    <div style={{ marginBottom: 10 }}>
-      <div style={styles.chipsRow}>
-        {options.map((opt) => (
-          <button
-            key={opt.key}
-            onClick={() => onWindowKeyChange(opt.key)}
-            style={{
-              ...styles.chip,
-              background: windowKey === opt.key ? "var(--brand-primary)" : "#f1f4f3",
-              borderColor: windowKey === opt.key ? "var(--brand-primary)" : "#d0e4f5",
-              color: windowKey === opt.key ? "#ffffff" : "var(--brand-text-muted)",
-            }}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
-      {showSlider && (
-        <input
-          type="range"
-          min={minTs}
-          max={maxTs}
-          step={3600000}
-          value={windowEnd ?? maxTs}
-          onChange={(e) => onWindowEndChange(Number(e.target.value))}
-          style={{ width: "100%", accentColor: "var(--brand-primary)" }}
-        />
-      )}
+    <div style={styles.chipsRow}>
+      {options.map((opt) => (
+        <button
+          key={opt.key}
+          onClick={() => onWindowKeyChange(opt.key)}
+          style={{
+            ...styles.chip,
+            background: windowKey === opt.key ? "var(--brand-primary)" : "#f1f4f3",
+            borderColor: windowKey === opt.key ? "var(--brand-primary)" : "#d0e4f5",
+            color: windowKey === opt.key ? "#ffffff" : "var(--brand-text-muted)",
+          }}
+        >
+          {opt.label}
+        </button>
+      ))}
     </div>
+  );
+}
+
+// v1.117.1 — Curseur de défilement temporel, affiché sous le graphique (pas
+// avec les chips) — voir demande Arnaud. N'apparaît que si la fenêtre
+// choisie est plus petite que la période totale couverte par les données.
+// Track d'une seule couleur des deux côtés de la poignée (pas de "remplissage"
+// façon barre de progression, qui suggérerait une quantité plutôt qu'une
+// position) : nécessite de neutraliser le rendu par défaut du navigateur
+// (WebKit/Firefox colorent différemment la portion avant/après la poignée),
+// d'où l'injection CSS ciblée plutôt qu'un input[type=range] nu.
+function TimeCursorSlider({ windowKey, windowEnd, onWindowEndChange, minTs, maxTs }) {
+  useEffect(() => {
+    const id = "poolgenai-zoom-slider-css";
+    if (document.getElementById(id)) return;
+    const style = document.createElement("style");
+    style.id = id;
+    style.textContent = `
+      input[type="range"].pg-zoom-slider {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 22px;
+        background: transparent;
+        margin: 4px 0;
+      }
+      input[type="range"].pg-zoom-slider:focus { outline: none; }
+      input[type="range"].pg-zoom-slider::-webkit-slider-runnable-track {
+        height: 4px;
+        border-radius: 2px;
+        background: #cfd8e3;
+      }
+      input[type="range"].pg-zoom-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--brand-primary);
+        border: 2px solid #fff;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        margin-top: -7px;
+        cursor: grab;
+      }
+      input[type="range"].pg-zoom-slider::-moz-range-track {
+        height: 4px;
+        border-radius: 2px;
+        background: #cfd8e3;
+      }
+      input[type="range"].pg-zoom-slider::-moz-range-progress {
+        height: 4px;
+        border-radius: 2px;
+        background: #cfd8e3;
+      }
+      input[type="range"].pg-zoom-slider::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--brand-primary);
+        border: 2px solid #fff;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        cursor: grab;
+      }
+    `;
+    document.head.appendChild(style);
+  }, []);
+
+  const windowMs = getPeriodWindowMs(windowKey);
+  if (!windowMs || minTs == null || maxTs == null || (maxTs - minTs) <= windowMs) return null;
+
+  return (
+    <input
+      type="range"
+      className="pg-zoom-slider"
+      min={minTs}
+      max={maxTs}
+      step={3600000}
+      value={windowEnd ?? maxTs}
+      onChange={(e) => onWindowEndChange(Number(e.target.value))}
+    />
   );
 }
 
@@ -13633,10 +13696,6 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
       <PeriodZoomControl
         windowKey={zoomWindow}
         onWindowKeyChange={updateZoomWindow}
-        windowEnd={zoomEnd}
-        onWindowEndChange={updateZoomEnd}
-        minTs={minTs}
-        maxTs={maxTs}
         t={t}
       />
 
@@ -13659,11 +13718,16 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
       {chartDataWithProjections.length === 0 ? (
         <p style={styles.helpTextSmall}>{t("no_measures_in_period")}</p>
       ) : (
-      /* Détermine si les mesures couvrent plus d'un jour */
+      /* v1.117.1 — L'axe temporel respecte toujours l'échelle choisie (Tout/
+         7j/14j/1 mois), pas seulement l'étendue réelle des points visibles :
+         sinon une fenêtre de 7 jours avec un seul point dedans s'affichait
+         écrasée sur ce seul point plutôt que sur les 7 jours complets — voir
+         demande Arnaud. Format de date toujours jj/mm hh:mm (plus de bascule
+         heure seule/date seule selon l'étendue). */
       (() => {
-        const timestamps = chartDataWithProjections.map((d) => d.timestamp);
-        const spanMs = timestamps.length > 1 ? Math.max(...timestamps) - Math.min(...timestamps) : 0;
-        const showTime = spanMs < 86400000 * 2; // moins de 2 jours → affiche heure
+        const zoomWindowMs = getPeriodWindowMs(zoomWindow);
+        const domainEnd = zoomWindow === "all" ? maxTs : (zoomEnd ?? maxTs);
+        const domainStart = zoomWindow === "all" ? minTs : (domainEnd - zoomWindowMs);
         return (
           <div style={styles.chartCard}>
             <ResponsiveContainer width="100%" height={220}>
@@ -13672,16 +13736,13 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
                 <XAxis
                   dataKey="timestamp"
                   type="number"
-                  domain={["dataMin", "dataMax"]}
+                  domain={[domainStart, domainEnd]}
                   scale="time"
                   tickFormatter={(ts) => {
                     const d = new Date(ts);
-                    if (showTime) {
-                      return `${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`;
-                    }
-                    return `${d.getDate().toString().padStart(2,"0")}/${(d.getMonth()+1).toString().padStart(2,"0")}`;
+                    return `${d.getDate().toString().padStart(2,"0")}/${(d.getMonth()+1).toString().padStart(2,"0")} ${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`;
                   }}
-                  tick={{ fontSize: 10, fill: "var(--brand-text-muted)" }}
+                  tick={{ fontSize: 9, fill: "var(--brand-text-muted)" }}
                 />
             <YAxis
               yAxisId="left"
@@ -13749,6 +13810,14 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
         );
       })()
       )}
+
+      <TimeCursorSlider
+        windowKey={zoomWindow}
+        windowEnd={zoomEnd}
+        onWindowEndChange={updateZoomEnd}
+        minTs={minTs}
+        maxTs={maxTs}
+      />
 
       <div style={styles.sectionRow}>
         <span style={styles.sectionLabel}>{t("journal")}</span>
@@ -21640,10 +21709,6 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           <PeriodZoomControl
             windowKey={zoomWindow}
             onWindowKeyChange={updateZoomWindow}
-            windowEnd={zoomEnd}
-            onWindowEndChange={setZoomEnd}
-            minTs={minTs}
-            maxTs={maxTs}
             t={t}
           />
         </div>
@@ -21658,9 +21723,12 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
         {chartDataWithProjections.length === 0 ? (
           <p style={styles.helpTextSmall}>{t("no_measures_in_period")}</p>
         ) : (() => {
-          const timestamps = chartDataWithProjections.map((d) => d.timestamp);
-          const spanMs = timestamps.length > 1 ? Math.max(...timestamps) - Math.min(...timestamps) : 0;
-          const showTime = spanMs < 86400000 * 2;
+          // v1.117.1 — Domaine fixé sur l'échelle choisie (Tout/7j/14j/1 mois),
+          // pas seulement l'étendue réelle des points visibles, et format de
+          // date toujours jj/mm hh:mm — voir le fix équivalent côté Historique.
+          const zoomWindowMs = getPeriodWindowMs(zoomWindow);
+          const domainEnd = zoomWindow === "all" ? maxTs : (zoomEnd ?? maxTs);
+          const domainStart = zoomWindow === "all" ? minTs : (domainEnd - zoomWindowMs);
           return (
           <React.Fragment>
           <div style={styles.reportChartWrap} className="report-chart-wrap">
@@ -21673,14 +21741,13 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
               <XAxis
                 dataKey="timestamp"
                 type="number"
-                domain={["dataMin", "dataMax"]}
+                domain={[domainStart, domainEnd]}
                 scale="time"
                 tickFormatter={(ts) => {
                   const d = new Date(ts);
-                  if (showTime) return `${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`;
-                  return `${d.getDate().toString().padStart(2,"0")}/${(d.getMonth()+1).toString().padStart(2,"0")}`;
+                  return `${d.getDate().toString().padStart(2,"0")}/${(d.getMonth()+1).toString().padStart(2,"0")} ${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`;
                 }}
-                tick={{ fontSize: 12, fill: "#2d4a6e" }}
+                tick={{ fontSize: 10, fill: "#2d4a6e" }}
               />
               <YAxis yAxisId="left" tick={{ fontSize: 12, fill: "#2d4a6e" }} width={30} />
               <YAxis
@@ -21737,6 +21804,16 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           </React.Fragment>
           );
         })()}
+
+        <div className="no-print">
+          <TimeCursorSlider
+            windowKey={zoomWindow}
+            windowEnd={zoomEnd}
+            onWindowEndChange={setZoomEnd}
+            minTs={minTs}
+            maxTs={maxTs}
+          />
+        </div>
 
         <div style={styles.reportSectionTitle}>{t("detailed_history")}</div>
         {journalRows.length === 0 ? (
