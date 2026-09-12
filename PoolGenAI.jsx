@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.117.6";
+const APP_VERSION = "1.117.7";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -13234,6 +13234,18 @@ function TimeCursorSlider({ windowKey, windowEnd, onWindowEndChange, minTs, maxT
   const windowMs = getPeriodWindowMs(windowKey);
   if (!windowMs || minTs == null || maxTs == null || (maxTs - minTs) <= windowMs) return null;
 
+  // v1.117.7 — Sur une timeline étalée sur plusieurs mois, les données
+  // récentes n'occupent qu'une infime portion de la piste (ex. les 7
+  // derniers jours sur ~2 mois d'historique) : impossible en pratique de
+  // glisser le curseur pixel-parfait jusqu'à l'extrémité exacte au clavier/
+  // à la souris/au doigt — l'utilisateur retombait systématiquement un peu
+  // avant "maintenant", donc sur une fenêtre qui exclut la dernière mesure
+  // (voir demande Arnaud : "revenir au présent" ne montrait plus rien de
+  // récent). Un magnétisme vers les deux bornes (1% de la plage totale)
+  // garantit qu'aller au bout de la piste retombe exactement sur le début/
+  // la fin réels de l'historique.
+  const snapTolerance = Math.max((maxTs - minTs) * 0.01, 3600000);
+
   return (
     <input
       type="range"
@@ -13242,7 +13254,13 @@ function TimeCursorSlider({ windowKey, windowEnd, onWindowEndChange, minTs, maxT
       max={maxTs}
       step={3600000}
       value={windowEnd ?? maxTs}
-      onChange={(e) => onWindowEndChange(Number(e.target.value))}
+      onChange={(e) => {
+        const raw = Number(e.target.value);
+        const snapped = maxTs - raw <= snapTolerance ? maxTs
+          : raw - minTs <= snapTolerance ? minTs
+          : raw;
+        onWindowEndChange(snapped);
+      }}
     />
   );
 }
