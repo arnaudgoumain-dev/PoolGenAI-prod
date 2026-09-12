@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.117.2";
+const APP_VERSION = "1.117.3";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -151,6 +151,7 @@ const TRANSLATIONS = {
     diag_history_confidence: "Confiance",
     diag_history_delete: "Supprimer",
     diag_history_empty: "Aucun diagnostic enregistré pour le moment.",
+    diag_history_empty_period: "Aucun diagnostic sur cette période.",
     diag_history_locked: "Historique des diagnostics IA réservé à la version Premium",
     diag_history_confirm_delete: "Supprimer ce diagnostic ?",
     update_required_title: "Nouvelle version disponible",
@@ -958,6 +959,7 @@ const TRANSLATIONS = {
     diag_history_confidence: "Confidence",
     diag_history_delete: "Delete",
     diag_history_empty: "No diagnostic saved yet.",
+    diag_history_empty_period: "No diagnostic in this period.",
     diag_history_locked: "AI diagnostics history reserved for Premium",
     diag_history_confirm_delete: "Delete this diagnostic?",
     update_required_title: "New version available",
@@ -1752,6 +1754,7 @@ const TRANSLATIONS = {
     diag_history_confidence: "Vertrauen",
     diag_history_delete: "Löschen",
     diag_history_empty: "Noch keine Diagnose gespeichert.",
+    diag_history_empty_period: "Keine Diagnose in diesem Zeitraum.",
     diag_history_locked: "KI-Diagnoseverlauf nur in Premium",
     diag_history_confirm_delete: "Diese Diagnose löschen?",
     update_required_title: "Neue Version verfügbar",
@@ -2547,6 +2550,7 @@ const TRANSLATIONS = {
     diag_history_confidence: "Fiducia",
     diag_history_delete: "Elimina",
     diag_history_empty: "Nessuna diagnosi salvata per ora.",
+    diag_history_empty_period: "Nessuna diagnosi in questo periodo.",
     diag_history_locked: "Storico diagnosi IA riservato a Premium",
     diag_history_confirm_delete: "Eliminare questa diagnosi?",
     update_required_title: "Nuova versione disponibile",
@@ -3339,6 +3343,7 @@ const TRANSLATIONS = {
     diag_history_confidence: "Confianza",
     diag_history_delete: "Eliminar",
     diag_history_empty: "Aún no hay diagnósticos guardados.",
+    diag_history_empty_period: "Ningún diagnóstico en este período.",
     diag_history_locked: "Historial de diagnósticos IA reservado para Premium",
     diag_history_confirm_delete: "¿Eliminar este diagnóstico?",
     update_required_title: "Nueva versión disponible",
@@ -4131,6 +4136,7 @@ const TRANSLATIONS = {
     diag_history_confidence: "Confiança",
     diag_history_delete: "Excluir",
     diag_history_empty: "Nenhum diagnóstico salvo ainda.",
+    diag_history_empty_period: "Nenhum diagnóstico neste período.",
     diag_history_locked: "Histórico de diagnósticos IA reservado para o Premium",
     diag_history_confirm_delete: "Excluir este diagnóstico?",
     update_required_title: "Nova versão disponível",
@@ -13549,6 +13555,12 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
     () => filterByWindow((applications || []).filter((a) => a.type === "manual"), (a) => a.appliedAt, zoomWindow, zoomEnd ?? maxTs),
     [applications, zoomWindow, zoomEnd, maxTs]
   );
+  // v1.117.3 — L'historique des diagnostics IA suit lui aussi la fenêtre de
+  // zoom, comme les mesures/consommations — voir demande Arnaud.
+  const visibleDiagHistory = useMemo(
+    () => filterByWindow(diagHistory, (d) => d.date, zoomWindow, zoomEnd ?? maxTs),
+    [diagHistory, zoomWindow, zoomEnd, maxTs]
+  );
 
   const chartData = useMemo(() => {
     return [...visibleMeasures]
@@ -13986,6 +13998,8 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
             </div>
           ) : diagHistory.length === 0 ? (
             <p style={styles.helpTextSmall}>{t("diag_history_empty")}</p>
+          ) : visibleDiagHistory.length === 0 ? (
+            <p style={styles.helpTextSmall}>{t("diag_history_empty_period")}</p>
           ) : (
             <div style={{ overflowX: "auto" }}>
               <table style={styles.diagHistTable}>
@@ -13999,7 +14013,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
                   </tr>
                 </thead>
                 <tbody>
-                  {diagHistory.map((d) => (
+                  {visibleDiagHistory.map((d) => (
                     <tr key={d.id}>
                       <td style={styles.diagHistTd}>{formatDateShort(d.date)}</td>
                       <td style={styles.diagHistTd}>{d.note}</td>
@@ -20925,6 +20939,12 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
     () => filterByWindow((applications || []).filter((a) => a.type === "manual"), (a) => a.appliedAt, zoomWindow, zoomEnd ?? maxTs),
     [applications, zoomWindow, zoomEnd, maxTs]
   );
+  // v1.117.3 — L'historique des diagnostics IA suit lui aussi la fenêtre de
+  // zoom, comme les mesures/consommations — voir demande Arnaud.
+  const visibleDiagHistory = useMemo(
+    () => filterByWindow(diagHistory, (d) => d.date, zoomWindow, zoomEnd ?? maxTs),
+    [diagHistory, zoomWindow, zoomEnd, maxTs]
+  );
 
   const chartData = useMemo(
     () =>
@@ -21491,7 +21511,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
     y += 6;
 
     // ── Historique diagnostics IA ──
-    if (diagHistory.length > 0) {
+    if (visibleDiagHistory.length > 0) {
       sectionTitle(t("diag_history_title"));
 
       const dColW = { date: 16, note: 42, confidence: 14 };
@@ -21514,7 +21534,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
       pdf.setTextColor(0,0,0);
       y += 6;
 
-      const sortedDiag = [...diagHistory].sort((a,b) => new Date(b.date) - new Date(a.date));
+      const sortedDiag = [...visibleDiagHistory].sort((a,b) => new Date(b.date) - new Date(a.date));
       sortedDiag.forEach((d, i) => {
         pdf.setFontSize(6); pdf.setFont("helvetica","normal");
         const dateStr = new Date(d.date).toLocaleDateString(localeMap[lang] || "fr-FR");
@@ -21976,7 +21996,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           </div>
         </div>
 
-        {diagHistory.length > 0 && (
+        {visibleDiagHistory.length > 0 && (
           <div style={{ marginTop: 20 }}>
             <div style={styles.reportSectionTitle}>{t("diag_history_title")}</div>
             <div style={{ overflowX: "auto" }}>
@@ -21990,7 +22010,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                   </tr>
                 </thead>
                 <tbody>
-                  {diagHistory.map((d) => (
+                  {visibleDiagHistory.map((d) => (
                     <tr key={d.id}>
                       <td style={styles.diagHistTd}>{formatDateShort(d.date)}</td>
                       <td style={styles.diagHistTd}>{d.note}</td>
