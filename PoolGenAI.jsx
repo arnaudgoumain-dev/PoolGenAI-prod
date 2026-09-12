@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.117.4";
+const APP_VERSION = "1.117.5";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -13750,10 +13750,20 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
         const zoomWindowMs = getPeriodWindowMs(zoomWindow);
         const domainEnd = zoomWindow === "all" ? maxTs : (zoomEnd ?? maxTs);
         const domainStart = zoomWindow === "all" ? minTs : (domainEnd - zoomWindowMs);
+        // v1.117.5 — Recharts n'affiche ni axe Y ni graduations d'axe X
+        // correctement réparties sur toute l'échelle quand le tableau "data"
+        // est vide (aucune mesure dans la fenêtre) : on ancre le graphique
+        // sur les deux bornes de la fenêtre (valeurs null, aucune courbe
+        // tracée) pour que les deux axes restent lisibles pendant qu'on fait
+        // glisser le curseur sur une période sans mesure — voir demande
+        // Arnaud.
+        const chartRenderData = chartDataWithProjections.length > 0
+          ? chartDataWithProjections
+          : [{ timestamp: domainStart }, { timestamp: domainEnd }];
         return (
           <div style={styles.chartCard}>
             <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={chartDataWithProjections} margin={{ top: showValues ? 18 : 8, right: 12, left: 0, bottom: 0 }}>
+              <LineChart data={chartRenderData} margin={{ top: showValues ? 18 : 8, right: 12, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e6ebe9" />
                 <XAxis
                   dataKey="timestamp"
@@ -13765,12 +13775,14 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
                 />
             <YAxis
               yAxisId="left"
+              domain={[0, (max) => (Number.isFinite(max) && max > 0 ? max : 10)]}
               tick={{ fontSize: 10, fill: "var(--brand-text-muted)" }}
               width={32}
             />
             <YAxis
               yAxisId="right"
               orientation="right"
+              domain={[0, (max) => (Number.isFinite(max) && max > 0 ? max : 110)]}
               tick={{ fontSize: 10, fill: "var(--brand-text-muted)" }}
               width={28}
             />
@@ -21755,12 +21767,19 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           const zoomWindowMs = getPeriodWindowMs(zoomWindow);
           const domainEnd = zoomWindow === "all" ? maxTs : (zoomEnd ?? maxTs);
           const domainStart = zoomWindow === "all" ? minTs : (domainEnd - zoomWindowMs);
+          // v1.117.5 — Ancre le graphique sur les bornes de la fenêtre quand
+          // il n'y a aucune mesure dedans, sinon l'axe Y et les graduations
+          // de l'axe X (réparties sur toute l'échelle) disparaissent — voir
+          // le fix équivalent côté Historique.
+          const chartRenderData = chartDataWithProjections.length > 0
+            ? chartDataWithProjections
+            : [{ timestamp: domainStart }, { timestamp: domainEnd }];
           return (
           <React.Fragment>
           <div style={styles.reportChartWrap} className="report-chart-wrap">
             <ResponsiveContainer width="100%" height={showValues ? 380 : 340}>
             <LineChart
-              data={chartDataWithProjections}
+              data={chartRenderData}
               margin={{ top: showValues ? 24 : 8, right: 16, left: 0, bottom: 0 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#e6ebe9" />
@@ -21772,10 +21791,16 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                 height={36}
                 tick={<DateTimeAxisTick fontSize={10} fill="#2d4a6e" />}
               />
-              <YAxis yAxisId="left" tick={{ fontSize: 12, fill: "#2d4a6e" }} width={30} />
+              <YAxis
+                yAxisId="left"
+                domain={[0, (max) => (Number.isFinite(max) && max > 0 ? max : 10)]}
+                tick={{ fontSize: 12, fill: "#2d4a6e" }}
+                width={30}
+              />
               <YAxis
                 yAxisId="right"
                 orientation="right"
+                domain={[0, (max) => (Number.isFinite(max) && max > 0 ? max : 110)]}
                 tick={{ fontSize: 12, fill: "#2d4a6e" }}
                 width={30}
               />
