@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.117.3";
+const APP_VERSION = "1.117.4";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -328,7 +328,6 @@ const TRANSLATIONS = {
     zoom_7d: "7 j glissants",
     zoom_14d: "14 j glissants",
     zoom_1m: "1 mois glissant",
-    no_measures_in_period: "Aucune mesure sur cette période.",
     countdown_done: "C'est l'heure !",
     treatment_at: "Traitement appliqué à",
     edit_treatment_section_title: "Traitement appliqué",
@@ -1132,7 +1131,6 @@ const TRANSLATIONS = {
     zoom_7d: "7d rolling",
     zoom_14d: "14d rolling",
     zoom_1m: "1mo rolling",
-    no_measures_in_period: "No measurements in this period.",
     countdown_done: "Time to treat!",
     treatment_at: "Treatment applied at",
     edit_treatment_section_title: "Treatment applied",
@@ -1926,7 +1924,6 @@ const TRANSLATIONS = {
     zoom_7d: "7 T gleitend",
     zoom_14d: "14 T gleitend",
     zoom_1m: "1 Monat gleitend",
-    no_measures_in_period: "Keine Messung in diesem Zeitraum.",
     countdown_done: "Zeit für die Behandlung!",
     treatment_at: "Behandlung angewendet um",
     edit_treatment_section_title: "Angewendete Behandlung",
@@ -2722,7 +2719,6 @@ const TRANSLATIONS = {
     zoom_7d: "7 gg mobili",
     zoom_14d: "14 gg mobili",
     zoom_1m: "1 mese mobile",
-    no_measures_in_period: "Nessuna misura in questo periodo.",
     countdown_done: "È ora di trattare!",
     treatment_at: "Trattamento applicato alle",
     edit_treatment_section_title: "Trattamento applicato",
@@ -3515,7 +3511,6 @@ const TRANSLATIONS = {
     zoom_7d: "7 d móviles",
     zoom_14d: "14 d móviles",
     zoom_1m: "1 mes móvil",
-    no_measures_in_period: "Ninguna medición en este período.",
     countdown_done: "¡Es hora de tratar!",
     treatment_at: "Tratamiento aplicado a las",
     edit_treatment_section_title: "Tratamiento aplicado",
@@ -4308,7 +4303,6 @@ const TRANSLATIONS = {
     zoom_7d: "7 d móveis",
     zoom_14d: "14 d móveis",
     zoom_1m: "1 mês móvel",
-    no_measures_in_period: "Nenhuma medição neste período.",
     countdown_done: "Hora do tratamento!",
     treatment_at: "Tratamento aplicado às",
     edit_treatment_section_title: "Tratamento aplicado",
@@ -13741,18 +13735,18 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
         <span>{t("show_values")}</span>
       </label>
 
-      {/* v1.117.0 — Fenêtre de zoom sans aucune mesure dedans (bassin actif
-          mais période choisie vide) : message plutôt qu'un graphique vide. */}
-      {chartDataWithProjections.length === 0 ? (
-        <p style={styles.helpTextSmall}>{t("no_measures_in_period")}</p>
-      ) : (
-      /* v1.117.1 — L'axe temporel respecte toujours l'échelle choisie (Tout/
+      {/* v1.117.1 — L'axe temporel respecte toujours l'échelle choisie (Tout/
          7j/14j/1 mois), pas seulement l'étendue réelle des points visibles :
          sinon une fenêtre de 7 jours avec un seul point dedans s'affichait
          écrasée sur ce seul point plutôt que sur les 7 jours complets — voir
          demande Arnaud. Format de date toujours jj/mm hh:mm (plus de bascule
-         heure seule/date seule selon l'étendue). */
-      (() => {
+         heure seule/date seule selon l'étendue).
+         v1.117.4 — Le graphique reste affiché (axe + échelle) même quand la
+         fenêtre choisie ne contient aucune mesure, sans texte de repli : en
+         faisant glisser le curseur sur une période vide, l'échelle de la
+         fenêtre (ex. 7 jours) doit rester visible pour se repérer — voir
+         demande Arnaud. */}
+      {(() => {
         const zoomWindowMs = getPeriodWindowMs(zoomWindow);
         const domainEnd = zoomWindow === "all" ? maxTs : (zoomEnd ?? maxTs);
         const domainStart = zoomWindow === "all" ? minTs : (domainEnd - zoomWindowMs);
@@ -13833,8 +13827,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
         </ResponsiveContainer>
           </div>
         );
-      })()
-      )}
+      })()}
 
       <TimeCursorSlider
         windowKey={zoomWindow}
@@ -21753,12 +21746,12 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           <input type="checkbox" checked={showValues} onChange={(e) => setShowValues(e.target.checked)} />
           <span>{t("show_values")}</span>
         </label>
-        {chartDataWithProjections.length === 0 ? (
-          <p style={styles.helpTextSmall}>{t("no_measures_in_period")}</p>
-        ) : (() => {
+        {(() => {
           // v1.117.1 — Domaine fixé sur l'échelle choisie (Tout/7j/14j/1 mois),
           // pas seulement l'étendue réelle des points visibles, et format de
           // date toujours jj/mm hh:mm — voir le fix équivalent côté Historique.
+          // v1.117.4 — Le graphique reste affiché (axe + échelle) même sans
+          // aucune mesure dans la fenêtre choisie, sans texte de repli.
           const zoomWindowMs = getPeriodWindowMs(zoomWindow);
           const domainEnd = zoomWindow === "all" ? maxTs : (zoomEnd ?? maxTs);
           const domainStart = zoomWindow === "all" ? minTs : (domainEnd - zoomWindowMs);
