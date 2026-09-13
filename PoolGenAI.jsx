@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.119.0";
+const APP_VERSION = "1.120.0";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -571,6 +571,8 @@ const TRANSLATIONS = {
     maintenance_units_label: "Nb unités",
     maintenance_volume_label: "Pour m³",
     maintenance_days_label: "Tous les X jours",
+    no_shock_dose_checkbox: "Pas de dosage choc connu (uniquement un rythme d'entretien)",
+    no_shock_dose_hint: "Ce produit n'a pas de dose de traitement correctif connue. Renseignez uniquement le poids d'une unité et le ratio d'entretien fabricant plus bas, dans « Conditionnement ».",
     unit_galets: "galets",
     unit_units: "unités",
     quantity_unit_mode_kg: "kg",
@@ -1368,6 +1370,8 @@ const TRANSLATIONS = {
     maintenance_units_label: "Nb units",
     maintenance_volume_label: "Per m³",
     maintenance_days_label: "Every X days",
+    no_shock_dose_checkbox: "No known shock dose (maintenance rate only)",
+    no_shock_dose_hint: "This product has no known correctif treatment dose. Only fill in the unit weight and the manufacturer's maintenance ratio below, in \"Packaging\".",
     unit_galets: "tablets",
     unit_units: "units",
     quantity_unit_mode_kg: "kg",
@@ -2164,6 +2168,8 @@ const TRANSLATIONS = {
     maintenance_units_label: "Anzahl Einheiten",
     maintenance_volume_label: "Pro m³",
     maintenance_days_label: "Alle X Tage",
+    no_shock_dose_checkbox: "Keine bekannte Stoßdosierung (nur Pflegedosierung)",
+    no_shock_dose_hint: "Für dieses Produkt ist keine Korrekturdosierung bekannt. Geben Sie unten unter „Verpackung“ nur das Gewicht pro Einheit und die Pflegedosierung des Herstellers an.",
     unit_galets: "Tabletten",
     unit_units: "Einheiten",
     quantity_unit_mode_kg: "kg",
@@ -2956,6 +2962,8 @@ const TRANSLATIONS = {
     maintenance_units_label: "N. unità",
     maintenance_volume_label: "Per m³",
     maintenance_days_label: "Ogni X giorni",
+    no_shock_dose_checkbox: "Nessun dosaggio shock noto (solo ritmo di manutenzione)",
+    no_shock_dose_hint: "Questo prodotto non ha un dosaggio correttivo noto. Indica solo il peso di un'unità e il rapporto di manutenzione del produttore più in basso, in \"Confezione\".",
     unit_galets: "pastiglie",
     unit_units: "unità",
     quantity_unit_mode_kg: "kg",
@@ -3748,6 +3756,8 @@ const TRANSLATIONS = {
     maintenance_units_label: "Nº unidades",
     maintenance_volume_label: "Por m³",
     maintenance_days_label: "Cada X días",
+    no_shock_dose_checkbox: "Sin dosis de choque conocida (solo ritmo de mantenimiento)",
+    no_shock_dose_hint: "Este producto no tiene una dosis de tratamiento correctivo conocida. Indica solo el peso de una unidad y el ratio de mantenimiento del fabricante más abajo, en \"Envase\".",
     unit_galets: "pastillas",
     unit_units: "unidades",
     quantity_unit_mode_kg: "kg",
@@ -4537,6 +4547,8 @@ const TRANSLATIONS = {
     maintenance_units_label: "Nº unidades",
     maintenance_volume_label: "Por m³",
     maintenance_days_label: "A cada X dias",
+    no_shock_dose_checkbox: "Sem dosagem de choque conhecida (apenas ritmo de manutenção)",
+    no_shock_dose_hint: "Este produto não tem uma dosagem de tratamento corretivo conhecida. Indique apenas o peso de uma unidade e o rácio de manutenção do fabricante mais abaixo, em \"Embalagem\".",
     unit_galets: "pastilhas",
     unit_units: "unidades",
     quantity_unit_mode_kg: "kg",
@@ -6816,7 +6828,7 @@ Informations à renseigner, dans les deux cas :
 - Son action principale (une seule valeur parmi : "ph-", "ph+", "chlore", "chlore-stabilise", "tac+", "tac-", "brome", "o2", "sel", "hard+", "phos-", "sequestrant")
   - "chlore" = chlore choc/non stabilisé, "chlore-stabilise" = galets/pastilles au chlore stabilisé (contient de l'acide cyanurique/CYA)
   - "tac-" = acide utilisé pour baisser l'alcalinité (acide chlorhydrique, bisulfate de sodium) — à distinguer de "ph-" même si c'est parfois le même produit physique : choisis "tac-" seulement si l'étiquette ou la notice présente explicitement ce produit comme correcteur de TAC/alcalinité
-- La dose conseillée et son unité (g, kg, mL ou L) — dose de TRAITEMENT, pas la taille du contenant
+- La dose conseillée et son unité (g, kg, mL ou L) — dose de TRAITEMENT correctif, pas la taille du contenant, pas le poids d'une unité, et pas le ratio d'entretien continu. Certains produits galets (chlore stabilisé notamment) n'ont, de la part du fabricant, qu'un ratio d'entretien continu et AUCUNE dose de traitement correctif distincte : dans ce cas précis, "doseAmount", "effectAmount" et "effectPer" doivent être null — ne jamais réutiliser le poids d'une unité ou le ratio d'entretien comme substitut d'une dose de traitement absente
 - L'effet annoncé sur le paramètre concerné pour un volume d'eau donné (ex : "20g augmente le pH de 0,1 pour 10m³")
 - Le délai d'attente avant baignade recommandé en heures
 - La taille TOTALE du contenant/emballage tel que vendu (ex : "5 kg", "25 kg", "1 L", "20 L")
@@ -6833,6 +6845,7 @@ Règles strictes :
 - "productImageUrl" : uniquement une URL trouvée réellement pendant la recherche web, jamais une URL inventée ou reconstruite — null si aucune trouvée
 - "source" doit refléter honnêtement d'où viennent les valeurs de dose/effet renvoyées : "web" seulement si la recherche a effectivement trouvé une notice exploitable pour ce produit précis, "etiquette" sinon
 - "maintenanceUnits"/"maintenanceVolumePer"/"maintenanceDays" : uniquement si "packagingType" est "galets" ET que le ratio est explicitement affiché — null sinon, jamais déduit de la dose de traitement
+- "doseAmount"/"effectAmount"/"effectPer" : null tous les trois si seul un ratio d'entretien continu est connu pour ce produit (aucune dose de traitement correctif distincte trouvée sur l'étiquette ni sur le web) — ne jamais les déduire du ratio d'entretien, du poids d'une unité ou de la taille du contenant
 - Les nombres sont des nombres, jamais des chaînes
 - JSON pur, rien d'autre`;
 
@@ -18763,7 +18776,7 @@ function ProductModal({ product, onClose, onSave, onLinkCommonProduct, isPremium
   // du produit de référence DEFAULT_PRODUCTS pour cette action — n'empêche
   // jamais l'enregistrement, voir incident TAC+ "Alcafix" (×10).
   const doseAnomalyWarning = useMemo(() => {
-    if (action === "outil-mesure" || isPhysicsDose) return false;
+    if (action === "outil-mesure" || isPhysicsDose || noShockDose) return false;
     const dp = DEFAULT_PRODUCTS.find((p) => p.action === action);
     const candidate = {
       doseAmount: parseFloat(doseAmount),
@@ -18772,7 +18785,7 @@ function ProductModal({ product, onClose, onSave, onLinkCommonProduct, isPremium
       doseUnit,
     };
     return isDoseRateAnomalous(candidate, dp, !isFixedDose);
-  }, [action, doseAmount, effectPer, effectAmount, doseUnit, isFixedDose, isPhysicsDose]);
+  }, [action, doseAmount, effectPer, effectAmount, doseUnit, isFixedDose, isPhysicsDose, noShockDose]);
   const [note, setNote] = useState(product?.note || "");
   // v1.49.0 — Remplace l'ancien état "photo" unique par un tableau : capture
   // multi-photos (face / code-barre / notice), un seul bouton, envoyées
@@ -18793,6 +18806,14 @@ function ProductModal({ product, onClose, onSave, onLinkCommonProduct, isPremium
   const [maintenanceUnits, setMaintenanceUnits] = useState(product?.maintenanceRatio?.units ?? "");
   const [maintenanceVolumePer, setMaintenanceVolumePer] = useState(product?.maintenanceRatio?.volumePer ?? "");
   const [maintenanceDays, setMaintenanceDays] = useState(product?.maintenanceRatio?.days ?? "");
+  // v1.120.0 — Case à cocher explicite "pas de dosage choc connu" (produit
+  // galets dont seul le rythme d'entretien est publié par le fabricant) :
+  // remplace l'ancienne détection implicite v1.119.0 (les 3 champs de dosage
+  // tous vides), invisible dans le formulaire et cassée par une dose
+  // pré-remplie par l'IA (retour Arnaud, produit "Chlore Multi Actions").
+  const [noShockDose, setNoShockDose] = useState(
+    !!(product?.packagingType === "galets" && product?.doseAmount == null && product?.maintenanceRatio)
+  );
   const [photoBusy, setPhotoBusy] = useState(false);
   const [aiAnalyzing, setAiAnalyzing] = useState(false);
   const [aiError, setAiError] = useState(null);
@@ -19106,16 +19127,14 @@ function ProductModal({ product, onClose, onSave, onLinkCommonProduct, isPremium
     const isTool = action === "outil-mesure";
     // v1.119.0 — Galets/sticks dont le fabricant ne publie qu'un rythme
     // d'entretien (ex. "1 galet pour 10 m³ par semaine"), sans dosage choc/
-    // correctif connu : les 3 champs de dosage réactif deviennent optionnels
-    // si le ratio d'entretien est entièrement renseigné, mais seulement s'ils
-    // sont TOUS les 3 vides (jamais un mélange saisi/vide, qui casserait le
-    // calcul de dose réactive avec une valeur manquante) — voir demande
-    // Arnaud. Le produit est alors utilisable pour l'entretien continu
-    // uniquement (voir computeRecommendations, qui l'exclut du calcul de
-    // dose réactive et retombe sur le chlore choc si disponible).
-    const hasMaintenanceRatio = packagingType === "galets" && maintenanceUnits !== "" && maintenanceUnits !== null && maintenanceVolumePer !== "" && maintenanceVolumePer !== null;
-    const correctifFieldsAllEmpty = [doseAmount, effectAmount, effectPer].every((v) => v === "" || v === null);
-    const maintenanceOnlyProduct = hasMaintenanceRatio && correctifFieldsAllEmpty;
+    // correctif connu : les 3 champs de dosage réactif sont alors inutiles
+    // (voir computeRecommendations, qui exclut ce produit du calcul de dose
+    // réactive et retombe sur le chlore choc si disponible). v1.120.0 —
+    // décidé explicitement via la case à cocher noShockDose (state), plus
+    // fiable que l'ancienne déduction v1.119.0 "les 3 champs sont vides"
+    // (invisible dans le formulaire, et cassée par une dose pré-remplie par
+    // l'IA — voir retour Arnaud, produit "Chlore Multi Actions").
+    const maintenanceOnlyProduct = noShockDose;
     // v1.46.0 — Les trois champs qui servent au calcul de dose ne doivent
     // jamais être enregistrés vides ou par défaut silencieux : c'est
     // exactement ce qui a produit un surdosage x19 sur un produit réel
@@ -19132,6 +19151,23 @@ function ProductModal({ product, onClose, onSave, onLinkCommonProduct, isPremium
         // bouton "Enregistrer" tout en bas — donnant l'impression que
         // l'enregistrement échouait silencieusement. Scroll explicite vers
         // le message dès qu'il apparaît.
+        requestAnimationFrame(() => {
+          formErrorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        });
+        return;
+      }
+    }
+    // v1.120.0 — Symétrique : quand "pas de dosage choc connu" est coché, le
+    // ratio d'entretien devient à son tour la seule information de dosage du
+    // produit — il ne doit pas pouvoir être enregistré vide non plus (sinon
+    // le produit ne sert plus à rien, ni en dose réactive ni en entretien).
+    if (!isTool && maintenanceOnlyProduct) {
+      const missing = [];
+      if (unitWeight === "" || unitWeight === null || Number.isNaN(parseFloat(unitWeight))) missing.push(t("unit_weight_label"));
+      if (maintenanceUnits === "" || maintenanceUnits === null || Number.isNaN(parseFloat(maintenanceUnits))) missing.push(t("maintenance_units_label"));
+      if (maintenanceVolumePer === "" || maintenanceVolumePer === null || Number.isNaN(parseFloat(maintenanceVolumePer))) missing.push(t("maintenance_volume_label"));
+      if (missing.length > 0) {
+        setFormError(t("product_missing_values", { fields: missing.join(", ") }));
         requestAnimationFrame(() => {
           formErrorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
         });
@@ -19428,7 +19464,33 @@ function ProductModal({ product, onClose, onSave, onLinkCommonProduct, isPremium
           {/* v1.50.0 — Sel : ni Quantité, ni Effet, ni Pour X m³ ne servent au
               calcul (ratio physique fixe indépendant du produit) — seuls le
               nom et le stock/contenant plus bas restent pertinents. */}
-          {!isPhysicsDose && (
+          {/* v1.120.0 — Certains produits galets (chlore stabilisé notamment)
+              n'ont, de la part du fabricant, qu'un rythme d'entretien continu
+              (ex. "1 galet / 10 m³ / semaine"), sans dosage choc/correctif
+              distinct — cette case rend le formulaire explicite là-dessus
+              plutôt que de laisser l'utilisateur deviner qu'il peut laisser
+              les 3 champs ci-dessous vides (retour Arnaud, produit "Chlore
+              Multi Actions sans sulfate de cuivre"). Visible seulement si le
+              suivi de stock est actif : c'est lui qui donne accès au choix
+              Conditionnement/Ratio d'entretien plus bas dans le formulaire. */}
+          {!isFixedDose && !isPhysicsDose && isPremium && manageStock && (
+            <label style={styles.checkboxRow}>
+              <input
+                type="checkbox"
+                checked={noShockDose}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setNoShockDose(checked);
+                  if (checked) setPackagingType("galets");
+                }}
+              />
+              <span>{t("no_shock_dose_checkbox")}</span>
+            </label>
+          )}
+          {!isPhysicsDose && noShockDose && (
+            <p style={styles.helpTextSmall}>{t("no_shock_dose_hint")}</p>
+          )}
+          {!isPhysicsDose && !noShockDose && (
             <div style={styles.fieldGrid}>
               <div>
                 <label style={styles.fieldLabel}>{t("quantity")}</label>
