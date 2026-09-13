@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.118.0";
+const APP_VERSION = "1.118.1";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -10262,10 +10262,25 @@ function PoolGenAIApp() {
     setProducts((prev) => {
       const exists = prev.find((x) => x.id === p.id);
       if (exists) return prev.map((x) => (x.id === p.id ? { ...x, ...p } : x));
-      return [...prev, { ...p, id: uid(), poolId: activePoolId, stockPercent: p.stockPercent ?? 100 }];
+      // v1.118.1 — ProductModal fournit désormais toujours un id (généré
+      // côté formulaire pour un nouveau produit), afin de pouvoir y relier
+      // ensuite l'id de la fiche partagée créée en tâche de fond — voir
+      // linkCommonProduct/onLinkCommonProduct.
+      return [...prev, { ...p, id: p.id || uid(), poolId: activePoolId, stockPercent: p.stockPercent ?? 100 }];
     });
     setEditingProduct(null);
     setShowAddProduct(false);
+  }
+
+  // v1.118.1 — Relie durablement un produit local à sa fiche dans la base
+  // commune (commonProducts), une fois créée/identifiée — voir bug remonté
+  // par Arnaud : sans ce lien mémorisé, chaque réouverture/sauvegarde du
+  // produit (sans reprendre de photo) perdait le "commonMatch" en mémoire
+  // et recréait une fiche en double dans la base commune, avec un email à
+  // chaque fois (6 doublons constatés pour un seul produit de Pierre).
+  function linkCommonProduct(localProductId, commonProductId) {
+    if (!localProductId || !commonProductId) return;
+    setProducts((prev) => prev.map((x) => (x.id === localProductId ? { ...x, commonProductId } : x)));
   }
 
   function deleteProduct(id) {
@@ -11219,6 +11234,7 @@ function PoolGenAIApp() {
             setEditingProduct(null);
           }}
           onSave={saveProduct}
+          onLinkCommonProduct={linkCommonProduct}
           isPremium={effectiveIsPremium}
           onWantPremium={(source) => {
             setShowAddProduct(false);
@@ -18703,7 +18719,7 @@ function ProductsToBuyView({ products, plan, latest, volume, effectiveTargets, a
   );
 }
 
-function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, applications, manageStock, onWantManageStock, lang, aiEnabled, apiKey, apiProvider, authUid }) {
+function ProductModal({ product, onClose, onSave, onLinkCommonProduct, isPremium, onWantPremium, applications, manageStock, onWantManageStock, lang, aiEnabled, apiKey, apiProvider, authUid }) {
   const t = useT(lang || "fr");
   const [name, setName] = useState(product?.name || "");
   const [action, setAction] = useState(product?.action || "ph-");
@@ -18777,7 +18793,13 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
   // Ne préremplit jamais les champs de dosage — sert uniquement à décider,
   // à la sauvegarde, s'il faut incrémenter une fiche existante (markCommonProductUsed)
   // ou en créer une nouvelle (createCommonProduct).
-  const [commonMatch, setCommonMatch] = useState(null);
+  // v1.118.1 — Si ce produit local a déjà été relié à une fiche de la base
+  // commune lors d'un enregistrement précédent (commonProductId), on part
+  // de cette correspondance déjà établie plutôt que de repartir de zéro à
+  // chaque ouverture du formulaire (voir bug des fiches dupliquées).
+  const [commonMatch, setCommonMatch] = useState(
+    product?.commonProductId ? { matchType: "alias", productId: product.commonProductId } : null
+  );
   const [detectedBarcode, setDetectedBarcode] = useState(null);
   const [detectedSubstance, setDetectedSubstance] = useState(null);
   // v1.99.0 — Palier de maturation d'une fiche communautaire identifiée par
@@ -19100,8 +19122,13 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
         return;
       }
     }
+    // v1.118.1 — Id généré ici (pas dans saveProduct) pour un produit tout
+    // juste créé, afin de pouvoir y relier ensuite l'id de la fiche partagée
+    // (voir onLinkCommonProduct plus bas, une fois la création/le lookup
+    // base commune résolu de manière asynchrone).
+    const localProductId = product?.id || uid();
     onSave({
-      id: product?.id,
+      id: localProductId,
       name: name.trim(),
       action,
       doseAmount: (isTool || isPhysicsDose) ? 0 : parseFloat(doseAmount),
@@ -19135,6 +19162,10 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
         ? null
         : { units: parseFloat(maintenanceUnits), volumePer: parseFloat(maintenanceVolumePer), days: parseFloat(maintenanceDays) || null },
       createdAt: product?.createdAt || new Date().toISOString(),
+      // v1.118.1 — Conserve le lien vers la fiche base commune déjà établi
+      // (voir onLinkCommonProduct) : sans ce champ, il serait perdu à
+      // chaque sauvegarde puisque onSave ne fusionne que les clés fournies.
+      commonProductId: product?.commonProductId || null,
     });
 
     // v1.48.0 — Écriture base commune, en tâche de fond (fire-and-forget) :
@@ -19196,6 +19227,13 @@ function ProductModal({ product, onClose, onSave, isPremium, onWantPremium, appl
             } catch (e) {
               console.warn("Upload photo base commune échoué :", e.message);
             }
+          }
+          // v1.118.1 — Mémorise durablement la correspondance sur le produit
+          // local (voir linkCommonProduct) : sans ce lien, la prochaine
+          // sauvegarde de ce même produit sans reprendre de photo repartirait
+          // de commonMatch=null et recréerait une fiche en double.
+          if (sharedProductId && sharedProductId !== product?.commonProductId) {
+            onLinkCommonProduct?.(localProductId, sharedProductId);
           }
           // v1.49.0 — Point 4 : matchType "fuzzy_candidates" non résolu par
           // l'utilisateur (aucun bouton Oui/Non cliqué) : on n'écrit rien
