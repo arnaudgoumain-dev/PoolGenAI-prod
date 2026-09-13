@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.120.0";
+const APP_VERSION = "1.120.1";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -18770,6 +18770,17 @@ function ProductModal({ product, onClose, onSave, onLinkCommonProduct, isPremium
   // manuelle — le masquage de champs ne dépend que de l'action choisie.
   const isFixedDose = FIXED_DOSE_ACTIONS.has(action);
   const isPhysicsDose = PHYSICS_DOSE_ACTIONS.has(action);
+  // v1.120.0 — Case à cocher explicite "pas de dosage choc connu" (produit
+  // galets dont seul le rythme d'entretien est publié par le fabricant) :
+  // remplace l'ancienne détection implicite v1.119.0 (les 3 champs de dosage
+  // tous vides), invisible dans le formulaire et cassée par une dose
+  // pré-remplie par l'IA (retour Arnaud, produit "Chlore Multi Actions").
+  // Déclarée ici (avant doseAnomalyWarning, qui la référence) — une
+  // déclaration plus bas dans le fichier provoquait un ReferenceError (TDZ)
+  // à chaque ouverture du formulaire, voir incident 260913.
+  const [noShockDose, setNoShockDose] = useState(
+    !!(product?.packagingType === "galets" && product?.doseAmount == null && product?.maintenanceRatio)
+  );
   // v1.108.3 — Garde-fou dose anormale (voir isDoseRateAnomalous, même
   // logique que le plan de traitement) : avertit dès la saisie/l'IA si le
   // taux implicite (doseAmount/effectPer/effectAmount) s'écarte fortement
@@ -18806,14 +18817,6 @@ function ProductModal({ product, onClose, onSave, onLinkCommonProduct, isPremium
   const [maintenanceUnits, setMaintenanceUnits] = useState(product?.maintenanceRatio?.units ?? "");
   const [maintenanceVolumePer, setMaintenanceVolumePer] = useState(product?.maintenanceRatio?.volumePer ?? "");
   const [maintenanceDays, setMaintenanceDays] = useState(product?.maintenanceRatio?.days ?? "");
-  // v1.120.0 — Case à cocher explicite "pas de dosage choc connu" (produit
-  // galets dont seul le rythme d'entretien est publié par le fabricant) :
-  // remplace l'ancienne détection implicite v1.119.0 (les 3 champs de dosage
-  // tous vides), invisible dans le formulaire et cassée par une dose
-  // pré-remplie par l'IA (retour Arnaud, produit "Chlore Multi Actions").
-  const [noShockDose, setNoShockDose] = useState(
-    !!(product?.packagingType === "galets" && product?.doseAmount == null && product?.maintenanceRatio)
-  );
   const [photoBusy, setPhotoBusy] = useState(false);
   const [aiAnalyzing, setAiAnalyzing] = useState(false);
   const [aiError, setAiError] = useState(null);
