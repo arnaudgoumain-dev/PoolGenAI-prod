@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.117.7";
+const APP_VERSION = "1.118.0";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -13284,6 +13284,11 @@ function DateTimeAxisTick({ x, y, payload, fill, fontSize }) {
 // ---------- Historique ----------
 function HistoryView({ measures, onDelete, onEdit, onAdd, onAddPrefilled, onValidateApplication, applications, isPremium, poolName, onGenerateReport, onWantPremiumForReport, lang, apiKey, apiProvider, authUid, pool, activePlan, products }) {
   const t = useT(lang);
+  // v1.118.0 — Cibles/paramètres actifs du bassin, pour savoir si une mesure
+  // du Journal est déjà entièrement dans sa cible (voir demande Arnaud : ne
+  // pas proposer de plan de traitement dans ce cas).
+  const recoTargets = useMemo(() => getEffectiveTargets(pool?.treatmentType || "chlore"), [pool?.treatmentType]);
+  const recoParamKeys = useMemo(() => getActiveParams(pool?.treatmentType || "chlore"), [pool?.treatmentType]);
   const [diagText, setDiagText] = useState("");
   const [diagResult, setDiagResult] = useState(null);
   const [diagLoading, setDiagLoading] = useState(false);
@@ -13925,6 +13930,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
                 authUid={authUid}
                 products={products}
                 volume={pool?.volume || 0}
+                recs={computeRecommendations(item.m, pool?.volume || 0, products, recoTargets, recoParamKeys, t)}
               />
             ) : (
               <ManualApplicationRow key={item.a.id} app={item.a} lang={lang} />
@@ -14109,7 +14115,7 @@ function ManualApplicationRow({ app, lang }) {
   );
 }
 
-function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, application, isPremium, manageStock, lang, activePlan, authUid, products, volume }) {
+function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, application, isPremium, manageStock, lang, activePlan, authUid, products, volume, recs }) {
   const t = useT(lang || "fr");
   // v1.112.0 — Valeurs pH/fCl projetées à partir des quantités réellement
   // appliquées (voir buildProjectedPoints) — indexées par position dans
@@ -14278,6 +14284,14 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, applicat
                 <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--brand-primary)", fontWeight: 600, padding: "6px 0" }}>
                   <Clock size={14} color="var(--brand-primary)" />
                   {t("plan_in_progress")}
+                </div>
+              ) : recs && recs.length === 0 ? (
+                // v1.118.0 — Mesure déjà dans sa cible sur tous les paramètres
+                // suivis : pas de plan à proposer (voir demande Arnaud), juste
+                // la confirmation, comme sur le tableau de bord.
+                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--brand-primary)", fontWeight: 600, padding: "6px 0" }}>
+                  <CheckCircle2 size={14} color="#1a8fd1" />
+                  {t("all_in_range")}
                 </div>
               ) : (
                 <button
