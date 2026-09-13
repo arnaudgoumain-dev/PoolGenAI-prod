@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.118.1";
+const APP_VERSION = "1.119.0";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -12537,6 +12537,14 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
   // valeurs de référence DEFAULT_PRODUCTS, au lieu de rester à null. Le badge
   // "non disponible dans tes produits" reste affiché séparément (productAvailable).
   const defaultProd = (action) => DEFAULT_PRODUCTS.find((p) => p.action === action) || null;
+  // v1.119.0 — Un produit réel peut désormais être "entretien uniquement"
+  // (galets/sticks sans dosage choc/correctif connu, voir ProductModal —
+  // doseAmount/effectAmount/effectPer laissés à null). Un tel produit ne
+  // doit jamais servir de source pour un calcul de dose réactive : on
+  // retombe alors sur le produit de référence générique (dp), exactement
+  // comme si aucun produit n'était configuré pour cette action.
+  const pickDoseSrc = (prod, dp) =>
+    (prod && prod.doseAmount != null && prod.effectAmount != null && prod.effectPer != null) ? prod : dp;
   const tac = parseFloat(latestLower.tac);
   // v1.56.0 — Dose TAC+/TAC- ajustée au volume du bassin et à l'écart mesuré,
   // comme pH et chlore (formule doseAmount × (volume/effectPer) × (écart/effectAmount)).
@@ -12546,7 +12554,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
     const diff = tacTargetMid - tac;
     const prod = findProduct("tac+");
     const dp = defaultProd("tac+");
-    const doseSrc = prod || dp;
+    const doseSrc = pickDoseSrc(prod, dp);
     const computedDose = doseSrc ? Math.round(doseSrc.doseAmount * (volume / doseSrc.effectPer) * (diff / doseSrc.effectAmount)) : null;
     steps.push({
       action: "tac+",
@@ -12576,7 +12584,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
     const diff = tac - tacTargetMid;
     const prod = findProduct("tac-");
     const dp = defaultProd("tac-");
-    const doseSrc = prod || dp;
+    const doseSrc = pickDoseSrc(prod, dp);
     const computedDose = doseSrc ? Math.round(doseSrc.doseAmount * (volume / doseSrc.effectPer) * (diff / doseSrc.effectAmount)) : null;
     steps.push({
       action: "tac-",
@@ -12621,7 +12629,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       const diff = phVal - targetMid;
       const prod = findProduct("ph-");
       const dp = defaultProd("ph-");
-      const doseSrc = prod || dp;
+      const doseSrc = pickDoseSrc(prod, dp);
       const computedDose = doseSrc ? Math.round(doseSrc.doseAmount * (volume / doseSrc.effectPer) * (diff / doseSrc.effectAmount)) : null;
       steps.push({
         action: "ph-",
@@ -12644,7 +12652,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       const diff = Math.max(0, (targetMid - phVal) - estimatedPhRiseFromTacPlus);
       const prod = findProduct("ph+");
       const dp = defaultProd("ph+");
-      const doseSrc = prod || dp;
+      const doseSrc = pickDoseSrc(prod, dp);
       const computedDose = doseSrc ? Math.round(doseSrc.doseAmount * (volume / doseSrc.effectPer) * (diff / doseSrc.effectAmount)) : null;
       steps.push({
         action: "ph+",
@@ -12711,7 +12719,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       const diff = Math.max(0, targetFcl - fCl);
       const prod = findProduct("chlore");
       const dp = defaultProd("chlore");
-      const doseSrc = prod || dp;
+      const doseSrc = pickDoseSrc(prod, dp);
       const computedDose = doseSrc ? scaleDoseForActiveChlorine(Math.round(doseSrc.doseAmount * (volume / doseSrc.effectPer) * (diff / doseSrc.effectAmount)), doseSrc) : null;
       steps.push({
         action: "chlore",
@@ -12745,11 +12753,19 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       // pas une question d'habitude.
       const cyaValForChlore = parseFloat(latestLower.cya);
       const cyaAtCeiling = has("cya") && !Number.isNaN(cyaValForChlore) && targetsLower.cya && cyaValForChlore >= targetsLower.cya.max;
-      const stabiliseProd = !cyaAtCeiling ? findProduct("chlore-stabilise") : null;
+      const stabiliseCandidate = !cyaAtCeiling ? findProduct("chlore-stabilise") : null;
+      // v1.119.0 — Un produit "entretien uniquement" (galets sans dosage
+      // choc/correctif connu, voir ProductModal.maintenanceOnlyProduct) ne
+      // peut pas servir à calculer une dose réactive : traité comme absent
+      // ici, pour retomber sur le chlore choc — même repli que si aucun
+      // produit chlore-stabilise n'était configuré du tout.
+      const stabiliseProd = (stabiliseCandidate && stabiliseCandidate.doseAmount != null && stabiliseCandidate.effectAmount != null && stabiliseCandidate.effectPer != null)
+        ? stabiliseCandidate
+        : null;
       const chosenAction = stabiliseProd ? "chlore-stabilise" : "chlore";
       const prod = stabiliseProd || findProduct("chlore");
       const dp = defaultProd(chosenAction);
-      const doseSrc = prod || dp;
+      const doseSrc = pickDoseSrc(prod, dp);
       const computedDose = doseSrc ? scaleDoseForActiveChlorine(Math.round(doseSrc.doseAmount * (volume / doseSrc.effectPer) * (diff / doseSrc.effectAmount)), doseSrc) : null;
       steps.push({
         action: chosenAction,
@@ -12805,7 +12821,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       // une fiche de référence "brome" (voir commentaire à sa définition).
       const prod = findProduct("brome");
       const dp = defaultProd("brome");
-      const doseSrc = prod || dp;
+      const doseSrc = pickDoseSrc(prod, dp);
       const diff = ((brT.min + brT.max) / 2) - bromeVal;
       const computedDose = doseSrc ? Math.round(doseSrc.doseAmount * (volume / doseSrc.effectPer) * (diff / doseSrc.effectAmount)) : null;
       steps.push({
@@ -12837,7 +12853,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       // une fiche de référence "o2" (voir commentaire à sa définition).
       const prod = findProduct("o2");
       const dp = defaultProd("o2");
-      const doseSrc = prod || dp;
+      const doseSrc = pickDoseSrc(prod, dp);
       const diff = ((o2T.min + o2T.max) / 2) - o2Val;
       const computedDose = doseSrc ? Math.round(doseSrc.doseAmount * (volume / doseSrc.effectPer) * (diff / doseSrc.effectAmount)) : null;
       steps.push({
@@ -12900,7 +12916,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       const diff = ((hardT.min + hardT.max) / 2) - hardVal;
       const prod = findProduct("hard+");
       const dp = defaultProd("hard+");
-      const doseSrc = prod || dp;
+      const doseSrc = pickDoseSrc(prod, dp);
       const computedDose = doseSrc ? Math.round(doseSrc.doseAmount * (volume / doseSrc.effectPer) * (diff / doseSrc.effectAmount)) : null;
       steps.push({
         action: "hard+",
@@ -12939,7 +12955,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
   if (has("phos") && !Number.isNaN(phosVal) && targetsLower.phos && phosVal > targetsLower.phos.max) {
     const prod = findProduct("phos-");
     const dp = defaultProd("phos-");
-    const doseSrc = prod || dp;
+    const doseSrc = pickDoseSrc(prod, dp);
     const computedDose = doseSrc ? Math.round(doseSrc.doseAmount * (volume / doseSrc.effectPer) * (phosVal / doseSrc.effectAmount)) : null;
     steps.push({
       action: "phos-",
@@ -12963,7 +12979,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
   if (has("copper") && !Number.isNaN(copperVal) && targetsLower.copper && copperVal > targetsLower.copper.max) {
     const prod = findProduct("sequestrant");
     const dp = defaultProd("sequestrant");
-    const doseSrc = prod || dp;
+    const doseSrc = pickDoseSrc(prod, dp);
     const computedDose = doseSrc ? Math.round(doseSrc.doseAmount * (volume / doseSrc.effectPer)) : null;
     steps.push({
       action: "sequestrant",
@@ -12987,7 +13003,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
   if (has("iron") && !Number.isNaN(ironVal) && targetsLower.iron && ironVal > targetsLower.iron.max) {
     const prod = findProduct("sequestrant");
     const dp = defaultProd("sequestrant");
-    const doseSrc = prod || dp;
+    const doseSrc = pickDoseSrc(prod, dp);
     const computedDose = doseSrc ? Math.round(doseSrc.doseAmount * (volume / doseSrc.effectPer)) : null;
     steps.push({
       action: "sequestrant",
@@ -19088,11 +19104,23 @@ function ProductModal({ product, onClose, onSave, onLinkCommonProduct, isPremium
     setFormError(null);
     if (!name.trim()) return;
     const isTool = action === "outil-mesure";
+    // v1.119.0 — Galets/sticks dont le fabricant ne publie qu'un rythme
+    // d'entretien (ex. "1 galet pour 10 m³ par semaine"), sans dosage choc/
+    // correctif connu : les 3 champs de dosage réactif deviennent optionnels
+    // si le ratio d'entretien est entièrement renseigné, mais seulement s'ils
+    // sont TOUS les 3 vides (jamais un mélange saisi/vide, qui casserait le
+    // calcul de dose réactive avec une valeur manquante) — voir demande
+    // Arnaud. Le produit est alors utilisable pour l'entretien continu
+    // uniquement (voir computeRecommendations, qui l'exclut du calcul de
+    // dose réactive et retombe sur le chlore choc si disponible).
+    const hasMaintenanceRatio = packagingType === "galets" && maintenanceUnits !== "" && maintenanceUnits !== null && maintenanceVolumePer !== "" && maintenanceVolumePer !== null;
+    const correctifFieldsAllEmpty = [doseAmount, effectAmount, effectPer].every((v) => v === "" || v === null);
+    const maintenanceOnlyProduct = hasMaintenanceRatio && correctifFieldsAllEmpty;
     // v1.46.0 — Les trois champs qui servent au calcul de dose ne doivent
     // jamais être enregistrés vides ou par défaut silencieux : c'est
     // exactement ce qui a produit un surdosage x19 sur un produit réel
     // (valeurs par défaut 30/0.1/10 jamais modifiées par l'utilisateur).
-    if (!isTool && !isPhysicsDose) {
+    if (!isTool && !isPhysicsDose && !maintenanceOnlyProduct) {
       const missing = [];
       if (doseAmount === "" || doseAmount === null || Number.isNaN(parseFloat(doseAmount))) missing.push(t("quantity"));
       if (!isFixedDose && (effectAmount === "" || effectAmount === null || Number.isNaN(parseFloat(effectAmount)))) missing.push(t("effect_variation"));
@@ -19131,10 +19159,13 @@ function ProductModal({ product, onClose, onSave, onLinkCommonProduct, isPremium
       id: localProductId,
       name: name.trim(),
       action,
-      doseAmount: (isTool || isPhysicsDose) ? 0 : parseFloat(doseAmount),
+      // v1.119.0 — null (jamais NaN) quand le produit est déclaré entretien
+      // uniquement (voir maintenanceOnlyProduct) : computeRecommendations
+      // exclut alors ce produit du calcul de dose réactive.
+      doseAmount: (isTool || isPhysicsDose) ? 0 : (maintenanceOnlyProduct ? null : parseFloat(doseAmount)),
       doseUnit,
-      effectAmount: (isTool || isFixedDose || isPhysicsDose) ? 0 : parseFloat(effectAmount),
-      effectPer: (isTool || isPhysicsDose) ? 0 : parseFloat(effectPer),
+      effectAmount: (isTool || isFixedDose || isPhysicsDose) ? 0 : (maintenanceOnlyProduct ? null : parseFloat(effectAmount)),
+      effectPer: (isTool || isPhysicsDose) ? 0 : (maintenanceOnlyProduct ? null : parseFloat(effectPer)),
       // v1.102.0 — Voir scaleDoseForActiveChlorine. null = pas de recalcul
       // (comportement d'avant), jamais 0 par défaut (une valeur 0 fausserait
       // le calcul par division par zéro protégée en amont, mais reste sans
