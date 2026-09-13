@@ -240,6 +240,82 @@
   .cta-band .btn { background: #fff; color: var(--deep) !important; }
   .cta-band .btn:hover { background: #eaf6f4; }
 
+  /* Programme de test */
+  .test-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px;
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 44px;
+    align-items: start;
+  }
+  .test-story p { color: var(--muted); margin: 0 0 14px; }
+  .test-story ul { margin: 18px 0 0; padding: 0; list-style: none; }
+  .test-story li {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    color: var(--text);
+    font-size: 0.95rem;
+  }
+  .test-story li::before { content: "✓"; color: var(--accent); font-weight: 800; }
+  .test-form {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 26px;
+  }
+  .test-form h3 { margin: 0 0 6px; color: var(--deep); font-size: 1.15rem; }
+  .test-form p.sub { margin: 0 0 20px; color: var(--muted); font-size: 0.9rem; }
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--deep);
+    margin-bottom: 6px;
+  }
+  .field input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    color: var(--text);
+    background: #fff;
+  }
+  .field input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .test-form .btn {
+    width: 100%;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    font-size: 0.95rem;
+    padding: 12px 20px;
+  }
+  .test-form .btn[disabled] { opacity: 0.6; cursor: default; }
+  .form-msg {
+    margin-top: 14px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: none;
+  }
+  .form-msg.success { display: block; background: #e6f5ee; color: #0b6b46; border: 1px solid #bfe4d2; }
+  .form-msg.error { display: block; background: #fdf0ef; color: #b23b2f; border: 1px solid #f3cec9; }
+
+  @media (max-width: 820px) {
+    .test-panel { grid-template-columns: 1fr; padding: 28px; }
+  }
+
   footer {
     border-top: 1px solid var(--border);
     padding: 36px 0 50px;
@@ -289,6 +365,7 @@
     <div class="nav-links">
       <a href="#fonctionnalites">Fonctionnalités</a>
       <a href="#apercu">Aperçu</a>
+      <a href="#programme-test">Devenir testeur</a>
       <a href="https://app.poolgenai.com" class="btn">Ouvrir l'application</a>
     </div>
   </div>
@@ -395,6 +472,48 @@
   </div>
 </section>
 
+<section id="programme-test" style="background:var(--panel); border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Devenez testeur avant le lancement</h2>
+    </div>
+    <div class="test-panel">
+      <div class="test-story">
+        <p>Les chaleurs de cet été ne m'ont pas facilité le traitement de ma piscine : besoin de chlorer plus que d'habitude, et la crainte de ne plus pouvoir en profiter.</p>
+        <p>Ça m'a tellement occupé l'esprit, en tant que "non pro", que je me suis mis à faire des recherches sur ce qui se passe chimiquement dans un bassin exposé à de telles conditions — et dans quel ordre et quelles quantités appliquer les produits nécessaires.</p>
+        <p>De fil en aiguille, j'ai créé PoolGenAI. Je cherche maintenant des volontaires pour participer à la phase de test avant la publication officielle. Elle dure 2 semaines à 1 mois selon le nombre de testeurs.</p>
+        <ul>
+          <li>Avoir un compte Google (idéalement un téléphone Android — sinon possible via le site web de l'app, l'iOS n'est pas encore prêt)</li>
+          <li>Avoir une piscine ou un spa</li>
+          <li>Un peu de temps pour faire des mesures et utiliser l'app</li>
+        </ul>
+      </div>
+      <div class="test-form">
+        <h3>Je m'inscris</h3>
+        <p class="sub">Vous serez recontacté(e) par email avant le début de la phase de test.</p>
+        <form id="testerForm" action="https://formspree.io/f/mqpkvplb" method="POST">
+          <div class="field">
+            <label for="prenom">Prénom</label>
+            <input type="text" id="prenom" name="prenom" required autocomplete="given-name">
+          </div>
+          <div class="field">
+            <label for="nom">Nom</label>
+            <input type="text" id="nom" name="nom" required autocomplete="family-name">
+          </div>
+          <div class="field">
+            <label for="email">Adresse email</label>
+            <input type="email" id="email" name="email" required autocomplete="email">
+          </div>
+          <input type="hidden" name="_subject" value="Nouvelle inscription — Programme de test PoolGenAI">
+          <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off">
+          <button type="submit" class="btn">S'inscrire</button>
+          <div class="form-msg" id="testerFormMsg"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section>
   <div class="wrap">
     <div class="cta-band">
@@ -417,5 +536,39 @@
   </div>
 </footer>
 
+<script>
+(function () {
+  var form = document.getElementById("testerForm");
+  var msg = document.getElementById("testerFormMsg");
+  if (!form) return;
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var btn = form.querySelector("button[type=submit]");
+    btn.disabled = true;
+    msg.className = "form-msg";
+    msg.textContent = "";
+    fetch(form.action, {
+      method: "POST",
+      body: new FormData(form),
+      headers: { "Accept": "application/json" },
+    }).then(function (res) {
+      if (res.ok) {
+        form.reset();
+        msg.className = "form-msg success";
+        msg.textContent = "Merci ! Votre inscription est enregistrée, vous serez recontacté(e) par email.";
+      } else {
+        return res.json().then(function (data) {
+          throw new Error((data && data.errors && data.errors.map(function (er) { return er.message; }).join(", ")) || "Une erreur est survenue.");
+        });
+      }
+    }).catch(function () {
+      msg.className = "form-msg error";
+      msg.textContent = "Une erreur est survenue, merci de réessayer ou d'écrire à support@poolgenai.com.";
+    }).finally(function () {
+      btn.disabled = false;
+    });
+  });
+})();
+</script>
 </body>
 </html>
