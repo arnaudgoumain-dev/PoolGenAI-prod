@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.120.1";
+const APP_VERSION = "1.121.1";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -154,6 +154,7 @@ const TRANSLATIONS = {
     diag_history_empty_period: "Aucun diagnostic sur cette période.",
     diag_history_locked: "Historique des diagnostics IA réservé à la version Premium",
     diag_history_confirm_delete: "Supprimer ce diagnostic ?",
+    manual_application_delete_confirm: "Supprimer cet entretien manuel ? Le stock du produit sera recrédité.",
     update_required_title: "Nouvelle version disponible",
     update_required_desc: "Une nouvelle version de PoolGenAI a été déployée. Mets à jour l'application pour continuer.",
     update_required_btn: "Mettre à jour maintenant",
@@ -963,6 +964,7 @@ const TRANSLATIONS = {
     diag_history_empty_period: "No diagnostic in this period.",
     diag_history_locked: "AI diagnostics history reserved for Premium",
     diag_history_confirm_delete: "Delete this diagnostic?",
+    manual_application_delete_confirm: "Delete this manual maintenance entry? The product stock will be credited back.",
     update_required_title: "New version available",
     update_required_desc: "A new version of PoolGenAI has been released. Update the app to continue.",
     update_required_btn: "Update now",
@@ -1759,6 +1761,7 @@ const TRANSLATIONS = {
     diag_history_empty_period: "Keine Diagnose in diesem Zeitraum.",
     diag_history_locked: "KI-Diagnoseverlauf nur in Premium",
     diag_history_confirm_delete: "Diese Diagnose löschen?",
+    manual_application_delete_confirm: "Diese manuelle Pflegemaßnahme löschen? Der Produktbestand wird gutgeschrieben.",
     update_required_title: "Neue Version verfügbar",
     update_required_desc: "Eine neue Version von PoolGenAI wurde veröffentlicht. Aktualisiere die App, um fortzufahren.",
     update_required_btn: "Jetzt aktualisieren",
@@ -2556,6 +2559,7 @@ const TRANSLATIONS = {
     diag_history_empty_period: "Nessuna diagnosi in questo periodo.",
     diag_history_locked: "Storico diagnosi IA riservato a Premium",
     diag_history_confirm_delete: "Eliminare questa diagnosi?",
+    manual_application_delete_confirm: "Eliminare questa manutenzione manuale? Lo stock del prodotto verrà riaccreditato.",
     update_required_title: "Nuova versione disponibile",
     update_required_desc: "È stata rilasciata una nuova versione di PoolGenAI. Aggiorna l'app per continuare.",
     update_required_btn: "Aggiorna ora",
@@ -3350,6 +3354,7 @@ const TRANSLATIONS = {
     diag_history_empty_period: "Ningún diagnóstico en este período.",
     diag_history_locked: "Historial de diagnósticos IA reservado para Premium",
     diag_history_confirm_delete: "¿Eliminar este diagnóstico?",
+    manual_application_delete_confirm: "¿Eliminar este mantenimiento manual? El stock del producto se acreditará de nuevo.",
     update_required_title: "Nueva versión disponible",
     update_required_desc: "Se ha publicado una nueva versión de PoolGenAI. Actualiza la aplicación para continuar.",
     update_required_btn: "Actualizar ahora",
@@ -4144,6 +4149,7 @@ const TRANSLATIONS = {
     diag_history_empty_period: "Nenhum diagnóstico neste período.",
     diag_history_locked: "Histórico de diagnósticos IA reservado para o Premium",
     diag_history_confirm_delete: "Excluir este diagnóstico?",
+    manual_application_delete_confirm: "Excluir esta manutenção manual? O stock do produto será recreditado.",
     update_required_title: "Nova versão disponível",
     update_required_desc: "Uma nova versão do PoolGenAI foi lançada. Atualize o aplicativo para continuar.",
     update_required_btn: "Atualizar agora",
@@ -9994,6 +10000,18 @@ function PoolGenAIApp() {
     setShowManualApply(false);
   }
 
+  // v1.121.0 — Suppression d'une application manuelle (retour Arnaud : aucun
+  // moyen de corriger un entretien manuel saisi par erreur, contrairement aux
+  // mesures/plans). Recrédite le stock du produit consommé (symétrique de
+  // saveManualApplication ci-dessus, sign +1), puis supprime l'application —
+  // FB.deleteApplication attend l'id du document, qui est application.id pour
+  // une application manuelle (measureId toujours null, voir FB.saveApplication).
+  function deleteManualApplication(app) {
+    applyProductStockDelta(app.productName, app.appliedAmount, app.doseUnit, +1);
+    setApplications((prev) => prev.filter((a) => a.id !== app.id));
+    if (dataUid) FB.deleteApplication(dataUid, app.id).catch(() => {});
+  }
+
   // v1.66.0 — Édition d'une application déjà enregistrée (produit/quantité/
   // heure), depuis l'écran "Modifier" de l'historique. Corrige le stock en
   // delta : recrédite l'ancien produit puis décompte le nouveau, uniquement
@@ -11031,6 +11049,7 @@ function PoolGenAIApp() {
           <HistoryView
             measures={sortedMeasures}
             onDelete={deleteMeasure}
+            onDeleteManualApplication={deleteManualApplication}
             onEdit={handleEditMeasure}
             onAdd={handleOpenAddMeasure}
             onAddPrefilled={(prefilled) => {
@@ -13327,7 +13346,7 @@ function DateTimeAxisTick({ x, y, payload, fill, fontSize }) {
 }
 
 // ---------- Historique ----------
-function HistoryView({ measures, onDelete, onEdit, onAdd, onAddPrefilled, onValidateApplication, applications, isPremium, poolName, onGenerateReport, onWantPremiumForReport, lang, apiKey, apiProvider, authUid, pool, activePlan, products }) {
+function HistoryView({ measures, onDelete, onDeleteManualApplication, onEdit, onAdd, onAddPrefilled, onValidateApplication, applications, isPremium, poolName, onGenerateReport, onWantPremiumForReport, lang, apiKey, apiProvider, authUid, pool, activePlan, products }) {
   const t = useT(lang);
   // v1.118.0 — Cibles/paramètres actifs du bassin, pour savoir si une mesure
   // du Journal est déjà entièrement dans sa cible (voir demande Arnaud : ne
@@ -13978,7 +13997,12 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
                 recs={computeRecommendations(item.m, pool?.volume || 0, products, recoTargets, recoParamKeys, t)}
               />
             ) : (
-              <ManualApplicationRow key={item.a.id} app={item.a} lang={lang} />
+              <ManualApplicationRow
+                key={item.a.id}
+                app={item.a}
+                lang={lang}
+                onDelete={() => onDeleteManualApplication(item.a)}
+              />
             )
           );
         })()}
@@ -14136,7 +14160,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
 
 // v1.63.0 — Ligne compacte pour une application manuelle hors plan (ex.
 // entretien périodique), affichée dans le même journal que les mesures.
-function ManualApplicationRow({ app, lang }) {
+function ManualApplicationRow({ app, lang, onDelete }) {
   const t = useT(lang || "fr");
   return (
     <div style={{ ...styles.productRow, cursor: "default" }}>
@@ -14156,6 +14180,17 @@ function ManualApplicationRow({ app, lang }) {
           {app.productName} — {formatDose(app.appliedAmount, app.doseUnit || "g")}
         </div>
       </div>
+      {/* v1.121.0 — Retour Arnaud : aucun moyen de corriger un entretien
+          manuel saisi par erreur (ex. mauvais produit/quantité). Suppression
+          recrédite le stock, voir deleteManualApplication. */}
+      <button
+        type="button"
+        onClick={() => { if (window.confirm(t("manual_application_delete_confirm"))) onDelete(); }}
+        style={{ background: "none", border: "none", padding: 6, cursor: "pointer", flexShrink: 0, alignSelf: "flex-start" }}
+        aria-label={t("delete")}
+      >
+        <Trash2 size={14} color="#c0392b" />
+      </button>
     </div>
   );
 }
@@ -18806,6 +18841,17 @@ function ProductModal({ product, onClose, onSave, onLinkCommonProduct, isPremium
   // stockées, pas de changement de schéma Firestore productPhotos).
   const [analysisPhotos, setAnalysisPhotos] = useState(product?.photo ? [product.photo] : []);
   const photo = analysisPhotos[0] || null;
+  // v1.121.0 — Version haute résolution transitoire de chaque photo (1280px/
+  // q0.72, jamais persistée), utilisée UNIQUEMENT pour le décodage code-barre
+  // (ZXing) et l'analyse IA — analysisPhotos reste volontairement dégradée
+  // (300px/q0.5, voir handlePhotoChange) pour tenir dans la limite 1 Mo de
+  // config/main une fois stockée comme product.photo. Avant ce correctif, le
+  // code-barre et l'IA lisaient la même image dégradée que la miniature
+  // stockée, ratant des codes-barres pourtant nets sur la photo d'origine
+  // (retour Arnaud, "PCH Longue Durée 300G"). Tableau parallèle à
+  // analysisPhotos (même index), vide pour les photos déjà stockées d'un
+  // produit existant (pas de version haute résolution disponible en édition).
+  const [analysisPhotosHiRes, setAnalysisPhotosHiRes] = useState([]);
   const [stockPercent, setStockPercent] = useState(product?.stockPercent ?? null);
   const [containerAmount, setContainerAmount] = useState(product?.containerAmount ?? 1);
   const [containerUnit, setContainerUnit] = useState(product?.containerUnit ?? "kg");
@@ -18901,9 +18947,14 @@ function ProductModal({ product, onClose, onSave, onLinkCommonProduct, isPremium
       // miniature produit ne fait que 40x40px à l'affichage : 300px/qualité 0.5
       // suffit largement et réduit le poids d'un facteur ~10.
       const compressed = await compressImageDataUrl(dataUrl, 300, 0.5);
+      // v1.121.0 — Version haute résolution (défauts 1280px/q0.72), gardée
+      // uniquement en mémoire pour le décodage code-barre/l'analyse IA — voir
+      // analysisPhotosHiRes. Ne sert jamais au stockage.
+      const hiRes = await compressImageDataUrl(dataUrl);
       // v1.49.0 — Ajoute au tableau (multi-photos), plafonné à 4 pour éviter
       // un payload IA disproportionné et un coût par appel qui grimpe.
       setAnalysisPhotos((prev) => (prev.length >= 4 ? prev : [...prev, compressed]));
+      setAnalysisPhotosHiRes((prev) => (prev.length >= 4 ? prev : [...prev, hiRes]));
     } catch (err) {
       // silencieux
     } finally {
@@ -18914,6 +18965,7 @@ function ProductModal({ product, onClose, onSave, onLinkCommonProduct, isPremium
 
   function removeAnalysisPhoto(idx) {
     setAnalysisPhotos((prev) => prev.filter((_, i) => i !== idx));
+    setAnalysisPhotosHiRes((prev) => prev.filter((_, i) => i !== idx));
   }
 
   async function handleAnalyzePhoto() {
@@ -18923,13 +18975,18 @@ function ProductModal({ product, onClose, onSave, onLinkCommonProduct, isPremium
     setAiNote(null);
     setAiSuggestion(null);
     setCommonProductTier(null);
+    // v1.121.0 — Source haute résolution pour ZXing/l'IA (voir
+    // analysisPhotosHiRes) : retombe sur la version stockée (dégradée) photo
+    // par photo si la hi-res n'est pas disponible à cet index (ex. photo déjà
+    // enregistrée d'un produit existant, pas de version hi-res en mémoire).
+    const hiResPhotos = analysisPhotos.map((p, i) => analysisPhotosHiRes[i] || p);
     try {
       // v1.99.0 — Lecture code-barres locale (ZXing, déterministe, hors IA,
       // voir decodeBarcodeFromDataUrl) sur chaque photo fournie, avant tout
       // appel IA — même principe que pour les bandelettes (v1.98.8).
       // Best-effort : s'arrête à la première photo où un code-barres est lu.
       let zxingBarcode = null;
-      for (const dataUrl of analysisPhotos) {
+      for (const dataUrl of hiResPhotos) {
         zxingBarcode = await decodeBarcodeFromDataUrl(dataUrl);
         if (zxingBarcode) break;
       }
@@ -18970,7 +19027,7 @@ function ProductModal({ product, onClose, onSave, onLinkCommonProduct, isPremium
         if (earlyMatch.product.packagingType == null && idTokenForLookup) {
           (async () => {
             try {
-              const bgResult = await analyzeProductPhoto({ apiKey, apiProvider, dataUrls: analysisPhotos, uid: authUid, barcodeDetected: zxingBarcode });
+              const bgResult = await analyzeProductPhoto({ apiKey, apiProvider, dataUrls: hiResPhotos, uid: authUid, barcodeDetected: zxingBarcode });
               await enrichCommonProductPackaging({
                 idToken: idTokenForLookup,
                 productId: earlyMatch.productId,
@@ -18992,7 +19049,7 @@ function ProductModal({ product, onClose, onSave, onLinkCommonProduct, isPremium
       // complète, comme avant v1.99.0 — le code-barres ZXing (s'il existe)
       // est passé en indice fiable au prompt plutôt que laissé à la lecture
       // visuelle des chiffres par l'IA.
-      const result = await analyzeProductPhoto({ apiKey, apiProvider, dataUrls: analysisPhotos, uid: authUid, barcodeDetected: zxingBarcode });
+      const result = await analyzeProductPhoto({ apiKey, apiProvider, dataUrls: hiResPhotos, uid: authUid, barcodeDetected: zxingBarcode });
       if (result.name) setName(result.name);
       if (result.action) setAction(result.action);
       // v1.46.0 — Normalisation : la dose de traitement ne s'exprime jamais en
