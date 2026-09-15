@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.121.1";
+const APP_VERSION = "1.122.3";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -13345,6 +13345,73 @@ function DateTimeAxisTick({ x, y, payload, fill, fontSize }) {
   );
 }
 
+// v1.122.0 — Graduations intermédiaires de l'axe temporel : sans "ticks"
+// explicite, Recharts n'affichait souvent que les 2 bornes du domaine (voir
+// capture Arnaud, seulement "04/07 09:01" et "12/09 12:37" visibles), rendant
+// le repérage dans le temps difficile sur une longue période. Nombre de
+// graduations adapté à l'étendue affichée (plus dense sur une courte
+// période), jamais moins que le minimum demandé. Partagé entre le graphique
+// de l'Historique et celui du Rapport.
+function computeAxisTicks(domainStart, domainEnd, minTicks = 5) {
+  if (!Number.isFinite(domainStart) || !Number.isFinite(domainEnd) || domainEnd <= domainStart) return undefined;
+  const spanDays = (domainEnd - domainStart) / 86400000;
+  let count = spanDays <= 10 ? 8 : spanDays <= 45 ? 7 : 6;
+  count = Math.max(minTicks, count);
+  return Array.from({ length: count }, (_, i) => domainStart + ((domainEnd - domainStart) * i) / (count - 1));
+}
+
+// v1.122.2 — Étendue réelle (min/max) des séries actives d'un axe, calculée
+// sur les données effectivement rendues (chartRenderData) plutôt que laissée
+// à l'auto-domaine de Recharts — nécessaire pour pouvoir faire dépendre la
+// borne basse ET la borne haute d'un même calcul (voir niceAxisBounds
+// ci-dessous), ce que l'API domaine de Recharts (une fonction séparée par
+// borne, sans connaître l'autre) ne permet pas.
+function computeAxisRange(data, keys) {
+  let min = Infinity, max = -Infinity;
+  data.forEach((d) => {
+    keys.forEach((k) => {
+      const v = d[k];
+      if (typeof v === "number" && Number.isFinite(v)) {
+        if (v < min) min = v;
+        if (v > max) max = v;
+      }
+    });
+  });
+  return Number.isFinite(min) && Number.isFinite(max) ? [min, max] : null;
+}
+
+// v1.122.2 — Domaine Y adaptatif aux valeurs affichées plutôt que toujours
+// ancré à 0 : sur un pH resserré entre 6,0 et 8,1 par exemple, une échelle
+// 0-8,1 écrase la courbe en haut du graphique et gaspille l'espace du bas —
+// voir retour Arnaud ("il serait plus intéressant d'afficher l'échelle de 5
+// à 9"). Marge de 15% autour des données puis arrondi "joli" (1/2/2,5/5/10 ×
+// une puissance de 10) pour que les graduations tombent sur des valeurs
+// lisibles. Jamais négatif (aucun paramètre piscine n'a de sens sous 0).
+// v1.122.3 — Retourne aussi la liste explicite des graduations, au pas
+// "joli" divisé par 2 (deux fois plus dense, ex. 0/2/4/6 -> 0/1/2/3/4/5/6) —
+// tickCount seul ne garantissait pas cette densité (Recharts choisit son
+// propre pas), voir retour Arnaud (capture demandant les tirets 1/3/5).
+function niceAxisBounds(dataMin, dataMax, fallbackMax) {
+  if (!Number.isFinite(dataMin) || !Number.isFinite(dataMax)) return { domain: [0, fallbackMax], ticks: undefined };
+  const span = dataMax - dataMin;
+  const pad = span > 0 ? span * 0.15 : Math.max(Math.abs(dataMax) * 0.1, 1);
+  let lo = dataMin - pad;
+  let hi = dataMax + pad;
+  const rawStep = (hi - lo) / 4;
+  const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+  const residual = rawStep / magnitude;
+  const niceStep = (residual <= 1 ? 1 : residual <= 2 ? 2 : residual <= 2.5 ? 2.5 : residual <= 5 ? 5 : 10) * magnitude;
+  lo = Math.max(0, Math.floor(lo / niceStep) * niceStep);
+  hi = Math.ceil(hi / niceStep) * niceStep;
+  if (hi <= lo) return { domain: [0, fallbackMax], ticks: undefined };
+  const tickStep = niceStep / 2;
+  const ticks = [];
+  for (let v = lo; v <= hi + tickStep * 0.001; v += tickStep) {
+    ticks.push(Math.round(v * 1000) / 1000);
+  }
+  return { domain: [lo, hi], ticks };
+}
+
 // ---------- Historique ----------
 function HistoryView({ measures, onDelete, onDeleteManualApplication, onEdit, onAdd, onAddPrefilled, onValidateApplication, applications, isPremium, poolName, onGenerateReport, onWantPremiumForReport, lang, apiKey, apiProvider, authUid, pool, activePlan, products }) {
   const t = useT(lang);
@@ -13854,6 +13921,34 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
         // fenêtre et de ses bornes) évite que Recharts ne réutilise un état
         // interne de transition/échelle devenu incohérent — voir demande
         // Arnaud.
+        // v1.122.0 — Axe droit masqué quand aucun paramètre actif ne s'y
+        // rapporte (ex. seuls pH/chlore libre affichés, tous sur l'axe
+        // gauche) : sinon une échelle 0-110 vide reste affichée sans aucune
+        // courbe s'y référant — voir demande Arnaud.
+        const hasRightAxis = chartParams.some((cp) => cp.axis === "right" && activeParams.includes(cp.key));
+        // v1.122.1 — Zone cible pH/chlore libre : mutuellement exclusives (voir
+        // retour Arnaud) — jamais affichées ensemble, seulement quand LE
+        // paramètre mesuré ET son projeté sont TOUS LES DEUX actifs, et que
+        // l'autre couple (fCl pour pH, pH pour fCl) ainsi que tout paramètre
+        // hors pH/chlore libre sont inactifs.
+        const otherParamsActive = chartParams.some(
+          (cp) => !["pH", "phProjected", "fCl", "fclProjected"].includes(cp.key) && activeParams.includes(cp.key)
+        );
+        const onlyPhFamily = activeParams.includes("pH") && activeParams.includes("phProjected")
+          && !activeParams.includes("fCl") && !activeParams.includes("fclProjected") && !otherParamsActive;
+        const onlyFclFamily = activeParams.includes("fCl") && activeParams.includes("fclProjected")
+          && !activeParams.includes("pH") && !activeParams.includes("phProjected") && !otherParamsActive;
+        const showPhTarget = onlyPhFamily && recoTargets.pH;
+        const showFclTarget = onlyFclFamily && recoTargets.fCl;
+        const axisTicks = computeAxisTicks(domainStart, domainEnd);
+        // v1.122.2 — Domaine Y adaptatif (voir niceAxisBounds) : calculé
+        // séparément par axe, sur les seules clés actives de cet axe.
+        const leftKeys = chartParams.filter((cp) => cp.axis === "left" && activeParams.includes(cp.key)).map((cp) => cp.key);
+        const rightKeys = chartParams.filter((cp) => cp.axis === "right" && activeParams.includes(cp.key)).map((cp) => cp.key);
+        const leftRange = computeAxisRange(chartRenderData, leftKeys);
+        const rightRange = computeAxisRange(chartRenderData, rightKeys);
+        const leftBounds = leftRange ? niceAxisBounds(leftRange[0], leftRange[1], 10) : { domain: [0, 10], ticks: undefined };
+        const rightBounds = rightRange ? niceAxisBounds(rightRange[0], rightRange[1], 110) : { domain: [0, 110], ticks: undefined };
         return (
           <div style={styles.chartCard}>
             <ResponsiveContainer width="100%" height={220}>
@@ -13865,25 +13960,38 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
                   domain={[domainStart, domainEnd]}
                   scale="time"
                   height={34}
+                  ticks={axisTicks}
                   tick={<DateTimeAxisTick fontSize={9} fill="var(--brand-text-muted)" />}
                 />
             <YAxis
               yAxisId="left"
-              domain={[0, (max) => (Number.isFinite(max) && max > 0 ? max : 10)]}
+              domain={leftBounds.domain}
+              ticks={leftBounds.ticks}
               tick={{ fontSize: 10, fill: "var(--brand-text-muted)" }}
               width={32}
+              allowDecimals
             />
-            <YAxis
-              yAxisId="right"
-              orientation="right"
-              domain={[0, (max) => (Number.isFinite(max) && max > 0 ? max : 110)]}
-              tick={{ fontSize: 10, fill: "var(--brand-text-muted)" }}
-              width={28}
-            />
+            {hasRightAxis && (
+              <YAxis
+                yAxisId="right"
+                orientation="right"
+                domain={rightBounds.domain}
+                ticks={rightBounds.ticks}
+                tick={{ fontSize: 10, fill: "var(--brand-text-muted)" }}
+                width={28}
+                allowDecimals
+              />
+            )}
             <Tooltip
               labelFormatter={(ts) => formatDate(new Date(ts).toISOString())}
               contentStyle={{ fontSize: 12, borderRadius: 10, border: "1px solid #d0e4f5" }}
             />
+            {showPhTarget && (
+              <ReferenceArea yAxisId="left" y1={recoTargets.pH.min} y2={recoTargets.pH.max} fill="#1a8fd1" fillOpacity={0.1} strokeOpacity={0} />
+            )}
+            {showFclTarget && (
+              <ReferenceArea yAxisId="left" y1={recoTargets.fCl.min} y2={recoTargets.fCl.max} fill="#2b7fd9" fillOpacity={0.1} strokeOpacity={0} />
+            )}
             {/* v1.113.2 — Les courbes projetées (pas mesurées) partagent
                 chartDataWithProjections avec toutes les autres <Line> (pas de
                 tableau "data" séparé), sinon le Tooltip partagé de Recharts
@@ -21222,6 +21330,11 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
     return [...rowsMap.values()].sort((a, b) => a.timestamp - b.timestamp);
   }, [chartData, visibleMeasures, applications, products, pool?.volume]);
 
+  // v1.122.0 — Cibles du bassin, pour la zone colorée pH/chlore libre sur le
+  // graphique (voir plus bas) — même mécanisme que recoTargets côté
+  // Historique.
+  const reportTargets = useMemo(() => getEffectiveTargets(pool?.treatmentType || "chlore"), [pool?.treatmentType]);
+
   const chartParams = [
     { key: "pH",     color: "#1a8fd1", label: "pH",                                          axis: "left"  },
     { key: "fCl",    color: "#2b7fd9", label: "FCL",                                         axis: "left"  },
@@ -22007,6 +22120,28 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           // v1.117.6 — Remount forcé (key) sur changement de fenêtre/bornes —
           // voir le fix équivalent côté Historique (Recharts pouvait geler
           // l'affichage après plusieurs allers-retours du curseur).
+          // v1.122.1 — Axe droit masqué / zone cible pH-chlore libre (mutuellement
+          // exclusives, chacune seulement quand mesuré + projeté sont TOUS LES
+          // DEUX actifs) / plus de graduations sur les 2 axes — mêmes règles
+          // que côté Historique.
+          const hasRightAxis = chartParams.some((cp) => cp.axis === "right" && activeReportParams.includes(cp.key));
+          const otherParamsActive = chartParams.some(
+            (cp) => !["pH", "phProjected", "fCl", "fclProjected"].includes(cp.key) && activeReportParams.includes(cp.key)
+          );
+          const onlyPhFamily = activeReportParams.includes("pH") && activeReportParams.includes("phProjected")
+            && !activeReportParams.includes("fCl") && !activeReportParams.includes("fclProjected") && !otherParamsActive;
+          const onlyFclFamily = activeReportParams.includes("fCl") && activeReportParams.includes("fclProjected")
+            && !activeReportParams.includes("pH") && !activeReportParams.includes("phProjected") && !otherParamsActive;
+          const showPhTarget = onlyPhFamily && reportTargets.pH;
+          const showFclTarget = onlyFclFamily && reportTargets.fCl;
+          const axisTicks = computeAxisTicks(domainStart, domainEnd);
+          // v1.122.2 — Domaine Y adaptatif — voir le fix équivalent côté Historique.
+          const leftKeys = chartParams.filter((cp) => cp.axis === "left" && activeReportParams.includes(cp.key)).map((cp) => cp.key);
+          const rightKeys = chartParams.filter((cp) => cp.axis === "right" && activeReportParams.includes(cp.key)).map((cp) => cp.key);
+          const leftRange = computeAxisRange(chartRenderData, leftKeys);
+          const rightRange = computeAxisRange(chartRenderData, rightKeys);
+          const leftBounds = leftRange ? niceAxisBounds(leftRange[0], leftRange[1], 10) : { domain: [0, 10], ticks: undefined };
+          const rightBounds = rightRange ? niceAxisBounds(rightRange[0], rightRange[1], 110) : { domain: [0, 110], ticks: undefined };
           return (
           <React.Fragment>
           <div style={styles.reportChartWrap} className="report-chart-wrap">
@@ -22023,21 +22158,34 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                 domain={[domainStart, domainEnd]}
                 scale="time"
                 height={36}
+                ticks={axisTicks}
                 tick={<DateTimeAxisTick fontSize={10} fill="#2d4a6e" />}
               />
               <YAxis
                 yAxisId="left"
-                domain={[0, (max) => (Number.isFinite(max) && max > 0 ? max : 10)]}
+                domain={leftBounds.domain}
+                ticks={leftBounds.ticks}
                 tick={{ fontSize: 12, fill: "#2d4a6e" }}
                 width={30}
+                allowDecimals
               />
-              <YAxis
-                yAxisId="right"
-                orientation="right"
-                domain={[0, (max) => (Number.isFinite(max) && max > 0 ? max : 110)]}
-                tick={{ fontSize: 12, fill: "#2d4a6e" }}
-                width={30}
-              />
+              {hasRightAxis && (
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
+                  domain={rightBounds.domain}
+                  ticks={rightBounds.ticks}
+                  tick={{ fontSize: 12, fill: "#2d4a6e" }}
+                  width={30}
+                  allowDecimals
+                />
+              )}
+              {showPhTarget && (
+                <ReferenceArea yAxisId="left" y1={reportTargets.pH.min} y2={reportTargets.pH.max} fill="#1a8fd1" fillOpacity={0.1} strokeOpacity={0} />
+              )}
+              {showFclTarget && (
+                <ReferenceArea yAxisId="left" y1={reportTargets.fCl.min} y2={reportTargets.fCl.max} fill="#2b7fd9" fillOpacity={0.1} strokeOpacity={0} />
+              )}
               {/* v1.116.0 — Paramètres projetés (cp.dashed) : trait pointillé et
                   étiquette de valeur décalée sous le point (au-dessus pour les
                   paramètres mesurés), voir le fix équivalent côté Historique. */}
