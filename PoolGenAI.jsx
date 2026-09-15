@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.122.3";
+const APP_VERSION = "1.122.5";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -13927,16 +13927,20 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
         // courbe s'y référant — voir demande Arnaud.
         const hasRightAxis = chartParams.some((cp) => cp.axis === "right" && activeParams.includes(cp.key));
         // v1.122.1 — Zone cible pH/chlore libre : mutuellement exclusives (voir
-        // retour Arnaud) — jamais affichées ensemble, seulement quand LE
-        // paramètre mesuré ET son projeté sont TOUS LES DEUX actifs, et que
-        // l'autre couple (fCl pour pH, pH pour fCl) ainsi que tout paramètre
-        // hors pH/chlore libre sont inactifs.
+        // retour Arnaud) — jamais affichées ensemble, seulement quand au
+        // moins un des deux (mesuré et/ou projeté) est actif pour ce
+        // paramètre, et que l'autre couple (fCl pour pH, pH pour fCl) ainsi
+        // que tout paramètre hors pH/chlore libre sont inactifs. v1.122.4 —
+        // n'exige plus les DEUX à la fois (mesuré ET projeté) : le seul
+        // projeté (ou le seul mesuré) suffit — voir retour Arnaud (captures
+        // "pH (projeté)" seul et "Cl libre (projeté)" seul, zone attendue
+        // dans les deux cas).
         const otherParamsActive = chartParams.some(
           (cp) => !["pH", "phProjected", "fCl", "fclProjected"].includes(cp.key) && activeParams.includes(cp.key)
         );
-        const onlyPhFamily = activeParams.includes("pH") && activeParams.includes("phProjected")
+        const onlyPhFamily = (activeParams.includes("pH") || activeParams.includes("phProjected"))
           && !activeParams.includes("fCl") && !activeParams.includes("fclProjected") && !otherParamsActive;
-        const onlyFclFamily = activeParams.includes("fCl") && activeParams.includes("fclProjected")
+        const onlyFclFamily = (activeParams.includes("fCl") || activeParams.includes("fclProjected"))
           && !activeParams.includes("pH") && !activeParams.includes("phProjected") && !otherParamsActive;
         const showPhTarget = onlyPhFamily && recoTargets.pH;
         const showFclTarget = onlyFclFamily && recoTargets.fCl;
@@ -13945,7 +13949,15 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
         // séparément par axe, sur les seules clés actives de cet axe.
         const leftKeys = chartParams.filter((cp) => cp.axis === "left" && activeParams.includes(cp.key)).map((cp) => cp.key);
         const rightKeys = chartParams.filter((cp) => cp.axis === "right" && activeParams.includes(cp.key)).map((cp) => cp.key);
-        const leftRange = computeAxisRange(chartRenderData, leftKeys);
+        let leftRange = computeAxisRange(chartRenderData, leftKeys);
+        // v1.122.5 — Étend l'étendue prise en compte pour le domaine à la
+        // zone cible affichée : sur une fenêtre glissante resserrée (7j/14j/
+        // 1 mois), les valeurs réelles peuvent rester hors de la cible (voir
+        // retour Arnaud) — sans ça, ReferenceArea (ifOverflow "discard" par
+        // défaut) ne dessinait plus rien dès que la cible dépassait le
+        // domaine calculé sur les seules données.
+        if (showPhTarget) leftRange = leftRange ? [Math.min(leftRange[0], recoTargets.pH.min), Math.max(leftRange[1], recoTargets.pH.max)] : [recoTargets.pH.min, recoTargets.pH.max];
+        if (showFclTarget) leftRange = leftRange ? [Math.min(leftRange[0], recoTargets.fCl.min), Math.max(leftRange[1], recoTargets.fCl.max)] : [recoTargets.fCl.min, recoTargets.fCl.max];
         const rightRange = computeAxisRange(chartRenderData, rightKeys);
         const leftBounds = leftRange ? niceAxisBounds(leftRange[0], leftRange[1], 10) : { domain: [0, 10], ticks: undefined };
         const rightBounds = rightRange ? niceAxisBounds(rightRange[0], rightRange[1], 110) : { domain: [0, 110], ticks: undefined };
@@ -13987,10 +13999,10 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
               contentStyle={{ fontSize: 12, borderRadius: 10, border: "1px solid #d0e4f5" }}
             />
             {showPhTarget && (
-              <ReferenceArea yAxisId="left" y1={recoTargets.pH.min} y2={recoTargets.pH.max} fill="#1a8fd1" fillOpacity={0.1} strokeOpacity={0} />
+              <ReferenceArea yAxisId="left" y1={recoTargets.pH.min} y2={recoTargets.pH.max} fill="#1a8fd1" fillOpacity={0.1} strokeOpacity={0} ifOverflow="visible" />
             )}
             {showFclTarget && (
-              <ReferenceArea yAxisId="left" y1={recoTargets.fCl.min} y2={recoTargets.fCl.max} fill="#2b7fd9" fillOpacity={0.1} strokeOpacity={0} />
+              <ReferenceArea yAxisId="left" y1={recoTargets.fCl.min} y2={recoTargets.fCl.max} fill="#2b7fd9" fillOpacity={0.1} strokeOpacity={0} ifOverflow="visible" />
             )}
             {/* v1.113.2 — Les courbes projetées (pas mesurées) partagent
                 chartDataWithProjections avec toutes les autres <Line> (pas de
@@ -22120,17 +22132,17 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           // v1.117.6 — Remount forcé (key) sur changement de fenêtre/bornes —
           // voir le fix équivalent côté Historique (Recharts pouvait geler
           // l'affichage après plusieurs allers-retours du curseur).
-          // v1.122.1 — Axe droit masqué / zone cible pH-chlore libre (mutuellement
-          // exclusives, chacune seulement quand mesuré + projeté sont TOUS LES
-          // DEUX actifs) / plus de graduations sur les 2 axes — mêmes règles
-          // que côté Historique.
+          // v1.122.4 — Axe droit masqué / zone cible pH-chlore libre (mutuellement
+          // exclusives, chacune dès que mesuré et/ou projeté est actif pour ce
+          // paramètre) / plus de graduations sur les 2 axes — mêmes règles que
+          // côté Historique.
           const hasRightAxis = chartParams.some((cp) => cp.axis === "right" && activeReportParams.includes(cp.key));
           const otherParamsActive = chartParams.some(
             (cp) => !["pH", "phProjected", "fCl", "fclProjected"].includes(cp.key) && activeReportParams.includes(cp.key)
           );
-          const onlyPhFamily = activeReportParams.includes("pH") && activeReportParams.includes("phProjected")
+          const onlyPhFamily = (activeReportParams.includes("pH") || activeReportParams.includes("phProjected"))
             && !activeReportParams.includes("fCl") && !activeReportParams.includes("fclProjected") && !otherParamsActive;
-          const onlyFclFamily = activeReportParams.includes("fCl") && activeReportParams.includes("fclProjected")
+          const onlyFclFamily = (activeReportParams.includes("fCl") || activeReportParams.includes("fclProjected"))
             && !activeReportParams.includes("pH") && !activeReportParams.includes("phProjected") && !otherParamsActive;
           const showPhTarget = onlyPhFamily && reportTargets.pH;
           const showFclTarget = onlyFclFamily && reportTargets.fCl;
@@ -22138,7 +22150,11 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           // v1.122.2 — Domaine Y adaptatif — voir le fix équivalent côté Historique.
           const leftKeys = chartParams.filter((cp) => cp.axis === "left" && activeReportParams.includes(cp.key)).map((cp) => cp.key);
           const rightKeys = chartParams.filter((cp) => cp.axis === "right" && activeReportParams.includes(cp.key)).map((cp) => cp.key);
-          const leftRange = computeAxisRange(chartRenderData, leftKeys);
+          let leftRange = computeAxisRange(chartRenderData, leftKeys);
+          // v1.122.5 — Étend l'étendue prise en compte pour le domaine à la
+          // zone cible affichée — voir le fix équivalent côté Historique.
+          if (showPhTarget) leftRange = leftRange ? [Math.min(leftRange[0], reportTargets.pH.min), Math.max(leftRange[1], reportTargets.pH.max)] : [reportTargets.pH.min, reportTargets.pH.max];
+          if (showFclTarget) leftRange = leftRange ? [Math.min(leftRange[0], reportTargets.fCl.min), Math.max(leftRange[1], reportTargets.fCl.max)] : [reportTargets.fCl.min, reportTargets.fCl.max];
           const rightRange = computeAxisRange(chartRenderData, rightKeys);
           const leftBounds = leftRange ? niceAxisBounds(leftRange[0], leftRange[1], 10) : { domain: [0, 10], ticks: undefined };
           const rightBounds = rightRange ? niceAxisBounds(rightRange[0], rightRange[1], 110) : { domain: [0, 110], ticks: undefined };
@@ -22181,10 +22197,10 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                 />
               )}
               {showPhTarget && (
-                <ReferenceArea yAxisId="left" y1={reportTargets.pH.min} y2={reportTargets.pH.max} fill="#1a8fd1" fillOpacity={0.1} strokeOpacity={0} />
+                <ReferenceArea yAxisId="left" y1={reportTargets.pH.min} y2={reportTargets.pH.max} fill="#1a8fd1" fillOpacity={0.1} strokeOpacity={0} ifOverflow="visible" />
               )}
               {showFclTarget && (
-                <ReferenceArea yAxisId="left" y1={reportTargets.fCl.min} y2={reportTargets.fCl.max} fill="#2b7fd9" fillOpacity={0.1} strokeOpacity={0} />
+                <ReferenceArea yAxisId="left" y1={reportTargets.fCl.min} y2={reportTargets.fCl.max} fill="#2b7fd9" fillOpacity={0.1} strokeOpacity={0} ifOverflow="visible" />
               )}
               {/* v1.116.0 — Paramètres projetés (cp.dashed) : trait pointillé et
                   étiquette de valeur décalée sous le point (au-dessus pour les
