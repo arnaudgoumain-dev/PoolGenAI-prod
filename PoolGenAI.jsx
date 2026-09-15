@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.122.5";
+const APP_VERSION = "1.122.6";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -21986,9 +21986,29 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
       const pdfBlob = await generatePdfBlob();
       const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
 
+      // v1.123.0 — navigator.share() exige d'être invoqué dans la fenêtre du
+      // geste utilisateur ("transient activation") : la génération du PDF
+      // ci-dessus (multi-pages, peut prendre un instant) consomme parfois
+      // cette fenêtre, faisant échouer le partage avec une erreur brute non
+      // traduite ("Permission denied", vue en conditions réelles par
+      // Pierre) alors que le PDF est bel et bien généré. Retombe désormais
+      // silencieusement sur le téléchargement classique dans ce cas, plutôt
+      // que d'afficher l'erreur — l'utilisateur récupère son rapport sans
+      // même remarquer l'échec du partage.
+      let shared = false;
       if (navigator.share && navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-        await navigator.share({ title: `Rapport PoolGenAI — ${poolName}`, files: [pdfFile] });
-      } else {
+        try {
+          await navigator.share({ title: `Rapport PoolGenAI — ${poolName}`, files: [pdfFile] });
+          shared = true;
+        } catch (shareErr) {
+          if (shareErr.name === "AbortError") {
+            shared = true; // annulé volontairement par l'utilisateur dans la fenêtre de partage — pas une erreur
+          } else {
+            console.warn("navigator.share a échoué, fallback téléchargement :", shareErr.message);
+          }
+        }
+      }
+      if (!shared) {
         const url = URL.createObjectURL(pdfBlob);
         const a = document.createElement("a");
         a.href = url; a.download = fileName;
@@ -21997,7 +22017,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
         setTimeout(() => URL.revokeObjectURL(url), 5000);
       }
     } catch(e) {
-      if (e.name !== "AbortError") { console.error("PDF share error", e); setPdfError(e.message||"Erreur PDF"); }
+      console.error("PDF share error", e); setPdfError(e.message||"Erreur PDF");
     } finally { setPdfLoading(false); }
   }
 
