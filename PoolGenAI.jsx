@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.122.6";
+const APP_VERSION = "1.122.7";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -9119,14 +9119,24 @@ function PoolGenAIApp() {
   // Migration : un compte déjà premium AVANT ce correctif n'a jamais eu ce
   // champ (undefined). Pour ne pas remettre son stock à 0% au premier
   // chargement après déploiement, une activation n'est considérée "à
-  // traiter" sur un champ undefined QUE SI aiEnabled ET manageStock (bassin
-  // actif) sont TOUS LES DEUX encore à false — signe qu'aucune activation
-  // réelle n'a jamais eu lieu (le cas précis d'un isPremium posé
-  // manuellement sans configurer le reste). Si l'un des deux est déjà à
-  // true, le compte est traité comme légitimement déjà configuré : on se
-  // contente de poser le flag, sans rien réinitialiser. Un champ
-  // explicitement `false` (posé par la branche downgrade ci-dessus) déclenche
-  // en revanche une réapplication inconditionnelle.
+  // traiter" QUE SI aiEnabled ET manageStock (bassin actif) sont TOUS LES
+  // DEUX encore à false — signe qu'aucune activation réelle n'a jamais eu
+  // lieu (le cas précis d'un isPremium posé manuellement sans configurer le
+  // reste). Si l'un des deux est déjà à true, le compte est traité comme
+  // légitimement déjà configuré : on se contente de poser le flag, sans
+  // rien réinitialiser.
+  //
+  // v1.123.0 — Fix incident réel (retour Arnaud/Pierre, 16/09/2026) : cette
+  // vérification ne portait AVANT que sur un flag `undefined` — pas sur un
+  // flag explicitement `false` (posé par la branche downgrade ci-dessus, à
+  // chaque aller-retour isPremium true→false→true, même transitoire : replay
+  // de webhook Stripe, snapshot Firestore momentanément périmé, etc., sans
+  // action de l'utilisateur). Un flag `false` déclenchait alors une
+  // réapplication INCONDITIONNELLE — remettant tout le stock à 0% même pour
+  // un bassin où manageStock était déjà actif depuis longtemps avec du stock
+  // réel. La remise à 0 ne doit protéger qu'une vraie première activation
+  // (rien n'a jamais été configuré) ; elle ne doit plus jamais dépendre de
+  // l'historique du flag lui-même.
   //
   // Attend accountConfigReceived (mon config/main a été lu au moins une
   // fois) ET activePool (le bassin doit exister pour recevoir manageStock) :
@@ -9144,7 +9154,7 @@ function PoolGenAIApp() {
     if (!accountConfigReceived || !isPremium || !activePool) return;
     const flag = premiumDefaultsAppliedRef.current; // true | false | undefined
     if (flag === true) return;
-    const alreadyLegit = flag === undefined && (aiEnabled || !!activePool.manageStock);
+    const alreadyLegit = aiEnabled || !!activePool.manageStock;
     if (!alreadyLegit) {
       setAiEnabled(true);
       // v1.29.7 — À l'activation, la gestion de stock s'active par défaut sur
