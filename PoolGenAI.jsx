@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.123.1";
+const APP_VERSION = "1.123.3";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -13707,6 +13707,22 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
   const minTs = allTimestamps.length ? Math.min(...allTimestamps) : null;
   const maxTs = allTimestamps.length ? Math.max(...allTimestamps) : null;
 
+  // v1.123.2 — Fenêtre glissante qui suit vraiment la dernière mesure : sans
+  // ça, zoomEnd restait figé sur l'instant où la puce (ou le curseur) a été
+  // actionnée — une mesure ajoutée après coup tombait hors de la fenêtre
+  // persistée (ex. "1 mois glissant"), invisible dans le Journal/graphique
+  // sans que rien ne l'indique — voir retour Arnaud. On avance zoomEnd
+  // jusqu'à la mesure la plus récente dès qu'elle dépasse la borne actuelle,
+  // sans jamais changer la fenêtre choisie (7j/14j/1 mois) ni la ramener en
+  // arrière (ex. après suppression d'une mesure).
+  useEffect(() => {
+    if (zoomWindow === "all" || maxTs == null) return;
+    if (zoomEnd == null || maxTs > zoomEnd) {
+      setZoomEnd(maxTs);
+      saveZoomPref(pool?.id, { windowKey: zoomWindow, windowEnd: maxTs });
+    }
+  }, [maxTs, zoomWindow]);
+
   function updateZoomWindow(key) {
     setZoomWindow(key);
     // Ancre par défaut la fenêtre sur les données les plus récentes.
@@ -21329,6 +21345,16 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
   const minTs = sortedMeasures.length ? new Date(sortedMeasures[0].date).getTime() : null;
   const maxTs = sortedMeasures.length ? new Date(sortedMeasures[sortedMeasures.length - 1].date).getTime() : null;
 
+  // v1.123.2 — Même fix que côté Historique (voir demande Arnaud) : la
+  // fenêtre glissante suit la mesure la plus récente au lieu de rester
+  // figée sur l'instant de sa dernière sélection. État local uniquement —
+  // jamais persisté ici (voir commentaire ci-dessus, la préférence
+  // appartient à l'Historique).
+  useEffect(() => {
+    if (zoomWindow === "all" || maxTs == null) return;
+    if (zoomEnd == null || maxTs > zoomEnd) setZoomEnd(maxTs);
+  }, [maxTs, zoomWindow]);
+
   function updateZoomWindow(key) {
     setZoomWindow(key);
     setZoomEnd(key === "all" ? null : maxTs);
@@ -22596,6 +22622,7 @@ function ModalShell({ children, onClose, title, rightAction, forced, footer }) {
 function formatDate(iso) {
   const d = new Date(iso);
   return d.toLocaleString("fr-FR", {
+    weekday: "short",
     day: "2-digit",
     month: "short",
     hour: "2-digit",
