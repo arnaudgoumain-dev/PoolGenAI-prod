@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.122.7";
+const APP_VERSION = "1.123.1";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -582,6 +582,9 @@ const TRANSLATIONS = {
     maintenance_card_text: "{units} galet(s) / {volume} m³, tous les {days} jours",
     no_stock_category_hint: "Aucun produit en stock dans cette catégorie — saisie libre",
     no_stock_generic_hint: "Aucun produit en stock dans cette catégorie — produit générique proposé",
+    generic_product_badge: "Produit générique",
+    generic_product_option_prefix: "Générique :",
+    option_stock_empty_suffix: "(stock épuisé)",
     prod_name_tac_plus: "Produit TAC+ (bicarbonate de sodium)",
     prod_name_calcium: "Chlorure de calcium (dureté +)",
     prod_name_anti_phos: "Anti-phosphates (PHOSfree type)",
@@ -1382,6 +1385,9 @@ const TRANSLATIONS = {
     maintenance_card_text: "{units} tablet(s) / {volume} m³, every {days} days",
     no_stock_category_hint: "No product in stock in this category — free entry",
     no_stock_generic_hint: "No product in stock in this category — generic product suggested",
+    generic_product_badge: "Generic product",
+    generic_product_option_prefix: "Generic:",
+    option_stock_empty_suffix: "(out of stock)",
     prod_name_tac_plus: "TAC+ product (sodium bicarbonate)",
     prod_name_calcium: "Calcium chloride (hardness +)",
     prod_name_anti_phos: "Anti-phosphates (PHOSfree type)",
@@ -2181,6 +2187,9 @@ const TRANSLATIONS = {
     maintenance_card_text: "{units} Tablette(n) / {volume} m³, alle {days} Tage",
     no_stock_category_hint: "Kein Produkt in dieser Kategorie auf Lager — freie Eingabe",
     no_stock_generic_hint: "Kein Produkt in dieser Kategorie auf Lager — generisches Produkt vorgeschlagen",
+    generic_product_badge: "Generisches Produkt",
+    generic_product_option_prefix: "Generisch:",
+    option_stock_empty_suffix: "(Lager leer)",
     prod_name_tac_plus: "KH+-Produkt (Natriumbicarbonat)",
     prod_name_calcium: "Calciumchlorid (Härte +)",
     prod_name_anti_phos: "Anti-Phosphat (PHOSfree Typ)",
@@ -2976,6 +2985,9 @@ const TRANSLATIONS = {
     maintenance_card_text: "{units} pastiglia/e / {volume} m³, ogni {days} giorni",
     no_stock_category_hint: "Nessun prodotto in stock in questa categoria — inserimento libero",
     no_stock_generic_hint: "Nessun prodotto in stock in questa categoria — prodotto generico proposto",
+    generic_product_badge: "Prodotto generico",
+    generic_product_option_prefix: "Generico:",
+    option_stock_empty_suffix: "(scorte esaurite)",
     prod_name_tac_plus: "Prodotto TAC+ (bicarbonato di sodio)",
     prod_name_calcium: "Cloruro di calcio (durezza +)",
     prod_name_anti_phos: "Anti-fosfati (tipo PHOSfree)",
@@ -3771,6 +3783,9 @@ const TRANSLATIONS = {
     maintenance_card_text: "{units} pastilla(s) / {volume} m³, cada {days} días",
     no_stock_category_hint: "Ningún producto en stock en esta categoría — entrada libre",
     no_stock_generic_hint: "Ningún producto en stock en esta categoría — producto genérico propuesto",
+    generic_product_badge: "Producto genérico",
+    generic_product_option_prefix: "Genérico:",
+    option_stock_empty_suffix: "(sin stock)",
     prod_name_tac_plus: "Producto TAC+ (bicarbonato de sodio)",
     prod_name_calcium: "Cloruro de calcio (dureza +)",
     prod_name_anti_phos: "Anti-fosfatos (tipo PHOSfree)",
@@ -4563,6 +4578,9 @@ const TRANSLATIONS = {
     maintenance_card_text: "{units} pastilha(s) / {volume} m³, a cada {days} dias",
     no_stock_category_hint: "Nenhum produto em stock nesta categoria — entrada livre",
     no_stock_generic_hint: "Nenhum produto em stock nesta categoria — produto genérico sugerido",
+    generic_product_badge: "Produto genérico",
+    generic_product_option_prefix: "Genérico:",
+    option_stock_empty_suffix: "(sem stock)",
     prod_name_tac_plus: "Produto TAC+ (bicarbonato de sódio)",
     prod_name_calcium: "Cloreto de cálcio (dureza +)",
     prod_name_anti_phos: "Anti-fosfatos (tipo PHOSfree)",
@@ -17668,14 +17686,24 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
 
   // v1.61.0 — Produits candidats pour l'action d'un step (ou action liée,
   // ex. "chlore"/"chlore-stabilise" servent tous deux à remonter le chlore
-  // libre), filtrés sur le stock réel et triés : le plus entamé puis le
-  // plus ancien en premier (on privilégie de terminer un produit avant
-  // d'en entamer un nouveau).
+  // libre), triés : en stock d'abord (le plus entamé puis le plus ancien en
+  // premier — on privilégie de terminer un produit avant d'en entamer un
+  // nouveau), puis les produits épuisés.
+  // v1.123.1 — N'exclut plus les produits à 0% de stock (retour Arnaud/
+  // Pierre : un utilisateur qui n'a plus de stock sur AUCUN produit de
+  // l'action se voyait proposer un générique à la place du sien — nom/
+  // dosage potentiellement différents de ce qu'il possède réellement).
+  // Toujours inclus désormais, mais relégués après les produits en stock —
+  // stockEmpty (voir plus bas) prévient l'utilisateur sans jamais masquer
+  // son propre produit.
   function getSortedCandidates(stepAction) {
     if (!manageStock || !products) return [];
     const relatedActions = stepAction === "chlore" ? ["chlore", "chlore-stabilise"] : [stepAction];
-    const candidates = products.filter((p) => relatedActions.includes(p.action) && (p.stockPercent ?? 100) > 0);
+    const candidates = products.filter((p) => relatedActions.includes(p.action));
     return [...candidates].sort((a, b) => {
+      const aEmpty = (a.stockPercent ?? 100) <= 0;
+      const bEmpty = (b.stockPercent ?? 100) <= 0;
+      if (aEmpty !== bEmpty) return aEmpty ? 1 : -1;
       const stockDiff = (a.stockPercent ?? 100) - (b.stockPercent ?? 100);
       if (stockDiff !== 0) return stockDiff;
       const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
@@ -17816,6 +17844,12 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   // v1.109.4 — productRealName plutôt que productName (libellé générique
   // possible via nameKey) — voir RecoCard.missingFromStock.
   const selectedProductObj = findAnyProduct(selectedProduct || step.productRealName || step.productName);
+  // v1.123.1 — Reflète désormais la sélection COURANTE (réelle ou générique),
+  // par référence dans DEFAULT_PRODUCTS — pas uniquement "aucun candidat
+  // réel du tout" : depuis la fusion des sélecteurs (retour Arnaud/Pierre,
+  // "me laisser choisir parmi les équivalents, générique inclus"),
+  // l'utilisateur peut choisir un générique même s'il a des produits réels.
+  const usingGenericProduct = !isInfoStep && manageStock && !!selectedProductObj && DEFAULT_PRODUCTS.includes(selectedProductObj);
   const { displayUnit } = toDisplayUnit(step.computedDoseAmount || step.appliedAmount, baseUnit, selectedProductObj);
   const scheduled = step.scheduledAt ? new Date(step.scheduledAt).getTime() : null;
   const remaining = scheduled ? scheduled - now : null;
@@ -17825,7 +17859,15 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   // testeur/Pierre sur "chlore trop haut" affichant un compte à rebours
   // avant de pouvoir acquitter la carte.
   const isReady = isInfoStep || remaining === null || remaining <= 0;
-  const prod = products?.find((p) => p.name === (step.productRealName ?? step.productName));
+  // v1.123.1 — Fix : ce garde-fou de stock restait pointé sur le produit
+  // RECOMMANDÉ à l'origine (step.productRealName/productName), jamais mis à
+  // jour selon la sélection réelle — un produit générique, choisi
+  // précisément PARCE QUE le produit recommandé n'a plus de stock, faisait
+  // donc s'afficher "Stock épuisé pour ce produit" pour un produit qui
+  // n'est même plus celui appliqué. Suit désormais selectedProductObj (la
+  // sélection effective) ; jamais vrai pour un générique (aucun champ
+  // stockPercent bas sur DEFAULT_PRODUCTS).
+  const prod = usingGenericProduct ? null : selectedProductObj;
   const stockEmpty = !isInfoStep && manageStock && prod && (prod.stockPercent ?? 100) <= 0;
 
   // v1.114.0 — Point de passage commun pour les applications susceptibles de
@@ -17940,6 +17982,11 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
 
         {/* Titre étape */}
         <div style={{ fontSize: 18, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 4 }}>
+          {usingGenericProduct && (
+            <div style={{ fontSize: 11.5, fontWeight: 700, color: "#c0392b", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 2 }}>
+              {t("generic_product_badge")}
+            </div>
+          )}
           {step.productName || step.title}
         </div>
         {step.title && step.productName && step.title !== step.productName && (
@@ -17997,55 +18044,23 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
         )}
 
         {/* Sélecteur de produit alternatif (si gestion stock activée).
-            v1.61.0 — Filtré sur le stock réel (>0%) et trié : le plus entamé
-            puis le plus ancien en premier (proposé par défaut). Le
+            v1.123.1 — Fusion des 2 anciens sélecteurs (produits réels /
+            générique), auparavant mutuellement exclusifs — retour Arnaud/
+            Pierre : "me donner le choix entre plusieurs produits équivalents,
+            y compris le générique". Liste désormais TOUJOURS tous les
+            candidats ensemble — produits réels d'abord (en stock puis
+            épuisés, ✓ sur le mieux classé), génériques ensuite, préfixés
+            "Générique :" — pour que rien ne soit jamais masqué. Le
             sélecteur ne s'affiche que s'il y a un choix réel à faire (2+
-            produits en stock) ; avec 0 ou 1 candidat, pas de sélecteur. */}
-        {!isInfoStep && manageStock && products && sortedCandidates.length > 1 && (() => {
+            candidats au total) ; avec 0 ou 1, pas de sélecteur. */}
+        {!isInfoStep && manageStock && (sortedCandidates.length + genericCandidates.length) > 1 && (() => {
+          const allCandidates = [...sortedCandidates, ...genericCandidates];
           const currentValue = selectedProduct || step.productName;
-          const selectValue = sortedCandidates.some(p => p.name === currentValue)
+          const selectValue = allCandidates.some(p => p.name === currentValue)
             ? currentValue
-            : sortedCandidates[0].name;
+            : allCandidates[0].name;
           return (
             <div style={{ marginBottom: 12 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: "var(--brand-text-secondary)", display: "block", marginBottom: 6 }}>
-                {t("product_col")}
-              </label>
-              <select
-                value={selectValue}
-                onChange={(e) => {
-                  const newProd = e.target.value;
-                  setSelectedProduct(newProd);
-                  const newProdObj = products.find(p => p.name === newProd);
-                  const amount = step.computedDoseAmount ?? step.appliedAmount;
-                  const { value } = toDisplayUnit(amount, step.doseUnit || "g", newProdObj);
-                  setEditAmount(value != null && value !== "" ? String(value) : "");
-                }}
-                style={{ width: "100%", boxSizing: "border-box", fontSize: 14, fontWeight: 600, color: "var(--brand-text-strong)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 12px", outline: "none", background: "#fff" }}
-              >
-                {sortedCandidates.map(p => (
-                  <option key={p.id || p.name} value={p.name}>
-                    {p.name}{p.name === sortedCandidates[0].name ? " ✓" : ""}
-                  </option>
-                ))}
-              </select>
-            </div>
-          );
-        })()}
-
-        {/* v1.63.2 — Sélecteur de produit générique (DEFAULT_PRODUCTS), quand
-            l'utilisateur n'a aucun produit réel en stock pour cette action.
-            Remplace l'ancienne saisie libre sans nom : le nom générique est
-            enregistré dans l'historique/le rapport, sans jamais décompter de
-            stock (aucun produit "products" ne porte ce nom). */}
-        {!isInfoStep && manageStock && sortedCandidates.length === 0 && genericCandidates.length > 0 && (() => {
-          const currentValue = selectedProduct || step.productName;
-          const selectValue = genericCandidates.some(p => p.name === currentValue)
-            ? currentValue
-            : genericCandidates[0].name;
-          return (
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ fontSize: 12, color: "#c0392b", marginBottom: 8 }}>{t("no_stock_generic_hint")}</div>
               <label style={{ fontSize: 12, fontWeight: 600, color: "var(--brand-text-secondary)", display: "block", marginBottom: 6 }}>
                 {t("product_col")}
               </label>
@@ -18061,13 +18076,25 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
                 }}
                 style={{ width: "100%", boxSizing: "border-box", fontSize: 14, fontWeight: 600, color: "var(--brand-text-strong)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 12px", outline: "none", background: "#fff" }}
               >
+                {sortedCandidates.map(p => (
+                  <option key={p.id || p.name} value={p.name}>
+                    {p.name}
+                    {(p.stockPercent ?? 100) <= 0 ? ` ${t("option_stock_empty_suffix")}` : ""}
+                    {p.name === allCandidates[0].name ? " ✓" : ""}
+                  </option>
+                ))}
                 {genericCandidates.map(p => (
-                  <option key={p.id || p.name} value={p.name}>{p.name}</option>
+                  <option key={p.id || p.name} value={p.name}>
+                    {t("generic_product_option_prefix")} {p.name}{p.name === allCandidates[0].name ? " ✓" : ""}
+                  </option>
                 ))}
               </select>
             </div>
           );
         })()}
+        {usingGenericProduct && (
+          <div style={{ fontSize: 12, color: "#c0392b", marginBottom: 8 }}>{t("no_stock_generic_hint")}</div>
+        )}
 
         {/* Quantité — masquée pour la carte entretien (rien à saisir).
             Dernier repli : aucun produit réel NI générique pour cette action
@@ -18312,20 +18339,26 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
 // sans filtre par action. Champ quantité adaptatif kg/galets comme le Wizard.
 function ManualApplyModal({ products, onClose, onSave, lang }) {
   const t = useT(lang || "fr");
+  // v1.123.1 — N'exclut plus les produits à 0% de stock (même fix que le
+  // wizard de plan — retour Arnaud/Pierre) : relégués après les produits en
+  // stock, jamais masqués. Le catalogue générique (DEFAULT_PRODUCTS) reste
+  // toujours proposé en complément, jamais décompté du stock réel
+  // (saveManualApplication ne matche que par id, un produit générique n'en
+  // partage aucun avec "products").
   const realCandidates = (products || [])
-    .filter((p) => p.action !== "outil-mesure" && (p.stockPercent ?? 100) > 0)
-    .sort((a, b) => a.name.localeCompare(b.name));
-  // v1.64.0 — Aucun produit réel en stock : on propose le catalogue générique
-  // (DEFAULT_PRODUCTS), comme dans le wizard de plan de traitement. Jamais
-  // décompté du stock réel (saveManualApplication ne matche que par id, un
-  // produit générique n'en partage aucun avec "products").
-  const isGeneric = realCandidates.length === 0;
-  const candidates = isGeneric
-    ? DEFAULT_PRODUCTS.filter((p) => p.action !== "outil-mesure").sort((a, b) => a.name.localeCompare(b.name))
-    : realCandidates;
+    .filter((p) => p.action !== "outil-mesure")
+    .sort((a, b) => {
+      const aEmpty = (a.stockPercent ?? 100) <= 0;
+      const bEmpty = (b.stockPercent ?? 100) <= 0;
+      if (aEmpty !== bEmpty) return aEmpty ? 1 : -1;
+      return a.name.localeCompare(b.name);
+    });
+  const genericCandidates = DEFAULT_PRODUCTS.filter((p) => p.action !== "outil-mesure").sort((a, b) => a.name.localeCompare(b.name));
+  const candidates = [...realCandidates, ...genericCandidates];
 
   const [selectedName, setSelectedName] = useState(candidates[0]?.name || "");
   const selected = candidates.find((p) => p.name === selectedName) || null;
+  const isGeneric = !!selected && DEFAULT_PRODUCTS.includes(selected);
   const isGalets = selected?.packagingType === "galets" && selected?.unitWeight > 0;
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(() => {
@@ -18368,8 +18401,13 @@ function ManualApplyModal({ products, onClose, onSave, lang }) {
             onChange={(e) => { setSelectedName(e.target.value); setAmount(""); }}
             style={{ width: "100%", boxSizing: "border-box", fontSize: 14, fontWeight: 600, color: "var(--brand-text-strong)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 12px", outline: "none", background: "#fff", marginBottom: 14 }}
           >
-            {candidates.map((p) => (
-              <option key={p.id || p.name} value={p.name}>{p.name}</option>
+            {realCandidates.map((p) => (
+              <option key={p.id || p.name} value={p.name}>
+                {p.name}{(p.stockPercent ?? 100) <= 0 ? ` ${t("option_stock_empty_suffix")}` : ""}
+              </option>
+            ))}
+            {genericCandidates.map((p) => (
+              <option key={p.id || p.name} value={p.name}>{t("generic_product_option_prefix")} {p.name}</option>
             ))}
           </select>
 
