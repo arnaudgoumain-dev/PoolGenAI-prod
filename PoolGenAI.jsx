@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.123.3";
+const APP_VERSION = "1.123.4";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -6874,9 +6874,21 @@ Règles strictes :
 - JSON pur, rien d'autre`;
 
   const text = await callAIWithImage({ apiKey, apiProvider, prompt, imageDataUrl: photos, uid: callerUid, maxTokens: 1500, enableWebSearch: apiProvider !== "openai" });
-  const match = text.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error("Réponse IA non parseable : " + text.slice(0, 200));
-  return JSON.parse(match[0]);
+  // v1.123.4 — Extrait le premier objet JSON équilibré (extractJsonObject)
+  // au lieu de la regex gloutonne /\{[\s\S]*\}/ (première "{" → dernière
+  // "}" du texte) : avec la recherche web activée, l'IA ajoute parfois du
+  // texte (ou un second bloc) après le JSON, contenant une accolade — la
+  // regex englobait alors tout, d'où "Unexpected non-whitespace character
+  // after JSON at position 1290" (retour Arnaud, analyse d'un produit
+  // anti-algues). Même filet que pour les bandelettes : réparation d'une
+  // réponse tronquée par max_tokens.
+  const raw = extractJsonObject(text);
+  if (!raw) throw new Error("Réponse IA non parseable : " + text.slice(0, 200));
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
+    return JSON.parse(repairTruncatedJson(raw));
+  }
 }
 
 // ---------- Base commune de produits : appels au Worker ----------
