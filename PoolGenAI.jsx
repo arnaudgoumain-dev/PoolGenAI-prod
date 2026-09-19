@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.124.1";
+const APP_VERSION = "1.124.2";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -557,6 +557,7 @@ const TRANSLATIONS = {
     weak_password: "Mot de passe trop court (6 caractères min).",
     firebase_not_configured: "⚠️ Firebase non configuré — fonctionnement hors-ligne uniquement.",
     note_ph_minus: "Vérifier le pH avant chaque ajout. Max 1 kg/100 m³/jour, ou espacer de 2h.",
+    note_ph_minus_liquid: "Vérifier le pH avant chaque ajout. Respecter la dose maximale par jour indiquée sur l’étiquette du produit, ou espacer de 2h.",
     note_ph_plus: "Répartir sur tout le bassin, filtration en marche.",
     note_chlore_choc: "À verser le soir, soleil couché. Ne stabilise pas (n'augmente pas le CYA).",
     note_galets: "Augmente le CYA à chaque utilisation. À éviter si CYA déjà > 50 mg/L.",
@@ -1365,6 +1366,7 @@ const TRANSLATIONS = {
     weak_password: "Password too short (min 6 characters).",
     firebase_not_configured: "⚠️ Firebase not configured — offline mode only.",
     note_ph_minus: "Check pH before each addition. Max 1 kg/100 m³/day, or space 2h apart.",
+    note_ph_minus_liquid: "Check pH before each addition. Follow the maximum daily dose on the product label, or space 2h apart.",
     note_ph_plus: "Spread across the pool with filtration running.",
     note_chlore_choc: "Pour in the evening after sunset. Does not stabilise (does not raise CYA).",
     note_galets: "Raises CYA with each use. Avoid if CYA is already above 50 mg/L.",
@@ -2172,6 +2174,7 @@ const TRANSLATIONS = {
     weak_password: "Passwort zu kurz (mind. 6 Zeichen).",
     firebase_not_configured: "⚠️ Firebase nicht konfiguriert — nur Offline-Modus.",
     note_ph_minus: "pH vor jeder Zugabe prüfen. Max 1 kg/100 m³/Tag oder 2h Abstand.",
+    note_ph_minus_liquid: "pH vor jeder Zugabe prüfen. Maximale Tagesdosis laut Produktetikett beachten oder 2h Abstand halten.",
     note_ph_plus: "Im gesamten Becken verteilen, Filtration in Betrieb.",
     note_chlore_choc: "Abends nach Sonnenuntergang zugeben. Stabilisiert nicht (erhöht CYA nicht).",
     note_galets: "Erhöht CYA bei jeder Nutzung. Vermeiden wenn CYA bereits über 50 mg/L.",
@@ -2975,6 +2978,7 @@ const TRANSLATIONS = {
     weak_password: "Password troppo corta (min 6 caratteri).",
     firebase_not_configured: "⚠️ Firebase non configurato — solo modalità offline.",
     note_ph_minus: "Controllare il pH prima di ogni aggiunta. Max 1 kg/100 m³/giorno o distanziare di 2h.",
+    note_ph_minus_liquid: "Controllare il pH prima di ogni aggiunta. Rispettare la dose massima giornaliera indicata sull’etichetta del prodotto o distanziare di 2h.",
     note_ph_plus: "Distribuire in tutta la vasca con filtrazione in funzione.",
     note_chlore_choc: "Versare la sera dopo il tramonto. Non stabilizza (non aumenta il CYA).",
     note_galets: "Aumenta il CYA ad ogni utilizzo. Evitare se il CYA è già sopra 50 mg/L.",
@@ -3778,6 +3782,7 @@ const TRANSLATIONS = {
     weak_password: "Contraseña demasiado corta (mín. 6 caracteres).",
     firebase_not_configured: "⚠️ Firebase no configurado — solo modo offline.",
     note_ph_minus: "Verificar el pH antes de cada adición. Máx 1 kg/100 m³/día o espaciar 2h.",
+    note_ph_minus_liquid: "Verificar el pH antes de cada adición. Respetar la dosis máxima diaria de la etiqueta del producto o espaciar 2h.",
     note_ph_plus: "Distribuir por toda la piscina con filtración en marcha.",
     note_chlore_choc: "Verter por la noche después del atardecer. No estabiliza (no aumenta el CYA).",
     note_galets: "Aumenta el CYA con cada uso. Evitar si el CYA ya supera los 50 mg/L.",
@@ -4578,6 +4583,7 @@ const TRANSLATIONS = {
     weak_password: "Senha muito curta (mín. 6 caracteres).",
     firebase_not_configured: "⚠️ Firebase não configurado — apenas modo offline.",
     note_ph_minus: "Verificar o pH antes de cada adição. Máx 1 kg/100 m³/dia ou espaçar 2h.",
+    note_ph_minus_liquid: "Verificar o pH antes de cada adição. Respeitar a dose máxima diária do rótulo do produto ou espaçar 2h.",
     note_ph_plus: "Distribuir por toda a piscina com filtração em funcionamento.",
     note_chlore_choc: "Adicionar à noite após o pôr do sol. Não estabiliza (não aumenta o CYA).",
     note_galets: "Aumenta o CYA a cada uso. Evitar se o CYA já estiver acima de 50 mg/L.",
@@ -12636,6 +12642,13 @@ function ComplementCard({ step, products, lang }) {
 // (comparaison insensible à la casse, partout où "mL"/"g"/"kg"/"L" sont
 // comparés) et coupe la source (voir handleAnalyzePhoto, qui normalise
 // désormais aussi la suggestion IA avant de l'appliquer).
+// Note pH- : la limite "1 kg/100 m³/jour" vaut pour un acide en poudre ; pour un
+// produit liquide (mL/L) on renvoie vers l'étiquette du produit.
+function phMinusNoteKeyForUnit(unit) {
+  const u = String(unit || "").toLowerCase();
+  return (u === "ml" || u === "l") ? "note_ph_minus_liquid" : "note_ph_minus";
+}
+
 function normalizeDoseUnit(u) {
   if (!u) return u;
   const s = String(u).trim();
@@ -12819,7 +12832,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
   // fallbackKey ne doit s'appliquer que si le produit existe mais n'a pas de
   // note ; si le produit est introuvable, le message est toujours générique.
   const prodNote = (prod, fallbackKey) =>
-    prod ? (prod.noteKey ? _(prod.noteKey) : prod.note) || _(fallbackKey) : _("reco_no_product_note");
+    prod ? (prod.noteKey ? _(prod.noteKey === "note_ph_minus" ? phMinusNoteKeyForUnit(prod.doseUnit) : prod.noteKey) : prod.note) || _(fallbackKey === "note_ph_minus" ? phMinusNoteKeyForUnit(prod.doseUnit) : fallbackKey) : _("reco_no_product_note");
   // Traduit le nom d'un produit : utilise nameKey si disponible, sinon le nom brut
   const prodName = (prod, fallbackKey) =>
     prod ? (prod.nameKey ? _(prod.nameKey) : prod.name) || _(fallbackKey) : _(fallbackKey);
@@ -18161,9 +18174,13 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   const displayProductName = selectionChanged
     ? (selectedProductObj.nameKey ? t(selectedProductObj.nameKey) : selectedProductObj.name)
     : (step.productName || step.title);
-  const displayNote = selectionChanged
+  const rawDisplayNote = selectionChanged
     ? (ownNote(selectedProductObj) || (ownNote(origProdObj) ? null : step.note))
     : step.note;
+  // Note pH- (dose max en kg) : inadaptée à un produit liquide → renvoi à l'étiquette
+  const displayNote = (rawDisplayNote && step.action === "ph-" && selectedProductObj && rawDisplayNote === t("note_ph_minus"))
+    ? t(phMinusNoteKeyForUnit(selectedProductObj.doseUnit))
+    : rawDisplayNote;
 
   // v1.114.0 — Point de passage commun pour les applications susceptibles de
   // déclencher une scission (produit avec dose calculée, hors % et hors
