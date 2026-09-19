@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.128.1";
+const APP_VERSION = "1.128.2";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -14152,8 +14152,32 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
         rows.set(ts, row);
       });
     });
+    // v1.128.2 — Une fois qu'un paramètre a une courbe projetée (première
+    // application projetée, sur l'ensemble de l'historique), elle rejoint
+    // SYSTÉMATIQUEMENT chaque mesure suivante de ce paramètre, même sans
+    // application de produit à ce moment-là — voir retour Arnaud.
+    const firstProjTs = {};
+    [...measures].sort((a, b) => new Date(a.date) - new Date(b.date)).forEach((m) => {
+      const app = (applications || []).find((a) => a.measureId === m.id);
+      if (!app) return;
+      const mts = new Date(m.date).getTime();
+      Object.values(buildProjectedPoints(m, app.steps, products, pool?.volume || 0)).forEach((p) => {
+        if (firstProjTs[p.param] == null) firstProjTs[p.param] = mts;
+      });
+    });
+    visibleMeasures.forEach((m) => {
+      const mts = new Date(m.date).getTime();
+      Object.keys(firstProjTs).forEach((param) => {
+        if (mts < firstProjTs[param]) return;
+        const measured = parseFloat(m[param]);
+        if (isNaN(measured)) return;
+        const anchorRow = rows.get(mts) || { timestamp: mts, date: formatDateShort(m.date) };
+        if (anchorRow[PROJECTED_CHART_KEY[param]] == null) anchorRow[PROJECTED_CHART_KEY[param]] = Math.round(measured * 10) / 10;
+        rows.set(mts, anchorRow);
+      });
+    });
     return [...rows.values()].sort((a, b) => a.timestamp - b.timestamp);
-  }, [chartData, visibleMeasures, applications, products, pool?.volume]);
+  }, [chartData, visibleMeasures, measures, applications, products, pool?.volume]);
 
   const chartParams = [
     { key: "pH",    color: "#1a8fd1", label: "pH",                                  axis: "left" },
@@ -21952,8 +21976,32 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
         rowsMap.set(ts, row);
       });
     });
+    // v1.128.2 — Une fois qu'un paramètre a une courbe projetée (première
+    // application projetée, sur l'ensemble de l'historique), elle rejoint
+    // SYSTÉMATIQUEMENT chaque mesure suivante de ce paramètre, même sans
+    // application de produit à ce moment-là — voir retour Arnaud.
+    const firstProjTs = {};
+    [...sortedMeasures].sort((a, b) => new Date(a.date) - new Date(b.date)).forEach((m) => {
+      const app = (applications || []).find((a) => a.measureId === m.id);
+      if (!app) return;
+      const mts = new Date(m.date).getTime();
+      Object.values(buildProjectedPoints(m, app.steps, products, pool?.volume || 0)).forEach((p) => {
+        if (firstProjTs[p.param] == null) firstProjTs[p.param] = mts;
+      });
+    });
+    visibleMeasures.forEach((m) => {
+      const mts = new Date(m.date).getTime();
+      Object.keys(firstProjTs).forEach((param) => {
+        if (mts < firstProjTs[param]) return;
+        const measured = parseFloat(m[param]);
+        if (isNaN(measured)) return;
+        const anchorRow = rowsMap.get(mts) || { timestamp: mts, date: formatDateShort(m.date) };
+        if (anchorRow[PROJECTED_CHART_KEY[param]] == null) anchorRow[PROJECTED_CHART_KEY[param]] = Math.round(measured * 10) / 10;
+        rowsMap.set(mts, anchorRow);
+      });
+    });
     return [...rowsMap.values()].sort((a, b) => a.timestamp - b.timestamp);
-  }, [chartData, visibleMeasures, applications, products, pool?.volume]);
+  }, [chartData, visibleMeasures, sortedMeasures, applications, products, pool?.volume]);
 
   // v1.122.0 — Cibles du bassin, pour la zone colorée pH/chlore libre sur le
   // graphique (voir plus bas) — même mécanisme que recoTargets côté
