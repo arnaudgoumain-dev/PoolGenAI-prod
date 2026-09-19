@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.124.0";
+const APP_VERSION = "1.124.1";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -10196,7 +10196,21 @@ function PoolGenAIApp() {
     // d'arrondi kg↔g / L↔mL et ne pas déclencher de proposition de scission
     // sur un reliquat infime.
     const target = origStep.computedDoseAmount;
-    const canSplit = target != null && amount != null && origStep.mode !== "entretien" && origStep.doseUnit !== "%";
+    // v1.124.1 — Produit appliqué d'unité différente de celle de l'étape
+    // (poudre g ↔ liquide mL) : `amount` est dans l'unité du produit
+    // appliqué (voir handleApply). Si la conversion des taux de dosage est
+    // possible, l'étape appliquée passe dans cette unité (doseUnit et
+    // computedDoseAmount convertis — stock, historique et rapport lisent
+    // step.doseUnit) ; sinon on ne tente pas de comparer/scinder des
+    // quantités d'unités différentes.
+    const appliedProdObj = productName ? findProductOrGeneric(products, productName) : null;
+    const origProdObj = findProductOrGeneric(products, origStep.productRealName ?? origStep.productName);
+    const unitChanged = !!(appliedProdObj?.doseUnit && origStep.doseUnit && origStep.doseUnit !== "%"
+      && origStep.mode !== "entretien" && !PHYSICS_DOSE_ACTIONS.has(origStep.action)
+      && normalizeDoseUnit(appliedProdObj.doseUnit) !== normalizeDoseUnit(origStep.doseUnit));
+    const unitConv = unitChanged ? rescaleDoseFull(target, origStep.action, origProdObj, appliedProdObj) : null;
+    const canSplit = target != null && amount != null && origStep.mode !== "entretien" && origStep.doseUnit !== "%"
+      && !(unitChanged && !unitConv?.converted);
     const epsilon = canSplit ? Math.max(1, target * 0.02) : 0;
     // v1.123.5 — `amount` est exprimé pour le produit réellement appliqué
     // (productName), `target` pour le produit d'origine du plan : on ramène
@@ -10227,6 +10241,10 @@ function PoolGenAIApp() {
         appliedAmount: amount,
         skipped: false,
         ...(productName && productName !== s.productName ? { appliedProductName: productName } : {}),
+        ...(unitChanged ? {
+          doseUnit: normalizeDoseUnit(appliedProdObj.doseUnit),
+          computedDoseAmount: unitConv?.converted ? unitConv.amount : null,
+        } : {}),
       };
     });
 
@@ -12437,10 +12455,12 @@ function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep }) {
     cardProductName = appliedProdObj.nameKey ? t(appliedProdObj.nameKey) : appliedProdObj.name;
     cardProductPhoto = appliedProdObj.photo || null;
     appliedIsGeneric = DEFAULT_PRODUCTS.includes(appliedProdObj);
-    const newDose = rescaleDoseForProduct(reco.computedDoseAmount, reco.action, fromProd, appliedProdObj);
-    if (reco.doseText && reco.computedDoseAmount != null && newDose != null && newDose !== reco.computedDoseAmount) {
+    // v1.124.1 — La dose recalculée peut être dans une autre unité (poudre
+    // g ↔ liquide mL) : on remplace aussi l'unité dans le texte.
+    const conv = rescaleDoseFull(reco.computedDoseAmount, reco.action, fromProd, appliedProdObj);
+    if (reco.doseText && reco.computedDoseAmount != null && conv.converted) {
       const oldStr = formatDose(reco.computedDoseAmount, reco.doseUnit || "g");
-      const newStr = formatDose(newDose, reco.doseUnit || "g");
+      const newStr = formatDose(conv.amount, conv.unit);
       if (reco.doseText.includes(oldStr)) cardDoseText = reco.doseText.replace(oldStr, newStr);
     }
     const ownNote = (p) => (p ? ((p.noteKey ? t(p.noteKey) : p.note) || null) : null);
@@ -12729,28 +12749,45 @@ function isDoseRateAnomalous(prod, referenceProd, useEffectAmount = true) {
 // computeRecommendations (pickDoseSrc) : un produit sans dosage réactif
 // complet (ex. galets "entretien uniquement") retombe sur le produit par
 // défaut de son action. Inchangé pour le sel (dose physique indépendante du
-// produit) et quand les unités de dose diffèrent (g vs mL, non comparables
-// sans densité). Chlore : rééchelonné aussi sur le % de chlore actif
+// produit). Chlore : rééchelonné aussi sur le % de chlore actif
 // (voir scaleDoseForActiveChlorine). `round=false` pour les comparaisons.
-function rescaleDoseForProduct(dose, action, fromProd, toProd, round = true) {
-  if (dose == null || !fromProd || !toProd || fromProd === toProd) return dose;
-  if (PHYSICS_DOSE_ACTIONS.has(action)) return dose;
-  if (normalizeDoseUnit(fromProd.doseUnit) !== normalizeDoseUnit(toProd.doseUnit)) return dose;
+// v1.124.1 — Gère aussi un produit d'unité différente (poudre g ↔ liquide mL) :
+// chaque taux de dosage est exprimé dans l'unité PROPRE de son produit (ex. "30 g
+// par 0,1 pH pour 10 m³" / "86 mL par 0,1 pH pour 10 m³"), donc dose /
+// taux d'origine = besoin (m³ × écart de pH) indépendant de l'unité, × taux du
+// nouveau produit = quantité directement dans SON unité — aucune densité
+// nécessaire. Avant, une unité différente laissait le nombre inchangé (ex.
+// 1,598 L de liquide affiché tel quel pour une poudre : ≈ 0,56 kg attendus —
+// retour Arnaud). Renvoie { amount, unit, converted } : `unit` est l'unité du
+// produit cible quand la conversion a eu lieu (sinon null = garder l'unité de
+// l'étape).
+function rescaleDoseFull(dose, action, fromProd, toProd, round = true) {
+  const unchanged = { amount: dose, unit: null, converted: false };
+  if (dose == null || !fromProd || !toProd || fromProd === toProd) return unchanged;
+  if (PHYSICS_DOSE_ACTIONS.has(action)) return unchanged;
   const useEffect = !FIXED_DOSE_ACTIONS.has(action);
   const src = (p) => (p.doseAmount != null && p.effectAmount != null && p.effectPer != null)
     ? p
     : (DEFAULT_PRODUCTS.find((d) => d.action === p.action) || p);
   const fromSrc = src(fromProd);
   const toSrc = src(toProd);
+  const fromUnit = normalizeDoseUnit(fromSrc.doseUnit);
+  const toUnit = normalizeDoseUnit(toSrc.doseUnit);
+  // Produit dont l'unité propre diffère de celle de sa source de dosage
+  // (repli sur le produit par défaut d'une autre unité) : conversion non fiable.
+  if (normalizeDoseUnit(fromProd.doseUnit) !== fromUnit || normalizeDoseUnit(toProd.doseUnit) !== toUnit) return unchanged;
   const fromRate = productDoseRate(fromSrc, useEffect);
   const toRate = productDoseRate(toSrc, useEffect);
-  if (!fromRate || !toRate) return dose;
+  if (!fromRate || !toRate) return unchanged;
   let scaled = dose * toRate / fromRate;
   if (action === "chlore" || action === "chlore-stabilise") {
     const pct = (p) => (typeof p.activeChlorinePercent === "number" && p.activeChlorinePercent > 0) ? p.activeChlorinePercent : CHLORE_REFERENCE_ACTIVE_PERCENT;
     scaled = scaled * pct(fromSrc) / pct(toSrc);
   }
-  return round ? Math.round(scaled) : scaled;
+  return { amount: round ? Math.round(scaled) : scaled, unit: toUnit, converted: true };
+}
+function rescaleDoseForProduct(dose, action, fromProd, toProd, round = true) {
+  return rescaleDoseFull(dose, action, fromProd, toProd, round).amount;
 }
 function findProductOrGeneric(products, name) {
   return (products || []).find((p) => p.name === name) || DEFAULT_PRODUCTS.find((p) => p.name === name) || null;
@@ -17955,10 +17992,15 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   // (productRealName/productName), mise à l'échelle par le ratio des taux de
   // dosage — voir rescaleDoseForProduct. Sans dose calculée (étape déjà
   // appliquée, computedDoseAmount null), renvoie appliedAmount inchangé.
+  // v1.124.1 — Renvoie { amount, unit } : `unit` est l'unité du produit
+  // cible (poudre g ↔ liquide mL) — c'est elle qu'il faut afficher/demander
+  // (kg ou L), plus l'unité de l'étape d'origine.
   function scaledDoseFor(s, toProd) {
-    if (s.computedDoseAmount == null) return s.appliedAmount;
+    const stepUnit = s.doseUnit || "g";
+    if (s.computedDoseAmount == null) return { amount: s.appliedAmount, unit: stepUnit };
     const fromProd = findAnyProduct(s.productRealName ?? s.productName);
-    return rescaleDoseForProduct(s.computedDoseAmount, s.action, fromProd, toProd);
+    const r = rescaleDoseFull(s.computedDoseAmount, s.action, fromProd, toProd);
+    return { amount: r.amount, unit: r.converted ? r.unit : stepUnit };
   }
 
   useEffect(() => {
@@ -17988,8 +18030,8 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
           : products?.find((p) => p.name === (step.productRealName ?? step.productName));
         // v1.123.5 — Dose recalculée pour le produit présélectionné (peut
         // différer du produit pour lequel le plan a été calculé).
-        const amount = scaledDoseFor(step, defaultProductObj);
-        const { value } = toDisplayUnit(amount, unit, defaultProductObj);
+        const scaled = scaledDoseFor(step, defaultProductObj);
+        const { value } = toDisplayUnit(scaled.amount, scaled.unit, defaultProductObj);
         setEditAmount(value != null && value !== "" ? String(value) : "");
         // Heure par défaut = maintenant en format HH:MM
         const d = new Date();
@@ -18084,7 +18126,9 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   // "me laisser choisir parmi les équivalents, générique inclus"),
   // l'utilisateur peut choisir un générique même s'il a des produits réels.
   const usingGenericProduct = !isInfoStep && manageStock && !!selectedProductObj && DEFAULT_PRODUCTS.includes(selectedProductObj);
-  const { displayUnit } = toDisplayUnit(step.computedDoseAmount || step.appliedAmount, baseUnit, selectedProductObj);
+  // v1.124.1 — Unité affichée = celle du produit sélectionné (kg pour une
+  // poudre, L pour un liquide), pas celle de l'étape d'origine.
+  const { displayUnit } = toDisplayUnit(step.computedDoseAmount || step.appliedAmount, scaledDoseFor(step, selectedProductObj).unit, selectedProductObj);
   const scheduled = step.scheduledAt ? new Date(step.scheduledAt).getTime() : null;
   const remaining = scheduled ? scheduled - now : null;
   // v1.111.3 — Une étape informative (isInfoStep) n'a rien à attendre : le
@@ -18375,8 +18419,8 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
                   // v1.123.5 — Quantité recalculée pour le nouveau produit
                   // (ratio des taux de dosage), plus seulement reconvertie
                   // d'unité — retour Arnaud.
-                  const amount = scaledDoseFor(step, newProdObj);
-                  const { value } = toDisplayUnit(amount, step.doseUnit || "g", newProdObj);
+                  const scaled = scaledDoseFor(step, newProdObj);
+                  const { value } = toDisplayUnit(scaled.amount, scaled.unit, newProdObj);
                   setEditAmount(value != null && value !== "" ? String(value) : "");
                 }}
                 style={{ width: "100%", boxSizing: "border-box", fontSize: 14, fontWeight: 600, color: "var(--brand-text-strong)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 12px", outline: "none", background: "#fff" }}
