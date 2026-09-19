@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.123.4";
+const APP_VERSION = "1.124.0";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -585,6 +585,11 @@ const TRANSLATIONS = {
     generic_product_badge: "Produit générique",
     generic_product_option_prefix: "Générique :",
     option_stock_empty_suffix: "(stock épuisé)",
+    wizard_complement_badge: "Complément",
+    complement_pending_text: "Reste à appliquer : ≈ {dose} de {product} (ou produit équivalent)",
+    complement_from: "À partir de {date}",
+    stock_insufficient_msg: "Stock insuffisant : il reste {remaining} de ce produit pour une dose de {needed}.",
+    stock_insufficient_btn: "Appliquer le stock restant, compléter ensuite",
     prod_name_tac_plus: "Produit TAC+ (bicarbonate de sodium)",
     prod_name_calcium: "Chlorure de calcium (dureté +)",
     prod_name_anti_phos: "Anti-phosphates (PHOSfree type)",
@@ -1388,6 +1393,11 @@ const TRANSLATIONS = {
     generic_product_badge: "Generic product",
     generic_product_option_prefix: "Generic:",
     option_stock_empty_suffix: "(out of stock)",
+    wizard_complement_badge: "Top-up",
+    complement_pending_text: "Remaining to apply: ≈ {dose} of {product} (or an equivalent product)",
+    complement_from: "From {date}",
+    stock_insufficient_msg: "Not enough stock: {remaining} of this product left for a dose of {needed}.",
+    stock_insufficient_btn: "Apply remaining stock, top up afterwards",
     prod_name_tac_plus: "TAC+ product (sodium bicarbonate)",
     prod_name_calcium: "Calcium chloride (hardness +)",
     prod_name_anti_phos: "Anti-phosphates (PHOSfree type)",
@@ -2190,6 +2200,11 @@ const TRANSLATIONS = {
     generic_product_badge: "Generisches Produkt",
     generic_product_option_prefix: "Generisch:",
     option_stock_empty_suffix: "(Lager leer)",
+    wizard_complement_badge: "Ergänzung",
+    complement_pending_text: "Noch anzuwenden: ≈ {dose} von {product} (oder ein gleichwertiges Produkt)",
+    complement_from: "Ab {date}",
+    stock_insufficient_msg: "Nicht genug Bestand: noch {remaining} dieses Produkts bei einer Dosis von {needed}.",
+    stock_insufficient_btn: "Restbestand anwenden, danach ergänzen",
     prod_name_tac_plus: "KH+-Produkt (Natriumbicarbonat)",
     prod_name_calcium: "Calciumchlorid (Härte +)",
     prod_name_anti_phos: "Anti-Phosphat (PHOSfree Typ)",
@@ -2988,6 +3003,11 @@ const TRANSLATIONS = {
     generic_product_badge: "Prodotto generico",
     generic_product_option_prefix: "Generico:",
     option_stock_empty_suffix: "(scorte esaurite)",
+    wizard_complement_badge: "Integrazione",
+    complement_pending_text: "Resta da applicare: ≈ {dose} di {product} (o prodotto equivalente)",
+    complement_from: "Da {date}",
+    stock_insufficient_msg: "Scorte insufficienti: restano {remaining} di questo prodotto per una dose di {needed}.",
+    stock_insufficient_btn: "Applica le scorte rimanenti, integra dopo",
     prod_name_tac_plus: "Prodotto TAC+ (bicarbonato di sodio)",
     prod_name_calcium: "Cloruro di calcio (durezza +)",
     prod_name_anti_phos: "Anti-fosfati (tipo PHOSfree)",
@@ -3786,6 +3806,11 @@ const TRANSLATIONS = {
     generic_product_badge: "Producto genérico",
     generic_product_option_prefix: "Genérico:",
     option_stock_empty_suffix: "(sin stock)",
+    wizard_complement_badge: "Complemento",
+    complement_pending_text: "Queda por aplicar: ≈ {dose} de {product} (o producto equivalente)",
+    complement_from: "A partir del {date}",
+    stock_insufficient_msg: "Stock insuficiente: quedan {remaining} de este producto para una dosis de {needed}.",
+    stock_insufficient_btn: "Aplicar el stock restante y completar después",
     prod_name_tac_plus: "Producto TAC+ (bicarbonato de sodio)",
     prod_name_calcium: "Cloruro de calcio (dureza +)",
     prod_name_anti_phos: "Anti-fosfatos (tipo PHOSfree)",
@@ -4581,6 +4606,11 @@ const TRANSLATIONS = {
     generic_product_badge: "Produto genérico",
     generic_product_option_prefix: "Genérico:",
     option_stock_empty_suffix: "(sem stock)",
+    wizard_complement_badge: "Complemento",
+    complement_pending_text: "Falta aplicar: ≈ {dose} de {product} (ou produto equivalente)",
+    complement_from: "A partir de {date}",
+    stock_insufficient_msg: "Stock insuficiente: restam {remaining} deste produto para uma dose de {needed}.",
+    stock_insufficient_btn: "Aplicar o stock restante e completar depois",
     prod_name_tac_plus: "Produto TAC+ (bicarbonato de sódio)",
     prod_name_calcium: "Cloreto de cálcio (dureza +)",
     prod_name_anti_phos: "Anti-fosfatos (tipo PHOSfree)",
@@ -10138,6 +10168,10 @@ function PoolGenAIApp() {
       doseUnit: s.doseUnit,
       appliedAt: s.appliedAt, skipped: s.skipped, scheduledAt: s.scheduledAt,
       mode: s.mode, doseText: s.doseText,
+      // v1.124.0 — Conserve le marquage des étapes de complément (voir
+      // applyWizardStep) dans l'application enregistrée, pour que la carte
+      // "Complément" du plan reste correctement associée à son étape mère.
+      ...(s.isComplement ? { isComplement: true } : {}),
     }));
   }
 
@@ -10164,13 +10198,31 @@ function PoolGenAIApp() {
     const target = origStep.computedDoseAmount;
     const canSplit = target != null && amount != null && origStep.mode !== "entretien" && origStep.doseUnit !== "%";
     const epsilon = canSplit ? Math.max(1, target * 0.02) : 0;
-    const rawRemainder = canSplit ? target - amount : 0;
+    // v1.123.5 — `amount` est exprimé pour le produit réellement appliqué
+    // (productName), `target` pour le produit d'origine du plan : on ramène
+    // `amount` aux termes du produit d'origine avant de comparer, et le
+    // reliquat reste ainsi exprimé pour le produit d'origine — cohérent avec
+    // la nouvelle étape de complément (qui garde ses productName/
+    // computedDoseAmount d'origine, recalculés ensuite pour le produit choisi
+    // par le wizard). Voir rescaleDoseForProduct.
+    const amountInOrigTerms = amount == null ? amount : rescaleDoseForProduct(
+      amount, origStep.action,
+      findProductOrGeneric(products, productName || origStep.productRealName || origStep.productName),
+      findProductOrGeneric(products, origStep.productRealName ?? origStep.productName),
+      false
+    );
+    const rawRemainder = canSplit ? target - amountInOrigTerms : 0;
     const needsSplit = rawRemainder > epsilon && !!wantsSplit;
 
     const newSteps = activePlan.steps.map((s, i) => {
       if (i !== stepIdx) return s;
+      // v1.124.0 — Reprend appliedProductName à zéro à chaque application :
+      // une étape de complément héritait auparavant (via ...origStep) du
+      // produit de l'étape mère, et le gardait même si l'utilisateur
+      // appliquait ensuite le produit d'origine ou un autre.
+      const { appliedProductName: _prevApplied, ...sRest } = s;
       return {
-        ...s,
+        ...sRest,
         appliedAt: now,
         appliedAmount: amount,
         skipped: false,
@@ -10180,9 +10232,14 @@ function PoolGenAIApp() {
 
     let stepsWithSplit = newSteps;
     if (needsSplit) {
+      // v1.124.0 — Complément : reste exprimé pour le produit d'origine du
+      // plan, sans produit "appliqué" pré-rempli (l'assistant propose le
+      // produit en stock, et la dose est recalculée pour celui choisi) ;
+      // marqué isComplement pour que le tableau de bord en affiche une carte.
+      const { appliedProductName: _dropApplied, ...origRest } = origStep;
       const splitStep = {
-        ...origStep,
-        ...(newSteps[stepIdx].appliedProductName ? { appliedProductName: newSteps[stepIdx].appliedProductName } : {}),
+        ...origRest,
+        isComplement: true,
         computedDoseAmount: rawRemainder,
         appliedAmount: null,
         appliedAt: null,
@@ -12236,17 +12293,35 @@ Réponds directement en français, sans titre ni introduction.`;
             {recs.length > 1 && (
               <p style={styles.helpText}>{t("follow_order")}</p>
             )}
-            {recs.map((r, i) => (
-              <RecoCard
-                key={i}
-                reco={r}
-                isLast={i === recs.length - 1}
-                manageStock={manageStock}
-                products={products}
-                lang={lang}
-                appliedStep={(planForLatest || applicationForLatest)?.steps?.[i] || null}
-              />
-            ))}
+            {(() => {
+              // v1.124.0 — Les étapes de complément (isComplement) s'insèrent
+              // dans le plan sans correspondre à une recommandation : on
+              // regroupe donc chaque étape "mère" avec ses compléments pour
+              // garder le lien recommandation ↔ étape (avant, tout décalage
+              // d'indice après une scission faussait les cartes suivantes) et
+              // afficher une carte Complément juste après sa mère.
+              const stepsSrc = (planForLatest || applicationForLatest)?.steps || [];
+              const groups = [];
+              stepsSrc.forEach((s) => {
+                if (!s.isComplement) groups.push({ main: s, complements: [] });
+                else if (groups.length) groups[groups.length - 1].complements.push(s);
+              });
+              return recs.map((r, i) => (
+                <React.Fragment key={i}>
+                  <RecoCard
+                    reco={r}
+                    isLast={i === recs.length - 1}
+                    manageStock={manageStock}
+                    products={products}
+                    lang={lang}
+                    appliedStep={groups[i]?.main || null}
+                  />
+                  {(groups[i]?.complements || []).map((c, j) => (
+                    <ComplementCard key={`c${j}`} step={c} products={products} lang={lang} />
+                  ))}
+                </React.Fragment>
+              ));
+            })()}
 
             {(() => {
               if (applicationForLatest && !planForLatest) {
@@ -12338,6 +12413,39 @@ function ParamCard({ param, value, effectiveTargets, lang }) {
 function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep }) {
   const t = useT(lang || "fr");
   const isInfo = !!reco.noAction;
+  // v1.123.7 — Une fois l'étape appliquée avec un AUTRE produit que celui du
+  // plan (choix dans l'assistant, voir appliedProductName), la carte affiche
+  // ce produit-là — nom, photo, dose conseillée recalculée, note — au lieu
+  // du produit d'origine (retour Arnaud). Les badges de stock/produit
+  // manquant ne s'appliquent plus (ils portaient sur le produit d'origine).
+  const origProductName = reco.productRealName ?? reco.productName;
+  const swappedName = !isInfo && appliedStep && appliedStep.appliedAt && !appliedStep.skipped
+    && appliedStep.appliedProductName && appliedStep.appliedProductName !== origProductName
+    ? appliedStep.appliedProductName : null;
+  const appliedProdObj = swappedName ? findProductOrGeneric(products, swappedName) : null;
+  const swapped = !!appliedProdObj;
+  let cardProductName = reco.productName;
+  let cardProductPhoto = reco.productPhoto;
+  let cardDoseText = reco.doseText;
+  let cardNote = reco.note;
+  let appliedIsGeneric = false;
+  if (swapped) {
+    // Produit source du calcul d'origine : le produit du plan s'il existe,
+    // sinon le produit par défaut de l'action (voir pickDoseSrc).
+    const fromProd = findProductOrGeneric(products, origProductName)
+      || DEFAULT_PRODUCTS.find((d) => d.action === reco.action) || null;
+    cardProductName = appliedProdObj.nameKey ? t(appliedProdObj.nameKey) : appliedProdObj.name;
+    cardProductPhoto = appliedProdObj.photo || null;
+    appliedIsGeneric = DEFAULT_PRODUCTS.includes(appliedProdObj);
+    const newDose = rescaleDoseForProduct(reco.computedDoseAmount, reco.action, fromProd, appliedProdObj);
+    if (reco.doseText && reco.computedDoseAmount != null && newDose != null && newDose !== reco.computedDoseAmount) {
+      const oldStr = formatDose(reco.computedDoseAmount, reco.doseUnit || "g");
+      const newStr = formatDose(newDose, reco.doseUnit || "g");
+      if (reco.doseText.includes(oldStr)) cardDoseText = reco.doseText.replace(oldStr, newStr);
+    }
+    const ownNote = (p) => (p ? ((p.noteKey ? t(p.noteKey) : p.note) || null) : null);
+    cardNote = ownNote(appliedProdObj) || (ownNote(fromProd) ? null : reco.note);
+  }
   return (
     <div style={isInfo ? styles.recoCardInfo : styles.recoCard}>
       <div style={{ ...styles.recoTop, justifyContent: "space-between" }}>
@@ -12375,16 +12483,21 @@ function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep }) {
         // alors un libellé générique ("Aucun produit nécessaire"), jamais le
         // nom d'un vrai produit — le recherche échouait donc toujours et
         // affichait "stock épuisé" alors qu'aucun produit n'est requis.
-        const missingFromStock = !isInfo && manageStock && products && reco.productAvailable &&
+        const missingFromStock = !swapped && !isInfo && manageStock && products && reco.productAvailable &&
           !products.find((p) => p.name === (reco.productRealName ?? reco.productName) && (p.stockPercent ?? 100) > 0);
         return (
           <div style={styles.recoProductRow}>
-            {reco.productPhoto && (
-              <img src={reco.productPhoto} alt="" style={styles.recoProductThumb} />
+            {cardProductPhoto && (
+              <img src={cardProductPhoto} alt="" style={styles.recoProductThumb} />
             )}
             <div style={styles.recoProduct}>
-              {reco.productName}
-              {reco.productAvailable === false && (
+              {cardProductName}
+              {appliedIsGeneric && (
+                <span style={{ ...styles.recoMissingTag, background: "#fdf0ef", color: "#c0392b", borderColor: "#f5c6c2" }}>
+                  {t("generic_product_badge")}
+                </span>
+              )}
+              {!swapped && reco.productAvailable === false && (
                 <span style={styles.recoMissingTag}>
                   <AlertTriangle size={11} /> {t("missing_product")}
                 </span>
@@ -12398,7 +12511,7 @@ function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep }) {
           </div>
         );
       })()}
-      {reco.doseText && <div style={styles.recoDose}>{reco.doseText}</div>}
+      {cardDoseText && <div style={styles.recoDose}>{cardDoseText}</div>}
       {/* v1.110.1 — Quantité réellement appliquée pour cette étape (peut
           différer de la dose suggérée ci-dessus si l'utilisateur l'a ajustée
           dans le wizard). */}
@@ -12412,7 +12525,7 @@ function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep }) {
           avertissement non bloquant si la dose calculée s'écarte fortement
           du produit de référence pour cette action — n'empêche jamais
           d'appliquer le plan, signale juste une fiche produit à vérifier. */}
-      {reco.doseAnomaly && (
+      {!swapped && reco.doseAnomaly && (
         <div style={styles.recoAnomalyWarning}>
           <AlertTriangle size={12} /> {t("dose_anomaly_warning")}
         </div>
@@ -12425,7 +12538,7 @@ function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep }) {
           <Info size={12} /> {t("reco_ph_reduced_by_tac_note")}
         </div>
       )}
-      {reco.missingTip && <div style={styles.recoNote}>{reco.missingTip}</div>}
+      {!swapped && reco.missingTip && <div style={styles.recoNote}>{reco.missingTip}</div>}
       {reco.timingTip && <div style={{ fontSize: 12.5, color: "#3a5a78", marginTop: 4 }}>🌙 {reco.timingTip}</div>}
 
       {isInfo && (
@@ -12442,7 +12555,51 @@ function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep }) {
         </div>
       )}
 
-      {reco.note && <div style={styles.recoNote}>{reco.note}</div>}
+      {cardNote && <div style={styles.recoNote}>{cardNote}</div>}
+    </div>
+  );
+}
+
+// v1.124.0 — Carte "Complément" du plan de traitement : étape insérée quand la
+// dose n'a pas pu être appliquée en une fois (stock insuffisant d'un produit,
+// dose max par prise... — voir applyWizardStep/isComplement). Affichée juste
+// après la carte de l'étape mère : reste à appliquer (exprimé pour le produit
+// d'origine du plan, le produit final se choisit dans l'assistant) et horaire
+// prévu, puis produit et quantité réellement appliqués une fois faite.
+function ComplementCard({ step, products, lang }) {
+  const t = useT(lang || "fr");
+  const done = !!step.appliedAt && !step.skipped;
+  const usedObj = done && step.appliedProductName ? findProductOrGeneric(products, step.appliedProductName) : null;
+  const shownName = usedObj ? (usedObj.nameKey ? t(usedObj.nameKey) : usedObj.name) : step.productName;
+  const unit = step.doseUnit || "g";
+  return (
+    <div style={{ ...styles.recoCard, borderStyle: "dashed", opacity: step.skipped ? 0.6 : 1 }}>
+      <div style={{ ...styles.recoTop, justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={styles.recoStepBadge}>+</div>
+          <span style={styles.recoParam}>{t("wizard_complement_badge")}</span>
+        </div>
+      </div>
+      <div style={styles.recoProductRow}>
+        <div style={styles.recoProduct}>{step.skipped ? "⊘ " : ""}{shownName}</div>
+      </div>
+      {!done && !step.skipped && step.computedDoseAmount != null && (
+        <div style={styles.recoDose}>
+          {t("complement_pending_text", { dose: formatDose(step.computedDoseAmount, unit), product: step.productName })}
+        </div>
+      )}
+      {!done && !step.skipped && step.scheduledAt && (
+        <div style={styles.recoTiming}>
+          <Clock size={13} color="#a8721a" />
+          {t("complement_from", { date: formatDate(step.scheduledAt) })}
+        </div>
+      )}
+      {done && step.appliedAmount != null && (
+        <div style={{ fontSize: 13, fontWeight: 600, color: "#1a8fd1", marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
+          <CheckCircle2 size={13} />
+          {t("applied_amount", { amount: formatDose(step.appliedAmount, unit) })}
+        </div>
+      )}
     </div>
   );
 }
@@ -12561,6 +12718,42 @@ function isDoseRateAnomalous(prod, referenceProd, useEffectAmount = true) {
   if (!rate || !refRate) return false;
   const ratio = rate / refRate;
   return ratio > DOSE_RATE_ANOMALY_FACTOR || ratio < 1 / DOSE_RATE_ANOMALY_FACTOR;
+}
+
+// v1.123.5 — Recalcul de la dose quand l'utilisateur applique un autre produit
+// que celui pour lequel le plan a été calculé (retour Arnaud : "quand je change
+// de produit, la quantité est-elle recalculée ?" — non, seule l'unité
+// d'affichage l'était). Mise à l'échelle par le ratio des taux de dosage
+// (doseAmount / effectPer / effectAmount) des deux produits : pas besoin de
+// l'écart mesuré ni du volume, qui se simplifient. Même repli que
+// computeRecommendations (pickDoseSrc) : un produit sans dosage réactif
+// complet (ex. galets "entretien uniquement") retombe sur le produit par
+// défaut de son action. Inchangé pour le sel (dose physique indépendante du
+// produit) et quand les unités de dose diffèrent (g vs mL, non comparables
+// sans densité). Chlore : rééchelonné aussi sur le % de chlore actif
+// (voir scaleDoseForActiveChlorine). `round=false` pour les comparaisons.
+function rescaleDoseForProduct(dose, action, fromProd, toProd, round = true) {
+  if (dose == null || !fromProd || !toProd || fromProd === toProd) return dose;
+  if (PHYSICS_DOSE_ACTIONS.has(action)) return dose;
+  if (normalizeDoseUnit(fromProd.doseUnit) !== normalizeDoseUnit(toProd.doseUnit)) return dose;
+  const useEffect = !FIXED_DOSE_ACTIONS.has(action);
+  const src = (p) => (p.doseAmount != null && p.effectAmount != null && p.effectPer != null)
+    ? p
+    : (DEFAULT_PRODUCTS.find((d) => d.action === p.action) || p);
+  const fromSrc = src(fromProd);
+  const toSrc = src(toProd);
+  const fromRate = productDoseRate(fromSrc, useEffect);
+  const toRate = productDoseRate(toSrc, useEffect);
+  if (!fromRate || !toRate) return dose;
+  let scaled = dose * toRate / fromRate;
+  if (action === "chlore" || action === "chlore-stabilise") {
+    const pct = (p) => (typeof p.activeChlorinePercent === "number" && p.activeChlorinePercent > 0) ? p.activeChlorinePercent : CHLORE_REFERENCE_ACTIVE_PERCENT;
+    scaled = scaled * pct(fromSrc) / pct(toSrc);
+  }
+  return round ? Math.round(scaled) : scaled;
+}
+function findProductOrGeneric(products, name) {
+  return (products || []).find((p) => p.name === name) || DEFAULT_PRODUCTS.find((p) => p.name === name) || null;
 }
 
 // ---------- Logique de recommandation ----------
@@ -17757,6 +17950,17 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
     return (products || []).find((p) => p.name === name) || DEFAULT_PRODUCTS.find((p) => p.name === name) || null;
   }
 
+  // v1.123.5 — Dose de l'étape exprimée pour le produit `toProd` : la dose
+  // calculée (computedDoseAmount) l'est pour le produit d'origine du plan
+  // (productRealName/productName), mise à l'échelle par le ratio des taux de
+  // dosage — voir rescaleDoseForProduct. Sans dose calculée (étape déjà
+  // appliquée, computedDoseAmount null), renvoie appliedAmount inchangé.
+  function scaledDoseFor(s, toProd) {
+    if (s.computedDoseAmount == null) return s.appliedAmount;
+    const fromProd = findAnyProduct(s.productRealName ?? s.productName);
+    return rescaleDoseForProduct(s.computedDoseAmount, s.action, fromProd, toProd);
+  }
+
   useEffect(() => {
     const iv = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(iv);
@@ -17766,7 +17970,6 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
     if (plan && plan.currentStepIdx >= 0) {
       const step = plan.steps[plan.currentStepIdx];
       if (step) {
-        const amount = step.computedDoseAmount ?? step.appliedAmount;
         const unit = step.doseUnit || "g";
         // v1.61.0 — Pré-sélection du produit à utiliser : le plus entamé
         // puis le plus ancien parmi les produits en stock de l'action (ou
@@ -17783,6 +17986,9 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
         const defaultProductObj = sorted.length > 0 ? sorted[0]
           : generic.length > 0 ? generic[0]
           : products?.find((p) => p.name === (step.productRealName ?? step.productName));
+        // v1.123.5 — Dose recalculée pour le produit présélectionné (peut
+        // différer du produit pour lequel le plan a été calculé).
+        const amount = scaledDoseFor(step, defaultProductObj);
         const { value } = toDisplayUnit(amount, unit, defaultProductObj);
         setEditAmount(value != null && value !== "" ? String(value) : "");
         // Heure par défaut = maintenant en format HH:MM
@@ -17898,6 +18104,23 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   const prod = usingGenericProduct ? null : selectedProductObj;
   const stockEmpty = !isInfoStep && manageStock && prod && (prod.stockPercent ?? 100) <= 0;
 
+  // v1.123.6 — Titre et note produit suivent le produit SÉLECTIONNÉ, plus le
+  // produit d'origine du plan (retour Arnaud : après un changement de
+  // produit, l'étape continuait d'afficher le nom et la note de l'ancien —
+  // ex. "Augmente le CYA..." pour des galets alors qu'un produit sans
+  // stabilisant était choisi). Note du produit choisi si elle existe ; sinon
+  // la note de l'étape n'est conservée que si elle était générique (issue
+  // du repli par action, pas de la note propre au produit d'origine).
+  const origProdObj = findAnyProduct(step.productRealName ?? step.productName);
+  const selectionChanged = !!selectedProductObj && !!origProdObj && selectedProductObj !== origProdObj;
+  const ownNote = (p) => (p ? ((p.noteKey ? t(p.noteKey) : p.note) || null) : null);
+  const displayProductName = selectionChanged
+    ? (selectedProductObj.nameKey ? t(selectedProductObj.nameKey) : selectedProductObj.name)
+    : (step.productName || step.title);
+  const displayNote = selectionChanged
+    ? (ownNote(selectedProductObj) || (ownNote(origProdObj) ? null : step.note))
+    : step.note;
+
   // v1.114.0 — Point de passage commun pour les applications susceptibles de
   // déclencher une scission (produit avec dose calculée, hors % et hors
   // entretien) : si la quantité saisie est significativement inférieure à la
@@ -17908,7 +18131,18 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
     const target = step.computedDoseAmount;
     const canSplit = target != null && amount != null && step.mode !== "entretien" && step.doseUnit !== "%";
     const epsilon = canSplit ? Math.max(1, target * 0.02) : 0;
-    const rawRemainder = canSplit ? target - amount : 0;
+    // v1.123.5 — `amount` est exprimé pour le produit réellement appliqué,
+    // `target` pour le produit d'origine du plan : on ramène `amount` aux
+    // termes du produit d'origine avant de comparer (sinon appliquer la dose
+    // recalculée correcte d'un autre produit déclencherait une fausse
+    // proposition de scission). Voir aussi applyWizardStep.
+    const amountInOrigTerms = amount == null ? amount : rescaleDoseForProduct(
+      amount, step.action,
+      findAnyProduct(productName || step.productRealName || step.productName),
+      findAnyProduct(step.productRealName ?? step.productName),
+      false
+    );
+    const rawRemainder = canSplit ? target - amountInOrigTerms : 0;
     if (rawRemainder > epsilon) {
       setPendingSplit({ amount, appliedAt, productName });
       return;
@@ -17970,6 +18204,41 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
     finalizeApply(amount, appliedAt, selectedProduct);
   }
 
+  // v1.124.0 — Stock insuffisant pour la dose saisie (retour Arnaud : "1,5 kg
+  // à mettre, 1 kg en stock, un produit B neuf") : propose d'appliquer ce qu'il
+  // reste puis de compléter avec un autre produit, en un clic — la scission
+  // (étape de complément) est créée d'office, sans passer par la question
+  // "appliquer le complément plus tard ?". Uniquement pour un produit réel
+  // suivi en stock, hors entretien/pourcentage/générique. Avec des galets,
+  // seul un nombre entier d'unités est applicable.
+  const stockShortfall = (() => {
+    if (!manageStock || isInfoStep || isPercentDose || step.mode === "entretien" || usingGenericProduct || !selectedProductObj) return null;
+    if (!(products || []).some((p) => p.name === selectedProductObj.name)) return null;
+    const unit = selectedProductObj.doseUnit || baseUnit;
+    const remaining = remainingInDoseUnit(selectedProductObj, unit);
+    if (remaining == null || remaining <= 0) return null;
+    const { displayUnit: du } = toDisplayUnit(null, unit, selectedProductObj);
+    const entered = toBaseUnit(editAmount, du, unit, selectedProductObj);
+    if (entered == null || entered <= remaining + Math.max(1, remaining * 0.02)) return null;
+    const isGaletsProd = selectedProductObj.packagingType === "galets" && selectedProductObj.unitWeight > 0;
+    const applicable = isGaletsProd ? Math.floor(remaining / selectedProductObj.unitWeight) * selectedProductObj.unitWeight : remaining;
+    if (applicable <= 0) return null;
+    const fmt = (v) => isGaletsProd ? `${Math.round(v / selectedProductObj.unitWeight)} ${t("unit_galets")}` : formatDose(Math.round(v * 100) / 100, unit);
+    return { applicable, remainingText: fmt(applicable), neededText: fmt(entered) };
+  })();
+
+  function handleApplyRemainingStock() {
+    if (!stockShortfall) return;
+    let appliedAt = new Date().toISOString();
+    if (editTime) {
+      const [h, m] = editTime.split(":").map(Number);
+      const d = new Date();
+      d.setHours(h, m, 0, 0);
+      appliedAt = d.toISOString();
+    }
+    onApplyStep(currentIdx, stockShortfall.applicable, appliedAt, selectedProduct, true);
+  }
+
   return (
     <>
     <div style={{
@@ -18010,12 +18279,17 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
 
         {/* Titre étape */}
         <div style={{ fontSize: 18, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 4 }}>
+          {step.isComplement && (
+            <div style={{ fontSize: 11.5, fontWeight: 700, color: "#a8721a", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 2 }}>
+              {t("wizard_complement_badge")}
+            </div>
+          )}
           {usingGenericProduct && (
             <div style={{ fontSize: 11.5, fontWeight: 700, color: "#c0392b", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 2 }}>
               {t("generic_product_badge")}
             </div>
           )}
-          {step.productName || step.title}
+          {displayProductName}
         </div>
         {step.title && step.productName && step.title !== step.productName && (
           <div style={{ fontSize: 13, color: "var(--brand-text-secondary)", marginBottom: 8 }}>{step.title}</div>
@@ -18055,9 +18329,9 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
         )}
 
         {/* Note produit */}
-        {step.note && (
+        {displayNote && (
           <div style={{ background: "#fff8e8", border: "1.5px solid #e6a817", borderRadius: 8, padding: "10px 14px", marginBottom: 12 }}>
-            <div style={{ fontSize: 14, fontWeight: 800, color: "#7a5800", lineHeight: 1.4 }}>{step.note}</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: "#7a5800", lineHeight: 1.4 }}>{displayNote}</div>
           </div>
         )}
 
@@ -18098,7 +18372,10 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
                   const newProd = e.target.value;
                   setSelectedProduct(newProd);
                   const newProdObj = findAnyProduct(newProd);
-                  const amount = step.computedDoseAmount ?? step.appliedAmount;
+                  // v1.123.5 — Quantité recalculée pour le nouveau produit
+                  // (ratio des taux de dosage), plus seulement reconvertie
+                  // d'unité — retour Arnaud.
+                  const amount = scaledDoseFor(step, newProdObj);
                   const { value } = toDisplayUnit(amount, step.doseUnit || "g", newProdObj);
                   setEditAmount(value != null && value !== "" ? String(value) : "");
                 }}
@@ -18166,6 +18443,21 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
                   : displayUnit}
               </div>
             </div>
+          </div>
+        )}
+        {stockShortfall && (
+          <div style={{ background: "#fff8e8", border: "1.5px solid #e6a817", borderRadius: 10, padding: "10px 12px", marginBottom: 12 }}>
+            <div style={{ fontSize: 13, color: "#7a5800", fontWeight: 600, lineHeight: 1.4, marginBottom: 8 }}>
+              <AlertTriangle size={13} style={{ marginRight: 4, verticalAlign: "-2px" }} />
+              {t("stock_insufficient_msg", { remaining: stockShortfall.remainingText, needed: stockShortfall.neededText })}
+            </div>
+            <button
+              type="button"
+              onClick={handleApplyRemainingStock}
+              style={{ width: "100%", padding: "10px 0", borderRadius: 10, border: "none", background: "#e6a817", color: "#fff", fontWeight: 700, fontSize: 13.5, cursor: "pointer" }}
+            >
+              {t("stock_insufficient_btn")}
+            </button>
           </div>
         )}
         {isInfoStep && step.doseText && (
