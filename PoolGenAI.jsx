@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.127.0";
+const APP_VERSION = "1.128.1";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -324,8 +324,11 @@ const TRANSLATIONS = {
     ph_projected_label: "pH projeté : {value}",
     fcl_projected_label: "Chlore libre projeté : {value}",
     ph_projected_chart_label: "pH (projeté)",
+    tac_projected_chart_label: "TAC (projeté)",
+    tac_projected_label: "TAC projeté : {value}",
     fcl_projected_chart_label: "Cl libre (projeté)",
     zoom_all: "Tout",
+    zoom_3d: "3 j glissants",
     zoom_7d: "7 j glissants",
     zoom_14d: "14 j glissants",
     zoom_1m: "1 mois glissant",
@@ -1141,8 +1144,11 @@ const TRANSLATIONS = {
     ph_projected_label: "Projected pH: {value}",
     fcl_projected_label: "Projected free chlorine: {value}",
     ph_projected_chart_label: "pH (projected)",
+    tac_projected_chart_label: "ALK (projected)",
+    tac_projected_label: "Projected alkalinity: {value}",
     fcl_projected_chart_label: "Free Cl (projected)",
     zoom_all: "All",
+    zoom_3d: "3d rolling",
     zoom_7d: "7d rolling",
     zoom_14d: "14d rolling",
     zoom_1m: "1mo rolling",
@@ -1948,8 +1954,11 @@ const TRANSLATIONS = {
     ph_projected_label: "Projizierter pH-Wert: {value}",
     fcl_projected_label: "Projiziertes freies Chlor: {value}",
     ph_projected_chart_label: "pH (projiziert)",
+    tac_projected_chart_label: "KH (projiziert)",
+    tac_projected_label: "Projizierte Karbonathärte: {value}",
     fcl_projected_chart_label: "Freies Cl (projiziert)",
     zoom_all: "Alle",
+    zoom_3d: "3 T gleitend",
     zoom_7d: "7 T gleitend",
     zoom_14d: "14 T gleitend",
     zoom_1m: "1 Monat gleitend",
@@ -2757,8 +2766,11 @@ const TRANSLATIONS = {
     ph_projected_label: "pH previsto: {value}",
     fcl_projected_label: "Cloro libero previsto: {value}",
     ph_projected_chart_label: "pH (previsto)",
+    tac_projected_chart_label: "TAC (previsto)",
+    tac_projected_label: "TAC previsto: {value}",
     fcl_projected_chart_label: "Cl libero (previsto)",
     zoom_all: "Tutto",
+    zoom_3d: "3 gg mobili",
     zoom_7d: "7 gg mobili",
     zoom_14d: "14 gg mobili",
     zoom_1m: "1 mese mobile",
@@ -3563,8 +3575,11 @@ const TRANSLATIONS = {
     ph_projected_label: "pH proyectado: {value}",
     fcl_projected_label: "Cloro libre proyectado: {value}",
     ph_projected_chart_label: "pH (proyectado)",
+    tac_projected_chart_label: "TAC (proyectado)",
+    tac_projected_label: "TAC proyectado: {value}",
     fcl_projected_chart_label: "Cl libre (proyectado)",
     zoom_all: "Todo",
+    zoom_3d: "3 d móviles",
     zoom_7d: "7 d móviles",
     zoom_14d: "14 d móviles",
     zoom_1m: "1 mes móvil",
@@ -4369,8 +4384,11 @@ const TRANSLATIONS = {
     ph_projected_label: "pH projetado: {value}",
     fcl_projected_label: "Cloro livre projetado: {value}",
     ph_projected_chart_label: "pH (projetado)",
+    tac_projected_chart_label: "TAC (projetado)",
+    tac_projected_label: "TAC projetado: {value}",
     fcl_projected_chart_label: "Cl livre (projetado)",
     zoom_all: "Tudo",
+    zoom_3d: "3 d móveis",
     zoom_7d: "7 d móveis",
     zoom_14d: "14 d móveis",
     zoom_1m: "1 mês móvel",
@@ -5387,6 +5405,10 @@ function computeProjectedDelta(product, appliedAmount, volume) {
 
 const PROJECTABLE_PH_ACTIONS = ["ph-", "ph+"];
 const PROJECTABLE_FCL_ACTIONS = ["chlore", "chlore-stabilise"];
+// v1.128.0 — TAC projeté, même principe que pH/chlore libre projetés.
+const PROJECTABLE_TAC_ACTIONS = ["tac+", "tac-"];
+// Clé de série du graphique (chartParams) pour chaque paramètre projeté.
+const PROJECTED_CHART_KEY = { pH: "phProjected", fCl: "fclProjected", tac: "tacProjected" };
 
 // Construit, pour UNE mesure et son plan appliqué (steps), les points
 // projetés pH/fCl — indexés par position dans le tableau "steps" pour être
@@ -5401,6 +5423,8 @@ function buildProjectedPoints(measure, steps, products, volume) {
   let currentFcl = measure?.fCl !== undefined && measure.fCl !== "" && measure.fCl != null ? parseFloat(measure.fCl) : null;
   if (currentPh != null && isNaN(currentPh)) currentPh = null;
   if (currentFcl != null && isNaN(currentFcl)) currentFcl = null;
+  let currentTac = measure?.tac !== undefined && measure.tac !== "" && measure.tac != null ? parseFloat(measure.tac) : null;
+  if (currentTac != null && isNaN(currentTac)) currentTac = null;
   const indexed = (steps || [])
     .map((s, i) => ({ s, i }))
     .filter(({ s }) => !s.skipped && s.appliedAmount != null && s.appliedAt)
@@ -5408,8 +5432,9 @@ function buildProjectedPoints(measure, steps, products, volume) {
   indexed.forEach(({ s, i }) => {
     const isPh = PROJECTABLE_PH_ACTIONS.includes(s.action);
     const isFcl = PROJECTABLE_FCL_ACTIONS.includes(s.action);
-    if (!isPh && !isFcl) return;
-    const baseline = isPh ? currentPh : currentFcl;
+    const isTac = PROJECTABLE_TAC_ACTIONS.includes(s.action);
+    if (!isPh && !isFcl && !isTac) return;
+    const baseline = isPh ? currentPh : isFcl ? currentFcl : currentTac;
     if (baseline == null) return;
     // v1.116.1 — Sur les étapes historiques où productRealName n'a jamais été
     // renseigné (cas fréquent, voir constaté sur le compte de Pierre) et où
@@ -5427,10 +5452,10 @@ function buildProjectedPoints(measure, steps, products, volume) {
       || DEFAULT_PRODUCTS.find((p) => p.action === s.action);
     const delta = computeProjectedDelta(prod, s.appliedAmount, volume);
     if (delta == null || isNaN(delta)) return;
-    const sign = s.action === "ph-" ? -1 : 1;
-    const newVal = baseline + sign * delta;
-    if (isPh) currentPh = newVal; else currentFcl = newVal;
-    byIndex[i] = { param: isPh ? "pH" : "fCl", value: newVal, appliedAt: s.appliedAt };
+    const sign = (s.action === "ph-" || s.action === "tac-") ? -1 : 1;
+    const newVal = isTac ? Math.max(0, baseline + sign * delta) : baseline + sign * delta;
+    if (isPh) currentPh = newVal; else if (isFcl) currentFcl = newVal; else currentTac = newVal;
+    byIndex[i] = { param: isPh ? "pH" : isFcl ? "fCl" : "tac", value: newVal, appliedAt: s.appliedAt };
   });
   return byIndex;
 }
@@ -13500,7 +13525,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
 // rapport) : fenêtres glissantes prédéfinies ou "Tout", plus un curseur pour
 // déplacer la fenêtre dans l'historique complet quand elle est plus petite
 // que la période totale couverte par les mesures — voir demande Arnaud.
-const PERIOD_WINDOW_DAYS = { "7d": 7, "14d": 14, "1m": 30 };
+const PERIOD_WINDOW_DAYS = { "3d": 3, "7d": 7, "14d": 14, "1m": 30 };
 
 function getPeriodWindowMs(key) {
   const days = PERIOD_WINDOW_DAYS[key];
@@ -13551,6 +13576,7 @@ function filterByWindow(items, getDate, windowKey, windowEnd) {
 function PeriodZoomControl({ windowKey, onWindowKeyChange, t }) {
   const options = [
     { key: "all", label: t("zoom_all") },
+    { key: "3d", label: t("zoom_3d") },
     { key: "7d", label: t("zoom_7d") },
     { key: "14d", label: t("zoom_14d") },
     { key: "1m", label: t("zoom_1m") },
@@ -14106,10 +14132,23 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
     [...visibleMeasures].sort((a, b) => new Date(a.date) - new Date(b.date)).forEach((m) => {
       const app = (applications || []).find((a) => a.measureId === m.id);
       if (!app) return;
-      Object.values(buildProjectedPoints(m, app.steps, products, pool?.volume || 0)).forEach((p) => {
+      const projPoints = Object.values(buildProjectedPoints(m, app.steps, products, pool?.volume || 0));
+      // v1.128.1 — La courbe projetée d'un paramètre part de la dernière valeur
+      // MESURÉE (point d'ancrage à l'heure de la mesure), puis passe par chaque
+      // application projetée, puis par la mesure suivante si elle est aussi
+      // suivie d'une application — voir retour Arnaud.
+      const anchorTs = new Date(m.date).getTime();
+      new Set(projPoints.map((p) => p.param)).forEach((param) => {
+        const measured = parseFloat(m[param]);
+        if (isNaN(measured)) return;
+        const anchorRow = rows.get(anchorTs) || { timestamp: anchorTs, date: formatDateShort(m.date) };
+        anchorRow[PROJECTED_CHART_KEY[param]] = Math.round(measured * 10) / 10;
+        rows.set(anchorTs, anchorRow);
+      });
+      projPoints.forEach((p) => {
         const ts = new Date(p.appliedAt).getTime();
         const row = rows.get(ts) || { timestamp: ts, date: formatDateShort(p.appliedAt) };
-        row[p.param === "pH" ? "phProjected" : "fclProjected"] = Math.round(p.value * 10) / 10;
+        row[PROJECTED_CHART_KEY[p.param]] = Math.round(p.value * 10) / 10;
         rows.set(ts, row);
       });
     });
@@ -14133,6 +14172,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
     // chip du paramètre mesuré correspondant introduit en v1.113.2.
     { key: "phProjected",  color: "#1a8fd1", label: t("ph_projected_chart_label"),  axis: "left", dashed: true },
     { key: "fclProjected", color: "#2b7fd9", label: t("fcl_projected_chart_label"), axis: "left", dashed: true },
+    { key: "tacProjected", color: "#d98c2b", label: t("tac_projected_chart_label"), axis: "right", dashed: true },
   ];
 
   const allKeys = chartParams.map((cp) => cp.key);
@@ -14826,8 +14866,8 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, applicat
                         réellement appliquée (pas une mesure — voir buildProjectedPoints). */}
                     {projectedByIndex[i] && (
                       <div style={{ fontSize: 11, color: "#a8721a", marginTop: 1 }}>
-                        {t(projectedByIndex[i].param === "pH" ? "ph_projected_label" : "fcl_projected_label", {
-                          value: projectedByIndex[i].value.toFixed(1),
+                        {t(projectedByIndex[i].param === "pH" ? "ph_projected_label" : projectedByIndex[i].param === "tac" ? "tac_projected_label" : "fcl_projected_label", {
+                          value: projectedByIndex[i].value.toFixed(projectedByIndex[i].param === "tac" ? 0 : 1),
                         })}
                       </div>
                     )}
@@ -21892,10 +21932,23 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
     visibleMeasures.forEach((m) => {
       const app = (applications || []).find((a) => a.measureId === m.id);
       if (!app) return;
-      Object.values(buildProjectedPoints(m, app.steps, products, pool?.volume || 0)).forEach((p) => {
+      const projPoints = Object.values(buildProjectedPoints(m, app.steps, products, pool?.volume || 0));
+      // v1.128.1 — La courbe projetée d'un paramètre part de la dernière valeur
+      // MESURÉE (point d'ancrage à l'heure de la mesure), puis passe par chaque
+      // application projetée, puis par la mesure suivante si elle est aussi
+      // suivie d'une application — voir retour Arnaud.
+      const anchorTs = new Date(m.date).getTime();
+      new Set(projPoints.map((p) => p.param)).forEach((param) => {
+        const measured = parseFloat(m[param]);
+        if (isNaN(measured)) return;
+        const anchorRow = rowsMap.get(anchorTs) || { timestamp: anchorTs, date: formatDateShort(m.date) };
+        anchorRow[PROJECTED_CHART_KEY[param]] = Math.round(measured * 10) / 10;
+        rowsMap.set(anchorTs, anchorRow);
+      });
+      projPoints.forEach((p) => {
         const ts = new Date(p.appliedAt).getTime();
         const row = rowsMap.get(ts) || { timestamp: ts, date: formatDateShort(p.appliedAt) };
-        row[p.param === "pH" ? "phProjected" : "fclProjected"] = Math.round(p.value * 10) / 10;
+        row[PROJECTED_CHART_KEY[p.param]] = Math.round(p.value * 10) / 10;
         rowsMap.set(ts, row);
       });
     });
@@ -21923,6 +21976,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
     // Historique (voir demande Arnaud).
     { key: "phProjected",  color: "#1a8fd1", label: t("ph_projected_chart_label"),  axis: "left", dashed: true },
     { key: "fclProjected", color: "#2b7fd9", label: t("fcl_projected_chart_label"), axis: "left", dashed: true },
+    { key: "tacProjected", color: "#d98c2b", label: t("tac_projected_chart_label"), axis: "right", dashed: true },
   ];
 
   // v1.66.2 — Sélection des paramètres affichés sur le graphique du rapport
