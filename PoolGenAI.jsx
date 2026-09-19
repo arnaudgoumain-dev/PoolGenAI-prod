@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.124.2";
+const APP_VERSION = "1.127.0";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -558,6 +558,7 @@ const TRANSLATIONS = {
     firebase_not_configured: "⚠️ Firebase non configuré — fonctionnement hors-ligne uniquement.",
     note_ph_minus: "Vérifier le pH avant chaque ajout. Max 1 kg/100 m³/jour, ou espacer de 2h.",
     note_ph_minus_liquid: "Vérifier le pH avant chaque ajout. Respecter la dose maximale par jour indiquée sur l’étiquette du produit, ou espacer de 2h.",
+    note_ph_minus_prorata: "Soit {max} pour ce bassin ({volume} m³).",
     note_ph_plus: "Répartir sur tout le bassin, filtration en marche.",
     note_chlore_choc: "À verser le soir, soleil couché. Ne stabilise pas (n'augmente pas le CYA).",
     note_galets: "Augmente le CYA à chaque utilisation. À éviter si CYA déjà > 50 mg/L.",
@@ -817,6 +818,7 @@ const TRANSLATIONS = {
     context_loading: "Chargement du bassin…",
     context_secondary_option: "Bassin de {pseudo}",
     banner_secondary: "{pool} — compte de {pseudo}",
+    header_delegated_by: "Bassin délégué par {pseudo}",
     invite_response_title: "Invitation",
     invite_response_text: "{pseudo} t'invite à accéder au bassin {pool}.",
     invite_response_accept: "Accepter",
@@ -1367,6 +1369,7 @@ const TRANSLATIONS = {
     firebase_not_configured: "⚠️ Firebase not configured — offline mode only.",
     note_ph_minus: "Check pH before each addition. Max 1 kg/100 m³/day, or space 2h apart.",
     note_ph_minus_liquid: "Check pH before each addition. Follow the maximum daily dose on the product label, or space 2h apart.",
+    note_ph_minus_prorata: "That is {max} for this pool ({volume} m³).",
     note_ph_plus: "Spread across the pool with filtration running.",
     note_chlore_choc: "Pour in the evening after sunset. Does not stabilise (does not raise CYA).",
     note_galets: "Raises CYA with each use. Avoid if CYA is already above 50 mg/L.",
@@ -1624,6 +1627,7 @@ const TRANSLATIONS = {
     context_loading: "Loading pool…",
     context_secondary_option: "{pseudo}'s pool",
     banner_secondary: "{pool} — {pseudo}'s account",
+    header_delegated_by: "Pool shared by {pseudo}",
     invite_response_title: "Invitation",
     invite_response_text: "{pseudo} invites you to access the pool {pool}.",
     invite_response_accept: "Accept",
@@ -2175,6 +2179,7 @@ const TRANSLATIONS = {
     firebase_not_configured: "⚠️ Firebase nicht konfiguriert — nur Offline-Modus.",
     note_ph_minus: "pH vor jeder Zugabe prüfen. Max 1 kg/100 m³/Tag oder 2h Abstand.",
     note_ph_minus_liquid: "pH vor jeder Zugabe prüfen. Maximale Tagesdosis laut Produktetikett beachten oder 2h Abstand halten.",
+    note_ph_minus_prorata: "Das sind {max} für dieses Becken ({volume} m³).",
     note_ph_plus: "Im gesamten Becken verteilen, Filtration in Betrieb.",
     note_chlore_choc: "Abends nach Sonnenuntergang zugeben. Stabilisiert nicht (erhöht CYA nicht).",
     note_galets: "Erhöht CYA bei jeder Nutzung. Vermeiden wenn CYA bereits über 50 mg/L.",
@@ -2431,6 +2436,7 @@ const TRANSLATIONS = {
     context_loading: "Becken wird geladen…",
     context_secondary_option: "Becken von {pseudo}",
     banner_secondary: "{pool} — Konto von {pseudo}",
+    header_delegated_by: "Becken geteilt von {pseudo}",
     invite_response_title: "Einladung",
     invite_response_text: "{pseudo} lädt dich ein, auf das Becken {pool} zuzugreifen.",
     invite_response_accept: "Annehmen",
@@ -2979,6 +2985,7 @@ const TRANSLATIONS = {
     firebase_not_configured: "⚠️ Firebase non configurato — solo modalità offline.",
     note_ph_minus: "Controllare il pH prima di ogni aggiunta. Max 1 kg/100 m³/giorno o distanziare di 2h.",
     note_ph_minus_liquid: "Controllare il pH prima di ogni aggiunta. Rispettare la dose massima giornaliera indicata sull’etichetta del prodotto o distanziare di 2h.",
+    note_ph_minus_prorata: "Ovvero {max} per questa piscina ({volume} m³).",
     note_ph_plus: "Distribuire in tutta la vasca con filtrazione in funzione.",
     note_chlore_choc: "Versare la sera dopo il tramonto. Non stabilizza (non aumenta il CYA).",
     note_galets: "Aumenta il CYA ad ogni utilizzo. Evitare se il CYA è già sopra 50 mg/L.",
@@ -3235,6 +3242,7 @@ const TRANSLATIONS = {
     context_loading: "Caricamento piscina…",
     context_secondary_option: "Piscina di {pseudo}",
     banner_secondary: "{pool} — account di {pseudo}",
+    header_delegated_by: "Piscina condivisa da {pseudo}",
     invite_response_title: "Invito",
     invite_response_text: "{pseudo} ti invita ad accedere alla piscina {pool}.",
     invite_response_accept: "Accetta",
@@ -3783,6 +3791,7 @@ const TRANSLATIONS = {
     firebase_not_configured: "⚠️ Firebase no configurado — solo modo offline.",
     note_ph_minus: "Verificar el pH antes de cada adición. Máx 1 kg/100 m³/día o espaciar 2h.",
     note_ph_minus_liquid: "Verificar el pH antes de cada adición. Respetar la dosis máxima diaria de la etiqueta del producto o espaciar 2h.",
+    note_ph_minus_prorata: "Es decir, {max} para esta piscina ({volume} m³).",
     note_ph_plus: "Distribuir por toda la piscina con filtración en marcha.",
     note_chlore_choc: "Verter por la noche después del atardecer. No estabiliza (no aumenta el CYA).",
     note_galets: "Aumenta el CYA con cada uso. Evitar si el CYA ya supera los 50 mg/L.",
@@ -4039,6 +4048,7 @@ const TRANSLATIONS = {
     context_loading: "Cargando piscina…",
     context_secondary_option: "Piscina de {pseudo}",
     banner_secondary: "{pool} — cuenta de {pseudo}",
+    header_delegated_by: "Piscina compartida por {pseudo}",
     invite_response_title: "Invitación",
     invite_response_text: "{pseudo} te invita a acceder a la piscina {pool}.",
     invite_response_accept: "Aceptar",
@@ -4584,6 +4594,7 @@ const TRANSLATIONS = {
     firebase_not_configured: "⚠️ Firebase não configurado — apenas modo offline.",
     note_ph_minus: "Verificar o pH antes de cada adição. Máx 1 kg/100 m³/dia ou espaçar 2h.",
     note_ph_minus_liquid: "Verificar o pH antes de cada adição. Respeitar a dose máxima diária do rótulo do produto ou espaçar 2h.",
+    note_ph_minus_prorata: "Ou seja, {max} para esta piscina ({volume} m³).",
     note_ph_plus: "Distribuir por toda a piscina com filtração em funcionamento.",
     note_chlore_choc: "Adicionar à noite após o pôr do sol. Não estabiliza (não aumenta o CYA).",
     note_galets: "Aumenta o CYA a cada uso. Evitar se o CYA já estiver acima de 50 mg/L.",
@@ -4840,6 +4851,7 @@ const TRANSLATIONS = {
     context_loading: "A carregar a piscina…",
     context_secondary_option: "Piscina de {pseudo}",
     banner_secondary: "{pool} — conta de {pseudo}",
+    header_delegated_by: "Piscina partilhada por {pseudo}",
     invite_response_title: "Convite",
     invite_response_text: "{pseudo} convida-te a aceder à piscina {pool}.",
     invite_response_accept: "Aceitar",
@@ -5018,6 +5030,10 @@ const DEFAULT_PRODUCTS = [
     waitHours: 2,
     noteKey: "note_ph_minus",
     note: "Vérifier le pH avant chaque ajout. Max 1 kg/100 m³/jour, ou espacer de 2h.",
+    // v1.127.0 — Dose maximale par ajout, exprimée dans doseUnit pour 100 m³
+    // (voir phMinusMaxDoseFor / computeRecommendations : la dose du plan est
+    // plafonnée au prorata du volume, le reste part en étapes "Complément").
+    maxDosePer100m3: 1000,
     containerAmount: 1000,
     containerUnit: "kg",
     stockPercent: 100,
@@ -11735,6 +11751,11 @@ function Header({ poolName, location, poolPhoto, isPremium, entries, activeEntry
           />
         </div>
         <div style={styles.headerSub}>{location}</div>
+        {viewContext?.pseudo && (
+          <div style={{ ...styles.headerSub, fontSize: 11, opacity: 0.85, marginTop: 1 }}>
+            {t("header_delegated_by", { pseudo: viewContext.pseudo })}
+          </div>
+        )}
       </button>
       {isPremium && (
         <div style={styles.premiumBadge}>
@@ -12649,6 +12670,21 @@ function phMinusNoteKeyForUnit(unit) {
   return (u === "ml" || u === "l") ? "note_ph_minus_liquid" : "note_ph_minus";
 }
 
+// v1.127.0 — Limite de dose par ajout (g pour 100 m³) applicable à un produit
+// pH- : champ maxDosePer100m3 du produit ; à défaut, celle du produit par
+// défaut quand le produit n'a pas de note propre (c'est le cas où la note
+// générique "Max 1 kg/100 m³/jour" s'affiche — voir prodNote). Unité g
+// uniquement (pas de plafond chiffré pour un liquide : voir étiquette).
+function phMinusMaxDoseFor(prod, defaultProd, doseSrc, action) {
+  if (!doseSrc || String(doseSrc.doseUnit || "").trim().toLowerCase() !== "g") return null;
+  if (doseSrc.maxDosePer100m3 != null) return doseSrc.maxDosePer100m3;
+  if (prod?.maxDosePer100m3 != null) return prod.maxDosePer100m3;
+  if (action === "ph-" && (!prod || !prod.note || prod.noteKey === "note_ph_minus")) {
+    return defaultProd?.maxDosePer100m3 ?? null;
+  }
+  return null;
+}
+
 function normalizeDoseUnit(u) {
   if (!u) return u;
   const s = String(u).trim();
@@ -12946,7 +12982,26 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       const dp = defaultProd("ph-");
       const doseSrc = pickDoseSrc(prod, dp);
       const computedDose = doseSrc ? Math.round(doseSrc.doseAmount * (volume / doseSrc.effectPer) * (diff / doseSrc.effectAmount)) : null;
-      steps.push({
+      // v1.127.0 — Limite de dose par ajout proratisée au volume du bassin
+      // (ex. 1 kg/100 m³ → 720 g pour 72 m³). Au-delà : la 1re étape est
+      // plafonnée, le reste part en étapes "Complément" espacées du délai du
+      // produit (waitHours, 2 h par défaut), chacune ≤ limite.
+      const maxPer100 = phMinusMaxDoseFor(prod, dp, doseSrc, "ph-");
+      const maxDose = (maxPer100 && volume > 0) ? Math.round(maxPer100 * volume / 100) : null;
+      let firstDose = computedDose;
+      const extraDoses = [];
+      if (maxDose && computedDose != null && computedDose > maxDose * 1.02) {
+        firstDose = maxDose;
+        let rest = computedDose - maxDose;
+        while (rest > maxDose * 0.02) {
+          const chunk = Math.min(rest, maxDose);
+          extraDoses.push(chunk);
+          rest -= chunk;
+        }
+      }
+      const phMinusNote = prodNote(prod, "note_ph_minus");
+      const noteIsPhLimit = !!maxDose && !!phMinusNote && phMinusNote === _("note_ph_minus");
+      const phMinusStep = ({
         action: "ph-",
         title: _("reco_ph_high", { val: phVal }),
         productName: prodName(prod, "reco_fallback_ph_minus"),
@@ -12954,15 +13009,18 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       productRealName: prod?.name ?? null, // v1.109.4 — voir RecoCard.missingFromStock
         productPhoto: prod?.photo || null,
         doseText: doseSrc
-          ? `${_("reco_dose_prefix")} ${formatDose(computedDose, doseSrc.doseUnit)} ${_("reco_target")} ${targetMid.toFixed(1)}`
+          ? `${_("reco_dose_prefix")} ${formatDose(firstDose, doseSrc.doseUnit)} ${_("reco_target")} ${targetMid.toFixed(1)}`
           : null,
         missingTip: !prod ? _("missing_product_tip", { action: "ph-" }) : null,
-        computedDoseAmount: computedDose,
+        computedDoseAmount: firstDose,
         doseUnit: doseSrc?.doseUnit || null,
         doseAnomaly: isDoseRateAnomalous(prod, dp),
-        note: prodNote(prod, "note_ph_minus"),
+        note: noteIsPhLimit ? `${phMinusNote} ${_("note_ph_minus_prorata", { max: formatDose(maxDose, doseSrc.doseUnit), volume })}` : phMinusNote,
+        maxDoseAmount: maxDose || null,
         waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["ph-"],
       });
+      steps.push(phMinusStep);
+      extraDoses.forEach((chunk) => steps.push({ ...phMinusStep, isComplement: true, computedDoseAmount: chunk, doseText: null }));
     } else if (phVal < phTargets.min) {
       const diff = Math.max(0, (targetMid - phVal) - estimatedPhRiseFromTacPlus);
       const prod = findProduct("ph+");
@@ -13381,7 +13439,10 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
   // chlore qui la suit dans le plan : mélanger pH- et chlore choc trop tôt
   // précipite le calcaire et réduit l'efficacité du chlore. Ne s'applique
   // qu'au choc ("chlore"), pas aux autres oxydants ni au chlore d'entretien.
-  const phStepIndex = steps.findIndex((s) => s.action === "ph-" || s.action === "ph+");
+  // v1.127.0 — DERNIÈRE étape pH (le plan peut en compter plusieurs quand la
+  // dose pH- est scindée en compléments) : c'est elle qui précède le choc.
+  let phStepIndex = -1;
+  steps.forEach((s, i) => { if (s.action === "ph-" || s.action === "ph+") phStepIndex = i; });
   const chloreStepIndex = steps.findIndex((s) => s.action === "chlore");
   if (phStepIndex !== -1 && chloreStepIndex !== -1 && chloreStepIndex > phStepIndex) {
     steps[phStepIndex].waitHours = Math.max(steps[phStepIndex].waitHours || 0, 6);
@@ -18178,8 +18239,14 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
     ? (ownNote(selectedProductObj) || (ownNote(origProdObj) ? null : step.note))
     : step.note;
   // Note pH- (dose max en kg) : inadaptée à un produit liquide → renvoi à l'étiquette
-  const displayNote = (rawDisplayNote && step.action === "ph-" && selectedProductObj && rawDisplayNote === t("note_ph_minus"))
-    ? t(phMinusNoteKeyForUnit(selectedProductObj.doseUnit))
+  // v1.127.0 — Poudre : rappel de la limite proratisée au volume du bassin
+  // (step.maxDoseAmount, calculé dans computeRecommendations).
+  const isPhMinusGenericNote = !!rawDisplayNote && step.action === "ph-" && !!selectedProductObj
+    && (rawDisplayNote === t("note_ph_minus") || rawDisplayNote.startsWith(t("note_ph_minus") + " "));
+  const displayNote = isPhMinusGenericNote
+    ? (phMinusNoteKeyForUnit(selectedProductObj.doseUnit) === "note_ph_minus_liquid"
+        ? t("note_ph_minus_liquid")
+        : (step.note && step.note.startsWith(t("note_ph_minus") + " ") ? step.note : rawDisplayNote))
     : rawDisplayNote;
 
   // v1.114.0 — Point de passage commun pour les applications susceptibles de
@@ -19623,7 +19690,24 @@ function ProductModal({ product, onClose, onSave, onLinkCommonProduct, isPremium
       if (result.effectAmount != null) setEffectAmount(result.effectAmount);
       if (result.effectPer != null) setEffectPer(result.effectPer);
       if (result.waitHours != null) setWaitHours(result.waitHours);
+      // v1.126.0 — Lecture brute de l'IA (photo + recherche web), conservée
+      // telle quelle pour l'email support de création de fiche (comparaison
+      // avec la fiche réellement enregistrée). Jamais utilisée pour pré-remplir.
+      const aiRaw = {
+        name: result.name || null,
+        action: result.action || null,
+        doseUnit: suggDoseUnit || null,
+        activeSubstance: result.activeSubstance || null,
+        barcode: (zxingBarcode || result.barcode || null),
+        packagingType: result.packagingType || null,
+        unitWeight: result.unitWeight ?? null,
+        maintenanceUnits: result.maintenanceUnits ?? null,
+        maintenanceVolumePer: result.maintenanceVolumePer ?? null,
+        maintenanceDays: result.maintenanceDays ?? null,
+        note: result.note || null,
+      };
       setAiSuggestion({
+        raw: aiRaw,
         doseAmount: suggDoseAmount,
         effectAmount: result.effectAmount ?? null,
         effectPer: result.effectPer ?? null,
@@ -19886,6 +19970,43 @@ function ProductModal({ product, onClose, onSave, onLinkCommonProduct, isPremium
                 maintenanceUnits: packagingType !== "galets" ? null : (parseFloat(maintenanceUnits) || null),
                 maintenanceVolumePer: packagingType !== "galets" ? null : (parseFloat(maintenanceVolumePer) || null),
                 maintenanceDays: packagingType !== "galets" ? null : (parseFloat(maintenanceDays) || null),
+                // v1.126.0 — Pour l'email support uniquement (non stockés sur
+                // la fiche partagée) : fiche produit complète telle que
+                // saisie + lecture brute de l'IA pour détecter les écarts.
+                emailContext: {
+                  productSheet: {
+                    name: name.trim(),
+                    action,
+                    doseAmount: maintenanceOnlyProduct ? null : (parseFloat(doseAmount) || null),
+                    doseUnit: doseUnit || null,
+                    effectAmount: maintenanceOnlyProduct ? null : (parseFloat(effectAmount) || null),
+                    effectPer: maintenanceOnlyProduct ? null : (parseFloat(effectPer) || null),
+                    activeChlorinePercent: (action === "chlore" && activeChlorinePercent !== "" && !Number.isNaN(parseFloat(activeChlorinePercent))) ? parseFloat(activeChlorinePercent) : null,
+                    waitHours: parseFloat(waitHours) || 0,
+                    note: note || null,
+                    hasPhoto: !!photo,
+                    stockPercent: newStock,
+                    containerAmount: parseFloat(containerAmount) || 1,
+                    containerUnit: containerUnit || "kg",
+                    packagingType: packagingType || null,
+                    unitWeight: packagingType !== "galets" ? null : (parseFloat(unitWeight) || null),
+                    maintenanceUnits: packagingType !== "galets" ? null : (parseFloat(maintenanceUnits) || null),
+                    maintenanceVolumePer: packagingType !== "galets" ? null : (parseFloat(maintenanceVolumePer) || null),
+                    maintenanceDays: packagingType !== "galets" ? null : (parseFloat(maintenanceDays) || null),
+                    maintenanceOnly: !!maintenanceOnlyProduct,
+                  },
+                  aiFound: aiSuggestion ? {
+                    ...(aiSuggestion.raw || {}),
+                    doseAmount: aiSuggestion.doseAmount ?? null,
+                    effectAmount: aiSuggestion.effectAmount ?? null,
+                    effectPer: aiSuggestion.effectPer ?? null,
+                    waitHours: aiSuggestion.waitHours ?? null,
+                    containerAmount: aiSuggestion.containerAmount ?? null,
+                    containerUnit: aiSuggestion.containerUnit ?? null,
+                    source: aiSuggestion.source || null,
+                    productImageUrl: aiSuggestion.productImageUrl || null,
+                  } : null,
+                },
               },
             });
             sharedProductId = created?.productId || null;
