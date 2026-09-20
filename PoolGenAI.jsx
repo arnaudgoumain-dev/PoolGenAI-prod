@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.128.2";
+const APP_VERSION = "1.131.1";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -438,6 +438,8 @@ const TRANSLATIONS = {
     missing_product_tip: "Aucun produit {action} dans ta liste — ajoutes-en un dans l'onglet Produits.",
     dose_anomaly_warning: "Dose inhabituelle — vérifie la fiche de ce produit (quantité, effet, pour X m³).",
     reco_ph_reduced_by_tac_note: "Dose réduite : le TAC+ appliqué juste avant remonte aussi un peu le pH (estimation). Tu peux remesurer le pH avant d'appliquer pour ajuster si besoin.",
+    reco_trend_note_min: "Rebond à la hausse constaté après les dernières applications (3 dernières mesures) : dose calculée pour viser la borne basse de la zone cible ({target}) afin de compenser la dérive.",
+    reco_trend_note_max: "Rebond à la baisse constaté après les dernières applications (3 dernières mesures) : dose calculée pour viser la borne haute de la zone cible ({target}) afin de compenser la dérive.",
     see_dosage: "Voir dosage",
     // Paywall
     paywall_title: "Passer à la version Premium",
@@ -475,7 +477,7 @@ const TRANSLATIONS = {
     free_version: "Gratuit",
     param_ph: "pH",
     param_fcl: "Chlore libre (mg/L)",
-    axis_legend_u: "ᴜ échelle unités (pH, chlore) — gauche",
+    axis_legend_u: "◀ axe de gauche",
     action_ph_minus: "Baisse le pH",
         photos_section: "Photos des mesures",
     pool_photos_label: "Photos du bassin (optionnel)",
@@ -609,7 +611,7 @@ const TRANSLATIONS = {
     action_brome: "Brome",
     action_o2: "Oxygène actif",
     action_sel: "Sel (salinité)",
-    axis_legend_d: "ᴅ échelle dizaines (TAC, CYA, température) — droite",
+    axis_legend_d: "▶ axe de droite",
     reco_tac_low: "TAC trop bas ({val} mg/L)",
     reco_tac_high: "TAC trop haut ({val} mg/L)",
     reco_ph_high: "pH trop haut ({val})",
@@ -1255,6 +1257,8 @@ const TRANSLATIONS = {
     missing_product_tip: "No {action} product in your list — add one in the Products tab.",
     dose_anomaly_warning: "Unusual dose — check this product's sheet (quantity, effect, per X m³).",
     reco_ph_reduced_by_tac_note: "Dose reduced: the TAC+ applied just before also slightly raises pH (estimate). You can re-measure pH before applying, to adjust if needed.",
+    reco_trend_note_min: "Upward rebound observed after the last applications (last 3 measurements): dose calculated to aim for the lower limit of the target range ({target}) to offset the drift.",
+    reco_trend_note_max: "Downward rebound observed after the last applications (last 3 measurements): dose calculated to aim for the upper limit of the target range ({target}) to offset the drift.",
     see_dosage: "See dosage",
     paywall_title: "Go Premium",
     paywall_desc: "Unlimited readings · AI strip analysis · PDF report · Stock management",
@@ -1289,7 +1293,7 @@ const TRANSLATIONS = {
     free_version: "Free",
     param_ph: "pH",
     param_fcl: "Free chlorine (mg/L)",
-    axis_legend_u: "ᴜ unit scale (pH, chlorine) — left",
+    axis_legend_u: "◀ left axis",
     action_ph_minus: "Lowers pH",
         photos_section: "Reading photos",
     pool_photos_label: "Pool photos (optional)",
@@ -1423,7 +1427,7 @@ const TRANSLATIONS = {
     action_brome: "Bromine",
     action_o2: "Active oxygen",
     action_sel: "Salt (salinity)",
-    axis_legend_d: "ᴅ tens scale (TAC, CYA, temperature) — right",
+    axis_legend_d: "▶ right axis",
     reco_tac_low: "TAC too low ({val} mg/L)",
     reco_tac_high: "TAC too high ({val} mg/L)",
     reco_ph_high: "pH too high ({val})",
@@ -2065,6 +2069,8 @@ const TRANSLATIONS = {
     missing_product_tip: "Kein {action}-Produkt in deiner Liste — füge eines im Produkte-Tab hinzu.",
     dose_anomaly_warning: "Ungewöhnliche Dosis — überprüfe das Produktblatt (Menge, Wirkung, pro X m³).",
     reco_ph_reduced_by_tac_note: "Dosis reduziert: Der zuvor zugegebene KH+ erhöht auch leicht den pH-Wert (Schätzung). Du kannst den pH-Wert vor der Anwendung neu messen, um bei Bedarf anzupassen.",
+    reco_trend_note_min: "Nach den letzten Anwendungen wurde ein Wiederanstieg beobachtet (letzte 3 Messungen): Dosis auf die untere Grenze des Zielbereichs ({target}) berechnet, um die Drift auszugleichen.",
+    reco_trend_note_max: "Nach den letzten Anwendungen wurde ein Wiederabfall beobachtet (letzte 3 Messungen): Dosis auf die obere Grenze des Zielbereichs ({target}) berechnet, um die Drift auszugleichen.",
     see_dosage: "Dosierung anzeigen",
     paywall_title: "Zu Premium wechseln",
     paywall_desc: "Unbegrenzte Messungen · KI-Streifenanalyse · PDF-Bericht · Lagerverwaltung",
@@ -2102,7 +2108,7 @@ const TRANSLATIONS = {
     free_version: "Kostenlos",
     param_ph: "pH",
     param_fcl: "Freies Chlor (mg/L)",
-    axis_legend_u: "ᴜ Einheitsskala (pH, Chlor) — links",
+    axis_legend_u: "◀ linke Achse",
     action_ph_minus: "pH senken",
         photos_section: "Messfotos",
     pool_photos_label: "Beckenfotos (optional)",
@@ -2236,7 +2242,7 @@ const TRANSLATIONS = {
     action_brome: "Brom",
     action_o2: "Aktivsauerstoff",
     action_sel: "Salz (Salzgehalt)",
-    axis_legend_d: "ᴅ Zehnerskala (TAC, CYA, Temperatur) — rechts",
+    axis_legend_d: "▶ rechte Achse",
     reco_tac_low: "KH zu niedrig ({val} mg/L)",
     reco_tac_high: "KH zu hoch ({val} mg/L)",
     reco_ph_high: "pH zu hoch ({val})",
@@ -2877,6 +2883,8 @@ const TRANSLATIONS = {
     missing_product_tip: "Nessun prodotto {action} nella tua lista — aggiungine uno nella scheda Prodotti.",
     dose_anomaly_warning: "Dose insolita — controlla la scheda di questo prodotto (quantità, effetto, per X m³).",
     reco_ph_reduced_by_tac_note: "Dose ridotta: il TAC+ applicato appena prima fa salire leggermente anche il pH (stima). Puoi rimisurare il pH prima di applicare per correggere se necessario.",
+    reco_trend_note_min: "Rimbalzo verso l'alto osservato dopo le ultime applicazioni (ultime 3 misure): dose calcolata per puntare al limite inferiore dell'intervallo target ({target}) e compensare la deriva.",
+    reco_trend_note_max: "Rimbalzo verso il basso osservato dopo le ultime applicazioni (ultime 3 misure): dose calcolata per puntare al limite superiore dell'intervallo target ({target}) e compensare la deriva.",
     see_dosage: "Vedi dosaggio",
     paywall_title: "Passa a Premium",
     paywall_desc: "Misurazioni illimitate · Analisi IA strisce · Rapporto PDF · Gestione stock",
@@ -2911,7 +2919,7 @@ const TRANSLATIONS = {
     free_version: "Gratuito",
     param_ph: "pH",
     param_fcl: "Cloro libero (mg/L)",
-    axis_legend_u: "ᴜ scala unità (pH, cloro) — sinistra",
+    axis_legend_u: "◀ asse sinistro",
     action_ph_minus: "Abbassa il pH",
         photos_section: "Foto misurazioni",
     pool_photos_label: "Foto vasca (opzionale)",
@@ -3045,7 +3053,7 @@ const TRANSLATIONS = {
     action_brome: "Bromo",
     action_o2: "Ossigeno attivo",
     action_sel: "Sale (salinità)",
-    axis_legend_d: "ᴅ scala decine (TAC, CYA, temperatura) — destra",
+    axis_legend_d: "▶ asse destro",
     reco_tac_low: "TAC troppo basso ({val} mg/L)",
     reco_tac_high: "TAC troppo alto ({val} mg/L)",
     reco_ph_high: "pH troppo alto ({val})",
@@ -3686,6 +3694,8 @@ const TRANSLATIONS = {
     missing_product_tip: "Sin producto {action} en tu lista — añade uno en la pestaña Productos.",
     dose_anomaly_warning: "Dosis inusual — revisa la ficha de este producto (cantidad, efecto, por X m³).",
     reco_ph_reduced_by_tac_note: "Dosis reducida: el TAC+ aplicado justo antes también sube ligeramente el pH (estimación). Puedes volver a medir el pH antes de aplicar para ajustar si hace falta.",
+    reco_trend_note_min: "Rebote al alza observado tras las últimas aplicaciones (últimas 3 mediciones): dosis calculada para apuntar al límite inferior del rango objetivo ({target}) y compensar la deriva.",
+    reco_trend_note_max: "Rebote a la baja observado tras las últimas aplicaciones (últimas 3 mediciones): dosis calculada para apuntar al límite superior del rango objetivo ({target}) y compensar la deriva.",
     see_dosage: "Ver dosaje",
     paywall_title: "Pasar a Premium",
     ai_timer_hint: "A análise pode levar até 30 segundos.",
@@ -3720,7 +3730,7 @@ const TRANSLATIONS = {
     free_version: "Gratuito",
     param_ph: "pH",
     param_fcl: "Cloro libre (mg/L)",
-    axis_legend_u: "ᴜ escala unidades (pH, cloro) — izquierda",
+    axis_legend_u: "◀ eje izquierdo",
     action_ph_minus: "Baja el pH",
         photos_section: "Fotos de mediciones",
     pool_photos_label: "Fotos de la piscina (opcional)",
@@ -3854,7 +3864,7 @@ const TRANSLATIONS = {
     action_brome: "Bromo",
     action_o2: "Oxígeno activo",
     action_sel: "Sal (salinidad)",
-    axis_legend_d: "ᴅ escala decenas (TAC, CYA, temperatura) — derecha",
+    axis_legend_d: "▶ eje derecho",
     reco_tac_low: "TAC demasiado bajo ({val} mg/L)",
     reco_tac_high: "TAC demasiado alto ({val} mg/L)",
     reco_ph_high: "pH demasiado alto ({val})",
@@ -4495,6 +4505,8 @@ const TRANSLATIONS = {
     missing_product_tip: "Nenhum produto {action} na sua lista — adicione um na aba Produtos.",
     dose_anomaly_warning: "Dose incomum — verifica a ficha deste produto (quantidade, efeito, por X m³).",
     reco_ph_reduced_by_tac_note: "Dose reduzida: o TAC+ aplicado logo antes também sobe um pouco o pH (estimativa). Podes voltar a medir o pH antes de aplicar para ajustar se necessário.",
+    reco_trend_note_min: "Ressalto de subida observado após as últimas aplicações (últimas 3 medições): dose calculada para visar o limite inferior da zona alvo ({target}) e compensar a deriva.",
+    reco_trend_note_max: "Ressalto de descida observado após as últimas aplicações (últimas 3 medições): dose calculada para visar o limite superior da zona alvo ({target}) e compensar a deriva.",
     see_dosage: "Ver dosagem",
     paywall_title: "Passar para Premium",
     paywall_desc: "Medições ilimitadas · Análise IA de tiras · Relatório PDF · Gestão de estoque",
@@ -4526,7 +4538,7 @@ const TRANSLATIONS = {
     free_version: "Gratuito",
     param_ph: "pH",
     param_fcl: "Cloro livre (mg/L)",
-    axis_legend_u: "ᴜ escala unidades (pH, cloro) — esquerda",
+    axis_legend_u: "◀ eixo esquerdo",
     action_ph_minus: "Baixa o pH",
         photos_section: "Fotos das medições",
     pool_photos_label: "Fotos da piscina (opcional)",
@@ -4660,7 +4672,7 @@ const TRANSLATIONS = {
     action_brome: "Bromo",
     action_o2: "Oxigênio ativo",
     action_sel: "Sal (salinidade)",
-    axis_legend_d: "ᴅ escala dezenas (TAC, CYA, temperatura) — direita",
+    axis_legend_d: "▶ eixo direito",
     reco_tac_low: "TAC muito baixo ({val} mg/L)",
     reco_tac_high: "TAC muito alto ({val} mg/L)",
     reco_ph_high: "pH muito alto ({val})",
@@ -5409,6 +5421,37 @@ const PROJECTABLE_FCL_ACTIONS = ["chlore", "chlore-stabilise"];
 const PROJECTABLE_TAC_ACTIONS = ["tac+", "tac-"];
 // Clé de série du graphique (chartParams) pour chaque paramètre projeté.
 const PROJECTED_CHART_KEY = { pH: "phProjected", fCl: "fclProjected", tac: "tacProjected" };
+
+// v1.130.0 — Axes adaptatifs : quand la famille pH (pH + pH projeté) et la
+// famille chlore (chlore libre/total/combiné + projeté) sont toutes deux
+// affichées et que la moyenne de l'une dépasse 3× celle de l'autre, la famille
+// à la plus faible moyenne passe sur l'axe de droite — un axe unique aplatit
+// sinon la courbe la plus petite (voir capture Arnaud, pH ~7,5 vs chlore ~1).
+// Sans effet si un autre paramètre occupe déjà l'axe de droite (TAC, CYA...)
+// ou si un paramètre hors de ces deux familles est actif : on garderait alors
+// un axe partagé illisible.
+const AXIS_RATIO_THRESHOLD = 3;
+const PH_FAMILY_KEYS = ["pH", "phProjected"];
+const CL_FAMILY_KEYS = ["fCl", "fclProjected", "tCl", "ccl"];
+function withAdaptiveAxes(params, activeKeys, rows) {
+  const active = params.filter((cp) => activeKeys.includes(cp.key));
+  const familyMean = (keys) => {
+    const vals = [];
+    (rows || []).forEach((d) => keys.forEach((k) => {
+      if (activeKeys.includes(k) && d[k] != null && !isNaN(d[k])) vals.push(Number(d[k]));
+    }));
+    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+  };
+  const phMean = familyMean(PH_FAMILY_KEYS);
+  const clMean = familyMean(CL_FAMILY_KEYS);
+  if (phMean == null || clMean == null || phMean <= 0 || clMean <= 0) return params;
+  const hi = Math.max(phMean, clMean), lo = Math.min(phMean, clMean);
+  if (hi / lo <= AXIS_RATIO_THRESHOLD) return params;
+  const inFamilies = (cp) => PH_FAMILY_KEYS.includes(cp.key) || CL_FAMILY_KEYS.includes(cp.key);
+  if (active.some((cp) => !inFamilies(cp))) return params;
+  const moved = phMean < clMean ? PH_FAMILY_KEYS : CL_FAMILY_KEYS;
+  return params.map((cp) => (moved.includes(cp.key) ? { ...cp, axis: "right" } : cp));
+}
 
 // Construit, pour UNE mesure et son plan appliqué (steps), les points
 // projetés pH/fCl — indexés par position dans le tableau "steps" pour être
@@ -9938,8 +9981,8 @@ function PoolGenAIApp() {
 
   const validatingMeasureRecs = useMemo(() => {
     if (!validatingMeasure) return [];
-    return computeRecommendations(validatingMeasure, activePool?.volume || 0, poolProducts, effectiveTargets, activeParamKeys, tFn);
-  }, [validatingMeasure, activePool, poolProducts, effectiveTargets, activeParamKeys, lang]);
+    return computeRecommendations(validatingMeasure, activePool?.volume || 0, poolProducts, effectiveTargets, activeParamKeys, tFn, computeParamTrends(poolMeasures, validatingMeasure, poolApplications, poolProducts, activePool?.volume || 0));
+  }, [validatingMeasure, activePool, poolProducts, poolMeasures, poolApplications, effectiveTargets, activeParamKeys, lang]);
 
   const existingApplicationForValidating = useMemo(() => {
     if (!validatingMeasure) return null;
@@ -10515,7 +10558,7 @@ function PoolGenAIApp() {
       return;
     }
     // Sinon démarrer un nouveau plan
-    const recs = recsOverride || computeRecommendations(m, activePool?.volume || 0, poolProducts, effectiveTargets, activeParamKeys, tFn);
+    const recs = recsOverride || computeRecommendations(m, activePool?.volume || 0, poolProducts, effectiveTargets, activeParamKeys, tFn, computeParamTrends(poolMeasures, m, poolApplications, poolProducts, activePool?.volume || 0));
     startPlan(m.id, recs);
     setShowWizard(true);
   }
@@ -11199,6 +11242,7 @@ function PoolGenAIApp() {
             apiKey={aiEnabled && effectiveIsPremium ? apiKey : ""}
             apiProvider={apiProvider}
             recentMeasures={sortedMeasures}
+            recentApplications={poolApplications}
             effectiveTargets={effectiveTargets}
             activeParamKeys={activeParamKeys}
             activePlan={activePlan}
@@ -11239,6 +11283,8 @@ function PoolGenAIApp() {
             products={poolProducts}
             plan={activePlan}
             latest={latest}
+            recentMeasures={poolMeasures}
+            recentApplications={poolApplications}
             volume={activePool?.volume || 0}
             effectiveTargets={effectiveTargets}
             activeParamKeys={activeParamKeys}
@@ -12162,7 +12208,7 @@ function DelegationSection({ authUser, lang, linkedPoolsInfo, onRequestRevocatio
 }
 
 // ---------- Dashboard ----------
-function Dashboard({ latest, volume, products, manageStock, onAddMeasure, onEditMeasure, onValidateApplication, applicationForLatest, blockedByLimit, isPremium, onWantPremium, apiKey, apiProvider, recentMeasures, effectiveTargets, activeParamKeys, lang, activePlan, onResumePlan, onOpenManualApply, authUid }) {
+function Dashboard({ latest, recentApplications, volume, products, manageStock, onAddMeasure, onEditMeasure, onValidateApplication, applicationForLatest, blockedByLimit, isPremium, onWantPremium, apiKey, apiProvider, recentMeasures, effectiveTargets, activeParamKeys, lang, activePlan, onResumePlan, onOpenManualApply, authUid }) {
   const t = useT(lang);
   const [aiComment, setAiComment] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -12250,8 +12296,8 @@ Réponds directement en français, sans titre ni introduction.`;
     }
   }
   const recs = useMemo(
-    () => (latest ? computeRecommendations(latest, volume, products, effectiveTargets, activeParamKeys, t) : []),
-    [latest, volume, products, effectiveTargets, activeParamKeys]
+    () => (latest ? computeRecommendations(latest, volume, products, effectiveTargets, activeParamKeys, t, computeParamTrends(recentMeasures, latest, recentApplications, products, volume)) : []),
+    [latest, volume, products, effectiveTargets, activeParamKeys, recentMeasures, recentApplications]
   );
 
   if (!latest) {
@@ -12610,6 +12656,11 @@ function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep }) {
           <Info size={12} /> {t("reco_ph_reduced_by_tac_note")}
         </div>
       )}
+      {reco.trendTarget && (
+        <div style={styles.recoInfoTiming}>
+          <Info size={12} /> {t(reco.trendTarget === "min" ? "reco_trend_note_min" : "reco_trend_note_max", { target: reco.trendTargetValue })}
+        </div>
+      )}
       {!swapped && reco.missingTip && <div style={styles.recoNote}>{reco.missingTip}</div>}
       {reco.timingTip && <div style={{ fontSize: 12.5, color: "#3a5a78", marginTop: 4 }}>🌙 {reco.timingTip}</div>}
 
@@ -12867,8 +12918,58 @@ function findProductOrGeneric(products, name) {
   return (products || []).find((p) => p.name === name) || DEFAULT_PRODUCTS.find((p) => p.name === name) || null;
 }
 
+// v1.131.0 — Tendance d'un paramètre (pH, chlore libre, TAC) sur les 3 dernières
+// mesures se terminant à la mesure m, fondée sur le REBOND après application :
+// pour chacun des 2 intervalles (mesure i → i+1), écart entre la valeur mesurée
+// à i+1 et la dernière valeur PROJETÉE après les applications faites à i (voir
+// buildProjectedPoints). Tendance retenue seulement si les 2 rebonds vont dans
+// le même sens et que leur moyenne dépasse un seuil (sinon bruit) :
+// { ph, fcl, tac } = "up" (le paramètre remonte après correction) | "down".
+// Sert à viser la borne de zone opposée à la dérive (voir
+// computeRecommendations) : un pH corrigé qui remonte à chaque fois est
+// corrigé jusqu'à la borne basse plutôt que jusqu'au milieu.
+const TREND_MIN_CHANGE = { pH: 0.1, fCl: 0.3, tac: 10 };
+function computeParamTrends(measures, m, applications, products, volume) {
+  if (!m || !Array.isArray(measures)) return {};
+  const pid = m.poolId || "default";
+  const mts = new Date(m.date).getTime();
+  if (isNaN(mts)) return {};
+  const seq = measures
+    .filter((x) => (x.poolId || "default") === pid && x.id !== m.id && new Date(x.date).getTime() < mts)
+    .sort((x, y) => new Date(x.date) - new Date(y.date))
+    .slice(-2);
+  seq.push(m);
+  if (seq.length < 3) return {};
+  const out = {};
+  [["pH", "ph"], ["fCl", "fcl"], ["tac", "tac"]].forEach(([key, name]) => {
+    const rebounds = [];
+    for (let i = 0; i < 2; i++) {
+      const prev = seq[i];
+      const next = seq[i + 1];
+      const app = (applications || []).find((ap) => ap.measureId === prev.id);
+      if (!app) continue;
+      const projected = Object.values(buildProjectedPoints(prev, app.steps, products, volume || 0))
+        .filter((p) => p.param === key)
+        .sort((x, y) => new Date(x.appliedAt) - new Date(y.appliedAt));
+      if (!projected.length) continue;
+      const measured = parseFloat(next[key]);
+      if (isNaN(measured)) continue;
+      rebounds.push(measured - projected[projected.length - 1].value);
+    }
+    if (rebounds.length < 2) return;
+    const allUp = rebounds.every((r) => r > 0);
+    const allDown = rebounds.every((r) => r < 0);
+    if (!allUp && !allDown) return;
+    const mean = rebounds.reduce((acc, r) => acc + Math.abs(r), 0) / rebounds.length;
+    if (mean >= TREND_MIN_CHANGE[key]) out[name] = allUp ? "up" : "down";
+  });
+  return out;
+}
+
 // ---------- Logique de recommandation ----------
-function computeRecommendations(latest, volume, products, effectiveTargets, activeParamKeys, t) {
+function computeRecommendations(latest, volume, products, effectiveTargets, activeParamKeys, t, trends) {
+  // v1.131.0 — trends : voir computeParamTrends (optionnel, absent = milieu de zone).
+  const trend = trends || {};
   const _ = t || ((k, vars) => {
     // fallback fr si pas de t fourni
     let s = (TRANSLATIONS.fr[k] || k);
@@ -12926,7 +13027,8 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
   // comme pH et chlore (formule doseAmount × (volume/effectPer) × (écart/effectAmount)).
   // Avant : dose fixe du produit renvoyée telle quelle, sans lien avec l'écart réel.
   if (has("tac") && !Number.isNaN(tac) && targetsLower.tac && tac < targetsLower.tac.min) {
-    const tacTargetMid = (targetsLower.tac.min + targetsLower.tac.max) / 2;
+    const trendBound = trend.tac === "down" ? "max" : null;
+    const tacTargetMid = trendBound ? targetsLower.tac.max : (targetsLower.tac.min + targetsLower.tac.max) / 2;
     const diff = tacTargetMid - tac;
     const prod = findProduct("tac+");
     const dp = defaultProd("tac+");
@@ -12947,6 +13049,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       doseUnit: doseSrc?.doseUnit || null,
       doseAnomaly: isDoseRateAnomalous(prod, dp),
       note: prodNote(prod, "reco_note_tac"),
+      ...(trendBound ? { trendTarget: trendBound, trendTargetValue: tacTargetMid.toFixed(0) } : {}),
       waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["tac+"],
     });
   }
@@ -12956,7 +13059,8 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
   // produit n'est configuré pour cette action (missing_product_tip), pour ne
   // jamais masquer silencieusement un TAC hors cible.
   if (has("tac") && !Number.isNaN(tac) && targetsLower.tac && tac > targetsLower.tac.max) {
-    const tacTargetMid = (targetsLower.tac.min + targetsLower.tac.max) / 2;
+    const trendBound = trend.tac === "up" ? "min" : null;
+    const tacTargetMid = trendBound ? targetsLower.tac.min : (targetsLower.tac.min + targetsLower.tac.max) / 2;
     const diff = tac - tacTargetMid;
     const prod = findProduct("tac-");
     const dp = defaultProd("tac-");
@@ -12977,6 +13081,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       doseUnit: doseSrc?.doseUnit || null,
       doseAnomaly: isDoseRateAnomalous(prod, dp),
       note: prodNote(prod, "reco_note_tac_minus"),
+      ...(trendBound ? { trendTarget: trendBound, trendTargetValue: tacTargetMid.toFixed(0) } : {}),
       waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["tac-"],
     });
   }
@@ -12993,7 +13098,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
   const TAC_PLUS_PH_RISE_PER_TAC_PPM = 0.1 / 30;
   const estimatedPhRiseFromTacPlus =
     has("tac") && !Number.isNaN(tac) && targetsLower.tac && tac < targetsLower.tac.min
-      ? (((targetsLower.tac.min + targetsLower.tac.max) / 2) - tac) * TAC_PLUS_PH_RISE_PER_TAC_PPM
+      ? (((trend.tac === "down" ? targetsLower.tac.max : (targetsLower.tac.min + targetsLower.tac.max) / 2)) - tac) * TAC_PLUS_PH_RISE_PER_TAC_PPM
       : 0;
 
   // pH
@@ -13002,7 +13107,9 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
     const phTargets = targetsLower.ph;
     const targetMid = (phTargets.min + phTargets.max) / 2;
     if (phVal > phTargets.max) {
-      const diff = phVal - targetMid;
+      const phTrendBound = trend.ph === "up" ? "min" : null;
+      const phTarget = phTrendBound ? phTargets.min : targetMid;
+      const diff = phVal - phTarget;
       const prod = findProduct("ph-");
       const dp = defaultProd("ph-");
       const doseSrc = pickDoseSrc(prod, dp);
@@ -13034,7 +13141,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       productRealName: prod?.name ?? null, // v1.109.4 — voir RecoCard.missingFromStock
         productPhoto: prod?.photo || null,
         doseText: doseSrc
-          ? `${_("reco_dose_prefix")} ${formatDose(firstDose, doseSrc.doseUnit)} ${_("reco_target")} ${targetMid.toFixed(1)}`
+          ? `${_("reco_dose_prefix")} ${formatDose(firstDose, doseSrc.doseUnit)} ${_("reco_target")} ${phTarget.toFixed(1)}`
           : null,
         missingTip: !prod ? _("missing_product_tip", { action: "ph-" }) : null,
         computedDoseAmount: firstDose,
@@ -13042,12 +13149,15 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
         doseAnomaly: isDoseRateAnomalous(prod, dp),
         note: noteIsPhLimit ? `${phMinusNote} ${_("note_ph_minus_prorata", { max: formatDose(maxDose, doseSrc.doseUnit), volume })}` : phMinusNote,
         maxDoseAmount: maxDose || null,
+        ...(phTrendBound ? { trendTarget: phTrendBound, trendTargetValue: phTarget.toFixed(1) } : {}),
         waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["ph-"],
       });
       steps.push(phMinusStep);
       extraDoses.forEach((chunk) => steps.push({ ...phMinusStep, isComplement: true, computedDoseAmount: chunk, doseText: null }));
     } else if (phVal < phTargets.min) {
-      const diff = Math.max(0, (targetMid - phVal) - estimatedPhRiseFromTacPlus);
+      const phTrendBoundUp = trend.ph === "down" ? "max" : null;
+      const phTargetUp = phTrendBoundUp ? phTargets.max : targetMid;
+      const diff = Math.max(0, (phTargetUp - phVal) - estimatedPhRiseFromTacPlus);
       const prod = findProduct("ph+");
       const dp = defaultProd("ph+");
       const doseSrc = pickDoseSrc(prod, dp);
@@ -13060,7 +13170,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       productRealName: prod?.name ?? null, // v1.109.4 — voir RecoCard.missingFromStock
         productPhoto: prod?.photo || null,
         doseText: doseSrc
-          ? `${_("reco_dose_prefix")} ${formatDose(computedDose, doseSrc.doseUnit)} ${_("reco_target")} ${targetMid.toFixed(1)}`
+          ? `${_("reco_dose_prefix")} ${formatDose(computedDose, doseSrc.doseUnit)} ${_("reco_target")} ${phTargetUp.toFixed(1)}`
           : null,
         missingTip: !prod ? _("missing_product_tip", { action: "ph+" }) : null,
         computedDoseAmount: computedDose,
@@ -13069,6 +13179,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
         // v1.109.0 — Voir estimatedPhRiseFromTacPlus ci-dessus : invite à
         // remesurer plutôt que de faire confiance à une correction estimée.
         phAdjustedForTac: estimatedPhRiseFromTacPlus > 0.01,
+        ...(phTrendBoundUp ? { trendTarget: phTrendBoundUp, trendTargetValue: phTargetUp.toFixed(1) } : {}),
         note: prodNote(prod, "note_ph_plus"),
         waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["ph+"],
       });
@@ -13138,7 +13249,8 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
         waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["chlore"],
       });
     } else if (fCl < fclT.min) {
-      const targetFcl = (fclT.min + fclT.max) / 2;
+      const fclTrendBound = trend.fcl === "down" ? "max" : null;
+      const targetFcl = fclTrendBound ? fclT.max : (fclT.min + fclT.max) / 2;
       const diff = targetFcl - fCl;
       // v1.110.0 — Chlore libre bas SANS contamination (pas de combiné, pas
       // d'urgence) : si le bassin a un régime chlore stabilisé configuré
@@ -13168,6 +13280,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
       steps.push({
         action: chosenAction,
         title: _("reco_cl_low", { val: fCl }),
+        ...(fclTrendBound ? { trendTarget: fclTrendBound, trendTargetValue: String(targetFcl) } : {}),
         productName: prodName(prod, chosenAction === "chlore-stabilise" ? "reco_fallback_chlore_stabilise" : "reco_fallback_chlore"),
         productAvailable: !!prod,
         productRealName: prod?.name ?? null, // v1.109.4 — voir RecoCard.missingFromStock
@@ -14179,26 +14292,29 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
     return [...rows.values()].sort((a, b) => a.timestamp - b.timestamp);
   }, [chartData, visibleMeasures, measures, applications, products, pool?.volume]);
 
-  const chartParams = [
+  const chartParamsBase = [
+    // v1.129.0 — Ordre des pastilles : chaque paramètre projeté précède son
+    // paramètre mesuré (demande Arnaud).
+    { key: "phProjected",  color: "#1a8fd1", label: t("ph_projected_chart_label"),  axis: "left", dashed: true },
     { key: "pH",    color: "#1a8fd1", label: "pH",                                  axis: "left" },
+    { key: "fclProjected", color: "#2b7fd9", label: t("fcl_projected_chart_label"), axis: "left", dashed: true },
     { key: "fCl",   color: "#2b7fd9", label: t("param_fcl").replace(" (mg/L)", ""), axis: "left" },
-    { key: "tCl",   color: "#8a6fd1", label: t("param_tcl").replace(" (mg/L)", ""), axis: "left" },
-    { key: "ccl",   color: "#6a4fd1", label: t("ccl_col"),                          axis: "left" },
+    { key: "tacProjected", color: "#d98c2b", label: t("tac_projected_chart_label"), axis: "right", dashed: true },
     { key: "tac",   color: "#d98c2b", label: t("tac_col"),                          axis: "right" },
     { key: "cya",   color: "#c4502f", label: t("cya_col"),                          axis: "right" },
+    { key: "tCl",   color: "#8a6fd1", label: t("param_tcl").replace(" (mg/L)", ""), axis: "left" },
+    { key: "ccl",   color: "#6a4fd1", label: t("ccl_col"),                          axis: "left" },
     { key: "hard",  color: "#2b9c8a", label: t("hard_col"),                         axis: "right" },
     { key: "phos",  color: "#8a2b9c", label: t("phos_col"),                         axis: "right" },
     { key: "copper",color: "#b8860b", label: t("copper_col"),                       axis: "left" },
     { key: "iron",  color: "#8b4513", label: t("iron_col"),                         axis: "left" },
     { key: "temp",  color: "#e0578a", label: t("temp_col"),                         axis: "right" },
-    // v1.114.0 — Chips indépendantes pour les paramètres projetés (pas
-    // mesurés) : voir demande Arnaud, remplace le couplage automatique à la
-    // chip du paramètre mesuré correspondant introduit en v1.113.2.
-    { key: "phProjected",  color: "#1a8fd1", label: t("ph_projected_chart_label"),  axis: "left", dashed: true },
-    { key: "fclProjected", color: "#2b7fd9", label: t("fcl_projected_chart_label"), axis: "left", dashed: true },
-    { key: "tacProjected", color: "#d98c2b", label: t("tac_projected_chart_label"), axis: "right", dashed: true },
   ];
 
+  const chartParams = useMemo(
+    () => withAdaptiveAxes(chartParamsBase, activeParams, chartDataWithProjections),
+    [activeParams, chartDataWithProjections]
+  );
   const allKeys = chartParams.map((cp) => cp.key);
   const allActive = allKeys.every((k) => activeParams.includes(k));
 
@@ -14288,7 +14404,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
             }}
           >
             {cp.label}
-            <span style={styles.chipAxisTag}>{cp.axis === "left" ? "ᴜ" : "ᴅ"}</span>
+            <span style={styles.chipAxisTag}>{cp.axis === "left" ? "◀" : "▶"}</span>
           </button>
         ))}
       </div>
@@ -14538,7 +14654,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
                 authUid={authUid}
                 products={products}
                 volume={pool?.volume || 0}
-                recs={computeRecommendations(item.m, pool?.volume || 0, products, recoTargets, recoParamKeys, t)}
+                recs={computeRecommendations(item.m, pool?.volume || 0, products, recoTargets, recoParamKeys, t, computeParamTrends(measures, item.m, applications, products, pool?.volume || 0))}
               />
             ) : (
               <ManualApplicationRow
@@ -19311,7 +19427,7 @@ function remainingInDoseUnit(prod, doseUnit) {
   return remaining;
 }
 
-function ProductsToBuyView({ products, plan, latest, volume, effectiveTargets, activeParamKeys, lang, manageStock, poolName, treatmentType, onBack, onEditProduct, onQuickAddProduct }) {
+function ProductsToBuyView({ products, plan, latest, recentMeasures, recentApplications, volume, effectiveTargets, activeParamKeys, lang, manageStock, poolName, treatmentType, onBack, onEditProduct, onQuickAddProduct }) {
   const t = useT(lang || "fr");
   const [addedIds, setAddedIds] = useState([]);
 
@@ -19355,7 +19471,7 @@ function ProductsToBuyView({ products, plan, latest, volume, effectiveTargets, a
     if (plan) {
       pendingSteps = plan.steps.filter((s) => !stepIsResolved(s) && s.mode !== "entretien");
     } else if (latest) {
-      pendingSteps = computeRecommendations(latest, volume, products, effectiveTargets, activeParamKeys, null);
+      pendingSteps = computeRecommendations(latest, volume, products, effectiveTargets, activeParamKeys, null, computeParamTrends(recentMeasures, latest, recentApplications, products, volume));
     }
     pendingSteps.forEach((step) => {
       if (!step.productName || step.computedDoseAmount == null || !step.doseUnit) return;
@@ -22008,29 +22124,33 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
   // Historique.
   const reportTargets = useMemo(() => getEffectiveTargets(pool?.treatmentType || "chlore"), [pool?.treatmentType]);
 
-  const chartParams = [
+  const chartParamsBase = [
+    // v1.129.0 — Ordre des pastilles : chaque paramètre projeté précède son
+    // paramètre mesuré (demande Arnaud).
+    { key: "phProjected",  color: "#1a8fd1", label: t("ph_projected_chart_label"),  axis: "left", dashed: true },
     { key: "pH",     color: "#1a8fd1", label: "pH",                                          axis: "left"  },
+    { key: "fclProjected", color: "#2b7fd9", label: t("fcl_projected_chart_label"), axis: "left", dashed: true },
     { key: "fCl",    color: "#2b7fd9", label: "FCL",                                         axis: "left"  },
-    { key: "tCl",    color: "#8a6fd1", label: "TCL",                                         axis: "left"  },
-    { key: "ccl",    color: "#5b3fa0", label: "CCL",                                         axis: "left"  },
+    { key: "tacProjected", color: "#d98c2b", label: t("tac_projected_chart_label"), axis: "right", dashed: true },
     { key: "tac",    color: "#d98c2b", label: t("tac_col"),                                  axis: "right" },
     { key: "cya",    color: "#c4502f", label: t("cya_col"),                                  axis: "right" },
+    { key: "tCl",    color: "#8a6fd1", label: "TCL",                                         axis: "left"  },
+    { key: "ccl",    color: "#5b3fa0", label: "CCL",                                         axis: "left"  },
     { key: "hard",   color: "#2e8b57", label: t("hard_col"),                                 axis: "right" },
     { key: "phos",   color: "#9b59b6", label: t("phos_col"),                                 axis: "right" },
     { key: "copper", color: "#b5651d", label: t("copper_col"),                               axis: "right" },
     { key: "iron",   color: "#c0392b", label: t("iron_col"),                                 axis: "right" },
     { key: "temp",   color: "#e0578a", label: t("temp_col"),                                 axis: "right" },
-    // v1.116.0 — Paramètres projetés, chip indépendante comme dans l'onglet
-    // Historique (voir demande Arnaud).
-    { key: "phProjected",  color: "#1a8fd1", label: t("ph_projected_chart_label"),  axis: "left", dashed: true },
-    { key: "fclProjected", color: "#2b7fd9", label: t("fcl_projected_chart_label"), axis: "left", dashed: true },
-    { key: "tacProjected", color: "#d98c2b", label: t("tac_projected_chart_label"), axis: "right", dashed: true },
   ];
 
   // v1.66.2 — Sélection des paramètres affichés sur le graphique du rapport
   // (aperçu HTML et PDF), même mécanisme de puces que le graphique de
   // l'onglet Historique. Tous actifs par défaut.
-  const [activeReportParams, setActiveReportParams] = useState(() => chartParams.map((cp) => cp.key));
+  const [activeReportParams, setActiveReportParams] = useState(() => chartParamsBase.map((cp) => cp.key));
+  const chartParams = useMemo(
+    () => withAdaptiveAxes(chartParamsBase, activeReportParams, chartDataWithProjections),
+    [activeReportParams, chartDataWithProjections]
+  );
   const allReportKeys = chartParams.map((cp) => cp.key);
   const allReportActive = allReportKeys.every((k) => activeReportParams.includes(k));
   function toggleReportParam(key) {
@@ -22044,7 +22164,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
     const repTargets = getEffectiveTargets(pool?.treatmentType || "chlore");
     const repParams = getActiveParams(pool?.treatmentType || "chlore");
     return visibleMeasures.map((m) => {
-      const recs = computeRecommendations(m, pool?.volume || 0, products, repTargets, repParams, t);
+      const recs = computeRecommendations(m, pool?.volume || 0, products, repTargets, repParams, t, computeParamTrends(sortedMeasures, m, applications, products, pool?.volume || 0));
       const application = applications.find((a) => a.measureId === m.id) || null;
       return { measure: m, recs, application };
     });
@@ -22390,7 +22510,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
       const appliedSteps = app?.steps?.filter(s => !s.skipped) || [];
       const repTargets = getEffectiveTargets(pool?.treatmentType || "chlore");
       const repParams  = getActiveParams(pool?.treatmentType || "chlore");
-      const mRecs = computeRecommendations(m, pool?.volume || 0, products, repTargets, repParams, t);
+      const mRecs = computeRecommendations(m, pool?.volume || 0, products, repTargets, repParams, t, computeParamTrends(sortedMeasures, m, applications, products, pool?.volume || 0));
 
       const useSteps = appliedSteps.length > 0;
       const items = useSteps ? appliedSteps : mRecs;
@@ -22776,7 +22896,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
               }}
             >
               {cp.label}
-              <span style={styles.chipAxisTag}>{cp.axis === "left" ? "ᴜ" : "ᴅ"}</span>
+              <span style={styles.chipAxisTag}>{cp.axis === "left" ? "◀" : "▶"}</span>
             </button>
           ))}
         </div>
