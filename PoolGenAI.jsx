@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.131.1";
+const APP_VERSION = "1.132.1";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -10265,6 +10265,53 @@ function PoolGenAIApp() {
     }));
   }
 
+  // v1.132.0 — Resynchronise les étapes NON APPLIQUÉES d'un plan en cours avec
+  // la recommandation actuelle quand leur produit (ou leur action) a changé
+  // depuis le démarrage du plan : les cartes du tableau de bord sont
+  // recalculées en direct, alors que l'assistant appliquait le plan figé —
+  // ex. fiche produit modifiée entre-temps (galets → chlore non stabilisé),
+  // produit supprimé... Ne touche jamais une étape déjà appliquée/passée ni
+  // les horaires ; rapprochement par titre (même mesure → même titre).
+  function syncActivePlanWithRecommendations() {
+    if (!activePlan) return;
+    const measure = poolMeasures.find((mm) => mm.id === activePlan.measureId);
+    if (!measure) return;
+    const volume = activePool?.volume || 0;
+    const recsNow = computeRecommendations(measure, volume, poolProducts, effectiveTargets, activeParamKeys, tFn, computeParamTrends(poolMeasures, measure, poolApplications, poolProducts, volume));
+    const isPending = (st) => !st.appliedAt && !st.skipped && st.mode !== "entretien";
+    let changed = false;
+    const steps = activePlan.steps.map((st) => {
+      if (!isPending(st)) return st;
+      const r = recsNow.find((x) => x.title === st.title);
+      if (!r) return st;
+      const sameProduct = (r.productRealName ?? r.productName) === (st.productRealName ?? st.productName) && r.action === st.action;
+      if (sameProduct) return st;
+      changed = true;
+      const productFields = {
+        action: r.action,
+        productName: r.productName,
+        productRealName: r.productRealName,
+        productPhoto: r.productPhoto,
+        productAvailable: r.productAvailable,
+        doseUnit: r.doseUnit,
+        waitHours: r.waitHours,
+        note: r.note,
+      };
+      if (st.isComplement) return { ...st, ...productFields };
+      return {
+        ...st,
+        ...productFields,
+        doseText: r.doseText,
+        missingTip: r.missingTip,
+        computedDoseAmount: r.computedDoseAmount,
+        appliedAmount: r.computedDoseAmount,
+        doseAnomaly: r.doseAnomaly,
+        timingTip: r.timingTip,
+      };
+    });
+    if (changed) setActivePlan({ ...activePlan, steps });
+  }
+
   // Valide une étape du wizard — version sans appel de setter dans setter
   function applyWizardStep(stepIdx, amount, appliedAt, productName, wantsSplit) {
     if (!activePlan) return;
@@ -10554,6 +10601,7 @@ function PoolGenAIApp() {
     }
     // Si plan déjà en cours pour cette mesure, reprendre
     if (activePlan && activePlan.measureId === m.id) {
+      syncActivePlanWithRecommendations();
       setShowWizard(true);
       return;
     }
@@ -11246,7 +11294,7 @@ function PoolGenAIApp() {
             effectiveTargets={effectiveTargets}
             activeParamKeys={activeParamKeys}
             activePlan={activePlan}
-            onResumePlan={() => setShowWizard(true)}
+            onResumePlan={() => { syncActivePlanWithRecommendations(); setShowWizard(true); }}
             onOpenManualApply={() => setShowManualApply(true)}
             authUid={dataUid}
           />
@@ -12550,7 +12598,7 @@ function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep }) {
     // sinon le produit par défaut de l'action (voir pickDoseSrc).
     const fromProd = findProductOrGeneric(products, origProductName)
       || DEFAULT_PRODUCTS.find((d) => d.action === reco.action) || null;
-    cardProductName = appliedProdObj.nameKey ? t(appliedProdObj.nameKey) : appliedProdObj.name;
+    cardProductName = productDisplayName(appliedProdObj, t);
     cardProductPhoto = appliedProdObj.photo || null;
     appliedIsGeneric = DEFAULT_PRODUCTS.includes(appliedProdObj);
     // v1.124.1 — La dose recalculée peut être dans une autre unité (poudre
@@ -12693,7 +12741,7 @@ function ComplementCard({ step, products, lang }) {
   const t = useT(lang || "fr");
   const done = !!step.appliedAt && !step.skipped;
   const usedObj = done && step.appliedProductName ? findProductOrGeneric(products, step.appliedProductName) : null;
-  const shownName = usedObj ? (usedObj.nameKey ? t(usedObj.nameKey) : usedObj.name) : step.productName;
+  const shownName = usedObj ? productDisplayName(usedObj, t) : step.productName;
   const unit = step.doseUnit || "g";
   return (
     <div style={{ ...styles.recoCard, borderStyle: "dashed", opacity: step.skipped ? 0.6 : 1 }}>
@@ -12759,6 +12807,28 @@ function phMinusMaxDoseFor(prod, defaultProd, doseSrc, action) {
     return defaultProd?.maxDosePer100m3 ?? null;
   }
   return null;
+}
+
+// v1.132.0 — "chlore" (choc) et "chlore-stabilise" (galets/sticks) servent tous
+// deux à remonter le chlore libre : un produit de l'une des deux actions peut
+// être choisi pour une étape de l'autre (avant : seule une étape "chlore"
+// proposait les deux ; une étape "chlore stabilisé" n'offrait jamais le choc
+// en stock — voir signalement de Pierre).
+// v1.132.1 — Nom affiché d'un produit : le libellé traduit (nameKey) ne vaut que
+// tant que le nom n'a pas été modifié par l'utilisateur. Une fiche par défaut
+// renommée ("PCH Longue Durée 300G", "Alcafix"...) garde son nameKey en base :
+// elle s'affichait sous le nom générique traduit ("Chlore choc non stabilisé
+// (type Chloryte)") au lieu de son vrai nom — signalé par Pierre.
+function productDisplayName(p, tr) {
+  if (!p) return "";
+  if (!p.nameKey) return p.name;
+  const def = DEFAULT_PRODUCTS.find((d) => d.nameKey === p.nameKey);
+  const unchanged = !p.name || p.name === def?.name || p.name === TRANSLATIONS.fr[p.nameKey];
+  return unchanged ? tr(p.nameKey) : p.name;
+}
+const CHLORE_LIKE_ACTIONS = ["chlore", "chlore-stabilise"];
+function relatedProductActions(action) {
+  return CHLORE_LIKE_ACTIONS.includes(action) ? CHLORE_LIKE_ACTIONS : [action];
 }
 
 function normalizeDoseUnit(u) {
@@ -12997,7 +13067,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
     prod ? (prod.noteKey ? _(prod.noteKey === "note_ph_minus" ? phMinusNoteKeyForUnit(prod.doseUnit) : prod.noteKey) : prod.note) || _(fallbackKey === "note_ph_minus" ? phMinusNoteKeyForUnit(prod.doseUnit) : fallbackKey) : _("reco_no_product_note");
   // Traduit le nom d'un produit : utilise nameKey si disponible, sinon le nom brut
   const prodName = (prod, fallbackKey) =>
-    prod ? (prod.nameKey ? _(prod.nameKey) : prod.name) || _(fallbackKey) : _(fallbackKey);
+    prod ? productDisplayName(prod, _) || _(fallbackKey) : _(fallbackKey);
   // v1.29.8 — Remplacement automatique : si l'utilisateur a saisi son propre
   // produit pour une action donnée (ex. "ph+"), il prend le pas sur le produit
   // standard pré-rempli pour la même action, sans action manuelle. Le produit
@@ -16787,7 +16857,7 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
     return v;
   }
   function candidatesForEditAction(action, currentName) {
-    const rel = action === "chlore" ? ["chlore", "chlore-stabilise"] : [action];
+    const rel = relatedProductActions(action);
     const real = (products || []).filter((p) => rel.includes(p.action) && (p.stockPercent ?? 100) > 0);
     const generic = DEFAULT_PRODUCTS.filter((p) => rel.includes(p.action));
     const list = [...real, ...generic];
@@ -18210,7 +18280,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   // son propre produit.
   function getSortedCandidates(stepAction) {
     if (!manageStock || !products) return [];
-    const relatedActions = stepAction === "chlore" ? ["chlore", "chlore-stabilise"] : [stepAction];
+    const relatedActions = relatedProductActions(stepAction);
     const candidates = products.filter((p) => relatedActions.includes(p.action));
     return [...candidates].sort((a, b) => {
       const aEmpty = (a.stockPercent ?? 100) <= 0;
@@ -18231,7 +18301,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   // décomptés (saveApplication ne décrémente que les produits présents dans
   // "products", donc un nom générique n'y matche jamais).
   function getGenericCandidates(stepAction) {
-    const relatedActions = stepAction === "chlore" ? ["chlore", "chlore-stabilise"] : [stepAction];
+    const relatedActions = relatedProductActions(stepAction);
     return DEFAULT_PRODUCTS.filter((p) => relatedActions.includes(p.action));
   }
 
@@ -18413,8 +18483,8 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   const selectionChanged = !!selectedProductObj && !!origProdObj && selectedProductObj !== origProdObj;
   const ownNote = (p) => (p ? ((p.noteKey ? t(p.noteKey) : p.note) || null) : null);
   const displayProductName = selectionChanged
-    ? (selectedProductObj.nameKey ? t(selectedProductObj.nameKey) : selectedProductObj.name)
-    : (step.productName || step.title);
+    ? productDisplayName(selectedProductObj, t)
+    : (origProdObj ? productDisplayName(origProdObj, t) : (step.productName || step.title));
   const rawDisplayNote = selectionChanged
     ? (ownNote(selectedProductObj) || (ownNote(origProdObj) ? null : step.note))
     : step.note;
@@ -19559,7 +19629,7 @@ function ProductsToBuyView({ products, plan, latest, recentMeasures, recentAppli
                       <Beaker size={16} color="var(--brand-icon-light)" />
                     </div>
                     <div style={{ flex: 1, textAlign: "left" }}>
-                      <div style={styles.productName}>{dp.nameKey ? t(dp.nameKey) : dp.name}</div>
+                      <div style={styles.productName}>{productDisplayName(dp, t)}</div>
                     </div>
                     <button
                       type="button"
