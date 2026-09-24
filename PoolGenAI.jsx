@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.137.0";
+const APP_VERSION = "1.138.0";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -68,6 +68,7 @@ const TRANSLATIONS = {
     phos_projected_chart_label: "Phos. (projeté)",
     hard_projected_label: "TH projeté : {value}",
     phos_projected_label: "Phosphates projetés : {value}",
+    measured_suffix: "mesuré",
     copper_col: "Cuivre",
     iron_col: "Fer",
     param_ccl: "Chlore combiné (CCL)",
@@ -898,6 +899,7 @@ const TRANSLATIONS = {
     phos_projected_chart_label: "Phos. (projected)",
     hard_projected_label: "Projected hardness: {value}",
     phos_projected_label: "Projected phosphates: {value}",
+    measured_suffix: "measured",
     copper_col: "Copper",
     iron_col: "Iron",
     param_ccl: "Combined chlorine (CCL)",
@@ -1715,6 +1717,7 @@ const TRANSLATIONS = {
     phos_projected_chart_label: "Phos. (projiziert)",
     hard_projected_label: "Projizierte Härte: {value}",
     phos_projected_label: "Projizierte Phosphate: {value}",
+    measured_suffix: "gemessen",
     copper_col: "Kupfer",
     iron_col: "Eisen",
     param_ccl: "Gebundenes Chlor (CCL)",
@@ -2533,6 +2536,7 @@ const TRANSLATIONS = {
     phos_projected_chart_label: "Fos. (previsto)",
     hard_projected_label: "Durezza prevista: {value}",
     phos_projected_label: "Fosfati previsti: {value}",
+    measured_suffix: "misurato",
     copper_col: "Rame",
     iron_col: "Ferro",
     param_ccl: "Cloro combinato (CCL)",
@@ -3348,6 +3352,7 @@ const TRANSLATIONS = {
     phos_projected_chart_label: "Fos. (proyectado)",
     hard_projected_label: "Dureza proyectada: {value}",
     phos_projected_label: "Fosfatos proyectados: {value}",
+    measured_suffix: "medido",
     copper_col: "Cobre",
     iron_col: "Hierro",
     param_ccl: "Cloro combinado (CCL)",
@@ -4163,6 +4168,7 @@ const TRANSLATIONS = {
     phos_projected_chart_label: "Fos. (projetado)",
     hard_projected_label: "Dureza projetada: {value}",
     phos_projected_label: "Fosfatos projetados: {value}",
+    measured_suffix: "medido",
     copper_col: "Cobre",
     iron_col: "Ferro",
     param_ccl: "Cloro combinado (CCL)",
@@ -5479,6 +5485,11 @@ const AXIS_RATIO_THRESHOLD = 3;
 const PH_FAMILY_KEYS = ["pH", "phProjected"];
 const CL_FAMILY_KEYS = ["fCl", "fclProjected", "tCl", "ccl"];
 function withAdaptiveAxes(params, activeKeys, rows) {
+  // v1.138.0 — Un seul paramètre affiché (seul et/ou avec sa valeur projetée) :
+  // un seul axe vertical, à gauche — même pour un paramètre normalement lu à
+  // droite (TAC, CYA, TH...).
+  const activeBases = new Set(activeKeys.map((k) => TARGET_BASE_KEY[k] || k));
+  if (activeBases.size === 1) return params.map((cp) => (cp.axis === "left" ? cp : { ...cp, axis: "left" }));
   const active = params.filter((cp) => activeKeys.includes(cp.key));
   const familyMean = (keys) => {
     const vals = [];
@@ -14468,7 +14479,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
     { key: "copper",color: "#b8860b", label: t("copper_col"),                       axis: "left" },
     { key: "iron",  color: "#8b4513", label: t("iron_col"),                         axis: "left" },
     { key: "temp",  color: "#e0578a", label: t("temp_col"),                         axis: "right" },
-  ];
+  ].map((cp) => (cp.projected ? cp : { ...cp, label: `${cp.label} (${t("measured_suffix")})` }));
 
   const chartParams = useMemo(
     () => withAdaptiveAxes(chartParamsBase, activeParams, chartDataWithProjections),
@@ -22278,7 +22289,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
     { key: "copper", color: "#b5651d", label: t("copper_col"),                               axis: "right" },
     { key: "iron",   color: "#c0392b", label: t("iron_col"),                                 axis: "right" },
     { key: "temp",   color: "#e0578a", label: t("temp_col"),                                 axis: "right" },
-  ];
+  ].map((cp) => (cp.projected ? cp : { ...cp, label: `${cp.label} (${t("measured_suffix")})` }));
 
   // v1.66.2 — Sélection des paramètres affichés sur le graphique du rapport
   // (aperçu HTML et PDF), même mécanisme de puces que le graphique de
