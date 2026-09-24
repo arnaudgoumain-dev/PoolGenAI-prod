@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.132.1";
+const APP_VERSION = "1.137.0";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -64,6 +64,10 @@ const TRANSLATIONS = {
     ccl_col: "CCL",
     hard_col: "TH",
     phos_col: "Phos.",
+    hard_projected_chart_label: "TH (projeté)",
+    phos_projected_chart_label: "Phos. (projeté)",
+    hard_projected_label: "TH projeté : {value}",
+    phos_projected_label: "Phosphates projetés : {value}",
     copper_col: "Cuivre",
     iron_col: "Fer",
     param_ccl: "Chlore combiné (CCL)",
@@ -890,6 +894,10 @@ const TRANSLATIONS = {
     ccl_col: "CCL",
     hard_col: "TH",
     phos_col: "Phos.",
+    hard_projected_chart_label: "TH (projected)",
+    phos_projected_chart_label: "Phos. (projected)",
+    hard_projected_label: "Projected hardness: {value}",
+    phos_projected_label: "Projected phosphates: {value}",
     copper_col: "Copper",
     iron_col: "Iron",
     param_ccl: "Combined chlorine (CCL)",
@@ -1703,6 +1711,10 @@ const TRANSLATIONS = {
     ccl_col: "CCL",
     hard_col: "TH",
     phos_col: "Phos.",
+    hard_projected_chart_label: "TH (projiziert)",
+    phos_projected_chart_label: "Phos. (projiziert)",
+    hard_projected_label: "Projizierte Härte: {value}",
+    phos_projected_label: "Projizierte Phosphate: {value}",
     copper_col: "Kupfer",
     iron_col: "Eisen",
     param_ccl: "Gebundenes Chlor (CCL)",
@@ -2517,6 +2529,10 @@ const TRANSLATIONS = {
     ccl_col: "CCL",
     hard_col: "TH",
     phos_col: "Fos.",
+    hard_projected_chart_label: "TH (previsto)",
+    phos_projected_chart_label: "Fos. (previsto)",
+    hard_projected_label: "Durezza prevista: {value}",
+    phos_projected_label: "Fosfati previsti: {value}",
     copper_col: "Rame",
     iron_col: "Ferro",
     param_ccl: "Cloro combinato (CCL)",
@@ -3328,6 +3344,10 @@ const TRANSLATIONS = {
     ccl_col: "CCL",
     hard_col: "TH",
     phos_col: "Fos.",
+    hard_projected_chart_label: "TH (proyectado)",
+    phos_projected_chart_label: "Fos. (proyectado)",
+    hard_projected_label: "Dureza proyectada: {value}",
+    phos_projected_label: "Fosfatos proyectados: {value}",
     copper_col: "Cobre",
     iron_col: "Hierro",
     param_ccl: "Cloro combinado (CCL)",
@@ -4139,6 +4159,10 @@ const TRANSLATIONS = {
     ccl_col: "CCL",
     hard_col: "TH",
     phos_col: "Fos.",
+    hard_projected_chart_label: "TH (projetado)",
+    phos_projected_chart_label: "Fos. (projetado)",
+    hard_projected_label: "Dureza projetada: {value}",
+    phos_projected_label: "Fosfatos projetados: {value}",
     copper_col: "Cobre",
     iron_col: "Ferro",
     param_ccl: "Cloro combinado (CCL)",
@@ -5420,7 +5444,12 @@ const PROJECTABLE_FCL_ACTIONS = ["chlore", "chlore-stabilise"];
 // v1.128.0 — TAC projeté, même principe que pH/chlore libre projetés.
 const PROJECTABLE_TAC_ACTIONS = ["tac+", "tac-"];
 // Clé de série du graphique (chartParams) pour chaque paramètre projeté.
-const PROJECTED_CHART_KEY = { pH: "phProjected", fCl: "fclProjected", tac: "tacProjected" };
+const PROJECTED_CHART_KEY = { pH: "phProjected", fCl: "fclProjected", tac: "tacProjected", hard: "hardProjected", phos: "phosProjected" };
+// v1.135.0 — TH projeté (hard+, chlorure de calcium) et phosphates projetés
+// (phos-, anti-phosphates), même modèle dose → effet que le TAC. CCL, cuivre et
+// fer ne sont volontairement pas projetés : pas de loi dose-effet fiable.
+const PROJECTABLE_HARD_ACTIONS = ["hard+"];
+const PROJECTABLE_PHOS_ACTIONS = ["phos-"];
 
 // v1.130.0 — Axes adaptatifs : quand la famille pH (pH + pH projeté) et la
 // famille chlore (chlore libre/total/combiné + projeté) sont toutes deux
@@ -5430,6 +5459,22 @@ const PROJECTED_CHART_KEY = { pH: "phProjected", fCl: "fclProjected", tac: "tacP
 // Sans effet si un autre paramètre occupe déjà l'axe de droite (TAC, CYA...)
 // ou si un paramètre hors de ces deux familles est actif : on garderait alors
 // un axe partagé illisible.
+// v1.134.0 — Zone cible d'un paramètre : affichée quand ce paramètre est le
+// SEUL affiché, seul et/ou avec sa valeur projetée (pH, Cl libre, TAC, CYA,
+// TH, phosphates, cuivre, fer, température...). Renvoie null dès que deux
+// paramètres différents sont visibles ou si le paramètre n'a pas de cible.
+const TARGET_BASE_KEY = { phProjected: "pH", fclProjected: "fCl", tacProjected: "tac", hardProjected: "hard", phosProjected: "phos" };
+function computeTargetZone(activeKeys, params, targets) {
+  const bases = [...new Set(activeKeys.map((k) => TARGET_BASE_KEY[k] || k))];
+  if (bases.length !== 1) return null;
+  const base = bases[0];
+  const tg = targets && targets[base];
+  if (!tg || tg.min == null || tg.max == null) return null;
+  const cps = params.filter((cp) => activeKeys.includes(cp.key) && (TARGET_BASE_KEY[cp.key] || cp.key) === base);
+  if (!cps.length) return null;
+  const main = cps.find((cp) => !cp.projected) || cps[0];
+  return { axis: main.axis, min: tg.min, max: tg.max, color: main.color };
+}
 const AXIS_RATIO_THRESHOLD = 3;
 const PH_FAMILY_KEYS = ["pH", "phProjected"];
 const CL_FAMILY_KEYS = ["fCl", "fclProjected", "tCl", "ccl"];
@@ -5468,6 +5513,9 @@ function buildProjectedPoints(measure, steps, products, volume) {
   if (currentFcl != null && isNaN(currentFcl)) currentFcl = null;
   let currentTac = measure?.tac !== undefined && measure.tac !== "" && measure.tac != null ? parseFloat(measure.tac) : null;
   if (currentTac != null && isNaN(currentTac)) currentTac = null;
+  const numOrNull = (v) => { const n = v !== undefined && v !== "" && v != null ? parseFloat(v) : null; return n != null && isNaN(n) ? null : n; };
+  let currentHard = numOrNull(measure?.hard);
+  let currentPhos = numOrNull(measure?.phos);
   const indexed = (steps || [])
     .map((s, i) => ({ s, i }))
     .filter(({ s }) => !s.skipped && s.appliedAmount != null && s.appliedAt)
@@ -5476,8 +5524,10 @@ function buildProjectedPoints(measure, steps, products, volume) {
     const isPh = PROJECTABLE_PH_ACTIONS.includes(s.action);
     const isFcl = PROJECTABLE_FCL_ACTIONS.includes(s.action);
     const isTac = PROJECTABLE_TAC_ACTIONS.includes(s.action);
-    if (!isPh && !isFcl && !isTac) return;
-    const baseline = isPh ? currentPh : isFcl ? currentFcl : currentTac;
+    const isHard = PROJECTABLE_HARD_ACTIONS.includes(s.action);
+    const isPhos = PROJECTABLE_PHOS_ACTIONS.includes(s.action);
+    if (!isPh && !isFcl && !isTac && !isHard && !isPhos) return;
+    const baseline = isPh ? currentPh : isFcl ? currentFcl : isTac ? currentTac : isHard ? currentHard : currentPhos;
     if (baseline == null) return;
     // v1.116.1 — Sur les étapes historiques où productRealName n'a jamais été
     // renseigné (cas fréquent, voir constaté sur le compte de Pierre) et où
@@ -5495,10 +5545,10 @@ function buildProjectedPoints(measure, steps, products, volume) {
       || DEFAULT_PRODUCTS.find((p) => p.action === s.action);
     const delta = computeProjectedDelta(prod, s.appliedAmount, volume);
     if (delta == null || isNaN(delta)) return;
-    const sign = (s.action === "ph-" || s.action === "tac-") ? -1 : 1;
-    const newVal = isTac ? Math.max(0, baseline + sign * delta) : baseline + sign * delta;
-    if (isPh) currentPh = newVal; else if (isFcl) currentFcl = newVal; else currentTac = newVal;
-    byIndex[i] = { param: isPh ? "pH" : isFcl ? "fCl" : "tac", value: newVal, appliedAt: s.appliedAt };
+    const sign = (s.action === "ph-" || s.action === "tac-" || s.action === "phos-") ? -1 : 1;
+    const newVal = (isPh || isFcl) ? baseline + sign * delta : Math.max(0, baseline + sign * delta);
+    if (isPh) currentPh = newVal; else if (isFcl) currentFcl = newVal; else if (isTac) currentTac = newVal; else if (isHard) currentHard = newVal; else currentPhos = newVal;
+    byIndex[i] = { param: isPh ? "pH" : isFcl ? "fCl" : isTac ? "tac" : isHard ? "hard" : "phos", value: newVal, appliedAt: s.appliedAt };
   });
   return byIndex;
 }
@@ -13754,6 +13804,43 @@ function filterByWindow(items, getDate, windowKey, windowEnd) {
   });
 }
 
+// v1.136.0 — Pastilles de sélection des paramètres du graphique : chaque
+// paramètre est regroupé avec sa valeur projetée dans une même capsule (voir
+// TARGET_BASE_KEY pour le lien projeté → mesuré). Un paramètre sans projection
+// reste une pastille isolée.
+function ParamChips({ params, activeKeys, onToggle }) {
+  const groups = [];
+  params.forEach((cp) => {
+    const base = TARGET_BASE_KEY[cp.key] || cp.key;
+    const last = groups[groups.length - 1];
+    if (last && last.base === base) last.items.push(cp);
+    else groups.push({ base, items: [cp] });
+  });
+  const chip = (cp) => {
+    const on = activeKeys.includes(cp.key);
+    return (
+      <button
+        key={cp.key}
+        onClick={() => onToggle(cp.key)}
+        style={{
+          ...styles.chip,
+          background: on ? cp.color + "22" : "#f1f4f3",
+          borderColor: on ? cp.color : "#d0e4f5",
+          color: on ? cp.color : "var(--brand-text-muted)",
+        }}
+      >
+        {cp.label}
+        <span style={styles.chipAxisTag}>{cp.axis === "left" ? "◀" : "▶"}</span>
+      </button>
+    );
+  };
+  return groups.map((g) =>
+    g.items.length > 1
+      ? <div key={g.base} style={styles.chipGroup}>{g.items.map(chip)}</div>
+      : chip(g.items[0])
+  );
+}
+
 // Chips de fenêtre, partagées entre l'onglet Historique et le rapport —
 // voir aussi TimeCursorSlider (curseur, rendu séparément sous le graphique).
 function PeriodZoomControl({ windowKey, onWindowKeyChange, t }) {
@@ -14365,17 +14452,19 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
   const chartParamsBase = [
     // v1.129.0 — Ordre des pastilles : chaque paramètre projeté précède son
     // paramètre mesuré (demande Arnaud).
-    { key: "phProjected",  color: "#1a8fd1", label: t("ph_projected_chart_label"),  axis: "left", dashed: true },
-    { key: "pH",    color: "#1a8fd1", label: "pH",                                  axis: "left" },
-    { key: "fclProjected", color: "#2b7fd9", label: t("fcl_projected_chart_label"), axis: "left", dashed: true },
-    { key: "fCl",   color: "#2b7fd9", label: t("param_fcl").replace(" (mg/L)", ""), axis: "left" },
-    { key: "tacProjected", color: "#d98c2b", label: t("tac_projected_chart_label"), axis: "right", dashed: true },
-    { key: "tac",   color: "#d98c2b", label: t("tac_col"),                          axis: "right" },
+    { key: "phProjected",  color: "#2f9e44", label: t("ph_projected_chart_label"),  axis: "left", projected: true },
+    { key: "pH",    color: "#2f9e44", label: "pH",                                  axis: "left", dashed: true },
+    { key: "fclProjected", color: "#2b7fd9", label: t("fcl_projected_chart_label"), axis: "left", projected: true },
+    { key: "fCl",   color: "#2b7fd9", label: t("param_fcl").replace(" (mg/L)", ""), axis: "left", dashed: true },
+    { key: "tacProjected", color: "#d98c2b", label: t("tac_projected_chart_label"), axis: "right", projected: true },
+    { key: "tac",   color: "#d98c2b", label: t("tac_col"),                          axis: "right", dashed: true },
     { key: "cya",   color: "#c4502f", label: t("cya_col"),                          axis: "right" },
     { key: "tCl",   color: "#8a6fd1", label: t("param_tcl").replace(" (mg/L)", ""), axis: "left" },
     { key: "ccl",   color: "#6a4fd1", label: t("ccl_col"),                          axis: "left" },
-    { key: "hard",  color: "#2b9c8a", label: t("hard_col"),                         axis: "right" },
-    { key: "phos",  color: "#8a2b9c", label: t("phos_col"),                         axis: "right" },
+    { key: "hardProjected", color: "#2b9c8a", label: t("hard_projected_chart_label"), axis: "right", projected: true },
+    { key: "hard",  color: "#2b9c8a", label: t("hard_col"),                         axis: "right", dashed: true },
+    { key: "phosProjected", color: "#8a2b9c", label: t("phos_projected_chart_label"), axis: "right", projected: true },
+    { key: "phos",  color: "#8a2b9c", label: t("phos_col"),                         axis: "right", dashed: true },
     { key: "copper",color: "#b8860b", label: t("copper_col"),                       axis: "left" },
     { key: "iron",  color: "#8b4513", label: t("iron_col"),                         axis: "left" },
     { key: "temp",  color: "#e0578a", label: t("temp_col"),                         axis: "right" },
@@ -14462,21 +14551,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
         >
           {allActive ? t("hide_all_params") : t("show_all_params")}
         </button>
-        {chartParams.map((cp) => (
-          <button
-            key={cp.key}
-            onClick={() => toggleParam(cp.key)}
-            style={{
-              ...styles.chip,
-              background: activeParams.includes(cp.key) ? cp.color + "22" : "#f1f4f3",
-              borderColor: activeParams.includes(cp.key) ? cp.color : "#d0e4f5",
-              color: activeParams.includes(cp.key) ? cp.color : "var(--brand-text-muted)",
-            }}
-          >
-            {cp.label}
-            <span style={styles.chipAxisTag}>{cp.axis === "left" ? "◀" : "▶"}</span>
-          </button>
-        ))}
+        <ParamChips params={chartParams} activeKeys={activeParams} onToggle={toggleParam} />
       </div>
 
       <PeriodZoomControl
@@ -14545,15 +14620,8 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
         // projeté (ou le seul mesuré) suffit — voir retour Arnaud (captures
         // "pH (projeté)" seul et "Cl libre (projeté)" seul, zone attendue
         // dans les deux cas).
-        const otherParamsActive = chartParams.some(
-          (cp) => !["pH", "phProjected", "fCl", "fclProjected"].includes(cp.key) && activeParams.includes(cp.key)
-        );
-        const onlyPhFamily = (activeParams.includes("pH") || activeParams.includes("phProjected"))
-          && !activeParams.includes("fCl") && !activeParams.includes("fclProjected") && !otherParamsActive;
-        const onlyFclFamily = (activeParams.includes("fCl") || activeParams.includes("fclProjected"))
-          && !activeParams.includes("pH") && !activeParams.includes("phProjected") && !otherParamsActive;
-        const showPhTarget = onlyPhFamily && recoTargets.pH;
-        const showFclTarget = onlyFclFamily && recoTargets.fCl;
+        // v1.134.0 — Zone cible générique (voir computeTargetZone).
+        const targetZone = computeTargetZone(activeParams, chartParams, recoTargets);
         const axisTicks = computeAxisTicks(domainStart, domainEnd);
         // v1.122.2 — Domaine Y adaptatif (voir niceAxisBounds) : calculé
         // séparément par axe, sur les seules clés actives de cet axe.
@@ -14566,9 +14634,9 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
         // retour Arnaud) — sans ça, ReferenceArea (ifOverflow "discard" par
         // défaut) ne dessinait plus rien dès que la cible dépassait le
         // domaine calculé sur les seules données.
-        if (showPhTarget) leftRange = leftRange ? [Math.min(leftRange[0], recoTargets.pH.min), Math.max(leftRange[1], recoTargets.pH.max)] : [recoTargets.pH.min, recoTargets.pH.max];
-        if (showFclTarget) leftRange = leftRange ? [Math.min(leftRange[0], recoTargets.fCl.min), Math.max(leftRange[1], recoTargets.fCl.max)] : [recoTargets.fCl.min, recoTargets.fCl.max];
-        const rightRange = computeAxisRange(chartRenderData, rightKeys);
+        if (targetZone && targetZone.axis === "left") leftRange = leftRange ? [Math.min(leftRange[0], targetZone.min), Math.max(leftRange[1], targetZone.max)] : [targetZone.min, targetZone.max];
+        let rightRange = computeAxisRange(chartRenderData, rightKeys);
+        if (targetZone && targetZone.axis === "right") rightRange = rightRange ? [Math.min(rightRange[0], targetZone.min), Math.max(rightRange[1], targetZone.max)] : [targetZone.min, targetZone.max];
         const leftBounds = leftRange ? niceAxisBounds(leftRange[0], leftRange[1], 10) : { domain: [0, 10], ticks: undefined };
         const rightBounds = rightRange ? niceAxisBounds(rightRange[0], rightRange[1], 110) : { domain: [0, 110], ticks: undefined };
         return (
@@ -14608,11 +14676,8 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
               labelFormatter={(ts) => formatDate(new Date(ts).toISOString())}
               contentStyle={{ fontSize: 12, borderRadius: 10, border: "1px solid #d0e4f5" }}
             />
-            {showPhTarget && (
-              <ReferenceArea yAxisId="left" y1={recoTargets.pH.min} y2={recoTargets.pH.max} fill="#1a8fd1" fillOpacity={0.1} strokeOpacity={0} ifOverflow="visible" />
-            )}
-            {showFclTarget && (
-              <ReferenceArea yAxisId="left" y1={recoTargets.fCl.min} y2={recoTargets.fCl.max} fill="#2b7fd9" fillOpacity={0.1} strokeOpacity={0} ifOverflow="visible" />
+            {targetZone && (
+              <ReferenceArea yAxisId={targetZone.axis} y1={targetZone.min} y2={targetZone.max} fill={targetZone.color} fillOpacity={0.1} strokeOpacity={0} ifOverflow="visible" />
             )}
             {/* v1.113.2 — Les courbes projetées (pas mesurées) partagent
                 chartDataWithProjections avec toutes les autres <Line> (pas de
@@ -14646,7 +14711,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
                           const { x, y, value } = props;
                           if (value == null) return null;
                           const text = Number(value).toFixed(1);
-                          const ty = y + (cp.dashed ? 16 : -9);
+                          const ty = y + (cp.projected ? 16 : -9);
                           const w = text.length * 6 + 6;
                           return (
                             <g>
@@ -15076,8 +15141,8 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, applicat
                         réellement appliquée (pas une mesure — voir buildProjectedPoints). */}
                     {projectedByIndex[i] && (
                       <div style={{ fontSize: 11, color: "#a8721a", marginTop: 1 }}>
-                        {t(projectedByIndex[i].param === "pH" ? "ph_projected_label" : projectedByIndex[i].param === "tac" ? "tac_projected_label" : "fcl_projected_label", {
-                          value: projectedByIndex[i].value.toFixed(projectedByIndex[i].param === "tac" ? 0 : 1),
+                        {t({ pH: "ph_projected_label", fCl: "fcl_projected_label", tac: "tac_projected_label", hard: "hard_projected_label", phos: "phos_projected_label" }[projectedByIndex[i].param], {
+                          value: projectedByIndex[i].value.toFixed(["pH", "fCl"].includes(projectedByIndex[i].param) ? 1 : 0),
                         })}
                       </div>
                     )}
@@ -22197,17 +22262,19 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
   const chartParamsBase = [
     // v1.129.0 — Ordre des pastilles : chaque paramètre projeté précède son
     // paramètre mesuré (demande Arnaud).
-    { key: "phProjected",  color: "#1a8fd1", label: t("ph_projected_chart_label"),  axis: "left", dashed: true },
-    { key: "pH",     color: "#1a8fd1", label: "pH",                                          axis: "left"  },
-    { key: "fclProjected", color: "#2b7fd9", label: t("fcl_projected_chart_label"), axis: "left", dashed: true },
-    { key: "fCl",    color: "#2b7fd9", label: "FCL",                                         axis: "left"  },
-    { key: "tacProjected", color: "#d98c2b", label: t("tac_projected_chart_label"), axis: "right", dashed: true },
-    { key: "tac",    color: "#d98c2b", label: t("tac_col"),                                  axis: "right" },
+    { key: "phProjected",  color: "#2f9e44", label: t("ph_projected_chart_label"),  axis: "left", projected: true },
+    { key: "pH",     color: "#2f9e44", label: "pH",                                          axis: "left", dashed: true  },
+    { key: "fclProjected", color: "#2b7fd9", label: t("fcl_projected_chart_label"), axis: "left", projected: true },
+    { key: "fCl",    color: "#2b7fd9", label: "FCL",                                         axis: "left", dashed: true  },
+    { key: "tacProjected", color: "#d98c2b", label: t("tac_projected_chart_label"), axis: "right", projected: true },
+    { key: "tac",    color: "#d98c2b", label: t("tac_col"),                                  axis: "right", dashed: true },
     { key: "cya",    color: "#c4502f", label: t("cya_col"),                                  axis: "right" },
     { key: "tCl",    color: "#8a6fd1", label: "TCL",                                         axis: "left"  },
     { key: "ccl",    color: "#5b3fa0", label: "CCL",                                         axis: "left"  },
-    { key: "hard",   color: "#2e8b57", label: t("hard_col"),                                 axis: "right" },
-    { key: "phos",   color: "#9b59b6", label: t("phos_col"),                                 axis: "right" },
+    { key: "hardProjected", color: "#2e8b57", label: t("hard_projected_chart_label"), axis: "right", projected: true },
+    { key: "hard",   color: "#2e8b57", label: t("hard_col"),                                 axis: "right", dashed: true },
+    { key: "phosProjected", color: "#9b59b6", label: t("phos_projected_chart_label"), axis: "right", projected: true },
+    { key: "phos",   color: "#9b59b6", label: t("phos_col"),                                 axis: "right", dashed: true },
     { key: "copper", color: "#b5651d", label: t("copper_col"),                               axis: "right" },
     { key: "iron",   color: "#c0392b", label: t("iron_col"),                                 axis: "right" },
     { key: "temp",   color: "#e0578a", label: t("temp_col"),                                 axis: "right" },
@@ -22432,7 +22499,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           if (showValues) {
             pdf.setFontSize(5);
             pdf.setTextColor(r, g, b);
-            const labelY = cp.dashed
+            const labelY = cp.projected
               ? Math.min(clampedPy + 3.2, gY + gH - 0.5)
               : Math.max(clampedPy - 1.4, gY - topPad + 2.5);
             pdf.text(String(pt.v), px, labelY, { align: "center" });
@@ -22954,21 +23021,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           >
             {allReportActive ? t("hide_all_params") : t("show_all_params")}
           </button>
-          {chartParams.map((cp) => (
-            <button
-              key={cp.key}
-              onClick={() => toggleReportParam(cp.key)}
-              style={{
-                ...styles.chip,
-                background: activeReportParams.includes(cp.key) ? cp.color + "22" : "#f1f4f3",
-                borderColor: activeReportParams.includes(cp.key) ? cp.color : "#d0e4f5",
-                color: activeReportParams.includes(cp.key) ? cp.color : "var(--brand-text-muted)",
-              }}
-            >
-              {cp.label}
-              <span style={styles.chipAxisTag}>{cp.axis === "left" ? "◀" : "▶"}</span>
-            </button>
-          ))}
+          <ParamChips params={chartParams} activeKeys={activeReportParams} onToggle={toggleReportParam} />
         </div>
         <div className="no-print">
           <PeriodZoomControl
@@ -23009,15 +23062,8 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           // paramètre) / plus de graduations sur les 2 axes — mêmes règles que
           // côté Historique.
           const hasRightAxis = chartParams.some((cp) => cp.axis === "right" && activeReportParams.includes(cp.key));
-          const otherParamsActive = chartParams.some(
-            (cp) => !["pH", "phProjected", "fCl", "fclProjected"].includes(cp.key) && activeReportParams.includes(cp.key)
-          );
-          const onlyPhFamily = (activeReportParams.includes("pH") || activeReportParams.includes("phProjected"))
-            && !activeReportParams.includes("fCl") && !activeReportParams.includes("fclProjected") && !otherParamsActive;
-          const onlyFclFamily = (activeReportParams.includes("fCl") || activeReportParams.includes("fclProjected"))
-            && !activeReportParams.includes("pH") && !activeReportParams.includes("phProjected") && !otherParamsActive;
-          const showPhTarget = onlyPhFamily && reportTargets.pH;
-          const showFclTarget = onlyFclFamily && reportTargets.fCl;
+          // v1.134.0 — Zone cible générique (voir computeTargetZone).
+          const targetZone = computeTargetZone(activeReportParams, chartParams, reportTargets);
           const axisTicks = computeAxisTicks(domainStart, domainEnd);
           // v1.122.2 — Domaine Y adaptatif — voir le fix équivalent côté Historique.
           const leftKeys = chartParams.filter((cp) => cp.axis === "left" && activeReportParams.includes(cp.key)).map((cp) => cp.key);
@@ -23025,9 +23071,9 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           let leftRange = computeAxisRange(chartRenderData, leftKeys);
           // v1.122.5 — Étend l'étendue prise en compte pour le domaine à la
           // zone cible affichée — voir le fix équivalent côté Historique.
-          if (showPhTarget) leftRange = leftRange ? [Math.min(leftRange[0], reportTargets.pH.min), Math.max(leftRange[1], reportTargets.pH.max)] : [reportTargets.pH.min, reportTargets.pH.max];
-          if (showFclTarget) leftRange = leftRange ? [Math.min(leftRange[0], reportTargets.fCl.min), Math.max(leftRange[1], reportTargets.fCl.max)] : [reportTargets.fCl.min, reportTargets.fCl.max];
-          const rightRange = computeAxisRange(chartRenderData, rightKeys);
+          if (targetZone && targetZone.axis === "left") leftRange = leftRange ? [Math.min(leftRange[0], targetZone.min), Math.max(leftRange[1], targetZone.max)] : [targetZone.min, targetZone.max];
+          let rightRange = computeAxisRange(chartRenderData, rightKeys);
+          if (targetZone && targetZone.axis === "right") rightRange = rightRange ? [Math.min(rightRange[0], targetZone.min), Math.max(rightRange[1], targetZone.max)] : [targetZone.min, targetZone.max];
           const leftBounds = leftRange ? niceAxisBounds(leftRange[0], leftRange[1], 10) : { domain: [0, 10], ticks: undefined };
           const rightBounds = rightRange ? niceAxisBounds(rightRange[0], rightRange[1], 110) : { domain: [0, 110], ticks: undefined };
           return (
@@ -23068,11 +23114,8 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                   allowDecimals
                 />
               )}
-              {showPhTarget && (
-                <ReferenceArea yAxisId="left" y1={reportTargets.pH.min} y2={reportTargets.pH.max} fill="#1a8fd1" fillOpacity={0.1} strokeOpacity={0} ifOverflow="visible" />
-              )}
-              {showFclTarget && (
-                <ReferenceArea yAxisId="left" y1={reportTargets.fCl.min} y2={reportTargets.fCl.max} fill="#2b7fd9" fillOpacity={0.1} strokeOpacity={0} ifOverflow="visible" />
+              {targetZone && (
+                <ReferenceArea yAxisId={targetZone.axis} y1={targetZone.min} y2={targetZone.max} fill={targetZone.color} fillOpacity={0.1} strokeOpacity={0} ifOverflow="visible" />
               )}
               {/* v1.116.0 — Paramètres projetés (cp.dashed) : trait pointillé et
                   étiquette de valeur décalée sous le point (au-dessus pour les
@@ -23095,7 +23138,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                           const { x, y, value } = props;
                           if (value == null) return null;
                           const text = Number(value).toFixed(1);
-                          const ty = y + (cp.dashed ? 15 : -8);
+                          const ty = y + (cp.projected ? 15 : -8);
                           const w = text.length * 6.5 + 6;
                           return (
                             <g>
@@ -24120,6 +24163,15 @@ const styles = {
   },
   chipAll: {
     fontWeight: 800,
+  },
+  chipGroup: {
+    display: "inline-flex",
+    flexWrap: "wrap",
+    gap: 4,
+    padding: 3,
+    borderRadius: 99,
+    background: "#eaf2fa",
+    border: "1px solid #d0e4f5",
   },
   chipAxisTag: {
     fontSize: 9,
