@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.138.0";
+const APP_VERSION = "1.140.0";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -69,6 +69,8 @@ const TRANSLATIONS = {
     hard_projected_label: "TH projeté : {value}",
     phos_projected_label: "Phosphates projetés : {value}",
     measured_suffix: "mesuré",
+    step_to_do: "à faire",
+    step_not_applied: "non appliqué",
     copper_col: "Cuivre",
     iron_col: "Fer",
     param_ccl: "Chlore combiné (CCL)",
@@ -900,6 +902,8 @@ const TRANSLATIONS = {
     hard_projected_label: "Projected hardness: {value}",
     phos_projected_label: "Projected phosphates: {value}",
     measured_suffix: "measured",
+    step_to_do: "to do",
+    step_not_applied: "not applied",
     copper_col: "Copper",
     iron_col: "Iron",
     param_ccl: "Combined chlorine (CCL)",
@@ -1718,6 +1722,8 @@ const TRANSLATIONS = {
     hard_projected_label: "Projizierte Härte: {value}",
     phos_projected_label: "Projizierte Phosphate: {value}",
     measured_suffix: "gemessen",
+    step_to_do: "offen",
+    step_not_applied: "nicht angewendet",
     copper_col: "Kupfer",
     iron_col: "Eisen",
     param_ccl: "Gebundenes Chlor (CCL)",
@@ -2537,6 +2543,8 @@ const TRANSLATIONS = {
     hard_projected_label: "Durezza prevista: {value}",
     phos_projected_label: "Fosfati previsti: {value}",
     measured_suffix: "misurato",
+    step_to_do: "da fare",
+    step_not_applied: "non applicato",
     copper_col: "Rame",
     iron_col: "Ferro",
     param_ccl: "Cloro combinato (CCL)",
@@ -3353,6 +3361,8 @@ const TRANSLATIONS = {
     hard_projected_label: "Dureza proyectada: {value}",
     phos_projected_label: "Fosfatos proyectados: {value}",
     measured_suffix: "medido",
+    step_to_do: "por hacer",
+    step_not_applied: "no aplicado",
     copper_col: "Cobre",
     iron_col: "Hierro",
     param_ccl: "Cloro combinado (CCL)",
@@ -4169,6 +4179,8 @@ const TRANSLATIONS = {
     hard_projected_label: "Dureza projetada: {value}",
     phos_projected_label: "Fosfatos projetados: {value}",
     measured_suffix: "medido",
+    step_to_do: "por fazer",
+    step_not_applied: "não aplicado",
     copper_col: "Cobre",
     iron_col: "Ferro",
     param_ccl: "Cloro combinado (CCL)",
@@ -10180,13 +10192,19 @@ function PoolGenAIApp() {
     track("treatment_applied", { steps_count: steps.length, all_applied: allApplied, all_done: allDone });
     setApplications((prev) => {
       const withoutThisMeasure = prev.filter((a) => a.measureId !== measureId);
+      const nowIso = new Date().toISOString();
+      const isDone = allDone != null ? !!allDone : !!allApplied;
+      const previous = prev.find((a) => a.measureId === measureId);
       const newApp = {
         id: uid(),
         poolId: activePoolId,
         measureId,
-        appliedAt: new Date().toISOString(),
+        appliedAt: nowIso,
         allApplied: !!allApplied,
-        allDone: allDone != null ? !!allDone : !!allApplied,
+        allDone: isDone,
+        // v1.139.0 — Instant où le plan a été terminé la première fois (conservé
+        // lors d'éditions ultérieures d'une étape) ; null tant que non terminé.
+        completedAt: isDone ? (previous?.completedAt || nowIso) : null,
         steps,
         createdBy: authUser?.uid || null,
       };
@@ -11763,6 +11781,7 @@ function PoolGenAIApp() {
           lang={lang}
           authUid={dataUid}
           isPremium={effectiveIsPremium}
+          activePlan={activePlan}
         />
       )}
 
@@ -12505,7 +12524,7 @@ Réponds directement en français, sans titre ni introduction.`;
           return (
             <div style={styles.applyConfirmedCard}>
               <CheckCircle2 size={16} color="#1a8fd1" />
-              <span style={{ flex: 1 }}>{t("wizard_completed")}</span>
+              <span style={{ flex: 1 }}>{wizardStatusLabel(applicationForLatest, t)}</span>
             </div>
           );
         }
@@ -12958,8 +12977,13 @@ function formatDose(amount, unit) {
 // ajouté côté saveApplication/applyWizardStep/skipWizardStep/editWizardStep).
 function wizardStatusLabel(app, t) {
   if (!app) return t("wizard_partial");
-  if (app.allApplied) return t("wizard_completed");
-  if (app.allDone) return t("wizard_completed_partial", { n: (app.steps || []).filter((s) => s.skipped).length });
+  // v1.139.0 — Date/heure de fin du plan ajoutée au badge (ex. "Sam. 26 sept.
+  // 14:05"). completedAt est posé à la première clôture (voir saveApplication) ;
+  // repli sur appliedAt (dernier enregistrement) pour les plans terminés avant.
+  const doneAt = app.completedAt || app.appliedAt;
+  const suffix = doneAt ? ` · ${formatPlanCompletedAt(doneAt)}` : "";
+  if (app.allApplied) return t("wizard_completed") + suffix;
+  if (app.allDone) return t("wizard_completed_partial", { n: (app.steps || []).filter((s) => s.skipped).length }) + suffix;
   return t("wizard_partial");
 }
 
@@ -14323,9 +14347,16 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
     setZoomEnd(pref?.windowEnd ?? null);
   }, [pool?.id]);
 
+  // v1.139.1 — La borne de la fenêtre glissante suit aussi les entretiens
+  // MANUELS (pas seulement les mesures) : un entretien saisi après la dernière
+  // mesure tombait hors de la fenêtre (1 mois glissant...) et restait absent
+  // du Journal — signalé par Pierre (stock décrémenté, rien dans l'historique).
   const allTimestamps = useMemo(
-    () => measures.map((m) => new Date(m.date).getTime()).filter((ts) => !isNaN(ts)),
-    [measures]
+    () => [
+      ...measures.map((m) => new Date(m.date).getTime()),
+      ...(applications || []).filter((a) => a.type === "manual").map((a) => new Date(a.appliedAt).getTime()),
+    ].filter((ts) => !isNaN(ts)),
+    [measures, applications]
   );
   const minTs = allTimestamps.length ? Math.min(...allTimestamps) : null;
   const maxTs = allTimestamps.length ? Math.max(...allTimestamps) : null;
@@ -15136,7 +15167,7 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, applicat
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: s.skipped ? "#9ab0c4" : "var(--brand-text-strong)" }}>
-                      {s.productName || s.title}
+                      {stepProductLabel(s)}
                       {s.appliedAmount && !s.skipped && (
                         <span style={{ fontWeight: 400, color: "var(--brand-text-secondary)", marginLeft: 6 }}>
                           — {s.appliedAmount >= 1000 ? `${(s.appliedAmount/1000).toFixed(2)} ${s.doseUnit === "g" ? "kg" : "L"}` : `${s.appliedAmount} ${s.doseUnit || "g"}`}
@@ -22105,7 +22136,7 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced }) {
 }
 
 // ---------- Rapport ----------
-function ReportView({ pool, measures, applications, products, onClose, manageStock, lang, authUid, isPremium }) {
+function ReportView({ pool, measures, applications, products, onClose, manageStock, lang, authUid, isPremium, activePlan }) {
   const t = useT(lang);
   const [showValues, setShowValues] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
@@ -22154,8 +22185,13 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
   // détaillé et les photos, à l'écran comme dans le PDF exporté.
   const [zoomWindow, setZoomWindow] = useState(() => loadZoomPref(pool?.id)?.windowKey || "all");
   const [zoomEnd, setZoomEnd] = useState(() => loadZoomPref(pool?.id)?.windowEnd ?? null);
-  const minTs = sortedMeasures.length ? new Date(sortedMeasures[0].date).getTime() : null;
-  const maxTs = sortedMeasures.length ? new Date(sortedMeasures[sortedMeasures.length - 1].date).getTime() : null;
+  // v1.139.1 — Comme l'Historique : la fenêtre suit aussi les entretiens manuels.
+  const reportTimestamps = [
+    ...sortedMeasures.map((m) => new Date(m.date).getTime()),
+    ...(applications || []).filter((a) => a.type === "manual").map((a) => new Date(a.appliedAt).getTime()),
+  ].filter((ts) => !isNaN(ts));
+  const minTs = reportTimestamps.length ? Math.min(...reportTimestamps) : null;
+  const maxTs = reportTimestamps.length ? Math.max(...reportTimestamps) : null;
 
   // v1.123.2 — Même fix que côté Historique (voir demande Arnaud) : la
   // fenêtre glissante suit la mesure la plus récente au lieu de rester
@@ -22712,13 +22748,14 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
         })();
 
         const prodVals = {
-          prod:    step ? step.productName : rec ? rec.productName : "—",
+          prod:    step ? stepProductLabel(step) : rec ? stepProductLabel(rec) : "—",
           advised: step ? (step.computedDoseAmount != null ? formatDose(step.computedDoseAmount, step.doseUnit||"g") : "—")
                         : rec ? formatDose(rec.computedDoseAmount, rec.doseUnit||"g") : "—",
           // v1.109.2 — Une étape jamais confirmée (appliedAmount null, ex.
           // plan en cours) affichait "? g" (voir formatDose) au lieu de "—"
           // comme les autres cellules vides du rapport.
-          qty:     step && step.appliedAmount != null ? formatDose(step.appliedAmount, step.doseUnit||"g") : "—",
+          qty:     step && step.appliedAmount != null ? formatDose(step.appliedAmount, step.doseUnit||"g")
+                   : (unappliedStepLabel(step, activePlan?.measureId === m.id, t) || "—"),
           // v1.111.6 — Date + heure propres à CETTE étape (peut différer de
           // la date de la mesure affichée à gauche, ex. plan fractionné dans
           // le temps ou application partielle avec reliquat).
@@ -23271,8 +23308,8 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                         </>
                       )}
                       <td style={styles.reportTdCell}>
-                        {step ? (step.skipped ? <span style={{ color: "#9ab0c4" }}>⊘ {step.productName}</span> : step.productName)
-                          : rec ? <span style={{ color: "var(--brand-text-muted)", fontStyle: "italic" }}>{rec.productName}</span>
+                        {step ? (step.skipped ? <span style={{ color: "#9ab0c4" }}>⊘ {stepProductLabel(step)}</span> : stepProductLabel(step))
+                          : rec ? <span style={{ color: "var(--brand-text-muted)", fontStyle: "italic" }}>{stepProductLabel(rec)}</span>
                           : "—"}
                       </td>
                       <td style={{ ...styles.reportTdCell, color: "var(--brand-text-secondary)" }}>
@@ -23281,7 +23318,12 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                           : "—"}
                       </td>
                       <td style={{ ...styles.reportTdCell, fontWeight: 700, color: step?.skipped ? "#9ab0c4" : "var(--brand-primary)" }}>
-                        {step && !step.skipped ? formatDose(step.appliedAmount, step.doseUnit || "g") : "—"}
+                        {(() => {
+                          if (!step || step.skipped) return "—";
+                          if (step.appliedAmount != null) return formatDose(step.appliedAmount, step.doseUnit || "g");
+                          const pending = unappliedStepLabel(step, activePlan?.measureId === measure.id, t);
+                          return pending ? <span style={{ fontWeight: 600, color: "#a8721a" }}>{pending}</span> : "—";
+                        })()}
                       </td>
                       <td style={{ ...styles.reportTdCell, color: "var(--brand-text-secondary)" }}>
                         {/* v1.111.6 — Date ajoutée à côté de l'heure : une étape peut être
@@ -23450,6 +23492,27 @@ function ModalShell({ children, onClose, title, rightAction, forced, footer }) {
   );
 }
 
+// v1.139.2 — Les cartes informatives (chlore trop haut, TH trop haut...) portent
+// le libellé "Aucun produit nécessaire" comme nom de produit, enregistré tel
+// quel (dans la langue de l'époque) dans l'application. Il ne doit pas
+// s'afficher dans l'historique : on montre alors le titre de l'étape.
+function isNoProductLabel(name) {
+  return !!name && Object.values(TRANSLATIONS).some((d) => d.reco_no_product === name);
+}
+// v1.140.0 — Colonne "Appliqué" du tableau détaillé : une étape avec une dose
+// prévue mais jamais appliquée affiche "à faire" si le plan de cette mesure
+// est en cours, sinon "non appliqué" (avant : "? g"). null = rien à signaler
+// (étape passée, appliquée, informative, entretien, sans dose).
+function unappliedStepLabel(step, planInProgress, t) {
+  if (!step || step.skipped || step.appliedAt || step.mode === "entretien"
+    || step.computedDoseAmount == null || isNoProductLabel(step.productName)) return null;
+  return t(planInProgress ? "step_to_do" : "step_not_applied");
+}
+function stepProductLabel(s) {
+  if (!s) return "—";
+  return isNoProductLabel(s.productName) ? (s.title || "—") : (s.productName || s.title || "—");
+}
+
 // ---------- Format dates ----------
 function formatDate(iso) {
   const d = new Date(iso);
@@ -23460,6 +23523,11 @@ function formatDate(iso) {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+// "Sam. 26 sept. 14:05" (weekday capitalisé, sans virgule) — badge de fin de plan.
+function formatPlanCompletedAt(iso) {
+  const s = formatDate(iso).replace(",", "");
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 function formatDateShort(iso) {
   const d = new Date(iso);
