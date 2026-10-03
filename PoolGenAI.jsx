@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.143.0";
+const APP_VERSION = "1.144.0";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -77,6 +77,8 @@ const TRANSLATIONS = {
     reco_part_after_h: "{h} h plus tard",
     substitute_for: "Remplace {product}",
     substitution_no_conversion: "Conversion impossible entre ces deux produits (fiche de dosage incomplète) : les étapes restantes du produit conseillé sont conservées. Remesure avant de poursuivre.",
+    wizard_edit_prev_any: "Modifier une étape précédente",
+    wizard_pick_prev: "Quelle étape modifier ?",
     copper_col: "Cuivre",
     iron_col: "Fer",
     param_ccl: "Chlore combiné (CCL)",
@@ -916,6 +918,8 @@ const TRANSLATIONS = {
     reco_part_after_h: "{h} h later",
     substitute_for: "Replaces {product}",
     substitution_no_conversion: "Cannot convert between these two products (incomplete dosage sheet): the remaining steps of the recommended product are kept. Re-measure before continuing.",
+    wizard_edit_prev_any: "Edit a previous step",
+    wizard_pick_prev: "Which step do you want to edit?",
     copper_col: "Copper",
     iron_col: "Iron",
     param_ccl: "Combined chlorine (CCL)",
@@ -1742,6 +1746,8 @@ const TRANSLATIONS = {
     reco_part_after_h: "{h} Std. später",
     substitute_for: "Ersetzt {product}",
     substitution_no_conversion: "Umrechnung zwischen diesen beiden Produkten nicht möglich (unvollständiges Dosierungsblatt): die verbleibenden Schritte des empfohlenen Produkts bleiben erhalten. Vor dem Fortfahren neu messen.",
+    wizard_edit_prev_any: "Einen vorherigen Schritt bearbeiten",
+    wizard_pick_prev: "Welchen Schritt bearbeiten?",
     copper_col: "Kupfer",
     iron_col: "Eisen",
     param_ccl: "Gebundenes Chlor (CCL)",
@@ -2569,6 +2575,8 @@ const TRANSLATIONS = {
     reco_part_after_h: "dopo {h} h",
     substitute_for: "Sostituisce {product}",
     substitution_no_conversion: "Conversione impossibile tra questi due prodotti (scheda di dosaggio incompleta): i passaggi rimanenti del prodotto consigliato vengono mantenuti. Rimisura prima di proseguire.",
+    wizard_edit_prev_any: "Modifica una fase precedente",
+    wizard_pick_prev: "Quale fase modificare?",
     copper_col: "Rame",
     iron_col: "Ferro",
     param_ccl: "Cloro combinato (CCL)",
@@ -3393,6 +3401,8 @@ const TRANSLATIONS = {
     reco_part_after_h: "{h} h después",
     substitute_for: "Sustituye a {product}",
     substitution_no_conversion: "Conversión imposible entre estos dos productos (ficha de dosificación incompleta): se conservan los pasos restantes del producto recomendado. Vuelve a medir antes de continuar.",
+    wizard_edit_prev_any: "Editar un paso anterior",
+    wizard_pick_prev: "¿Qué paso quieres editar?",
     copper_col: "Cobre",
     iron_col: "Hierro",
     param_ccl: "Cloro combinado (CCL)",
@@ -4217,6 +4227,8 @@ const TRANSLATIONS = {
     reco_part_after_h: "{h} h depois",
     substitute_for: "Substitui {product}",
     substitution_no_conversion: "Conversão impossível entre estes dois produtos (ficha de dosagem incompleta): os passos restantes do produto recomendado são mantidos. Volta a medir antes de continuar.",
+    wizard_edit_prev_any: "Editar uma etapa anterior",
+    wizard_pick_prev: "Que etapa queres editar?",
     copper_col: "Cobre",
     iron_col: "Ferro",
     param_ccl: "Cloro combinado (CCL)",
@@ -10656,11 +10668,62 @@ function PoolGenAIApp() {
       applyProductStockDelta(stockProductName, oldStep?.appliedAmount, oldStep?.doseUnit, +1);
       applyProductStockDelta(stockProductName, amount, oldStep?.doseUnit, -1);
     }
-    const finalSteps = buildFinalSteps(newSteps);
-    const allDone = newSteps.every(stepIsResolved);
+    // v1.144.0 — La correction est répercutée sur la suite du plan (retour
+    // Arnaud : "en tenir compte sur la carte") :
+    // 1) les applications en attente du même produit sont recalculées d'après
+    //    le nouvel écart (excès : on réduit le reste ; manque : on l'augmente) ;
+    // 2) si l'heure change, l'horaire prévu des étapes suivantes en attente suit.
+    let steps = newSteps;
+    const canRebalance = oldStep && oldStep.appliedAmount != null && amount != null
+      && oldStep.doseUnit !== "%" && !oldStep.noAction && oldStep.mode !== "entretien";
+    if (canRebalance) {
+      let end = stepIdx;
+      while (end + 1 < steps.length && steps[end + 1].isComplement && steps[end + 1].action === oldStep.action) end++;
+      const pendingIdx = [];
+      for (let k = stepIdx + 1; k <= end; k++) if (!steps[k].appliedAt && !steps[k].skipped) pendingIdx.push(k);
+      const contiguousTail = pendingIdx.length > 0 && pendingIdx[pendingIdx.length - 1] === end
+        && pendingIdx.every((k, n) => n === 0 || k === pendingIdx[n - 1] + 1);
+      if (contiguousTail) {
+        const origName = oldStep.productRealName ?? oldStep.productName;
+        const origObj = findProductOrGeneric(products, origName);
+        const usedObj = findProductOrGeneric(products, oldStep.appliedProductName || origName);
+        const toOrig = (v) => rescaleDoseForProduct(v, oldStep.action, usedObj, origObj, false);
+        const delta = toOrig(amount) - toOrig(oldStep.appliedAmount);
+        const pendingSteps = pendingIdx.map((k) => steps[k]);
+        const pendingSum = pendingSteps.reduce((a, c) => a + (c.computedDoseAmount || 0), 0);
+        if (Math.abs(delta) > Math.max(1, pendingSum * 0.02)) {
+          const redistributed = redistributeChain(pendingSteps, Math.max(0, pendingSum - delta), oldStep.maxDoseAmount || null, true);
+          steps = [...steps.slice(0, pendingIdx[0]), ...redistributed, ...steps.slice(pendingIdx[pendingIdx.length - 1] + 1)];
+        }
+      }
+    }
+    if (appliedAt !== oldStep?.appliedAt) {
+      let refTs = new Date(appliedAt).getTime();
+      let prevWait = steps[stepIdx].waitHours || 0;
+      steps = steps.map((st, i) => {
+        if (i <= stepIdx) return st;
+        if (stepIsResolved(st)) {
+          if (!st.noAction && st.appliedAt) refTs = new Date(st.appliedAt).getTime();
+          prevWait = st.waitHours || 0;
+          return st;
+        }
+        const sched = refTs + prevWait * 3600 * 1000;
+        refTs = sched;
+        prevWait = st.waitHours || 0;
+        return { ...st, scheduledAt: new Date(sched).toISOString() };
+      });
+    }
+    const finalSteps = buildFinalSteps(steps);
+    const allDone = steps.every(stepIsResolved);
     const applied = finalSteps.filter(s => stepIsResolved(s) && !s.skipped);
     saveApplication(activePlan.measureId, finalSteps, allDone && applied.length === finalSteps.length, allDone);
-    setActivePlan({ ...activePlan, steps: newSteps });
+    if (allDone) {
+      setActivePlan(null);
+      setShowWizard(false);
+      return;
+    }
+    const nextIdx = steps.findIndex((st) => !stepIsResolved(st));
+    setActivePlan({ ...activePlan, steps, currentStepIdx: nextIdx >= 0 ? nextIdx : activePlan.currentStepIdx });
   }
 
   // Passe une étape
@@ -18661,6 +18724,10 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   const [editAmount, setEditAmount] = React.useState(null);
   const [editTime, setEditTime] = React.useState("");
   const [editingPrev, setEditingPrev] = React.useState(false);
+  // v1.144.0 — Étape précédente en cours de modification (n'importe laquelle
+  // des étapes déjà appliquées, plus seulement la dernière) et sélecteur.
+  const [prevIdx, setPrevIdx] = React.useState(null);
+  const [pickingPrev, setPickingPrev] = React.useState(false);
   const [prevAmount, setPrevAmount] = React.useState("");
   const [prevTime, setPrevTime] = React.useState("");
   const [selectedProduct, setSelectedProduct] = React.useState(null);
@@ -18769,9 +18836,10 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
         setSelectedProduct(defaultProductName);
         setFreeUnitMode("kg");
         setEditingPrev(false);
+        setPickingPrev(false);
       }
     }
-  }, [plan?.currentStepIdx]);
+  }, [plan?.currentStepIdx, plan?.steps?.[plan?.currentStepIdx]?.computedDoseAmount]);
 
   function toDisplayUnit(amount, unit, product) {
     unit = normalizeDoseUnit(unit);
@@ -18824,6 +18892,20 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
 
   const totalSteps = plan.steps.length;
   const doneCount = plan.steps.filter(stepIsResolved).length;
+  // v1.144.0 — Étapes déjà appliquées (avec une quantité) qu'on peut corriger.
+  const editablePrev = plan.steps
+    .map((st, i) => ({ s: st, i }))
+    .filter(({ s: st, i }) => i < currentIdx && st.appliedAt && !st.skipped && !st.noAction && st.mode !== "entretien");
+  function openPrevEditor(i) {
+    const prev = plan.steps[i];
+    const { value } = toDisplayUnit(prev.appliedAmount, prev.doseUnit || "g");
+    setPrevAmount(String(value ?? ""));
+    const d = new Date(prev.appliedAt);
+    setPrevTime(`${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`);
+    setPrevIdx(i);
+    setEditingPrev(true);
+    setPickingPrev(false);
+  }
   const isMaintenance = step.mode === "entretien";
   // v1.111.2 — Carte purement informative (noAction: true, ex. "chlore trop
   // haut, laisser dégrader au soleil" — voir computeRecommendations) : au
@@ -19287,28 +19369,48 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
             {t("wizard_skip")}
           </button>
 
-          {/* Modifier l'étape précédente */}
-          {currentIdx > 0 && plan.steps[currentIdx - 1]?.appliedAt && !editingPrev && (
+          {/* v1.144.0 — Modifier une étape précédente (n'importe laquelle des étapes
+              déjà appliquées) : directement si une seule, sinon via un sélecteur. */}
+          {editablePrev.length > 0 && !editingPrev && !pickingPrev && (
             <button
               style={{ background: "none", border: "1px solid #d0e4f5", borderRadius: 8, color: "var(--brand-text-secondary)", fontSize: 12, cursor: "pointer", padding: "7px 12px", display: "flex", alignItems: "center", gap: 5 }}
-              onClick={() => {
-                const prev = plan.steps[currentIdx - 1];
-                const prevUnit = prev.doseUnit || "g";
-                const { value, displayUnit: du } = toDisplayUnit(prev.appliedAmount, prevUnit);
-                setPrevAmount(String(value ?? ""));
-                const d = new Date(prev.appliedAt);
-                setPrevTime(`${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`);
-                setEditingPrev(true);
-              }}
+              onClick={() => (editablePrev.length === 1 ? openPrevEditor(editablePrev[0].i) : setPickingPrev(true))}
             >
-              ← {t("wizard_edit_prev")}
+              ← {t(editablePrev.length === 1 ? "wizard_edit_prev" : "wizard_edit_prev_any")}
             </button>
           )}
         </div>
 
+        {pickingPrev && (
+          <div style={{ marginTop: 14, padding: "12px 14px", background: "var(--brand-bg-tint)", borderRadius: 12, border: "1px solid #d0e4f5" }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--brand-text-strong)", marginBottom: 8 }}>{t("wizard_pick_prev")}</div>
+            {editablePrev.map(({ s: ps, i }) => {
+              const d = new Date(ps.appliedAt);
+              return (
+                <button
+                  key={i}
+                  onClick={() => openPrevEditor(i)}
+                  style={{ display: "block", width: "100%", textAlign: "left", marginBottom: 6, padding: "8px 10px", background: "#fff", border: "1px solid #d0e4f5", borderRadius: 8, cursor: "pointer", fontSize: 13, color: "var(--brand-text-strong)" }}
+                >
+                  <span style={{ fontWeight: 700 }}>{i + 1}. {ps.productName || ps.title}</span>
+                  <span style={{ color: "var(--brand-text-secondary)" }}>
+                    {" — "}{ps.appliedAmount != null ? formatDose(ps.appliedAmount, ps.doseUnit || "g") : "?"} · {formatDate(d.toISOString())}
+                  </span>
+                </button>
+              );
+            })}
+            <button
+              style={{ marginTop: 2, padding: "7px 0", width: "100%", borderRadius: 9, border: "1px solid #d0e4f5", background: "#fff", color: "var(--brand-text-secondary)", fontWeight: 600, fontSize: 12, cursor: "pointer" }}
+              onClick={() => setPickingPrev(false)}
+            >
+              {t("cancel")}
+            </button>
+          </div>
+        )}
+
         {/* Panneau édition étape précédente */}
-        {editingPrev && (() => {
-          const prev = plan.steps[currentIdx - 1];
+        {editingPrev && prevIdx != null && plan.steps[prevIdx] && (() => {
+          const prev = plan.steps[prevIdx];
           const prevUnit = prev.doseUnit || "g";
           const { displayUnit: du } = toDisplayUnit(prev.appliedAmount, prevUnit);
           return (
@@ -19348,15 +19450,16 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
                       d.setHours(h, m, 0, 0);
                       newAppliedAt = d.toISOString();
                     }
-                    onEditPrevStep(currentIdx - 1, newAmount, newAppliedAt);
+                    onEditPrevStep(prevIdx, newAmount, newAppliedAt);
                     setEditingPrev(false);
+                    setPrevIdx(null);
                   }}
                 >
                   {t("save")}
                 </button>
                 <button
                   style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: "1px solid #d0e4f5", background: "#fff", color: "var(--brand-text-secondary)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
-                  onClick={() => setEditingPrev(false)}
+                  onClick={() => { setEditingPrev(false); setPrevIdx(null); }}
                 >
                   {t("cancel")}
                 </button>
