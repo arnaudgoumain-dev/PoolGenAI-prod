@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.140.0";
+const APP_VERSION = "1.141.0";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -71,6 +71,10 @@ const TRANSLATIONS = {
     measured_suffix: "mesuré",
     step_to_do: "à faire",
     step_not_applied: "non appliqué",
+    reco_parts_header: "Total en {n} applications :",
+    reco_parts_header_max: "Total en {n} applications (maximum {max} par ajout) :",
+    reco_part_now: "maintenant",
+    reco_part_after_h: "{h} h plus tard",
     copper_col: "Cuivre",
     iron_col: "Fer",
     param_ccl: "Chlore combiné (CCL)",
@@ -904,6 +908,10 @@ const TRANSLATIONS = {
     measured_suffix: "measured",
     step_to_do: "to do",
     step_not_applied: "not applied",
+    reco_parts_header: "Total in {n} applications:",
+    reco_parts_header_max: "Total in {n} applications (maximum {max} per addition):",
+    reco_part_now: "now",
+    reco_part_after_h: "{h} h later",
     copper_col: "Copper",
     iron_col: "Iron",
     param_ccl: "Combined chlorine (CCL)",
@@ -1724,6 +1732,10 @@ const TRANSLATIONS = {
     measured_suffix: "gemessen",
     step_to_do: "offen",
     step_not_applied: "nicht angewendet",
+    reco_parts_header: "Insgesamt in {n} Anwendungen:",
+    reco_parts_header_max: "Insgesamt in {n} Anwendungen (maximal {max} pro Zugabe):",
+    reco_part_now: "jetzt",
+    reco_part_after_h: "{h} Std. später",
     copper_col: "Kupfer",
     iron_col: "Eisen",
     param_ccl: "Gebundenes Chlor (CCL)",
@@ -2545,6 +2557,10 @@ const TRANSLATIONS = {
     measured_suffix: "misurato",
     step_to_do: "da fare",
     step_not_applied: "non applicato",
+    reco_parts_header: "Totale in {n} applicazioni:",
+    reco_parts_header_max: "Totale in {n} applicazioni (massimo {max} per aggiunta):",
+    reco_part_now: "subito",
+    reco_part_after_h: "dopo {h} h",
     copper_col: "Rame",
     iron_col: "Ferro",
     param_ccl: "Cloro combinato (CCL)",
@@ -3363,6 +3379,10 @@ const TRANSLATIONS = {
     measured_suffix: "medido",
     step_to_do: "por hacer",
     step_not_applied: "no aplicado",
+    reco_parts_header: "Total en {n} aplicaciones:",
+    reco_parts_header_max: "Total en {n} aplicaciones (máximo {max} por adición):",
+    reco_part_now: "ahora",
+    reco_part_after_h: "{h} h después",
     copper_col: "Cobre",
     iron_col: "Hierro",
     param_ccl: "Cloro combinado (CCL)",
@@ -4181,6 +4201,10 @@ const TRANSLATIONS = {
     measured_suffix: "medido",
     step_to_do: "por fazer",
     step_not_applied: "não aplicado",
+    reco_parts_header: "Total em {n} aplicações:",
+    reco_parts_header_max: "Total em {n} aplicações (máximo {max} por adição):",
+    reco_part_now: "agora",
+    reco_part_after_h: "{h} h depois",
     copper_col: "Cobre",
     iron_col: "Ferro",
     param_ccl: "Cloro combinado (CCL)",
@@ -12534,7 +12558,7 @@ Réponds directement en français, sans titre ni introduction.`;
             {recs.orderExplanation && (
               <p style={styles.helpText}>{recs.orderExplanation}</p>
             )}
-            {recs.length > 1 && (
+            {recs.filter((r) => !r.isComplement).length > 1 && (
               <p style={styles.helpText}>{t("follow_order")}</p>
             )}
             {(() => {
@@ -12550,20 +12574,27 @@ Réponds directement en français, sans titre ni introduction.`;
                 if (!s.isComplement) groups.push({ main: s, complements: [] });
                 else if (groups.length) groups[groups.length - 1].complements.push(s);
               });
-              return recs.map((r, i) => (
-                <React.Fragment key={i}>
-                  <RecoCard
-                    reco={r}
-                    isLast={i === recs.length - 1}
-                    manageStock={manageStock}
-                    products={products}
-                    lang={lang}
-                    appliedStep={groups[i]?.main || null}
-                  />
-                  {(groups[i]?.complements || []).map((c, j) => (
-                    <ComplementCard key={`c${j}`} step={c} products={products} lang={lang} />
-                  ))}
-                </React.Fragment>
+              // v1.141.0 — Une seule carte par produit à appliquer : les
+              // recommandations de complément (dose au-delà du plafond par
+              // ajout) et les compléments du plan sont fusionnés dans la carte
+              // de leur étape mère (voir buildCardParts), au lieu de cartes
+              // séparées qui donnaient l'impression de doses supplémentaires.
+              const recGroups = [];
+              recs.forEach((r) => {
+                if (r.isComplement && recGroups.length) recGroups[recGroups.length - 1].extras.push(r);
+                else recGroups.push({ main: r, extras: [] });
+              });
+              return recGroups.map((g, i) => (
+                <RecoCard
+                  key={i}
+                  reco={g.main}
+                  isLast={i === recGroups.length - 1}
+                  manageStock={manageStock}
+                  products={products}
+                  lang={lang}
+                  appliedStep={groups[i]?.main || null}
+                  parts={buildCardParts(g.main, g.extras, groups[i]?.main || null, groups[i]?.complements || [])}
+                />
               ));
             })()}
 
@@ -12654,8 +12685,46 @@ function ParamCard({ param, value, effectiveTargets, lang }) {
   );
 }
 
-function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep }) {
+// v1.141.0 — Une carte du plan = un produit, avec la quantité TOTALE à
+// appliquer et le détail de chaque application quand le total dépasse la dose
+// applicable en une fois (plafond par ajout, stock insuffisant...). Les
+// applications sont les étapes du plan (mère + compléments) s'il est démarré,
+// sinon les recommandations calculées (mère + compléments). Renvoie null si
+// une seule application. total = null quand les quantités ne sont pas
+// additionnables (unités ou produits différents).
+function buildCardParts(mainRec, extraRecs, planMain, planComplements) {
+  const usePlan = !!planMain;
+  const items = usePlan ? [planMain, ...(planComplements || [])] : [mainRec, ...(extraRecs || [])];
+  if (items.length < 2) return null;
+  const origName = mainRec.productRealName ?? mainRec.productName;
+  let cumul = 0;
+  let mixed = false;
+  const parts = items.map((st) => {
+    const applied = !!st.appliedAt && !st.skipped;
+    if (applied && st.appliedProductName && st.appliedProductName !== origName) mixed = true;
+    const amount = applied && st.appliedAmount != null ? st.appliedAmount : st.computedDoseAmount;
+    const part = {
+      amount,
+      unit: st.doseUnit || mainRec.doseUnit || "g",
+      applied,
+      skipped: !!st.skipped,
+      appliedAt: st.appliedAt || null,
+      scheduledAt: usePlan ? (st.scheduledAt || null) : null,
+      afterHours: cumul,
+    };
+    cumul += st.waitHours || 0;
+    return part;
+  });
+  const counted = parts.filter((p) => !p.skipped);
+  const sameUnit = counted.length > 0 && counted.every((p) => p.unit === counted[0].unit && p.amount != null);
+  parts.total = (!mixed && sameUnit) ? counted.reduce((a, p) => a + p.amount, 0) : null;
+  parts.unit = counted[0]?.unit || mainRec.doseUnit || "g";
+  return parts;
+}
+
+function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep, parts }) {
   const t = useT(lang || "fr");
+  const hasParts = !!parts && parts.length > 1;
   const isInfo = !!reco.noAction;
   // v1.123.7 — Une fois l'étape appliquée avec un AUTRE produit que celui du
   // plan (choix dans l'assistant, voir appliedProductName), la carte affiche
@@ -12691,6 +12760,11 @@ function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep }) {
     }
     const ownNote = (p) => (p ? ((p.noteKey ? t(p.noteKey) : p.note) || null) : null);
     cardNote = ownNote(appliedProdObj) || (ownNote(fromProd) ? null : reco.note);
+  }
+  // v1.141.0 — Plusieurs applications : la dose affichée est le TOTAL.
+  if (hasParts && !swapped && parts.total != null && cardDoseText && reco.computedDoseAmount != null) {
+    const oldStr = formatDose(reco.computedDoseAmount, reco.doseUnit || "g");
+    if (cardDoseText.includes(oldStr)) cardDoseText = cardDoseText.replace(oldStr, formatDose(parts.total, parts.unit));
   }
   return (
     <div style={isInfo ? styles.recoCardInfo : styles.recoCard}>
@@ -12758,10 +12832,31 @@ function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep }) {
         );
       })()}
       {cardDoseText && <div style={styles.recoDose}>{cardDoseText}</div>}
+      {hasParts && (
+        <div style={styles.recoParts}>
+          <div style={styles.recoPartsHeader}>
+            {reco.maxDoseAmount
+              ? t("reco_parts_header_max", { n: parts.length, max: formatDose(reco.maxDoseAmount, reco.doseUnit || parts.unit) })
+              : t("reco_parts_header", { n: parts.length })}
+          </div>
+          {parts.map((p, i) => (
+            <div key={i} style={{ ...styles.recoPartLine, opacity: p.skipped ? 0.55 : 1 }}>
+              <span style={{ fontWeight: 700, minWidth: 16 }}>{i + 1}.</span>
+              <span style={{ fontWeight: 700, color: p.applied ? "#1a8fd1" : "var(--brand-text-strong)" }}>{formatDose(p.amount, p.unit)}</span>
+              <span style={{ color: "var(--brand-text-secondary)" }}>
+                {p.skipped ? `— ⊘ ${t("treatment_skipped")}`
+                  : p.applied ? `— ✓ ${formatDate(p.appliedAt)}`
+                  : p.scheduledAt ? `— ${t("complement_from", { date: formatDate(p.scheduledAt) })}`
+                  : `— ${p.afterHours > 0 ? t("reco_part_after_h", { h: p.afterHours }) : t("reco_part_now")}`}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
       {/* v1.110.1 — Quantité réellement appliquée pour cette étape (peut
           différer de la dose suggérée ci-dessus si l'utilisateur l'a ajustée
           dans le wizard). */}
-      {appliedStep && appliedStep.appliedAt && !appliedStep.skipped && appliedStep.appliedAmount != null && (
+      {!hasParts && appliedStep && appliedStep.appliedAt && !appliedStep.skipped && appliedStep.appliedAmount != null && (
         <div style={{ fontSize: 13, fontWeight: 600, color: "#1a8fd1", marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
           <CheckCircle2 size={13} />
           {t("applied_amount", { amount: formatDose(appliedStep.appliedAmount, appliedStep.doseUnit || reco.doseUnit || "g") })}
@@ -12811,49 +12906,6 @@ function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep }) {
   );
 }
 
-// v1.124.0 — Carte "Complément" du plan de traitement : étape insérée quand la
-// dose n'a pas pu être appliquée en une fois (stock insuffisant d'un produit,
-// dose max par prise... — voir applyWizardStep/isComplement). Affichée juste
-// après la carte de l'étape mère : reste à appliquer (exprimé pour le produit
-// d'origine du plan, le produit final se choisit dans l'assistant) et horaire
-// prévu, puis produit et quantité réellement appliqués une fois faite.
-function ComplementCard({ step, products, lang }) {
-  const t = useT(lang || "fr");
-  const done = !!step.appliedAt && !step.skipped;
-  const usedObj = done && step.appliedProductName ? findProductOrGeneric(products, step.appliedProductName) : null;
-  const shownName = usedObj ? productDisplayName(usedObj, t) : step.productName;
-  const unit = step.doseUnit || "g";
-  return (
-    <div style={{ ...styles.recoCard, borderStyle: "dashed", opacity: step.skipped ? 0.6 : 1 }}>
-      <div style={{ ...styles.recoTop, justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={styles.recoStepBadge}>+</div>
-          <span style={styles.recoParam}>{t("wizard_complement_badge")}</span>
-        </div>
-      </div>
-      <div style={styles.recoProductRow}>
-        <div style={styles.recoProduct}>{step.skipped ? "⊘ " : ""}{shownName}</div>
-      </div>
-      {!done && !step.skipped && step.computedDoseAmount != null && (
-        <div style={styles.recoDose}>
-          {t("complement_pending_text", { dose: formatDose(step.computedDoseAmount, unit), product: step.productName })}
-        </div>
-      )}
-      {!done && !step.skipped && step.scheduledAt && (
-        <div style={styles.recoTiming}>
-          <Clock size={13} color="#a8721a" />
-          {t("complement_from", { date: formatDate(step.scheduledAt) })}
-        </div>
-      )}
-      {done && step.appliedAmount != null && (
-        <div style={{ fontSize: 13, fontWeight: 600, color: "#1a8fd1", marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
-          <CheckCircle2 size={13} />
-          {t("applied_amount", { amount: formatDose(step.appliedAmount, unit) })}
-        </div>
-      )}
-    </div>
-  );
-}
 
 // v1.109.2 — Normalise la casse d'une unité de dose ("ml" → "mL", etc.).
 // Root cause d'un bug réel (surdosage fantôme ×1000, ex. "500 L de pH moins"
@@ -13777,7 +13829,9 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
     // du plan. Seule une step actionnable incrémente le compteur ; une
     // carte info reste affichée mais avec stepNumber: null (pas de chiffre
     // dans son badge, voir RecoCard).
-    if (!step.noAction) actionCounter += 1;
+    // v1.141.0 — Un complément (dose au-delà du plafond par ajout) est une
+    // application supplémentaire du MÊME produit, pas une nouvelle étape.
+    if (!step.noAction && !step.isComplement) actionCounter += 1;
     return {
       ...step,
       stepNumber: step.noAction ? null : actionCounter,
@@ -24083,6 +24137,18 @@ const styles = {
     borderRadius: 99,
   },
   recoDose: { fontSize: 13, color: "#2d4a6e" },
+  recoParts: {
+    marginTop: 6,
+    padding: "7px 10px",
+    background: "#f4f9fe",
+    border: "1px solid #d6e6f5",
+    borderRadius: 8,
+    display: "flex",
+    flexDirection: "column",
+    gap: 3,
+  },
+  recoPartsHeader: { fontSize: 12, fontWeight: 700, color: "#3a5a78", marginBottom: 2 },
+  recoPartLine: { display: "flex", flexWrap: "wrap", alignItems: "baseline", gap: 6, fontSize: 13 },
   recoWait: {
     display: "flex",
     alignItems: "center",
