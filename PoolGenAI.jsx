@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.141.0";
+const APP_VERSION = "1.143.0";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -75,6 +75,8 @@ const TRANSLATIONS = {
     reco_parts_header_max: "Total en {n} applications (maximum {max} par ajout) :",
     reco_part_now: "maintenant",
     reco_part_after_h: "{h} h plus tard",
+    substitute_for: "Remplace {product}",
+    substitution_no_conversion: "Conversion impossible entre ces deux produits (fiche de dosage incomplète) : les étapes restantes du produit conseillé sont conservées. Remesure avant de poursuivre.",
     copper_col: "Cuivre",
     iron_col: "Fer",
     param_ccl: "Chlore combiné (CCL)",
@@ -912,6 +914,8 @@ const TRANSLATIONS = {
     reco_parts_header_max: "Total in {n} applications (maximum {max} per addition):",
     reco_part_now: "now",
     reco_part_after_h: "{h} h later",
+    substitute_for: "Replaces {product}",
+    substitution_no_conversion: "Cannot convert between these two products (incomplete dosage sheet): the remaining steps of the recommended product are kept. Re-measure before continuing.",
     copper_col: "Copper",
     iron_col: "Iron",
     param_ccl: "Combined chlorine (CCL)",
@@ -1736,6 +1740,8 @@ const TRANSLATIONS = {
     reco_parts_header_max: "Insgesamt in {n} Anwendungen (maximal {max} pro Zugabe):",
     reco_part_now: "jetzt",
     reco_part_after_h: "{h} Std. später",
+    substitute_for: "Ersetzt {product}",
+    substitution_no_conversion: "Umrechnung zwischen diesen beiden Produkten nicht möglich (unvollständiges Dosierungsblatt): die verbleibenden Schritte des empfohlenen Produkts bleiben erhalten. Vor dem Fortfahren neu messen.",
     copper_col: "Kupfer",
     iron_col: "Eisen",
     param_ccl: "Gebundenes Chlor (CCL)",
@@ -2561,6 +2567,8 @@ const TRANSLATIONS = {
     reco_parts_header_max: "Totale in {n} applicazioni (massimo {max} per aggiunta):",
     reco_part_now: "subito",
     reco_part_after_h: "dopo {h} h",
+    substitute_for: "Sostituisce {product}",
+    substitution_no_conversion: "Conversione impossibile tra questi due prodotti (scheda di dosaggio incompleta): i passaggi rimanenti del prodotto consigliato vengono mantenuti. Rimisura prima di proseguire.",
     copper_col: "Rame",
     iron_col: "Ferro",
     param_ccl: "Cloro combinato (CCL)",
@@ -3383,6 +3391,8 @@ const TRANSLATIONS = {
     reco_parts_header_max: "Total en {n} aplicaciones (máximo {max} por adición):",
     reco_part_now: "ahora",
     reco_part_after_h: "{h} h después",
+    substitute_for: "Sustituye a {product}",
+    substitution_no_conversion: "Conversión imposible entre estos dos productos (ficha de dosificación incompleta): se conservan los pasos restantes del producto recomendado. Vuelve a medir antes de continuar.",
     copper_col: "Cobre",
     iron_col: "Hierro",
     param_ccl: "Cloro combinado (CCL)",
@@ -4205,6 +4215,8 @@ const TRANSLATIONS = {
     reco_parts_header_max: "Total em {n} aplicações (máximo {max} por adição):",
     reco_part_now: "agora",
     reco_part_after_h: "{h} h depois",
+    substitute_for: "Substitui {product}",
+    substitution_no_conversion: "Conversão impossível entre estes dois produtos (ficha de dosagem incompleta): os passos restantes do produto recomendado são mantidos. Volta a medir antes de continuar.",
     copper_col: "Cobre",
     iron_col: "Ferro",
     param_ccl: "Cloro combinado (CCL)",
@@ -10365,6 +10377,9 @@ function PoolGenAIApp() {
       // applyWizardStep) dans l'application enregistrée, pour que la carte
       // "Complément" du plan reste correctement associée à son étape mère.
       ...(s.isComplement ? { isComplement: true } : {}),
+      // v1.143.0 — Étapes d'un produit de substitution (voir planSubstitutionContext).
+      ...(s.isSubstitute ? { isSubstitute: true } : {}),
+      ...(s.substituteFor ? { substituteFor: s.substituteFor } : {}),
     }));
   }
 
@@ -10385,6 +10400,7 @@ function PoolGenAIApp() {
     let changed = false;
     const steps = activePlan.steps.map((st) => {
       if (!isPending(st)) return st;
+      if (st.substituteFor) return st;
       const r = recsNow.find((x) => x.title === st.title);
       if (!r) return st;
       const sameProduct = (r.productRealName ?? r.productName) === (st.productRealName ?? st.productName) && r.action === st.action;
@@ -10412,7 +10428,10 @@ function PoolGenAIApp() {
         timingTip: r.timingTip,
       };
     });
-    if (changed) setActivePlan({ ...activePlan, steps });
+    // v1.142.0 — Doses déjà appliquées au-delà du prévu : réduit d'autant les
+    // applications en attente du même produit (voir rebalanceOverAppliedChains).
+    const rebalanced = rebalanceOverAppliedChains(steps, recsNow);
+    if (changed || rebalanced !== steps) setActivePlan({ ...activePlan, steps: rebalanced });
   }
 
   // Valide une étape du wizard — version sans appel de setter dans setter
@@ -10466,9 +10485,24 @@ function PoolGenAIApp() {
       false
     );
     const rawRemainder = canSplit ? target - amountInOrigTerms : 0;
-    const needsSplit = rawRemainder > epsilon && !!wantsSplit;
+    // v1.142.0 — Applications suivantes du même produit déjà au plan (dose
+    // répartie par plafond par ajout) : elles sont recalculées d'après ce qui
+    // vient d'être appliqué (au lieu d'insérer un complément en plus).
+    // v1.143.0 — Substitution de produit après application partielle de A.
+    const subCtx = planSubstitutionContext(activePlan.steps, stepIdx, productName, (n) => findProductOrGeneric(products, n));
+    const doSubstitute = !!(subCtx && subCtx.convertible && amount != null);
+    const laterRun = [];
+    if (!doSubstitute && canSplit && !unitChanged && !origStep.noAction) {
+      for (let k = stepIdx + 1; k < activePlan.steps.length; k++) {
+        const c = activePlan.steps[k];
+        if (c.isComplement && c.action === origStep.action && !c.appliedAt && !c.skipped) laterRun.push(k); else break;
+      }
+    }
+    const needsSplit = !doSubstitute && laterRun.length === 0 && rawRemainder > epsilon && !!wantsSplit;
 
-    const newSteps = activePlan.steps.map((s, i) => {
+    const newSteps = doSubstitute
+      ? buildSubstitutionSteps(activePlan.steps, stepIdx, amount, now, subCtx, activePool?.volume || 0, tFn)
+      : activePlan.steps.map((s, i) => {
       if (i !== stepIdx) return s;
       // v1.124.0 — Reprend appliedProductName à zéro à chaque application :
       // une étape de complément héritait auparavant (via ...origStep) du
@@ -10489,6 +10523,22 @@ function PoolGenAIApp() {
     });
 
     let stepsWithSplit = newSteps;
+    if (laterRun.length > 0) {
+      // Reste à répartir = ce qui était prévu sur les applications suivantes
+      // + l'écart de CETTE application : un excès (770 g au lieu de 720 g)
+      // réduit toujours le reste ; un manque n'y est ajouté que si
+      // l'utilisateur a choisi de le compléter (wantsSplit).
+      const pendingSteps = laterRun.map((k) => newSteps[k]);
+      const laterTotal = pendingSteps.reduce((a, c) => a + (c.computedDoseAmount || 0), 0);
+      const delta = target - amountInOrigTerms;
+      const effective = Math.abs(delta) <= epsilon ? 0 : (delta < 0 ? delta : (wantsSplit ? delta : 0));
+      const redistributed = redistributeChain(pendingSteps, Math.max(0, laterTotal + effective), origStep.maxDoseAmount || null, true);
+      stepsWithSplit = [
+        ...newSteps.slice(0, stepIdx + 1),
+        ...redistributed,
+        ...newSteps.slice(laterRun[laterRun.length - 1] + 1),
+      ];
+    }
     if (needsSplit) {
       // v1.124.0 — Complément : reste exprimé pour le produit d'origine du
       // plan, sans produit "appliqué" pré-rempli (l'assistant propose le
@@ -12571,8 +12621,11 @@ Réponds directement en français, sans titre ni introduction.`;
               const stepsSrc = (planForLatest || applicationForLatest)?.steps || [];
               const groups = [];
               stepsSrc.forEach((s) => {
-                if (!s.isComplement) groups.push({ main: s, complements: [] });
-                else if (groups.length) groups[groups.length - 1].complements.push(s);
+                const last = groups[groups.length - 1];
+                if (s.isSubstitute && last) last.subs.push({ main: s, complements: [] });
+                else if (s.isComplement && s.substituteFor && last && last.subs.length) last.subs[last.subs.length - 1].complements.push(s);
+                else if (!s.isComplement) groups.push({ main: s, complements: [], subs: [] });
+                else if (last) last.complements.push(s);
               });
               // v1.141.0 — Une seule carte par produit à appliquer : les
               // recommandations de complément (dose au-delà du plafond par
@@ -12585,16 +12638,32 @@ Réponds directement en français, sans titre ni introduction.`;
                 else recGroups.push({ main: r, extras: [] });
               });
               return recGroups.map((g, i) => (
-                <RecoCard
-                  key={i}
-                  reco={g.main}
-                  isLast={i === recGroups.length - 1}
-                  manageStock={manageStock}
-                  products={products}
-                  lang={lang}
-                  appliedStep={groups[i]?.main || null}
-                  parts={buildCardParts(g.main, g.extras, groups[i]?.main || null, groups[i]?.complements || [])}
-                />
+                <React.Fragment key={i}>
+                  <RecoCard
+                    reco={g.main}
+                    isLast={i === recGroups.length - 1 && !(groups[i]?.subs || []).length}
+                    manageStock={manageStock}
+                    products={products}
+                    lang={lang}
+                    appliedStep={groups[i]?.main || null}
+                    parts={buildCardParts(g.main, g.extras, groups[i]?.main || null, groups[i]?.complements || [])}
+                  />
+                  {(groups[i]?.subs || []).map((sub, k) => {
+                    const sr = substituteReco(g.main, sub.main, sub.complements, products);
+                    return (
+                      <RecoCard
+                        key={`s${k}`}
+                        reco={sr.reco}
+                        isLast={i === recGroups.length - 1 && k === groups[i].subs.length - 1}
+                        manageStock={manageStock}
+                        products={products}
+                        lang={lang}
+                        appliedStep={sub.main}
+                        parts={sr.parts}
+                      />
+                    );
+                  })}
+                </React.Fragment>
               ));
             })()}
 
@@ -12685,6 +12754,177 @@ function ParamCard({ param, value, effectiveTargets, lang }) {
   );
 }
 
+// v1.142.0 — Répartit une quantité restante à appliquer sur les applications
+// en attente d'un même produit (étapes mère/compléments), chacune plafonnée à
+// cap (dose max par ajout, null = pas de plafond : tout dans la 1re). Les
+// étapes en attente existantes sont réutilisées dans l'ordre ; celles devenues
+// inutiles disparaissent ; allowAppend permet d'en créer de nouvelles
+// (clonées de la dernière) si le reste dépasse leur capacité.
+function redistributeChain(pending, total, cap, allowAppend) {
+  const limit = cap || Infinity;
+  const tiny = Math.max(1, (cap || total || 1) * 0.02);
+  const chunks = [];
+  let left = total;
+  while (left > tiny && (allowAppend || chunks.length < pending.length)) {
+    const c = Math.min(left, limit);
+    chunks.push(Math.round(c));
+    left -= c;
+    if (!isFinite(limit)) break;
+  }
+  const tpl = pending[pending.length - 1];
+  return chunks.map((c, k) => ({ ...(pending[k] || tpl), computedDoseAmount: c, appliedAmount: c }));
+}
+
+// v1.142.0 — Reprise d'un plan en cours : quand les doses DÉJÀ appliquées d'un
+// produit dépassent ce qui était prévu (ex. 770 g au lieu de 720 g), les
+// applications en attente de ce produit sont réduites pour que le total reste
+// celui visé (liveTotal = somme des doses recommandées aujourd'hui). Réduction
+// seulement : une dose abandonnée volontairement (sous-dosage refusé en
+// complément) n'est jamais réinjectée. Renvoie la liste (ou la même si rien).
+function rebalanceOverAppliedChains(steps, recsNow) {
+  const out = [];
+  let changed = false;
+  let i = 0;
+  while (i < steps.length) {
+    const st = steps[i];
+    if (st.isComplement || st.noAction || st.mode === "entretien") { out.push(st); i++; continue; }
+    let j = i + 1;
+    while (j < steps.length && steps[j].isComplement && steps[j].action === st.action) j++;
+    const chain = steps.slice(i, j);
+    if (st.substituteFor) { out.push(...chain); i = j; continue; }
+    const resolved = chain.filter((c) => c.appliedAt || c.skipped);
+    const pending = chain.filter((c) => !c.appliedAt && !c.skipped);
+    const origName = st.productRealName ?? st.productName;
+    const sameUnit = chain.every((c) => c.doseUnit === st.doseUnit && !(c.appliedProductName && c.appliedProductName !== origName));
+    const tail = pending.length > 0 && chain.slice(chain.length - pending.length).every((c) => !c.appliedAt && !c.skipped);
+    const liveTotal = recsNow.filter((x) => x.title === st.title).reduce((a, x) => a + (x.computedDoseAmount || 0), 0);
+    const appliedSum = resolved.filter((c) => c.appliedAt && !c.skipped).reduce((a, c) => a + (c.appliedAmount || 0), 0);
+    if (pending.length > 0 && resolved.length > 0 && sameUnit && tail && liveTotal > 0 && appliedSum > 0) {
+      const pendingSum = pending.reduce((a, c) => a + (c.computedDoseAmount || 0), 0);
+      const R = Math.min(pendingSum, liveTotal - appliedSum);
+      if (R < pendingSum - Math.max(1, pendingSum * 0.02)) {
+        changed = true;
+        out.push(...resolved, ...redistributeChain(pending, Math.max(0, R), st.maxDoseAmount || null, false));
+        i = j;
+        continue;
+      }
+    }
+    out.push(...chain);
+    i = j;
+  }
+  return changed ? out : steps;
+}
+
+// v1.143.0 — Substitution de produit en cours de plan. Quand un produit A
+// conseillé a déjà été partiellement appliqué et que l'utilisateur en applique
+// un autre (B) pour la suite, le reste à faire est converti pour B (rapport
+// des dosages des deux fiches) et regroupé dans une carte propre à B ; la
+// carte de A ne garde que ce qui a été appliqué avec A. Contexte de la
+// substitution pour l'étape idx, ou null si elle ne s'applique pas ;
+// convertible = false quand les fiches ne permettent pas la conversion.
+function planSubstitutionContext(steps, idx, chosenName, findProd) {
+  const st = steps[idx];
+  if (!st || !chosenName || st.noAction || st.mode === "entretien" || st.doseUnit === "%"
+    || PHYSICS_DOSE_ACTIONS.has(st.action) || st.computedDoseAmount == null || st.skipped || st.appliedAt) return null;
+  const origName = st.productRealName ?? st.productName;
+  if (chosenName === origName) return null;
+  let start = idx;
+  while (start > 0 && steps[start].isComplement && steps[start - 1].action === st.action) start--;
+  const earlier = [];
+  for (let k = start; k < idx; k++) if (steps[k].appliedAt && !steps[k].skipped) earlier.push(k);
+  if (!earlier.length) return null;
+  const pendingIdx = [];
+  for (let k = idx; k < steps.length; k++) {
+    const c = steps[k];
+    if (k > idx && !(c.isComplement && c.action === st.action)) break;
+    if (c.appliedAt || c.skipped) break;
+    pendingIdx.push(k);
+  }
+  const fromProd = findProd(origName);
+  const toProd = findProd(chosenName);
+  const probe = fromProd && toProd ? rescaleDoseFull(1000, st.action, fromProd, toProd, false) : null;
+  return { origName, pendingIdx, fromProd, toProd, convertible: !!(probe && probe.converted) };
+}
+
+// Nouveau tableau d'étapes après la substitution : les applications en
+// attente de A (étape courante + suivantes du même produit) sont remplacées
+// par une étape B déjà appliquée (la quantité saisie) puis, s'il reste de la
+// dose, des applications B plafonnées selon la fiche de B (voir
+// phMinusMaxDoseFor ; aucun plafond pour un liquide).
+function buildSubstitutionSteps(steps, idx, amount, now, ctx, volume, tr) {
+  const st = steps[idx];
+  const { fromProd, toProd, pendingIdx, origName } = ctx;
+  const aRemaining = pendingIdx.reduce((a, k) => a + (steps[k].computedDoseAmount || 0), 0);
+  const conv = rescaleDoseFull(aRemaining, st.action, fromProd, toProd, false);
+  const unit = conv.unit;
+  const bTotal = Math.round(conv.amount);
+  let cap = null;
+  const per100 = phMinusMaxDoseFor(toProd, DEFAULT_PRODUCTS.find((d) => d.action === st.action), toProd, st.action);
+  if (per100 && volume > 0) cap = Math.round(per100 * volume / 100);
+  const note = toProd.noteKey
+    ? tr(toProd.noteKey === "note_ph_minus" ? phMinusNoteKeyForUnit(toProd.doseUnit) : toProd.noteKey)
+    : (toProd.note || null);
+  const main = {
+    ...st,
+    isComplement: false,
+    isSubstitute: true,
+    substituteFor: origName,
+    productName: productDisplayName(toProd, tr),
+    productRealName: toProd.name,
+    productPhoto: toProd.photo || null,
+    productAvailable: true,
+    doseUnit: unit,
+    computedDoseAmount: Math.min(bTotal, cap || Infinity),
+    doseText: null,
+    missingTip: null,
+    doseAnomaly: false,
+    note,
+    maxDoseAmount: cap,
+    waitHours: toProd.waitHours ?? DEFAULT_WAIT_HOURS[st.action] ?? st.waitHours,
+    appliedAt: now,
+    appliedAmount: amount,
+    skipped: false,
+  };
+  delete main.appliedProductName;
+  const rest = bTotal - amount;
+  const tpl = { ...main, isComplement: true, isSubstitute: false, appliedAt: null, appliedAmount: null };
+  const pending = rest > Math.max(1, bTotal * 0.02) ? redistributeChain([tpl], rest, cap, true) : [];
+  return [...steps.slice(0, idx), main, ...pending, ...steps.slice(pendingIdx[pendingIdx.length - 1] + 1)];
+}
+
+// Carte (reco synthétique) d'un produit de substitution, à partir de la
+// recommandation du produit d'origine et des étapes B du plan.
+function substituteReco(mainRec, subMain, subComps, products) {
+  const prodObj = findProductOrGeneric(products, subMain.productRealName ?? subMain.productName);
+  const synth = {
+    ...mainRec,
+    isComplement: false,
+    isSubstitute: true,
+    substituteFor: subMain.substituteFor,
+    stepNumber: null,
+    startsAfterHours: 0,
+    productName: subMain.productName,
+    productRealName: subMain.productRealName,
+    productPhoto: prodObj?.photo || subMain.productPhoto || null,
+    productAvailable: true,
+    missingTip: null,
+    doseAnomaly: false,
+    phAdjustedForTac: false,
+    trendTarget: null,
+    note: subMain.note || null,
+    doseUnit: subMain.doseUnit,
+    computedDoseAmount: subMain.computedDoseAmount,
+    maxDoseAmount: subMain.maxDoseAmount || null,
+  };
+  if (mainRec.doseText && mainRec.computedDoseAmount != null) {
+    const oldStr = formatDose(mainRec.computedDoseAmount, mainRec.doseUnit || "g");
+    synth.doseText = mainRec.doseText.includes(oldStr)
+      ? mainRec.doseText.replace(oldStr, formatDose(subMain.computedDoseAmount, subMain.doseUnit || "g"))
+      : null;
+  }
+  return { reco: synth, parts: buildCardParts(synth, [], subMain, subComps) };
+}
+
 // v1.141.0 — Une carte du plan = un produit, avec la quantité TOTALE à
 // appliquer et le détail de chaque application quand le total dépasse la dose
 // applicable en une fois (plafond par ajout, stock insuffisant...). Les
@@ -12771,7 +13011,7 @@ function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep, part
       <div style={{ ...styles.recoTop, justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div style={isInfo ? styles.recoStepBadgeInfo : styles.recoStepBadge}>
-            {isInfo ? <Info size={12} /> : reco.stepNumber}
+            {isInfo ? <Info size={12} /> : (reco.isSubstitute ? "↪" : reco.stepNumber)}
           </div>
           <span style={isInfo ? styles.recoParamInfo : styles.recoParam}>{reco.title}</span>
         </div>
@@ -12815,6 +13055,11 @@ function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep, part
               {appliedIsGeneric && (
                 <span style={{ ...styles.recoMissingTag, background: "#fdf0ef", color: "#c0392b", borderColor: "#f5c6c2" }}>
                   {t("generic_product_badge")}
+                </span>
+              )}
+              {reco.isSubstitute && (
+                <span style={{ ...styles.recoMissingTag, background: "#eef5fc", color: "#3a5a78", borderColor: "#c9defa" }}>
+                  {t("substitute_for", { product: (() => { const o = findProductOrGeneric(products, reco.substituteFor); return o ? productDisplayName(o, t) : reco.substituteFor; })() })}
                 </span>
               )}
               {!swapped && reco.productAvailable === false && (
@@ -18682,6 +18927,14 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
       false
     );
     const rawRemainder = canSplit ? target - amountInOrigTerms : 0;
+    // v1.143.0 — Substitution après application partielle : le reste est repris
+    // automatiquement dans une carte du produit employé (pas de question).
+    const subCtx = planSubstitutionContext(plan.steps, currentIdx, productName, findAnyProduct);
+    if (subCtx && !subCtx.convertible) window.alert(t("substitution_no_conversion"));
+    if (subCtx && subCtx.convertible && amount != null) {
+      onApplyStep(currentIdx, amount, appliedAt, productName, true);
+      return;
+    }
     if (rawRemainder > epsilon) {
       setPendingSplit({ amount, appliedAt, productName });
       return;
