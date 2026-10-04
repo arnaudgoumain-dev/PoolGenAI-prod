@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.144.3";
+const APP_VERSION = "1.145.0";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -10439,6 +10439,15 @@ function PoolGenAIApp() {
   // ex. fiche produit modifiée entre-temps (galets → chlore non stabilisé),
   // produit supprimé... Ne touche jamais une étape déjà appliquée/passée ni
   // les horaires ; rapprochement par titre (même mesure → même titre).
+  // v1.145.0 — Recommandations actuelles pour la mesure du plan en cours.
+  function liveRecsForActivePlan() {
+    if (!activePlan) return [];
+    const measure = poolMeasures.find((mm) => mm.id === activePlan.measureId);
+    if (!measure) return [];
+    const volume = activePool?.volume || 0;
+    return computeRecommendations(measure, volume, poolProducts, effectiveTargets, activeParamKeys, tFn, computeParamTrends(poolMeasures, measure, poolApplications, poolProducts, volume));
+  }
+
   function syncActivePlanWithRecommendations() {
     if (!activePlan) return null;
     const measure = poolMeasures.find((mm) => mm.id === activePlan.measureId);
@@ -10485,7 +10494,10 @@ function PoolGenAIApp() {
     });
     // v1.142.0 — Doses déjà appliquées au-delà du prévu : réduit d'autant les
     // applications en attente du même produit (voir rebalanceOverAppliedChains).
-    const rebalanced = rebalanceOverAppliedChains(steps, recsNow);
+    // v1.145.0 — Produit prévu disparu de la liste : applications restantes
+    // recalculées pour le produit disponible (voir healMissingProductChains).
+    const healedSteps = healMissingProductChains(steps, recsNow, (n) => findProductOrGeneric(products, n), tFn);
+    const rebalanced = rebalanceOverAppliedChains(healedSteps, recsNow);
     if (changed || rebalanced !== steps) {
       setActivePlan({ ...activePlan, steps: rebalanced });
       // v1.144.1 — Persisté aussi : sinon l'état local divergeait de
@@ -10761,18 +10773,39 @@ function PoolGenAIApp() {
   }
 
   // Modifie un step déjà appliqué (quantité + heure)
-  function editWizardStep(stepIdx, amount, appliedAt) {
+  function editWizardStep(stepIdx, amount, appliedAt, productName) {
     if (!activePlan) return;
     const oldStep = activePlan.steps[stepIdx];
-    const newSteps = activePlan.steps.map((s, i) =>
-      i === stepIdx ? { ...s, appliedAmount: amount, appliedAt } : s
-    );
+    // v1.145.0 — Le produit appliqué peut aussi être corrigé (retour Arnaud :
+    // "j'avais utilisé Reva Minus, pas EDG") : stock recrédité sur l'ancien,
+    // décompté sur le nouveau ; unité de la dose suivant le nouveau produit.
+    const origName = oldStep.productRealName ?? oldStep.productName;
+    const oldAppliedName = oldStep.appliedProductName || origName;
+    const newAppliedName = productName || oldAppliedName;
+    const productChanged = newAppliedName !== oldAppliedName;
+    const newProdObj = findProductOrGeneric(products, newAppliedName);
+    const newUnit = normalizeDoseUnit(newProdObj?.doseUnit || oldStep.doseUnit);
+    const unitChangedEdit = productChanged && normalizeDoseUnit(oldStep.doseUnit) !== newUnit;
+    const unitConvEdit = unitChangedEdit ? rescaleDoseFull(oldStep.computedDoseAmount, oldStep.action, findProductOrGeneric(products, origName), newProdObj, true) : null;
+    const newSteps = activePlan.steps.map((s, i) => {
+      if (i !== stepIdx) return s;
+      const { appliedProductName: _oldApplied, ...rest } = s;
+      return {
+        ...rest,
+        appliedAmount: amount,
+        appliedAt,
+        ...(newAppliedName !== origName ? { appliedProductName: newAppliedName } : {}),
+        ...(unitChangedEdit ? {
+          doseUnit: newUnit,
+          computedDoseAmount: unitConvEdit?.converted ? unitConvEdit.amount : null,
+        } : {}),
+      };
+    });
     // v1.111.5 — Corrige le stock en delta : recrédite l'ancien montant,
-    // décompte le nouveau (même produit/unité, seul le montant change ici).
+    // décompte le nouveau.
     if (oldStep?.doseUnit !== "%" && oldStep?.mode !== "entretien") {
-      const stockProductName = oldStep?.appliedProductName || oldStep?.productRealName || oldStep?.productName;
-      applyProductStockDelta(stockProductName, oldStep?.appliedAmount, oldStep?.doseUnit, +1);
-      applyProductStockDelta(stockProductName, amount, oldStep?.doseUnit, -1);
+      applyProductStockDelta(oldAppliedName, oldStep?.appliedAmount, oldStep?.doseUnit, +1);
+      applyProductStockDelta(newAppliedName, amount, newUnit, -1);
     }
     // v1.144.0 — La correction est répercutée sur la suite du plan (retour
     // Arnaud : "en tenir compte sur la carte") :
@@ -10780,7 +10813,14 @@ function PoolGenAIApp() {
     //    le nouvel écart (excès : on réduit le reste ; manque : on l'augmente) ;
     // 2) si l'heure change, l'horaire prévu des étapes suivantes en attente suit.
     let steps = newSteps;
-    const canRebalance = oldStep && oldStep.appliedAmount != null && amount != null
+    // v1.145.0 — Produit corrigé : applications en attente recalculées d'après
+    // la recommandation actuelle et l'appliqué converti (voir replanChainLive).
+    let replanned = false;
+    if (productChanged && oldStep.doseUnit !== "%" && !oldStep.noAction && oldStep.mode !== "entretien") {
+      const r = replanChainLive(steps, stepIdx, liveRecsForActivePlan(), (n) => findProductOrGeneric(products, n), tFn);
+      if (r) { steps = r; replanned = true; }
+    }
+    const canRebalance = !replanned && !productChanged && oldStep && oldStep.appliedAmount != null && amount != null
       && oldStep.doseUnit !== "%" && !oldStep.noAction && oldStep.mode !== "entretien";
     if (canRebalance) {
       let end = stepIdx;
@@ -12953,7 +12993,110 @@ function redistributeChain(pending, total, cap, allowAppend) {
     if (!isFinite(limit)) break;
   }
   const tpl = pending[pending.length - 1];
-  return chunks.map((c, k) => ({ ...(pending[k] || tpl), computedDoseAmount: c, appliedAmount: c }));
+  return chunks.map((c, k) => ({ ...(pending[k] || { ...tpl, isComplement: true }), computedDoseAmount: c, appliedAmount: c }));
+}
+
+// v1.145.0 — Recalcule les applications EN ATTENTE d'un produit à partir de la
+// recommandation actuelle (liveRecs = computeRecommendations de la mesure du
+// plan), en tenant compte de ce qui a déjà été appliqué, converti dans le
+// produit recommandé. Sert quand le produit d'une étape appliquée change
+// (correction depuis l'assistant) ou quand le produit prévu n'existe plus.
+// Total visé = somme des doses recommandées aujourd'hui ; reste = total moins
+// l'appliqué (converti) ; réparti en applications plafonnées (cap de la
+// recommandation). Si l'appliqué est dans un produit disparu (fiche inconnue),
+// repli proportionnel : fraction restante dans les unités du plan. Renvoie null
+// si le recalcul n'est pas possible (chaîne non reconnue, conversion
+// impossible...), sans rien modifier.
+function replanChainLive(steps, idx, liveRecs, findProd, tr) {
+  const act = steps[idx]?.action;
+  if (!act) return null;
+  let start = idx;
+  while (start > 0 && steps[start].isComplement && steps[start - 1].action === act) start--;
+  let end = start;
+  while (end + 1 < steps.length && steps[end + 1].isComplement && steps[end + 1].action === act) end++;
+  const main = steps[start];
+  if (main.substituteFor || main.noAction || main.mode === "entretien" || main.doseUnit === "%" || PHYSICS_DOSE_ACTIONS.has(act)) return null;
+  const live = liveRecs.filter((x) => x.title === main.title);
+  const liveMain = live.find((x) => !x.isComplement);
+  if (!liveMain || liveMain.noAction) return null;
+  const L = findProd(liveMain.productRealName ?? liveMain.productName);
+  if (!L) return null;
+  const T = live.reduce((a, x) => a + (x.computedDoseAmount || 0), 0);
+  if (!(T > 0)) return null;
+  const pendingIdx = [];
+  for (let k = start; k <= end; k++) if (!steps[k].appliedAt && !steps[k].skipped) pendingIdx.push(k);
+  if (pendingIdx.length > 0 && !(pendingIdx[pendingIdx.length - 1] === end && pendingIdx.every((k, n) => n === 0 || k === pendingIdx[n - 1] + 1))) return null;
+  // appliqué, converti dans le produit recommandé
+  let appliedL = 0;
+  let appliedOld = 0;
+  let anyUnknown = false;
+  for (let k = start; k <= end; k++) {
+    const st = steps[k];
+    if (!st.appliedAt || st.skipped) continue;
+    const p = findProd(st.appliedProductName || st.productRealName || st.productName);
+    appliedOld += st.appliedAmount || 0;
+    if (!p) { anyUnknown = true; continue; }
+    if (p === L) { appliedL += st.appliedAmount || 0; continue; }
+    const conv = rescaleDoseFull(st.appliedAmount || 0, act, p, L, false);
+    if (!conv.converted) return null;
+    appliedL += conv.amount;
+  }
+  let R;
+  if (anyUnknown) {
+    // fiche du produit appliqué introuvable : proportionnel, dans les unités du plan
+    const names = new Set(steps.slice(start, end + 1).map((st) => st.appliedProductName || st.productRealName || st.productName));
+    const units = new Set(steps.slice(start, end + 1).map((st) => st.doseUnit));
+    if (names.size !== 1 || units.size !== 1) return null;
+    const pendingOld = pendingIdx.reduce((a, k) => a + (steps[k].computedDoseAmount || 0), 0);
+    const denom = appliedOld + pendingOld;
+    if (!(denom > 0)) return null;
+    R = T * pendingOld / denom;
+  } else {
+    R = Math.max(0, T - appliedL);
+  }
+  const cap = liveMain.maxDoseAmount || null;
+  const fields = {
+    productName: productDisplayName(L, tr),
+    productRealName: L.name,
+    productPhoto: L.photo || null,
+    productAvailable: true,
+    doseUnit: liveMain.doseUnit,
+    maxDoseAmount: cap,
+    note: liveMain.note || null,
+    waitHours: liveMain.waitHours ?? main.waitHours,
+    doseText: null,
+    missingTip: null,
+    doseAnomaly: false,
+    appliedAt: null,
+    appliedAmount: null,
+    skipped: false,
+  };
+  const base = pendingIdx.length > 0
+    ? pendingIdx.map((k) => ({ ...steps[k], ...fields }))
+    : [{ ...steps[end], ...fields, isComplement: true }];
+  const redistributed = redistributeChain(base, R, cap, true);
+  const insertAt = pendingIdx.length > 0 ? pendingIdx[0] : end + 1;
+  const lastPending = pendingIdx.length > 0 ? pendingIdx[pendingIdx.length - 1] : end;
+  return [...steps.slice(0, insertAt), ...redistributed, ...steps.slice(lastPending + 1)];
+}
+
+// v1.145.0 — Chaînes dont les applications en attente référencent un produit
+// qui n'existe plus : recalculées pour le produit recommandé (voir
+// replanChainLive). Une seule tentative par produit/titre.
+function healMissingProductChains(steps, liveRecs, findProd, tr) {
+  let cur = steps;
+  let changed = false;
+  const done = new Set();
+  for (let guard = 0; guard < 6; guard++) {
+    const idx = cur.findIndex((st) => !st.appliedAt && !st.skipped && !st.noAction && st.mode !== "entretien"
+      && st.computedDoseAmount != null && !st.substituteFor && !findProd(st.productRealName ?? st.productName)
+      && !done.has(st.title + "|" + st.action));
+    if (idx < 0) break;
+    done.add(cur[idx].title + "|" + cur[idx].action);
+    const r = replanChainLive(cur, idx, liveRecs, findProd, tr);
+    if (r) { cur = r; changed = true; }
+  }
+  return changed ? cur : steps;
 }
 
 // v1.142.0 — Reprise d'un plan en cours : quand les doses DÉJÀ appliquées d'un
@@ -18853,6 +18996,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   // des étapes déjà appliquées, plus seulement la dernière) et sélecteur.
   const [prevIdx, setPrevIdx] = React.useState(null);
   const [pickingPrev, setPickingPrev] = React.useState(false);
+  const [prevProduct, setPrevProduct] = React.useState("");
   const [prevAmount, setPrevAmount] = React.useState("");
   const [prevTime, setPrevTime] = React.useState("");
   const [selectedProduct, setSelectedProduct] = React.useState(null);
@@ -19023,7 +19167,9 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
     .filter(({ s: st, i }) => i < currentIdx && st.appliedAt && !st.skipped && !st.noAction && st.mode !== "entretien");
   function openPrevEditor(i) {
     const prev = plan.steps[i];
-    const { value } = toDisplayUnit(prev.appliedAmount, prev.doseUnit || "g");
+    const prevName = prev.appliedProductName || prev.productRealName || prev.productName || "";
+    const { value } = toDisplayUnit(prev.appliedAmount, prev.doseUnit || "g", findAnyProduct(prevName));
+    setPrevProduct(prevName);
     setPrevAmount(String(value ?? ""));
     const d = new Date(prev.appliedAt);
     setPrevTime(`${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`);
@@ -19542,13 +19688,32 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
         {/* Panneau édition étape précédente */}
         {editingPrev && prevIdx != null && plan.steps[prevIdx] && (() => {
           const prev = plan.steps[prevIdx];
-          const prevUnit = prev.doseUnit || "g";
-          const { displayUnit: du } = toDisplayUnit(prev.appliedAmount, prevUnit);
+          const chosenProd = findAnyProduct(prevProduct);
+          const prevUnit = chosenProd?.doseUnit || prev.doseUnit || "g";
+          const { displayUnit: du } = toDisplayUnit(prev.appliedAmount, prevUnit, chosenProd);
+          const prodOptions = [...getSortedCandidates(prev.action), ...getGenericCandidates(prev.action)];
+          const optList = prodOptions.some((p) => p.name === prevProduct) ? prodOptions : [{ name: prevProduct, __missing: true }, ...prodOptions];
           return (
             <div style={{ marginTop: 14, padding: "12px 14px", background: "var(--brand-bg-tint)", borderRadius: 12, border: "1px solid #d0e4f5" }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: "var(--brand-text-strong)", marginBottom: 10 }}>
                 ← {prev.productName || prev.title}
               </div>
+              {optList.length > 1 && (
+                <>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: "var(--brand-text-secondary)", display: "block", marginBottom: 4 }}>{t("product_col")}</label>
+                  <select
+                    value={prevProduct}
+                    onChange={(e) => setPrevProduct(e.target.value)}
+                    style={{ width: "100%", boxSizing: "border-box", fontSize: 14, fontWeight: 600, color: "var(--brand-text-strong)", border: "1.5px solid #d0e4f5", borderRadius: 8, padding: "8px 10px", marginBottom: 10, background: "#fff" }}
+                  >
+                    {optList.map((p) => (
+                      <option key={p.id || p.name} value={p.name}>
+                        {p.__missing ? p.name : (DEFAULT_PRODUCTS.includes(p) ? `${t("generic_product_option_prefix")} ` : "") + (p.name)}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              )}
               <label style={{ fontSize: 11, fontWeight: 600, color: "var(--brand-text-secondary)", display: "block", marginBottom: 4 }}>{t("quantity_applied")}</label>
               <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10 }}>
                 <input
@@ -19571,9 +19736,10 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
                 <button
                   style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}
                   onClick={() => {
-                    const baseU = prev.doseUnit || "g";
-                    const { displayUnit: du2 } = toDisplayUnit(prev.appliedAmount, baseU);
-                    const newAmount = toBaseUnit(prevAmount, du2, baseU);
+                    const baseU = prevUnit;
+                    const { displayUnit: du2 } = toDisplayUnit(prev.appliedAmount, baseU, chosenProd);
+                    const newAmount = toBaseUnit(prevAmount, du2, baseU, chosenProd);
+                    if (newAmount != null && newAmount <= 0) { window.alert(t("wizard_amount_required")); return; }
                     let newAppliedAt = prev.appliedAt;
                     if (prevTime) {
                       const [h, m] = prevTime.split(":").map(Number);
@@ -19581,7 +19747,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
                       d.setHours(h, m, 0, 0);
                       newAppliedAt = d.toISOString();
                     }
-                    onEditPrevStep(prevIdx, newAmount, newAppliedAt);
+                    onEditPrevStep(prevIdx, newAmount, newAppliedAt, prevProduct);
                     setEditingPrev(false);
                     setPrevIdx(null);
                   }}
