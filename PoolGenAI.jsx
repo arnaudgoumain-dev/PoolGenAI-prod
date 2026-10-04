@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.144.0";
+const APP_VERSION = "1.144.3";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -79,6 +79,7 @@ const TRANSLATIONS = {
     substitution_no_conversion: "Conversion impossible entre ces deux produits (fiche de dosage incomplète) : les étapes restantes du produit conseillé sont conservées. Remesure avant de poursuivre.",
     wizard_edit_prev_any: "Modifier une étape précédente",
     wizard_pick_prev: "Quelle étape modifier ?",
+    wizard_amount_required: "Saisis une quantité supérieure à 0 (ou passe l'étape).",
     copper_col: "Cuivre",
     iron_col: "Fer",
     param_ccl: "Chlore combiné (CCL)",
@@ -920,6 +921,7 @@ const TRANSLATIONS = {
     substitution_no_conversion: "Cannot convert between these two products (incomplete dosage sheet): the remaining steps of the recommended product are kept. Re-measure before continuing.",
     wizard_edit_prev_any: "Edit a previous step",
     wizard_pick_prev: "Which step do you want to edit?",
+    wizard_amount_required: "Enter a quantity greater than 0 (or skip the step).",
     copper_col: "Copper",
     iron_col: "Iron",
     param_ccl: "Combined chlorine (CCL)",
@@ -1748,6 +1750,7 @@ const TRANSLATIONS = {
     substitution_no_conversion: "Umrechnung zwischen diesen beiden Produkten nicht möglich (unvollständiges Dosierungsblatt): die verbleibenden Schritte des empfohlenen Produkts bleiben erhalten. Vor dem Fortfahren neu messen.",
     wizard_edit_prev_any: "Einen vorherigen Schritt bearbeiten",
     wizard_pick_prev: "Welchen Schritt bearbeiten?",
+    wizard_amount_required: "Gib eine Menge größer als 0 ein (oder überspringe den Schritt).",
     copper_col: "Kupfer",
     iron_col: "Eisen",
     param_ccl: "Gebundenes Chlor (CCL)",
@@ -2577,6 +2580,7 @@ const TRANSLATIONS = {
     substitution_no_conversion: "Conversione impossibile tra questi due prodotti (scheda di dosaggio incompleta): i passaggi rimanenti del prodotto consigliato vengono mantenuti. Rimisura prima di proseguire.",
     wizard_edit_prev_any: "Modifica una fase precedente",
     wizard_pick_prev: "Quale fase modificare?",
+    wizard_amount_required: "Inserisci una quantità maggiore di 0 (o salta il passaggio).",
     copper_col: "Rame",
     iron_col: "Ferro",
     param_ccl: "Cloro combinato (CCL)",
@@ -3403,6 +3407,7 @@ const TRANSLATIONS = {
     substitution_no_conversion: "Conversión imposible entre estos dos productos (ficha de dosificación incompleta): se conservan los pasos restantes del producto recomendado. Vuelve a medir antes de continuar.",
     wizard_edit_prev_any: "Editar un paso anterior",
     wizard_pick_prev: "¿Qué paso quieres editar?",
+    wizard_amount_required: "Introduce una cantidad mayor que 0 (o salta el paso).",
     copper_col: "Cobre",
     iron_col: "Hierro",
     param_ccl: "Cloro combinado (CCL)",
@@ -4229,6 +4234,7 @@ const TRANSLATIONS = {
     substitution_no_conversion: "Conversão impossível entre estes dois produtos (ficha de dosagem incompleta): os passos restantes do produto recomendado são mantidos. Volta a medir antes de continuar.",
     wizard_edit_prev_any: "Editar uma etapa anterior",
     wizard_pick_prev: "Que etapa queres editar?",
+    wizard_amount_required: "Introduz uma quantidade superior a 0 (ou salta a etapa).",
     copper_col: "Cobre",
     iron_col: "Ferro",
     param_ccl: "Cloro combinado (CCL)",
@@ -8882,6 +8888,37 @@ function PoolGenAIApp() {
   function setActivePlan(value) {
     setActivePlanByPool((prev) => ({ ...prev, [activePoolId]: value }));
   }
+  // v1.144.2 — Nettoyage des étapes "0 g" héritées (voir isZeroAppliedStep) :
+  // plans en cours, puis applications enregistrées (réécrites dans le cloud).
+  useEffect(() => {
+    let changed = false;
+    const next = {};
+    Object.entries(activePlanByPool).forEach(([pid, plan]) => {
+      if (plan && Array.isArray(plan.steps) && plan.steps.some(isZeroAppliedStep)) {
+        const steps = revertZeroAppliedSteps(plan.steps, false);
+        const idx = steps.findIndex((st) => !(st.skipped || st.appliedAt));
+        next[pid] = { ...plan, steps, currentStepIdx: idx >= 0 ? idx : plan.currentStepIdx };
+        changed = true;
+      } else {
+        next[pid] = plan;
+      }
+    });
+    if (changed) setActivePlanByPool(next);
+  }, [activePlanByPool]);
+  useEffect(() => {
+    const hasZero = (a) => a.measureId && Array.isArray(a.steps) && a.steps.some(isZeroAppliedStep);
+    if (!applications.some(hasZero)) return;
+    const fixed = [];
+    const next = applications.map((a) => {
+      if (!hasZero(a)) return a;
+      const done = !!(a.allDone || a.allApplied);
+      const na = { ...a, steps: revertZeroAppliedSteps(a.steps, done), ...(done ? {} : { allApplied: false, allDone: false }) };
+      fixed.push(na);
+      return na;
+    });
+    setApplications(next);
+    if (dataUid) fixed.forEach((a) => FB.saveApplication(dataUid, a).catch(() => {}));
+  }, [applications]);
   // v1.53.0 — Migration silencieuse ancien format (objet unique partagé
   // entre tous les bassins) -> nouvelle map { poolId: plan }. Range l'ancien
   // plan dans le bassin de la mesure qu'il concerne si elle existe encore,
@@ -10403,16 +10440,22 @@ function PoolGenAIApp() {
   // produit supprimé... Ne touche jamais une étape déjà appliquée/passée ni
   // les horaires ; rapprochement par titre (même mesure → même titre).
   function syncActivePlanWithRecommendations() {
-    if (!activePlan) return;
+    if (!activePlan) return null;
     const measure = poolMeasures.find((mm) => mm.id === activePlan.measureId);
-    if (!measure) return;
+    if (!measure) return activePlan.steps;
     const volume = activePool?.volume || 0;
     const recsNow = computeRecommendations(measure, volume, poolProducts, effectiveTargets, activeParamKeys, tFn, computeParamTrends(poolMeasures, measure, poolApplications, poolProducts, volume));
     const isPending = (st) => !st.appliedAt && !st.skipped && st.mode !== "entretien";
     let changed = false;
-    const steps = activePlan.steps.map((st) => {
+    const steps = activePlan.steps.map((st, idx0) => {
       if (!isPending(st)) return st;
       if (st.substituteFor) return st;
+      // v1.144.1 — Une application déjà faite sur ce produit : le produit des
+      // applications restantes ne se change plus ici (c'est le rôle de la
+      // substitution dans l'assistant, qui convertit les quantités).
+      let b0 = idx0;
+      while (b0 > 0 && activePlan.steps[b0].isComplement && activePlan.steps[b0 - 1].action === st.action) b0--;
+      if (activePlan.steps.slice(b0, idx0).some((c) => c.appliedAt && !c.skipped)) return st;
       const r = recsNow.find((x) => x.title === st.title);
       if (!r) return st;
       const sameProduct = (r.productRealName ?? r.productName) === (st.productRealName ?? st.productName) && r.action === st.action;
@@ -10443,7 +10486,70 @@ function PoolGenAIApp() {
     // v1.142.0 — Doses déjà appliquées au-delà du prévu : réduit d'autant les
     // applications en attente du même produit (voir rebalanceOverAppliedChains).
     const rebalanced = rebalanceOverAppliedChains(steps, recsNow);
-    if (changed || rebalanced !== steps) setActivePlan({ ...activePlan, steps: rebalanced });
+    if (changed || rebalanced !== steps) {
+      setActivePlan({ ...activePlan, steps: rebalanced });
+      // v1.144.1 — Persisté aussi : sinon l'état local divergeait de
+      // l'application enregistrée.
+      const fin = buildFinalSteps(rebalanced);
+      saveApplication(activePlan.measureId, fin, false, rebalanced.every(stepIsResolved));
+    }
+    return rebalanced;
+  }
+
+  // v1.144.1 — "Reprendre le plan" : un plan dont toutes les étapes sont
+  // résolues n'a plus rien à proposer (l'assistant restait vide, bouton
+  // muet). Si l'application enregistrée contient encore des étapes en
+  // attente, on reprend depuis elle ; sinon le plan est clos proprement.
+  function resumePlan() {
+    if (!activePlan) return;
+    const closePlan = (stepsToClose) => {
+      const fin = buildFinalSteps(stepsToClose);
+      const applied = fin.filter((st) => stepIsResolved(st) && !st.skipped);
+      saveApplication(activePlan.measureId, fin, applied.length === fin.length, true);
+      setActivePlan(null);
+      setShowWizard(false);
+    };
+    const allResolved = (arr) => arr.length > 0 && arr.every(stepIsResolved);
+    // v1.144.3 — Plan local plus court que l'application enregistrée (étapes en
+    // attente perdues localement sans avoir été enregistrées) : les étapes
+    // manquantes sont réajoutées depuis l'application enregistrée.
+    const savedForPlan = (applications || []).find((a) => a.measureId === activePlan.measureId);
+    if (savedForPlan && (savedForPlan.steps || []).length > activePlan.steps.length) {
+      const tail = savedForPlan.steps.slice(activePlan.steps.length);
+      if (tail.some((st) => !stepIsResolved(st))) {
+        const last = activePlan.steps[activePlan.steps.length - 1];
+        const { appliedProductName: _ap, ...lastBase } = last || {};
+        const healed = [
+          ...activePlan.steps,
+          ...tail.map((st) => ({ ...lastBase, ...st })),
+        ];
+        const nextHealed = healed.findIndex((st) => !stepIsResolved(st));
+        setActivePlan({ ...activePlan, steps: healed, currentStepIdx: nextHealed });
+        setShowWizard(true);
+        return;
+      }
+    }
+    if (allResolved(activePlan.steps)) {
+      const saved = (applications || []).find((a) => a.measureId === activePlan.measureId);
+      if (saved && (saved.steps || []).some((st) => !stepIsResolved(st))) {
+        const measure = poolMeasures.find((mm) => mm.id === activePlan.measureId);
+        const volume = activePool?.volume || 0;
+        const recsNow = measure ? computeRecommendations(measure, volume, poolProducts, effectiveTargets, activeParamKeys, tFn, computeParamTrends(poolMeasures, measure, poolApplications, poolProducts, volume)) : [];
+        const restored = saved.steps.map((st) => {
+          const r = recsNow.find((x) => x.title === st.title);
+          return { ...st, waitHours: st.waitHours ?? r?.waitHours ?? 0, maxDoseAmount: st.maxDoseAmount ?? r?.maxDoseAmount ?? null, note: st.note ?? r?.note ?? null, productPhoto: st.productPhoto ?? r?.productPhoto ?? null, productAvailable: st.productAvailable ?? r?.productAvailable ?? true };
+        });
+        const nextIdx = restored.findIndex((st) => !stepIsResolved(st));
+        setActivePlan({ measureId: activePlan.measureId, steps: restored, currentStepIdx: nextIdx });
+        setShowWizard(true);
+        return;
+      }
+      closePlan(activePlan.steps);
+      return;
+    }
+    const synced = syncActivePlanWithRecommendations();
+    if (synced && allResolved(synced)) { closePlan(synced); return; }
+    setShowWizard(true);
   }
 
   // Valide une étape du wizard — version sans appel de setter dans setter
@@ -10817,8 +10923,7 @@ function PoolGenAIApp() {
     }
     // Si plan déjà en cours pour cette mesure, reprendre
     if (activePlan && activePlan.measureId === m.id) {
-      syncActivePlanWithRecommendations();
-      setShowWizard(true);
+      resumePlan();
       return;
     }
     // Sinon démarrer un nouveau plan
@@ -11510,7 +11615,7 @@ function PoolGenAIApp() {
             effectiveTargets={effectiveTargets}
             activeParamKeys={activeParamKeys}
             activePlan={activePlan}
-            onResumePlan={() => { syncActivePlanWithRecommendations(); setShowWizard(true); }}
+            onResumePlan={resumePlan}
             onOpenManualApply={() => setShowManualApply(true)}
             authUid={dataUid}
           />
@@ -12817,6 +12922,19 @@ function ParamCard({ param, value, effectiveTargets, lang }) {
   );
 }
 
+// v1.144.2 — Une étape "appliquée" avec une quantité de 0 est un reliquat d'un
+// ancien défaut (saisie vide validée) : aucune dose n'a été appliquée. On la
+// remet en attente avec sa dose prévue (le total visé est ainsi conservé),
+// ou en "passée" si le plan est déjà clos.
+function isZeroAppliedStep(st) {
+  return !!st && !!st.appliedAt && !st.skipped && st.appliedAmount === 0 && !st.noAction && st.mode !== "entretien";
+}
+function revertZeroAppliedSteps(steps, asSkipped) {
+  return steps.map((st) => (isZeroAppliedStep(st)
+    ? (asSkipped ? { ...st, skipped: true } : { ...st, appliedAt: null, appliedAmount: null })
+    : st));
+}
+
 // v1.142.0 — Répartit une quantité restante à appliquer sur les applications
 // en attente d'un même produit (étapes mère/compléments), chacune plafonnée à
 // cap (dose max par ajout, null = pas de plafond : tout dans la 1re). Les
@@ -12858,6 +12976,13 @@ function rebalanceOverAppliedChains(steps, recsNow) {
     const resolved = chain.filter((c) => c.appliedAt || c.skipped);
     const pending = chain.filter((c) => !c.appliedAt && !c.skipped);
     const origName = st.productRealName ?? st.productName;
+    // v1.144.1 — Fix : la dose recommandée aujourd'hui (liveTotal) n'est
+    // comparable aux doses déjà appliquées que si elle est calculée pour le
+    // MÊME produit ; sinon (produit changé depuis, fiche modifiée...) on
+    // soustrayait des grammes d'un produit à ceux d'un autre et on supprimait
+    // à tort les applications en attente (plan "2/2", bouton Reprendre muet).
+    const liveMain = recsNow.find((x) => x.title === st.title && !x.isComplement);
+    if (!liveMain || (liveMain.productRealName ?? liveMain.productName) !== origName) { out.push(...chain); i = j; continue; }
     const sameUnit = chain.every((c) => c.doseUnit === st.doseUnit && !(c.appliedProductName && c.appliedProductName !== origName));
     const tail = pending.length > 0 && chain.slice(chain.length - pending.length).every((c) => !c.appliedAt && !c.skipped);
     const liveTotal = recsNow.filter((x) => x.title === st.title).reduce((a, x) => a + (x.computedDoseAmount || 0), 0);
@@ -18994,6 +19119,12 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   // confirmation avant de conclure — voir demande Arnaud, remplace la
   // scission automatique de la v1.113.0.
   function finalizeApply(amount, appliedAt, productName) {
+    // v1.144.1 — Une quantité 0 n'est pas une application (elle apparaissait
+    // "0 g ✓" dans le plan) : on demande une vraie quantité ou de passer l'étape.
+    if (amount != null && amount <= 0) {
+      window.alert(t("wizard_amount_required"));
+      return;
+    }
     const target = step.computedDoseAmount;
     const canSplit = target != null && amount != null && step.mode !== "entretien" && step.doseUnit !== "%";
     const epsilon = canSplit ? Math.max(1, target * 0.02) : 0;
