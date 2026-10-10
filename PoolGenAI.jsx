@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.146.0";
+const APP_VERSION = "1.146.1";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -694,6 +694,7 @@ const TRANSLATIONS = {
     paywall_plan_yearly: "Annuel",
     paywall_plan_yearly_badge: "-30%",
     manage_subscription_btn: "Gérer mon abonnement",
+    tester_toggle_hint: "Mode testeur : active ou désactive le Premium pour tester l'application en mode standard ou en mode Premium.",
     ai_err_daily_limit: "Limite quotidienne d'analyses IA atteinte (50 par jour). Réessaie demain.",
     ai_err_tester_user: "Quota IA testeur atteint pour aujourd'hui (10 analyses par jour). Le reste de l'application reste utilisable ; réessaie demain.",
     ai_err_tester_day: "Le quota IA partagé entre testeurs est atteint pour aujourd'hui. Le reste de l'application reste utilisable ; réessaie demain.",
@@ -1544,6 +1545,7 @@ const TRANSLATIONS = {
     paywall_plan_yearly: "Yearly",
     paywall_plan_yearly_badge: "-30%",
     manage_subscription_btn: "Manage subscription",
+    tester_toggle_hint: "Tester mode: switch Premium on or off to try the app in standard or Premium mode.",
     ai_err_daily_limit: "Daily AI analysis limit reached (50 per day). Try again tomorrow.",
     ai_err_tester_user: "Tester AI quota reached for today (10 analyses per day). The rest of the app stays available; try again tomorrow.",
     ai_err_tester_day: "The AI quota shared by all testers is used up for today. The rest of the app stays available; try again tomorrow.",
@@ -2393,6 +2395,7 @@ const TRANSLATIONS = {
     paywall_plan_yearly: "Jährlich",
     paywall_plan_yearly_badge: "-30%",
     manage_subscription_btn: "Abo verwalten",
+    tester_toggle_hint: "Tester-Modus: Premium ein- oder ausschalten, um die App im Standard- oder Premium-Modus zu testen.",
     ai_err_daily_limit: "Tageslimit für KI-Analysen erreicht (50 pro Tag). Versuche es morgen erneut.",
     ai_err_tester_user: "KI-Kontingent für Tester für heute erreicht (10 Analysen pro Tag). Der Rest der App bleibt nutzbar; versuche es morgen erneut.",
     ai_err_tester_day: "Das gemeinsame KI-Kontingent aller Tester ist für heute aufgebraucht. Der Rest der App bleibt nutzbar; versuche es morgen erneut.",
@@ -3238,6 +3241,7 @@ const TRANSLATIONS = {
     paywall_plan_yearly: "Annuale",
     paywall_plan_yearly_badge: "-30%",
     manage_subscription_btn: "Gestisci abbonamento",
+    tester_toggle_hint: "Modalità tester: attiva o disattiva Premium per provare l'app in modalità standard o Premium.",
     ai_err_daily_limit: "Limite giornaliero di analisi IA raggiunto (50 al giorno). Riprova domani.",
     ai_err_tester_user: "Quota IA tester raggiunta per oggi (10 analisi al giorno). Il resto dell'app resta utilizzabile; riprova domani.",
     ai_err_tester_day: "La quota IA condivisa tra i tester è esaurita per oggi. Il resto dell'app resta utilizzabile; riprova domani.",
@@ -4083,6 +4087,7 @@ const TRANSLATIONS = {
     paywall_plan_yearly: "Anual",
     paywall_plan_yearly_badge: "-30%",
     manage_subscription_btn: "Gestionar suscripción",
+    tester_toggle_hint: "Modo probador: activa o desactiva Premium para probar la app en modo estándar o Premium.",
     ai_err_daily_limit: "Límite diario de análisis de IA alcanzado (50 al día). Inténtalo mañana.",
     ai_err_tester_user: "Cuota de IA de probador alcanzada por hoy (10 análisis al día). El resto de la app sigue disponible; inténtalo mañana.",
     ai_err_tester_day: "La cuota de IA compartida entre probadores se ha agotado por hoy. El resto de la app sigue disponible; inténtalo mañana.",
@@ -4925,6 +4930,7 @@ const TRANSLATIONS = {
     paywall_plan_yearly: "Anual",
     paywall_plan_yearly_badge: "-30%",
     manage_subscription_btn: "Gerir assinatura",
+    tester_toggle_hint: "Modo testador: ativa ou desativa o Premium para testar a app em modo padrão ou Premium.",
     ai_err_daily_limit: "Limite diário de análises de IA atingido (50 por dia). Tenta novamente amanhã.",
     ai_err_tester_user: "Quota de IA de testador atingida para hoje (10 análises por dia). O resto da app continua disponível; tenta novamente amanhã.",
     ai_err_tester_day: "A quota de IA partilhada entre testadores esgotou-se por hoje. O resto da app continua disponível; tenta novamente amanhã.",
@@ -9013,6 +9019,22 @@ function PoolGenAIApp() {
   useEffect(() => { CURRENT_LANG = lang; }, [lang]);
   // v1.146.0 — Fin du Premium testeur (ISO) si le compte est en essai testeur.
   const [testerUntil, setTesterUntil] = useState(null);
+  // v1.146.1 — Un testeur peut basculer entre le mode standard et le mode
+  // Premium (Réglages). Purement une VUE : le Premium reste actif côté serveur
+  // (isPremium inchangé), seul l'affichage/les fonctions de l'app passent en
+  // mode gratuit. Préférence synchronisée via config/main.testerStandardMode.
+  const [testerStandard, setTesterStandard] = useState(false);
+  const testerStandardRef = useRef(false);
+  const testerToggleLockRef = useRef(0);
+  function handleToggleTesterPremium(wantPremium) {
+    if (!testerUntil) return;
+    testerStandardRef.current = !wantPremium;
+    testerToggleLockRef.current = Date.now() + 3000; // ignore les snapshots périmés le temps de l'écriture
+    setTesterStandard(!wantPremium);
+    setIsPremium(!!wantPremium);
+    syncOwnConfig({ testerStandardMode: !wantPremium });
+    track("tester_mode_toggled", { premium: !!wantPremium });
+  }
   // v1.146.0 — Fin de l'essai testeur : le Worker retire le Premium (source
   // de vérité serveur) ; l'app le déclenche à l'échéance, ou au démarrage si
   // la date est déjà passée, puis le snapshot de config/main se met à jour.
@@ -9510,10 +9532,20 @@ function PoolGenAIApp() {
       // qui s'applique VRAIMENT à chaque snapshot, cohérente avec ce que
       // vérifie déjà le Worker (userConfig?.isPremium).
       const realIsPremium = !!config.isPremium;
-      setIsPremium((prev) => (prev === realIsPremium ? prev : realIsPremium));
       const sub = config.subscription;
-      setTesterUntil(realIsPremium && sub?.provider === "tester" && sub?.status === "tester" && sub?.until ? sub.until : null);
-      window.storage.set(STORAGE_KEYS.premium, JSON.stringify(realIsPremium)).catch(() => {});
+      const testerActive = realIsPremium && sub?.provider === "tester" && sub?.status === "tester" && !!sub?.until;
+      // v1.146.1 — Testeur en "mode standard" : l'app se comporte comme en
+      // gratuit (isPremium effectif = false) sans toucher au Premium serveur.
+      const wantStandard = Date.now() < testerToggleLockRef.current
+        ? testerStandardRef.current
+        : config.testerStandardMode === true;
+      const standardView = testerActive && wantStandard;
+      testerStandardRef.current = standardView;
+      const effectivePremium = realIsPremium && !standardView;
+      setIsPremium((prev) => (prev === effectivePremium ? prev : effectivePremium));
+      setTesterUntil(testerActive ? sub.until : null);
+      setTesterStandard(standardView);
+      window.storage.set(STORAGE_KEYS.premium, JSON.stringify(effectivePremium)).catch(() => {});
       // v1.96.4 — Valeur brute (true | false | undefined), lue à chaque
       // snapshot : voir l'effet dédié à premiumDefaultsApplied plus bas pour
       // la logique complète (migration comprise).
@@ -9567,7 +9599,7 @@ function PoolGenAIApp() {
       setShowPremiumReveal(true);
       track("upgrade_activated", { via: "stripe" });
       setApiKey(PROXY_BASE_URL); // v1.89.0 — suit l'environnement courant, pas figé sur PROD.
-    } else if (prev === true && isPremium === false) {
+    } else if (prev === true && isPremium === false && !testerStandardRef.current) {
       setRevealVariant("downgrade");
       setShowPremiumReveal(true);
       track("premium_deactivated", { via: "stripe" });
@@ -11944,6 +11976,7 @@ function PoolGenAIApp() {
             setIsPremium={setIsPremium}
             onWantManageSubscription={handleOpenPortal}
             testerUntil={testerUntil}
+            onToggleTesterPremium={handleToggleTesterPremium}
             onRedeemTesterCode={handleRedeemTesterCode}
             portalBusy={portalBusy}
             portalError={portalError}
@@ -21769,7 +21802,7 @@ function AccountDataRequestScreen({ lang, authUser, onClose, onSubmit }) {
   );
 }
 
-function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, viewContext, onDeleteAllMeasures: onDeleteAllMeasuresRaw, orphanedCount, onRepairOrphanedData, poolMeasureCount, onGenerateReport, onWantPremiumForReport, onWantPremium, isPremium, setIsPremium, onWantManageSubscription, testerUntil, onRedeemTesterCode, portalBusy, portalError, onReplayOnboarding, aiEnabled, setAiEnabled, calibrationContribution, setCalibrationContribution, stripTester, setStripTester, lang, setLang, authUser, onSignOut, onSignIn, onDeleteAccount, dataConsent, onRevokeDataConsent, cguAcceptedDate, myPseudo }) {
+function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, viewContext, onDeleteAllMeasures: onDeleteAllMeasuresRaw, orphanedCount, onRepairOrphanedData, poolMeasureCount, onGenerateReport, onWantPremiumForReport, onWantPremium, isPremium, setIsPremium, onWantManageSubscription, testerUntil, onToggleTesterPremium, onRedeemTesterCode, portalBusy, portalError, onReplayOnboarding, aiEnabled, setAiEnabled, calibrationContribution, setCalibrationContribution, stripTester, setStripTester, lang, setLang, authUser, onSignOut, onSignIn, onDeleteAccount, dataConsent, onRevokeDataConsent, cguAcceptedDate, myPseudo }) {
   const [editingPool, setEditingPool] = useState(null);
   const [showLangPicker, setShowLangPicker] = useState(false);
   const [pendingLang, setPendingLang] = useState(lang);
@@ -22009,14 +22042,16 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
               {isPremium ? t("unlimited_active") : t("free_mode")}
             </div>
             <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)" }}>
-              {isPremium && testerUntil ? t("tester_active_until", { date: testerDateLabel(testerUntil) }) : t("premium_test")}
+              {testerUntil ? t("tester_active_until", { date: testerDateLabel(testerUntil) }) : t("premium_test")}
             </div>
           </div>
         </div>
         {/* v1.90.0 — L'annulation réelle d'un abonnement Stripe se fait dans le
             portail Stripe (bouton "Gérer mon abonnement"), plus via un toggle
             local qui ne coupait qu'un champ Firestore côté client. */}
-        {isPremium && testerUntil ? null : isPremium ? (
+        {testerUntil ? (
+          <ToggleSwitch checked={isPremium} onChange={onToggleTesterPremium} />
+        ) : isPremium ? (
           <button
             type="button"
             onClick={onWantManageSubscription}
@@ -22032,9 +22067,12 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
       {portalError && (
         <div style={{ fontSize: 12, color: "#c0392b", marginTop: -8, marginBottom: 10 }}>{portalError}</div>
       )}
+      {testerUntil && (
+        <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginTop: -4, marginBottom: 12 }}>{t("tester_toggle_hint")}</div>
+      )}
 
       {/* v1.146.0 — Code testeur (test fermé Google Play) */}
-      {!isPremium && authUser && !viewContext && (
+      {!isPremium && !testerUntil && authUser && !viewContext && (
         <div style={{ marginTop: -4, marginBottom: 12 }}>
           <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--brand-text-secondary)", marginBottom: 6 }}>
             {t("tester_code_link")}
