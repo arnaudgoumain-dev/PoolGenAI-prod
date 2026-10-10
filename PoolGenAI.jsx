@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.145.0";
+const APP_VERSION = "1.146.0";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -694,6 +694,24 @@ const TRANSLATIONS = {
     paywall_plan_yearly: "Annuel",
     paywall_plan_yearly_badge: "-30%",
     manage_subscription_btn: "Gérer mon abonnement",
+    ai_err_daily_limit: "Limite quotidienne d'analyses IA atteinte (50 par jour). Réessaie demain.",
+    ai_err_tester_user: "Quota IA testeur atteint pour aujourd'hui (10 analyses par jour). Le reste de l'application reste utilisable ; réessaie demain.",
+    ai_err_tester_day: "Le quota IA partagé entre testeurs est atteint pour aujourd'hui. Le reste de l'application reste utilisable ; réessaie demain.",
+    ai_err_tester_total: "Le budget IA prévu pour la période de test est épuisé. Les autres fonctions de l'application restent disponibles.",
+    ai_err_tester_unavailable: "Quota IA momentanément indisponible. Réessaie dans quelques minutes.",
+    ai_err_tester_expired: "Ta période de test Premium est terminée.",
+    tester_code_link: "J'ai un code testeur",
+    tester_code_placeholder: "Code testeur",
+    tester_code_apply: "Activer",
+    tester_active_until: "Premium testeur actif jusqu'au {date}",
+    tester_redeem_ok: "Premium testeur activé jusqu'au {date}.",
+    tester_err_invalid_code: "Code invalide.",
+    tester_err_code_expired: "Ce code a expiré.",
+    tester_err_code_full: "Ce code a atteint son nombre maximal d'utilisations.",
+    tester_err_already_used: "Ce compte a déjà utilisé son essai testeur.",
+    tester_err_already_premium: "Ce compte est déjà Premium.",
+    tester_err_redeem_rate: "Trop de tentatives. Réessaie demain.",
+    tester_err_generic: "Activation impossible. Réessaie.",
     checkout_error: "Impossible de démarrer le paiement. Réessaie.",
     portal_error: "Impossible d'ouvrir la gestion de l'abonnement. Réessaie.",
     stripe_activation_checking: "Confirmation de ton paiement en cours…",
@@ -1526,6 +1544,24 @@ const TRANSLATIONS = {
     paywall_plan_yearly: "Yearly",
     paywall_plan_yearly_badge: "-30%",
     manage_subscription_btn: "Manage subscription",
+    ai_err_daily_limit: "Daily AI analysis limit reached (50 per day). Try again tomorrow.",
+    ai_err_tester_user: "Tester AI quota reached for today (10 analyses per day). The rest of the app stays available; try again tomorrow.",
+    ai_err_tester_day: "The AI quota shared by all testers is used up for today. The rest of the app stays available; try again tomorrow.",
+    ai_err_tester_total: "The AI budget for the test period is used up. The other features of the app remain available.",
+    ai_err_tester_unavailable: "AI quota temporarily unavailable. Try again in a few minutes.",
+    ai_err_tester_expired: "Your Premium test period has ended.",
+    tester_code_link: "I have a tester code",
+    tester_code_placeholder: "Tester code",
+    tester_code_apply: "Activate",
+    tester_active_until: "Tester Premium active until {date}",
+    tester_redeem_ok: "Tester Premium activated until {date}.",
+    tester_err_invalid_code: "Invalid code.",
+    tester_err_code_expired: "This code has expired.",
+    tester_err_code_full: "This code has reached its maximum number of uses.",
+    tester_err_already_used: "This account has already used its tester trial.",
+    tester_err_already_premium: "This account is already Premium.",
+    tester_err_redeem_rate: "Too many attempts. Try again tomorrow.",
+    tester_err_generic: "Activation failed. Try again.",
     checkout_error: "Couldn't start checkout. Try again.",
     portal_error: "Couldn't open subscription management. Try again.",
     stripe_activation_checking: "Confirming your payment…",
@@ -2357,6 +2393,24 @@ const TRANSLATIONS = {
     paywall_plan_yearly: "Jährlich",
     paywall_plan_yearly_badge: "-30%",
     manage_subscription_btn: "Abo verwalten",
+    ai_err_daily_limit: "Tageslimit für KI-Analysen erreicht (50 pro Tag). Versuche es morgen erneut.",
+    ai_err_tester_user: "KI-Kontingent für Tester für heute erreicht (10 Analysen pro Tag). Der Rest der App bleibt nutzbar; versuche es morgen erneut.",
+    ai_err_tester_day: "Das gemeinsame KI-Kontingent aller Tester ist für heute aufgebraucht. Der Rest der App bleibt nutzbar; versuche es morgen erneut.",
+    ai_err_tester_total: "Das KI-Budget für den Testzeitraum ist aufgebraucht. Die übrigen Funktionen der App bleiben verfügbar.",
+    ai_err_tester_unavailable: "KI-Kontingent vorübergehend nicht verfügbar. Versuche es in ein paar Minuten erneut.",
+    ai_err_tester_expired: "Dein Premium-Testzeitraum ist beendet.",
+    tester_code_link: "Ich habe einen Testercode",
+    tester_code_placeholder: "Testercode",
+    tester_code_apply: "Aktivieren",
+    tester_active_until: "Tester-Premium aktiv bis {date}",
+    tester_redeem_ok: "Tester-Premium aktiviert bis {date}.",
+    tester_err_invalid_code: "Ungültiger Code.",
+    tester_err_code_expired: "Dieser Code ist abgelaufen.",
+    tester_err_code_full: "Dieser Code hat die maximale Anzahl an Verwendungen erreicht.",
+    tester_err_already_used: "Dieses Konto hat seinen Testzeitraum bereits genutzt.",
+    tester_err_already_premium: "Dieses Konto ist bereits Premium.",
+    tester_err_redeem_rate: "Zu viele Versuche. Versuche es morgen erneut.",
+    tester_err_generic: "Aktivierung fehlgeschlagen. Versuche es erneut.",
     checkout_error: "Bezahlung konnte nicht gestartet werden. Versuche es erneut.",
     portal_error: "Abo-Verwaltung konnte nicht geöffnet werden. Versuche es erneut.",
     stripe_activation_checking: "Zahlung wird bestätigt…",
@@ -3184,6 +3238,24 @@ const TRANSLATIONS = {
     paywall_plan_yearly: "Annuale",
     paywall_plan_yearly_badge: "-30%",
     manage_subscription_btn: "Gestisci abbonamento",
+    ai_err_daily_limit: "Limite giornaliero di analisi IA raggiunto (50 al giorno). Riprova domani.",
+    ai_err_tester_user: "Quota IA tester raggiunta per oggi (10 analisi al giorno). Il resto dell'app resta utilizzabile; riprova domani.",
+    ai_err_tester_day: "La quota IA condivisa tra i tester è esaurita per oggi. Il resto dell'app resta utilizzabile; riprova domani.",
+    ai_err_tester_total: "Il budget IA previsto per il periodo di test è esaurito. Le altre funzioni dell'app restano disponibili.",
+    ai_err_tester_unavailable: "Quota IA temporaneamente non disponibile. Riprova tra qualche minuto.",
+    ai_err_tester_expired: "Il tuo periodo di prova Premium è terminato.",
+    tester_code_link: "Ho un codice tester",
+    tester_code_placeholder: "Codice tester",
+    tester_code_apply: "Attiva",
+    tester_active_until: "Premium tester attivo fino al {date}",
+    tester_redeem_ok: "Premium tester attivato fino al {date}.",
+    tester_err_invalid_code: "Codice non valido.",
+    tester_err_code_expired: "Questo codice è scaduto.",
+    tester_err_code_full: "Questo codice ha raggiunto il numero massimo di utilizzi.",
+    tester_err_already_used: "Questo account ha già usato la prova tester.",
+    tester_err_already_premium: "Questo account è già Premium.",
+    tester_err_redeem_rate: "Troppi tentativi. Riprova domani.",
+    tester_err_generic: "Attivazione non riuscita. Riprova.",
     checkout_error: "Impossibile avviare il pagamento. Riprova.",
     portal_error: "Impossibile aprire la gestione dell'abbonamento. Riprova.",
     stripe_activation_checking: "Conferma del pagamento in corso…",
@@ -4011,6 +4083,24 @@ const TRANSLATIONS = {
     paywall_plan_yearly: "Anual",
     paywall_plan_yearly_badge: "-30%",
     manage_subscription_btn: "Gestionar suscripción",
+    ai_err_daily_limit: "Límite diario de análisis de IA alcanzado (50 al día). Inténtalo mañana.",
+    ai_err_tester_user: "Cuota de IA de probador alcanzada por hoy (10 análisis al día). El resto de la app sigue disponible; inténtalo mañana.",
+    ai_err_tester_day: "La cuota de IA compartida entre probadores se ha agotado por hoy. El resto de la app sigue disponible; inténtalo mañana.",
+    ai_err_tester_total: "El presupuesto de IA previsto para el periodo de prueba se ha agotado. Las demás funciones de la app siguen disponibles.",
+    ai_err_tester_unavailable: "Cuota de IA temporalmente no disponible. Inténtalo en unos minutos.",
+    ai_err_tester_expired: "Tu periodo de prueba Premium ha terminado.",
+    tester_code_link: "Tengo un código de probador",
+    tester_code_placeholder: "Código de probador",
+    tester_code_apply: "Activar",
+    tester_active_until: "Premium de probador activo hasta el {date}",
+    tester_redeem_ok: "Premium de probador activado hasta el {date}.",
+    tester_err_invalid_code: "Código no válido.",
+    tester_err_code_expired: "Este código ha caducado.",
+    tester_err_code_full: "Este código ha alcanzado su número máximo de usos.",
+    tester_err_already_used: "Esta cuenta ya ha usado su prueba de probador.",
+    tester_err_already_premium: "Esta cuenta ya es Premium.",
+    tester_err_redeem_rate: "Demasiados intentos. Inténtalo mañana.",
+    tester_err_generic: "No se pudo activar. Inténtalo de nuevo.",
     checkout_error: "No se pudo iniciar el pago. Inténtalo de nuevo.",
     portal_error: "No se pudo abrir la gestión de la suscripción. Inténtalo de nuevo.",
     stripe_activation_checking: "Confirmando tu pago…",
@@ -4835,6 +4925,24 @@ const TRANSLATIONS = {
     paywall_plan_yearly: "Anual",
     paywall_plan_yearly_badge: "-30%",
     manage_subscription_btn: "Gerir assinatura",
+    ai_err_daily_limit: "Limite diário de análises de IA atingido (50 por dia). Tenta novamente amanhã.",
+    ai_err_tester_user: "Quota de IA de testador atingida para hoje (10 análises por dia). O resto da app continua disponível; tenta novamente amanhã.",
+    ai_err_tester_day: "A quota de IA partilhada entre testadores esgotou-se por hoje. O resto da app continua disponível; tenta novamente amanhã.",
+    ai_err_tester_total: "O orçamento de IA previsto para o período de teste esgotou-se. As outras funções da app continuam disponíveis.",
+    ai_err_tester_unavailable: "Quota de IA temporariamente indisponível. Tenta novamente dentro de alguns minutos.",
+    ai_err_tester_expired: "O teu período de teste Premium terminou.",
+    tester_code_link: "Tenho um código de testador",
+    tester_code_placeholder: "Código de testador",
+    tester_code_apply: "Ativar",
+    tester_active_until: "Premium de testador ativo até {date}",
+    tester_redeem_ok: "Premium de testador ativado até {date}.",
+    tester_err_invalid_code: "Código inválido.",
+    tester_err_code_expired: "Este código expirou.",
+    tester_err_code_full: "Este código atingiu o número máximo de utilizações.",
+    tester_err_already_used: "Esta conta já utilizou o seu teste de testador.",
+    tester_err_already_premium: "Esta conta já é Premium.",
+    tester_err_redeem_rate: "Demasiadas tentativas. Tenta novamente amanhã.",
+    tester_err_generic: "Não foi possível ativar. Tenta novamente.",
     checkout_error: "Não foi possível iniciar o pagamento. Tenta novamente.",
     portal_error: "Não foi possível abrir a gestão da assinatura. Tenta novamente.",
     stripe_activation_checking: "A confirmar o teu pagamento…",
@@ -5001,6 +5109,28 @@ const TRANSLATIONS = {
     revocation_response_error: "Erro ao processar o pedido.",
   },
 };
+
+// v1.146.0 — Langue courante pour les messages d'erreur produits hors des
+// composants (appels IA) ; mise à jour par l'App quand la langue change.
+let CURRENT_LANG = "fr";
+const AI_ERROR_CODE_KEYS = {
+  daily_limit: "ai_err_daily_limit",
+  tester_quota_user: "ai_err_tester_user",
+  tester_quota_day: "ai_err_tester_day",
+  tester_quota_total: "ai_err_tester_total",
+  tester_quota_error: "ai_err_tester_unavailable",
+  tester_expired: "ai_err_tester_expired",
+};
+// Lève l'erreur d'une réponse non-OK du proxy IA. Les codes connus (quotas
+// abonnés / testeurs) sont traduits ; sinon message brut comme avant.
+async function throwAiHttpError(response) {
+  const err = await response.json().catch(() => ({}));
+  const key = AI_ERROR_CODE_KEYS[err?.code];
+  const dict = TRANSLATIONS[CURRENT_LANG] || TRANSLATIONS.fr;
+  const e = new Error(key ? (dict[key] || TRANSLATIONS.fr[key]) : (err?.error?.message || err?.error || `Erreur Anthropic ${response.status}`));
+  if (err?.code) e.code = err.code;
+  throw e;
+}
 
 function useT(lang) {
   return function t(key, vars) {
@@ -6821,10 +6951,7 @@ async function callAIWithImage({ apiKey, prompt, imageDataUrl, uid: callerUid, m
       ...(enableWebSearch ? { tools: [{ type: "web_search_20250305", name: "web_search" }] } : {}),
     }),
   });
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err?.error?.message || err?.error || `Erreur Anthropic ${response.status}`);
-  }
+  if (!response.ok) await throwAiHttpError(response);
   const data = await response.json();
   // v1.47.0 — Avec la recherche web activée, la réponse peut contenir
   // plusieurs blocs (server_tool_use, web_search_tool_result, text...). Le
@@ -6853,10 +6980,7 @@ async function callAIText({ apiKey, prompt, uid: callerUid }) {
       messages: [{ role: "user", content: prompt }],
     }),
   });
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err?.error?.message || err?.error || `Erreur Anthropic ${response.status}`);
-  }
+  if (!response.ok) await throwAiHttpError(response);
   const data = await response.json();
   return (data.content || []).find((b) => b.type === "text")?.text || "";
 }
@@ -8862,8 +8986,50 @@ function PoolGenAIApp() {
       setPortalBusy(false);
     }
   }
+  // v1.146.0 — Programme testeurs : saisie d'un code testeur (Worker
+  // /tester/redeem). Le Premium arrive ensuite par le snapshot temps réel de
+  // config/main. Retourne { ok, code, until } pour que l'écran affiche le message.
+  async function handleRedeemTesterCode(code) {
+    if (!authUser) return { ok: false, code: "generic" };
+    try {
+      const idToken = await authUser.getIdToken();
+      const res = await fetch(`${PROXY_BASE_URL}/tester/redeem`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ code }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        track("tester_code_redeemed");
+        return { ok: true, until: data.until };
+      }
+      return { ok: false, code: data.code || "generic", detail: data.error || `HTTP ${res.status}` };
+    } catch (e) {
+      return { ok: false, code: "generic", detail: e.message };
+    }
+  }
   const [showAddPool, setShowAddPool] = useState(false);
   const [lang, setLang] = useState("fr");
+  useEffect(() => { CURRENT_LANG = lang; }, [lang]);
+  // v1.146.0 — Fin du Premium testeur (ISO) si le compte est en essai testeur.
+  const [testerUntil, setTesterUntil] = useState(null);
+  // v1.146.0 — Fin de l'essai testeur : le Worker retire le Premium (source
+  // de vérité serveur) ; l'app le déclenche à l'échéance, ou au démarrage si
+  // la date est déjà passée, puis le snapshot de config/main se met à jour.
+  useEffect(() => {
+    if (!authUser?.uid || !testerUntil) return;
+    const run = async () => {
+      try {
+        const idToken = await authUser.getIdToken();
+        await fetch(`${PROXY_BASE_URL}/tester/status`, { method: "POST", headers: { Authorization: `Bearer ${idToken}` } });
+      } catch (e) { /* réessayé au prochain démarrage */ }
+    };
+    const ms = Date.parse(testerUntil) - Date.now();
+    if (ms <= 0) { run(); return; }
+    if (ms > 2147483000) return;
+    const id = setTimeout(run, ms + 1000);
+    return () => clearTimeout(id);
+  }, [authUser?.uid, testerUntil]);
   const [isPremium, setIsPremium] = useState(false);
   // v1.96.4 — Suivi séparé de "ma config de compte a été reçue au moins une
   // fois" et de la valeur brute de config/main.premiumDefaultsApplied (true |
@@ -9345,6 +9511,8 @@ function PoolGenAIApp() {
       // vérifie déjà le Worker (userConfig?.isPremium).
       const realIsPremium = !!config.isPremium;
       setIsPremium((prev) => (prev === realIsPremium ? prev : realIsPremium));
+      const sub = config.subscription;
+      setTesterUntil(realIsPremium && sub?.provider === "tester" && sub?.status === "tester" && sub?.until ? sub.until : null);
       window.storage.set(STORAGE_KEYS.premium, JSON.stringify(realIsPremium)).catch(() => {});
       // v1.96.4 — Valeur brute (true | false | undefined), lue à chaque
       // snapshot : voir l'effet dédié à premiumDefaultsApplied plus bas pour
@@ -11775,6 +11943,8 @@ function PoolGenAIApp() {
             isPremium={isPremium}
             setIsPremium={setIsPremium}
             onWantManageSubscription={handleOpenPortal}
+            testerUntil={testerUntil}
+            onRedeemTesterCode={handleRedeemTesterCode}
             portalBusy={portalBusy}
             portalError={portalError}
             onReplayOnboarding={() => setShowOnboarding(true)}
@@ -14827,6 +14997,7 @@ Si aucun tableau Diagnostic IA n'est présent dans le document, retourne "diagno
         }),
       });
 
+      if (!response.ok) await throwAiHttpError(response);
       const data = await response.json();
       const text = data.content?.map(c => c.text || "").join("").trim();
       const clean = text.replace(/```json|```/g, "").trim();
@@ -21598,7 +21769,7 @@ function AccountDataRequestScreen({ lang, authUser, onClose, onSubmit }) {
   );
 }
 
-function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, viewContext, onDeleteAllMeasures: onDeleteAllMeasuresRaw, orphanedCount, onRepairOrphanedData, poolMeasureCount, onGenerateReport, onWantPremiumForReport, onWantPremium, isPremium, setIsPremium, onWantManageSubscription, portalBusy, portalError, onReplayOnboarding, aiEnabled, setAiEnabled, calibrationContribution, setCalibrationContribution, stripTester, setStripTester, lang, setLang, authUser, onSignOut, onSignIn, onDeleteAccount, dataConsent, onRevokeDataConsent, cguAcceptedDate, myPseudo }) {
+function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, viewContext, onDeleteAllMeasures: onDeleteAllMeasuresRaw, orphanedCount, onRepairOrphanedData, poolMeasureCount, onGenerateReport, onWantPremiumForReport, onWantPremium, isPremium, setIsPremium, onWantManageSubscription, testerUntil, onRedeemTesterCode, portalBusy, portalError, onReplayOnboarding, aiEnabled, setAiEnabled, calibrationContribution, setCalibrationContribution, stripTester, setStripTester, lang, setLang, authUser, onSignOut, onSignIn, onDeleteAccount, dataConsent, onRevokeDataConsent, cguAcceptedDate, myPseudo }) {
   const [editingPool, setEditingPool] = useState(null);
   const [showLangPicker, setShowLangPicker] = useState(false);
   const [pendingLang, setPendingLang] = useState(lang);
@@ -21611,7 +21782,29 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
   const [pseudoInput, setPseudoInput] = useState(myPseudo || "");
   const [pseudoBusy, setPseudoBusy] = useState(false);
   const [pseudoMsg, setPseudoMsg] = useState(null);
+  // v1.146.0 — Saisie du code testeur (programme de test fermé).
+  const [testerCode, setTesterCode] = useState("");
+  const [testerBusy, setTesterBusy] = useState(false);
+  const [testerMsg, setTesterMsg] = useState(null);
   const t = useT(lang);
+  const testerDateLabel = (iso) => { try { return new Date(iso).toLocaleDateString(lang); } catch (e) { return ""; } };
+
+  async function handleSubmitTesterCode() {
+    if (!testerCode.trim() || testerBusy) return;
+    setTesterBusy(true);
+    setTesterMsg(null);
+    const r = await onRedeemTesterCode(testerCode.trim());
+    setTesterBusy(false);
+    if (r.ok) {
+      setTesterMsg({ type: "ok", text: t("tester_redeem_ok", { date: testerDateLabel(r.until) }) });
+      setTesterCode("");
+    } else {
+      const key = `tester_err_${r.code}`;
+      // Hors PROD, le détail technique du serveur est affiché pour diagnostiquer.
+      const detail = r.detail && PROXY_BASE_URL !== PROXY_URLS.prod ? ` [${r.detail}]` : "";
+      setTesterMsg({ type: "error", text: (TRANSLATIONS.fr[key] ? t(key) : t("tester_err_generic")) + detail });
+    }
+  }
 
   useEffect(() => { setPseudoInput(myPseudo || ""); }, [myPseudo]);
 
@@ -21816,14 +22009,14 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
               {isPremium ? t("unlimited_active") : t("free_mode")}
             </div>
             <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)" }}>
-              {t("premium_test")}
+              {isPremium && testerUntil ? t("tester_active_until", { date: testerDateLabel(testerUntil) }) : t("premium_test")}
             </div>
           </div>
         </div>
         {/* v1.90.0 — L'annulation réelle d'un abonnement Stripe se fait dans le
             portail Stripe (bouton "Gérer mon abonnement"), plus via un toggle
             local qui ne coupait qu'un champ Firestore côté client. */}
-        {isPremium ? (
+        {isPremium && testerUntil ? null : isPremium ? (
           <button
             type="button"
             onClick={onWantManageSubscription}
@@ -21838,6 +22031,44 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
       </div>
       {portalError && (
         <div style={{ fontSize: 12, color: "#c0392b", marginTop: -8, marginBottom: 10 }}>{portalError}</div>
+      )}
+
+      {/* v1.146.0 — Code testeur (test fermé Google Play) */}
+      {!isPremium && authUser && !viewContext && (
+        <div style={{ marginTop: -4, marginBottom: 12 }}>
+          <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--brand-text-secondary)", marginBottom: 6 }}>
+            {t("tester_code_link")}
+          </div>
+          {(
+            <div style={{ display: "flex", gap: 8 }}>
+              <input
+                type="text"
+                style={{ ...styles.input, flex: 1, textTransform: "uppercase" }}
+                value={testerCode}
+                onChange={(e) => setTesterCode(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleSubmitTesterCode(); }}
+                placeholder={t("tester_code_placeholder")}
+                maxLength={40}
+                autoCapitalize="characters"
+                autoCorrect="off"
+                spellCheck={false}
+              />
+              <button
+                type="button"
+                style={{ padding: "0 16px", borderRadius: 10, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer", flexShrink: 0, opacity: testerBusy || !testerCode.trim() ? 0.6 : 1 }}
+                onClick={handleSubmitTesterCode}
+                disabled={testerBusy || !testerCode.trim()}
+              >
+                {testerBusy ? "..." : t("tester_code_apply")}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+      {testerMsg && (
+        <div style={{ fontSize: 12, color: testerMsg.type === "error" ? "#c0392b" : "#1a7a4a", marginTop: -6, marginBottom: 10 }}>
+          {testerMsg.text}
+        </div>
       )}
 
       <p style={styles.helpText}>
