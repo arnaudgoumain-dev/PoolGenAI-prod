@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.146.1";
+const APP_VERSION = "1.146.2";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -5119,6 +5119,17 @@ const TRANSLATIONS = {
 // v1.146.0 — Langue courante pour les messages d'erreur produits hors des
 // composants (appels IA) ; mise à jour par l'App quand la langue change.
 let CURRENT_LANG = "fr";
+// v1.146.2 — Langue de l'appareil parmi celles gérées (repli : anglais, quand
+// la langue du téléphone n'est pas disponible dans l'app). Sert de langue de
+// départ tant que ni l'appareil ni le compte n'en ont mémorisé une.
+function detectDeviceLang() {
+  try {
+    const nav = (navigator.language || navigator.userLanguage || "en").toLowerCase().slice(0, 2);
+    return ["fr", "en", "de", "it", "es", "pt"].includes(nav) ? nav : "en";
+  } catch (e) {
+    return "en";
+  }
+}
 const AI_ERROR_CODE_KEYS = {
   daily_limit: "ai_err_daily_limit",
   tester_quota_user: "ai_err_tester_user",
@@ -9015,7 +9026,7 @@ function PoolGenAIApp() {
     }
   }
   const [showAddPool, setShowAddPool] = useState(false);
-  const [lang, setLang] = useState("fr");
+  const [lang, setLang] = useState(detectDeviceLang);
   useEffect(() => { CURRENT_LANG = lang; }, [lang]);
   // v1.146.0 — Fin du Premium testeur (ISO) si le compte est en essai testeur.
   const [testerUntil, setTesterUntil] = useState(null);
@@ -9135,10 +9146,7 @@ function PoolGenAIApp() {
   // (comptes Google, cguVersion cloud absent) et "version dépassée" (re-acceptation).
   // Se recalcule automatiquement dès que acceptedCguVersion change (ex: rapatriement
   // cloud après connexion), contrairement à l'ancien setShowCguUpdate posé une seule fois.
-  const detectedLang = (() => {
-    const nav = (navigator.language || navigator.userLanguage || "fr").toLowerCase().slice(0, 2);
-    return ["fr","en","de","it","es","pt"].includes(nav) ? nav : "fr";
-  })();
+  const detectedLang = detectDeviceLang();
   const [validatingSelectedRecs, setValidatingSelectedRecs] = useState(null);
   const [showReport, setShowReport] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState(null);
@@ -10904,7 +10912,8 @@ function PoolGenAIApp() {
       : new Date(now);
     let recalcSteps = stepsWithSplit.map((s, i) => {
       if (i <= afterIdx) return s;
-      const scheduled = new Date(lastApplied.getTime() + (stepsWithSplit[i-1]?.waitHours || 0) * 3600 * 1000);
+      // v1.146.2 — une étape passée n'ajoute aucun délai.
+      const scheduled = new Date(lastApplied.getTime() + (stepsWithSplit[i-1]?.skipped ? 0 : (stepsWithSplit[i-1]?.waitHours || 0)) * 3600 * 1000);
       lastApplied = scheduled;
       return { ...s, scheduledAt: scheduled.toISOString() };
     });
@@ -11048,6 +11057,7 @@ function PoolGenAIApp() {
       let prevWait = steps[stepIdx].waitHours || 0;
       steps = steps.map((st, i) => {
         if (i <= stepIdx) return st;
+        if (st.skipped) return st; // v1.146.2 — une étape passée n'avance pas l'horloge
         if (stepIsResolved(st)) {
           if (!st.noAction && st.appliedAt) refTs = new Date(st.appliedAt).getTime();
           prevWait = st.waitHours || 0;
@@ -11075,9 +11085,30 @@ function PoolGenAIApp() {
   // Passe une étape
   function skipWizardStep(stepIdx) {
     if (!activePlan) return;
-    const newSteps = activePlan.steps.map((s, i) =>
+    let newSteps = activePlan.steps.map((s, i) =>
       i === stepIdx ? { ...s, skipped: true, appliedAt: new Date().toISOString() } : s
     );
+    // v1.146.2 — Une étape passée n'a rien changé à l'eau : le délai avant la
+    // suite ne doit courir que depuis la dernière étape RÉELLEMENT appliquée
+    // (ex. plan en 3 étapes dont la 2e est passée : la 3e est à X h de la 1re,
+    // pas de la 1re + la 2e).
+    let ref = null;
+    for (let k = stepIdx - 1; k >= 0; k--) {
+      const p = newSteps[k];
+      if (p.appliedAt && !p.skipped && !p.noAction && p.mode !== "entretien") {
+        ref = new Date(p.appliedAt).getTime() + (p.waitHours || 0) * 3600 * 1000;
+        break;
+      }
+    }
+    if (ref != null) {
+      let cursor = ref;
+      newSteps = newSteps.map((st, i) => {
+        if (i <= stepIdx || stepIsResolved(st)) return st;
+        const out = { ...st, scheduledAt: new Date(cursor).toISOString() };
+        cursor += (st.waitHours || 0) * 3600 * 1000;
+        return out;
+      });
+    }
     let nextIdx = stepIdx + 1;
     while (nextIdx < newSteps.length && stepIsResolved(newSteps[nextIdx])) nextIdx++;
     const allDone = nextIdx >= newSteps.length;
@@ -13048,10 +13079,20 @@ Réponds directement en français, sans titre ni introduction.`;
                 if (r.isComplement && recGroups.length) recGroups[recGroups.length - 1].extras.push(r);
                 else recGroups.push({ main: r, extras: [] });
               });
+              // v1.146.2 — Délai d'attente affiché sur la carte : les étapes
+              // passées du plan ne comptent pas (voir skipWizardStep).
+              const startsAfterFor = (rec, planStep) => {
+                const idx = planStep ? stepsSrc.indexOf(planStep) : -1;
+                if (idx <= 0) return rec;
+                const before = stepsSrc.slice(0, idx);
+                if (!before.some((x) => x.skipped)) return rec;
+                const hours = before.filter((x) => !x.skipped).reduce((a, x) => a + (x.waitHours || 0), 0);
+                return hours === rec.startsAfterHours ? rec : { ...rec, startsAfterHours: hours };
+              };
               return recGroups.map((g, i) => (
                 <React.Fragment key={i}>
                   <RecoCard
-                    reco={g.main}
+                    reco={startsAfterFor(g.main, groups[i]?.main || null)}
                     isLast={i === recGroups.length - 1 && !(groups[i]?.subs || []).length}
                     manageStock={manageStock}
                     products={products}
