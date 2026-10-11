@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.146.2";
+const APP_VERSION = "1.146.4";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -8036,7 +8036,7 @@ function track(event, params) {
   try { window._fbLog && window._fbLog(event, params); } catch (e) {}
 }
 
-function LoginScreen({ lang, onSkip, onConsentChange, detectedLang }) {
+function LoginScreen({ lang, onSkip, onConsentChange, detectedLang, onChangeLang }) {
   const t = useT(lang || detectedLang || "fr");
   const [mode, setMode] = useState("login"); // login | signup | reset | done | disclaimer
   const [email, setEmail] = useState("");
@@ -8216,7 +8216,7 @@ When a user photographs a treatment product that does not yet have a photo in th
 
 By creating an account, the user acknowledges having read this document in full (Terms v1.3) and accepts its terms.`,
     };
-    const text = disclaimerText[detectedLang || lang] || disclaimerText.en;
+    const text = disclaimerText[lang || detectedLang] || disclaimerText.en;
     return (
       <div style={{ minHeight: "100vh", background: "#eaf4fb", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 16 }}>
         <div style={{ width: "100%", maxWidth: 480, background: "#fff", borderRadius: 20, padding: 24, boxShadow: "0 4px 24px var(--brand-primary)18", maxHeight: "90dvh", display: "flex", flexDirection: "column" }}>
@@ -8302,9 +8302,32 @@ By creating an account, the user acknowledges having read this document in full 
             <Droplets size={28} color="#fff" />
           </div>
           <div style={{ fontSize: 22, fontWeight: 800, color: "var(--brand-text-strong)" }}>PoolGenAI</div>
-          <div style={{ fontSize: 13, color: "var(--brand-text-muted)", marginTop: 2 }}>
-            {mode === "signup" ? t("create_account") : mode === "reset" ? t("reset_password") : t("sign_in")}
-          </div>
+          {mode !== "login" && (
+            <div style={{ fontSize: 13, color: "var(--brand-text-muted)", marginTop: 2 }}>
+              {mode === "signup" ? t("create_account") : t("reset_password")}
+            </div>
+          )}
+          {/* v1.146.3 — Choix de la langue dès l'écran de connexion (boutons) */}
+          {onChangeLang && (
+            <div style={{ display: "flex", gap: 6, marginTop: 12, flexWrap: "wrap", justifyContent: "center" }}>
+              {LANGUAGE_OPTIONS.map((opt) => {
+                const active = opt.value === (lang || detectedLang || "en");
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => onChangeLang(opt.value)}
+                    aria-label={opt.label}
+                    aria-pressed={active}
+                    title={opt.label}
+                    style={{ minWidth: 38, padding: "5px 8px", borderRadius: 8, border: active ? "1.5px solid var(--brand-primary)" : "1.5px solid #d0e4f5", background: active ? "var(--brand-primary)" : "#f8fafd", color: active ? "#fff" : "var(--brand-text-secondary)", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+                  >
+                    {opt.value.toUpperCase()}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {!firebaseReady && (
@@ -8454,7 +8477,13 @@ By creating an account, the user acknowledges having read this document in full 
             <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "center" }}>
               {mode === "login" && (
                 <>
-                  <button onClick={() => { setMode("signup"); setError(""); setPwd(""); setPwd2(""); }} style={{ background: "none", border: "none", color: "var(--brand-primary)", fontSize: 13, cursor: "pointer", fontWeight: 600 }}>{t("no_account")}</button>
+                  {/* v1.146.3 — "S'inscrire" en vrai bouton, de même gabarit que "Connexion" (variante contour) */}
+                  <button
+                    onClick={() => { setMode("signup"); setError(""); setPwd(""); setPwd2(""); }}
+                    style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "1.5px solid var(--brand-primary)", background: "#fff", color: "var(--brand-primary)", fontWeight: 700, fontSize: 15, cursor: "pointer" }}
+                  >
+                    {t("no_account")}
+                  </button>
                   <button onClick={() => { setMode("reset"); setError(""); }} style={{ background: "none", border: "none", color: "#9aa9a5", fontSize: 12, cursor: "pointer" }}>{t("forgot_password")}</button>
                 </>
               )}
@@ -9027,6 +9056,8 @@ function PoolGenAIApp() {
   }
   const [showAddPool, setShowAddPool] = useState(false);
   const [lang, setLang] = useState(detectDeviceLang);
+  const langRef = useRef(lang);
+  langRef.current = lang;
   useEffect(() => { CURRENT_LANG = lang; }, [lang]);
   // v1.146.0 — Fin du Premium testeur (ISO) si le compte est en essai testeur.
   const [testerUntil, setTesterUntil] = useState(null);
@@ -9072,6 +9103,7 @@ function PoolGenAIApp() {
   // doivent être (ré)appliqués par défaut. Voir cet effet pour le détail.
   const [accountConfigReceived, setAccountConfigReceived] = useState(false);
   const premiumDefaultsAppliedRef = useRef(undefined);
+
   const [myPseudo, setMyPseudo] = useState(""); // v1.55.0 — pseudo de mon compte (vide = fallback email)
   const [applications, setApplications] = useState([]);
   const [validatingMeasure, setValidatingMeasure] = useState(null);
@@ -9087,6 +9119,20 @@ function PoolGenAIApp() {
   function setActivePlan(value) {
     setActivePlanByPool((prev) => ({ ...prev, [activePoolId]: value }));
   }
+  // v1.146.3 — Plans déjà en cours dont une étape a été passée avant ce
+  // correctif : l'horaire de la suite est recalé (voir rescheduleAfterSkips).
+  useEffect(() => {
+    let changed = false;
+    const next = {};
+    Object.entries(activePlanByPool).forEach(([pid, plan]) => {
+      if (plan && Array.isArray(plan.steps)) {
+        const steps = rescheduleAfterSkips(plan.steps);
+        if (steps !== plan.steps) { changed = true; next[pid] = { ...plan, steps }; return; }
+      }
+      next[pid] = plan;
+    });
+    if (changed) setActivePlanByPool(next);
+  }, [activePlanByPool]);
   // v1.144.2 — Nettoyage des étapes "0 g" héritées (voir isZeroAppliedStep) :
   // plans en cours, puis applications enregistrées (réécrites dans le cloud).
   useEffect(() => {
@@ -9559,6 +9605,9 @@ function PoolGenAIApp() {
       // la logique complète (migration comprise).
       premiumDefaultsAppliedRef.current = config.premiumDefaultsApplied;
       setAccountConfigReceived(true);
+      // v1.146.3 — Compte sans langue enregistrée (compte neuf) : on y mémorise la
+      // langue courante (langue du terminal, ou celle choisie à la connexion).
+      if (!config.lang) syncOwnConfig({ lang: langRef.current });
       if (config.lang) {
         setLang((prev) => (prev === config.lang ? prev : config.lang));
         window.storage.set("app_lang", JSON.stringify(config.lang)).catch(() => {});
@@ -10910,10 +10959,10 @@ function PoolGenAIApp() {
       : needsSplit
       ? new Date(stepsWithSplit[afterIdx].scheduledAt)
       : new Date(now);
+    const effWaits = planEffectiveWaits(stepsWithSplit); // v1.146.3 — une étape passée n'ajoute aucun délai
     let recalcSteps = stepsWithSplit.map((s, i) => {
       if (i <= afterIdx) return s;
-      // v1.146.2 — une étape passée n'ajoute aucun délai.
-      const scheduled = new Date(lastApplied.getTime() + (stepsWithSplit[i-1]?.skipped ? 0 : (stepsWithSplit[i-1]?.waitHours || 0)) * 3600 * 1000);
+      const scheduled = new Date(lastApplied.getTime() + (effWaits[i - 1] || 0) * 3600 * 1000);
       lastApplied = scheduled;
       return { ...s, scheduledAt: scheduled.toISOString() };
     });
@@ -11088,27 +11137,9 @@ function PoolGenAIApp() {
     let newSteps = activePlan.steps.map((s, i) =>
       i === stepIdx ? { ...s, skipped: true, appliedAt: new Date().toISOString() } : s
     );
-    // v1.146.2 — Une étape passée n'a rien changé à l'eau : le délai avant la
-    // suite ne doit courir que depuis la dernière étape RÉELLEMENT appliquée
-    // (ex. plan en 3 étapes dont la 2e est passée : la 3e est à X h de la 1re,
-    // pas de la 1re + la 2e).
-    let ref = null;
-    for (let k = stepIdx - 1; k >= 0; k--) {
-      const p = newSteps[k];
-      if (p.appliedAt && !p.skipped && !p.noAction && p.mode !== "entretien") {
-        ref = new Date(p.appliedAt).getTime() + (p.waitHours || 0) * 3600 * 1000;
-        break;
-      }
-    }
-    if (ref != null) {
-      let cursor = ref;
-      newSteps = newSteps.map((st, i) => {
-        if (i <= stepIdx || stepIsResolved(st)) return st;
-        const out = { ...st, scheduledAt: new Date(cursor).toISOString() };
-        cursor += (st.waitHours || 0) * 3600 * 1000;
-        return out;
-      });
-    }
+    // v1.146.2/3 — Une étape passée n'a rien changé à l'eau : le délai avant la
+    // suite ne court que depuis la dernière étape RÉELLEMENT appliquée.
+    newSteps = rescheduleAfterSkips(newSteps);
     let nextIdx = stepIdx + 1;
     while (nextIdx < newSteps.length && stepIsResolved(newSteps[nextIdx])) nextIdx++;
     const allDone = nextIdx >= newSteps.length;
@@ -11819,6 +11850,12 @@ function PoolGenAIApp() {
         <LoginScreen
           lang={lang}
           detectedLang={detectedLang}
+          onChangeLang={(l) => {
+            // v1.146.3 — La langue choisie avant la connexion devient la langue de
+            // l'app (mémorisée sur l'appareil, puis sur le compte à sa création).
+            setLang(l);
+            window.storage.set("app_lang", JSON.stringify(l)).catch(() => {});
+          }}
           onSkip={() => {
             // Désactivé — la vérification email persistante (needsEmailVerification)
             // prend le relais automatiquement une fois cet écran fermé.
@@ -13086,7 +13123,7 @@ Réponds directement en français, sans titre ni introduction.`;
                 if (idx <= 0) return rec;
                 const before = stepsSrc.slice(0, idx);
                 if (!before.some((x) => x.skipped)) return rec;
-                const hours = before.filter((x) => !x.skipped).reduce((a, x) => a + (x.waitHours || 0), 0);
+                const hours = planEffectiveWaits(stepsSrc).slice(0, idx).reduce((a, x) => a + x, 0);
                 return hours === rec.startsAfterHours ? rec : { ...rec, startsAfterHours: hours };
               };
               return recGroups.map((g, i) => (
@@ -13867,6 +13904,55 @@ function wizardStatusLabel(app, t) {
 // PoolGenAIApp) car utilisée aussi par PlanStatusCard et TreatmentWizard.
 function stepIsResolved(s) {
   return !!s.skipped || !!s.appliedAt;
+}
+
+// v1.146.3 — Délais d'attente effectifs d'un plan : une étape passée n'ajoute
+// aucun délai (rien n'a été appliqué). Exception de sécurité : un complément
+// passé reporte son délai sur l'application précédente du même produit s'il
+// est plus long (ex. délai de 6 h pH -> chlore choc, porté par la dernière
+// étape pH du plan).
+function planEffectiveWaits(steps) {
+  const w = steps.map((st) => (st.skipped ? 0 : (st.waitHours || 0)));
+  steps.forEach((st, i) => {
+    if (!st.skipped || !st.isComplement) return;
+    let j = i - 1;
+    while (j >= 0 && steps[j].skipped && steps[j].isComplement && steps[j].action === st.action) j--;
+    if (j >= 0 && !steps[j].skipped && steps[j].action === st.action) w[j] = Math.max(w[j], st.waitHours || 0);
+  });
+  return w;
+}
+
+// v1.146.3 — Recale l'horaire prévu des étapes en attente qui suivent une étape
+// passée : le délai court depuis la dernière étape RÉELLEMENT appliquée.
+// Idempotent ; retourne le même tableau si rien ne change.
+function rescheduleAfterSkips(steps) {
+  const H = 3600 * 1000;
+  const w = planEffectiveWaits(steps);
+  let out = steps;
+  let ref = null;
+  let sawSkip = false;
+  let cursor = null;
+  steps.forEach((st, i) => {
+    if (st.skipped) { sawSkip = true; return; }
+    if (st.appliedAt) {
+      if (!st.noAction && st.mode !== "entretien") {
+        ref = new Date(st.appliedAt).getTime() + w[i] * H;
+        sawSkip = false;
+        cursor = null;
+      }
+      return;
+    }
+    if (sawSkip && ref != null) {
+      if (cursor == null) cursor = ref;
+      const iso = new Date(cursor).toISOString();
+      if (st.scheduledAt !== iso) {
+        if (out === steps) out = steps.slice();
+        out[i] = { ...st, scheduledAt: iso };
+      }
+      cursor += w[i] * H;
+    }
+  });
+  return out;
 }
 
 // v1.108.3 — Garde-fou dose anormale : compare le taux d'un produit
