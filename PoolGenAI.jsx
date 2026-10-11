@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.146.4";
+const APP_VERSION = "1.146.5";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -499,6 +499,7 @@ const TRANSLATIONS = {
     pool_photos_label: "Photos du bassin (optionnel)",
     pool_photo_locked: "Photos du bassin réservées à la version Premium",
     sign_in: "Connexion",
+    login_email_placeholder: "votre@email.com",
     account_section: "Mon compte",
     confirm_password: "Confirmer le mot de passe",
     pwd_min6: "6 caractères minimum",
@@ -1350,6 +1351,7 @@ const TRANSLATIONS = {
     pool_photos_label: "Pool photos (optional)",
     pool_photo_locked: "Pool photos reserved for Premium",
     sign_in: "Sign in",
+    login_email_placeholder: "your@email.com",
     account_section: "My account",
     confirm_password: "Confirm password",
     pwd_min6: "6 characters minimum",
@@ -2200,6 +2202,7 @@ const TRANSLATIONS = {
     pool_photos_label: "Beckenfotos (optional)",
     pool_photo_locked: "Beckenfotos nur in Premium",
     sign_in: "Anmelden",
+    login_email_placeholder: "ihre@email.com",
     account_section: "Mein Konto",
     confirm_password: "Passwort bestätigen",
     pwd_min6: "Mindestens 6 Zeichen",
@@ -3046,6 +3049,7 @@ const TRANSLATIONS = {
     pool_photos_label: "Foto vasca (opzionale)",
     pool_photo_locked: "Foto vasca riservate a Premium",
     sign_in: "Accedi",
+    login_email_placeholder: "tua@email.com",
     account_section: "Il mio account",
     confirm_password: "Conferma password",
     pwd_min6: "Minimo 6 caratteri",
@@ -3892,6 +3896,7 @@ const TRANSLATIONS = {
     pool_photos_label: "Fotos de la piscina (opcional)",
     pool_photo_locked: "Fotos de piscina reservadas para Premium",
     sign_in: "Iniciar sesión",
+    login_email_placeholder: "tu@email.com",
     account_section: "Mi cuenta",
     confirm_password: "Confirmar contraseña",
     pwd_min6: "Mínimo 6 caracteres",
@@ -4735,6 +4740,7 @@ const TRANSLATIONS = {
     pool_photos_label: "Fotos da piscina (opcional)",
     pool_photo_locked: "Fotos da piscina reservadas para o Premium",
     sign_in: "Entrar",
+    login_email_placeholder: "seu@email.com",
     account_section: "Minha conta",
     confirm_password: "Confirmar senha",
     pwd_min6: "Mínimo 6 caracteres",
@@ -8362,7 +8368,7 @@ By creating an account, the user acknowledges having read this document in full 
             <input
               type="email" value={email} onChange={e => setEmail(e.target.value)}
               style={{ width: "100%", padding: "11px 14px", borderRadius: 10, border: "1.5px solid #d0e4f5", fontSize: 14, marginBottom: 10, boxSizing: "border-box" }}
-              placeholder="votre@email.com"
+              placeholder={t("login_email_placeholder")}
               onKeyDown={e => e.key === "Enter" && mode !== "signup" && handleSubmit()}
             />
 
