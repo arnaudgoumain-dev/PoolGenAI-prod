@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.146.5";
+const APP_VERSION = "1.146.6";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -329,6 +329,9 @@ const TRANSLATIONS = {
     wizard_apply_time: "Heure d'application",
     wizard_edit_prev: "Modifier l'étape précédente",
     wizard_resume: "Reprendre le plan",
+    modify_measure: "Modifier la mesure",
+    delete_measure: "Supprimer la mesure",
+    confirm_delete_measure: "Supprimer la mesure du {date} ? Cette action est irréversible.",
     wizard_completed: "Plan de traitement terminé ✓",
     wizard_partial: "Plan en cours",
     wizard_completed_partial: "Plan terminé — {n} étape(s) non appliquée(s)",
@@ -1187,6 +1190,9 @@ const TRANSLATIONS = {
     wizard_apply_time: "Application time",
     wizard_edit_prev: "Edit previous step",
     wizard_resume: "Resume plan",
+    modify_measure: "Edit measurement",
+    delete_measure: "Delete measurement",
+    confirm_delete_measure: "Delete the measurement from {date}? This cannot be undone.",
     wizard_completed: "Treatment plan completed ✓",
     wizard_partial: "Plan in progress",
     wizard_completed_partial: "Plan completed — {n} step(s) not applied",
@@ -2035,6 +2041,9 @@ const TRANSLATIONS = {
     wizard_apply_time: "Anwendungszeitpunkt",
     wizard_edit_prev: "Vorherigen Schritt bearbeiten",
     wizard_resume: "Plan fortsetzen",
+    modify_measure: "Messung bearbeiten",
+    delete_measure: "Messung löschen",
+    confirm_delete_measure: "Die Messung vom {date} löschen? Das kann nicht rückgängig gemacht werden.",
     wizard_completed: "Behandlungsplan abgeschlossen ✓",
     wizard_partial: "Plan läuft",
     wizard_completed_partial: "Plan abgeschlossen — {n} Schritt/Schritte nicht angewendet",
@@ -2885,6 +2894,9 @@ const TRANSLATIONS = {
     wizard_apply_time: "Orario di applicazione",
     wizard_edit_prev: "Modifica fase precedente",
     wizard_resume: "Riprendi piano",
+    modify_measure: "Modifica la misurazione",
+    delete_measure: "Elimina la misurazione",
+    confirm_delete_measure: "Eliminare la misurazione del {date}? L'azione è irreversibile.",
     wizard_completed: "Piano di trattamento completato ✓",
     wizard_partial: "Piano in corso",
     wizard_completed_partial: "Piano completato — {n} passaggi non applicati",
@@ -3732,6 +3744,9 @@ const TRANSLATIONS = {
     wizard_apply_time: "Hora de aplicación",
     wizard_edit_prev: "Editar paso anterior",
     wizard_resume: "Reanudar plan",
+    modify_measure: "Editar la medición",
+    delete_measure: "Eliminar la medición",
+    confirm_delete_measure: "¿Eliminar la medición del {date}? Esta acción no se puede deshacer.",
     wizard_completed: "Plan de tratamiento completado ✓",
     wizard_partial: "Plan en curso",
     wizard_completed_partial: "Plan completado — {n} paso(s) no aplicado(s)",
@@ -4579,6 +4594,9 @@ const TRANSLATIONS = {
     wizard_apply_time: "Hora de aplicação",
     wizard_edit_prev: "Editar etapa anterior",
     wizard_resume: "Retomar plano",
+    modify_measure: "Editar a medição",
+    delete_measure: "Excluir a medição",
+    confirm_delete_measure: "Excluir a medição de {date}? Esta ação é irreversível.",
     wizard_completed: "Plano de tratamento concluído ✓",
     wizard_partial: "Plano em andamento",
     wizard_completed_partial: "Plano concluído — {n} etapa(s) não aplicada(s)",
@@ -10771,6 +10789,28 @@ function PoolGenAIApp() {
     return rebalanced;
   }
 
+  // v1.146.6 — Reprise d'un plan depuis l'historique : le plan en cours de cette
+  // mesure, ou à défaut reconstitué depuis l'application enregistrée (plan non
+  // clos perdu localement). Sans effet si le plan d'une autre mesure est en cours.
+  function resumePlanForMeasure(measure) {
+    if (!measure) return;
+    if (activePlan) {
+      if (activePlan.measureId === measure.id) resumePlan();
+      return;
+    }
+    const saved = (applications || []).find((a) => a.measureId === measure.id);
+    if (!saved || !(saved.steps || []).some((st) => !stepIsResolved(st))) return;
+    const volume = activePool?.volume || 0;
+    const recsNow = computeRecommendations(measure, volume, poolProducts, effectiveTargets, activeParamKeys, tFn, computeParamTrends(poolMeasures, measure, poolApplications, poolProducts, volume));
+    const restored = saved.steps.map((st) => {
+      const r = recsNow.find((x) => x.title === st.title);
+      return { ...st, waitHours: st.waitHours ?? r?.waitHours ?? 0, maxDoseAmount: st.maxDoseAmount ?? r?.maxDoseAmount ?? null, note: st.note ?? r?.note ?? null, productPhoto: st.productPhoto ?? r?.productPhoto ?? null, productAvailable: st.productAvailable ?? r?.productAvailable ?? true };
+    });
+    const nextIdx = restored.findIndex((st) => !stepIsResolved(st));
+    setActivePlan({ measureId: measure.id, steps: restored, currentStepIdx: nextIdx });
+    setShowWizard(true);
+  }
+
   // v1.144.1 — "Reprendre le plan" : un plan dont toutes les étapes sont
   // résolues n'a plus rien à proposer (l'assistant restait vide, bouton
   // muet). Si l'application enregistrée contient encore des étapes en
@@ -11947,6 +11987,7 @@ function PoolGenAIApp() {
               setShowAddMeasure(true);
             }}
             onValidateApplication={handleValidateApplication}
+            onResumePlan={resumePlanForMeasure}
             applications={poolApplications}
             isPremium={effectiveIsPremium}
             poolName={activePool?.name}
@@ -15054,7 +15095,7 @@ function niceAxisBounds(dataMin, dataMax, fallbackMax) {
 }
 
 // ---------- Historique ----------
-function HistoryView({ measures, onDelete, onDeleteManualApplication, onEdit, onAdd, onAddPrefilled, onValidateApplication, applications, isPremium, poolName, onGenerateReport, onWantPremiumForReport, lang, apiKey, apiProvider, authUid, pool, activePlan, products }) {
+function HistoryView({ measures, onDelete, onDeleteManualApplication, onEdit, onAdd, onAddPrefilled, onValidateApplication, onResumePlan, applications, isPremium, poolName, onGenerateReport, onWantPremiumForReport, lang, apiKey, apiProvider, authUid, pool, activePlan, products }) {
   const t = useT(lang);
   // v1.118.0 — Cibles/paramètres actifs du bassin, pour savoir si une mesure
   // du Journal est déjà entièrement dans sa cible (voir demande Arnaud : ne
@@ -15790,6 +15831,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
                 onDelete={() => onDelete(item.m.id)}
                 onEdit={() => onEdit(item.m, applications.find((a) => a.measureId === item.m.id))}
                 onValidateApplication={() => onValidateApplication(item.m)}
+                onResumePlan={onResumePlan ? () => onResumePlan(item.m) : undefined}
                 application={applications.find((a) => a.measureId === item.m.id)}
                 isPremium={isPremium}
                 manageStock={!!pool?.manageStock}
@@ -15999,7 +16041,7 @@ function ManualApplicationRow({ app, lang, onDelete }) {
   );
 }
 
-function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, application, isPremium, manageStock, lang, activePlan, authUid, products, volume, recs }) {
+function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, onResumePlan, application, isPremium, manageStock, lang, activePlan, authUid, products, volume, recs }) {
   const t = useT(lang || "fr");
   // v1.112.0 — Valeurs pH/fCl projetées à partir des quantités réellement
   // appliquées (voir buildProjectedPoints) — indexées par position dans
@@ -16161,6 +16203,17 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, applicat
               <div style={{ fontSize: 11, color: "var(--brand-text-muted)", marginTop: 4 }}>
                 {wizardStatusLabel(application, t)}
               </div>
+              {/* v1.146.6 — Plan inachevé : on peut le reprendre depuis l'historique
+                  (sauf si le plan d'une autre mesure est en cours). */}
+              {onResumePlan && !application.allDone && (!activePlan || activePlan.measureId === measure.id) && (
+                <button
+                  type="button"
+                  onClick={onResumePlan}
+                  style={{ marginTop: 8, padding: "8px 14px", borderRadius: 10, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 12.5, cursor: "pointer" }}
+                >
+                  {t("wizard_resume")}
+                </button>
+              )}
             </div>
           ) : (
             !measure.importedFromPdf && (
@@ -16193,11 +16246,18 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, applicat
           )}
 
           <div style={{ display: "flex", gap: 8 }}>
+            {/* v1.146.6 — Libellés explicites ("la mesure", pas le plan) et
+                confirmation avant suppression. */}
             <button style={styles.editBtn} onClick={onEdit}>
-              <Settings2 size={14} /> {t("modify")}
+              <Settings2 size={14} /> {t("modify_measure")}
             </button>
-            <button style={styles.deleteBtn} onClick={onDelete}>
-              <Trash2 size={14} /> {t("delete")}
+            <button
+              style={styles.deleteBtn}
+              onClick={() => {
+                if (window.confirm(t("confirm_delete_measure", { date: formatDate(measure.date) }))) onDelete();
+              }}
+            >
+              <Trash2 size={14} /> {t("delete_measure")}
             </button>
           </div>
         </div>
