@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.146.6";
+const APP_VERSION = "1.146.7";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -11912,6 +11912,7 @@ function PoolGenAIApp() {
         />
       </div>
     )}
+    <style>{"@media print { .app { position: static !important; inset: auto !important; height: auto !important; } }"}</style>
     <div
       style={{
         ...styles.app,
@@ -24865,7 +24866,14 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     color: "var(--brand-text-strong)",
-    height: "100dvh",
+    // v1.146.7 — Conteneur ancré à la fenêtre (position fixed) plutôt que
+    // dimensionné en 100dvh : sur Android, 100dvh pouvait différer de la zone
+    // réellement visible et la barre de navigation du bas "flottait" au-dessus
+    // d'un vide, de hauteur variable. Impression : voir la règle @media print
+    // injectée avec le composant.
+    position: "fixed",
+    inset: 0,
+    width: "100%",
     overflow: "hidden",
   },
   header: {
