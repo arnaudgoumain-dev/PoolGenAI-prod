@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.146.7";
+const APP_VERSION = "1.148.0";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -476,6 +476,8 @@ const TRANSLATIONS = {
     add_pool_title: "Nouveau bassin",
     first_pool_title: "Bienvenue sur PoolGenAI",
     first_pool_intro: "Configure ton premier bassin pour commencer à suivre sa chimie de l'eau.",
+    pool_name_required: "Saisis le nom du bassin.",
+    pool_volume_required: "Saisis le volume du bassin (supérieur à 0).",
     edit_pool_title: "Modifier le bassin",
     pool_name_placeholder: "Ma piscine",
     pool_location_placeholder: "Rechercher une ville...",
@@ -1332,6 +1334,8 @@ const TRANSLATIONS = {
     add_pool_title: "New pool",
     first_pool_title: "Welcome to PoolGenAI",
     first_pool_intro: "Set up your first pool to start tracking its water chemistry.",
+    pool_name_required: "Enter a name for your pool.",
+    pool_volume_required: "Enter the pool volume (greater than 0).",
     edit_pool_title: "Edit pool",
     pool_name_placeholder: "My pool",
     pool_location_placeholder: "Search for a city...",
@@ -2183,6 +2187,8 @@ const TRANSLATIONS = {
     add_pool_title: "Neues Becken",
     first_pool_title: "Willkommen bei PoolGenAI",
     first_pool_intro: "Richte dein erstes Becken ein, um mit der Wasserchemie-Überwachung zu beginnen.",
+    pool_name_required: "Gib einen Namen für dein Becken ein.",
+    pool_volume_required: "Gib das Beckenvolumen ein (größer als 0).",
     ai_timer_hint: "L'analisi può richiedere fino a 30 secondi.",
     ai_reliability: "Affidabilità dell'analisi",
     ai_no_values: "Nessun valore leggibile su questa foto. Controlla la qualità e l'orientamento dell'immagine.",
@@ -3039,6 +3045,8 @@ const TRANSLATIONS = {
     add_pool_title: "Nuova vasca",
     first_pool_title: "Benvenuto su PoolGenAI",
     first_pool_intro: "Configura la tua prima vasca per iniziare a monitorare la chimica dell'acqua.",
+    pool_name_required: "Inserisci il nome della vasca.",
+    pool_volume_required: "Inserisci il volume della vasca (maggiore di 0).",
     edit_pool_title: "Modifica vasca",
     pool_name_placeholder: "La mia piscina",
     pool_location_placeholder: "Cerca una città...",
@@ -3889,6 +3897,8 @@ const TRANSLATIONS = {
     add_pool_title: "Nueva piscina",
     first_pool_title: "Bienvenido a PoolGenAI",
     first_pool_intro: "Configura tu primera piscina para empezar a seguir su química del agua.",
+    pool_name_required: "Introduce el nombre de la piscina.",
+    pool_volume_required: "Introduce el volumen de la piscina (mayor que 0).",
     edit_pool_title: "Editar piscina",
     pool_name_placeholder: "Mi piscina",
     pool_location_placeholder: "Buscar una ciudad...",
@@ -4736,6 +4746,8 @@ const TRANSLATIONS = {
     add_pool_title: "Nova piscina",
     first_pool_title: "Bem-vindo ao PoolGenAI",
     first_pool_intro: "Configura a tua primeira piscina para começar a acompanhar a química da água.",
+    pool_name_required: "Introduz o nome da piscina.",
+    pool_volume_required: "Introduz o volume da piscina (superior a 0).",
     edit_pool_title: "Editar piscina",
     pool_name_placeholder: "Minha piscina",
     pool_location_placeholder: "Pesquisar uma cidade...",
@@ -6015,6 +6027,63 @@ function compressImageDataUrl(dataUrl, maxDim = 1280, quality = 0.72) {
     img.onerror = () => resolve(dataUrl); // fallback silencieux
     img.src = dataUrl;
   });
+}
+
+// v1.148.0 — Réduit une photo directement depuis le FICHIER, sans passer par un
+// dataURL complet de l'original : une photo de téléphone (plusieurs Mo, jusqu'à
+// 50 mégapixels) lue en base64 puis décodée en pleine taille faisait plusieurs
+// copies en mémoire, et Android pouvait tuer la page au retour du sélecteur
+// (retour testeur : "l'app a planté en choisissant une image"). Ici : lecture
+// des dimensions, puis décodage DIRECTEMENT à taille réduite (createImageBitmap
+// avec redimensionnement) quand le navigateur le permet, repli sur un canvas.
+function computeTargetSize(w, h, maxDim) {
+  if (w <= maxDim && h <= maxDim) return { w, h };
+  return w >= h
+    ? { w: maxDim, h: Math.max(1, Math.round((h * maxDim) / w)) }
+    : { w: Math.max(1, Math.round((w * maxDim) / h)), h: maxDim };
+}
+async function compressImageFile(file, maxDim = 1280, quality = 0.72) {
+  const url = URL.createObjectURL(file);
+  try {
+    let img;
+    try {
+      img = await new Promise((resolve, reject) => {
+        const im = new Image();
+        im.onload = () => resolve(im);
+        im.onerror = () => reject(new Error("Image illisible"));
+        im.src = url;
+      });
+    } catch (e) {
+      // Format non décodable par le navigateur : on garde le fichier tel quel
+      // seulement s'il est petit, sinon on remonte l'erreur.
+      if (file.size <= 1500000) return await fileToDataUrl(file);
+      throw e;
+    }
+    const { w, h } = computeTargetSize(img.naturalWidth, img.naturalHeight, maxDim);
+    let source = img;
+    let bitmap = null;
+    if (typeof createImageBitmap === "function" && w < img.naturalWidth) {
+      try {
+        bitmap = await createImageBitmap(file, w >= h ? { resizeWidth: w, resizeQuality: "medium" } : { resizeHeight: h, resizeQuality: "medium" });
+        // Garde-fou : proportions identiques à celles attendues, sinon repli.
+        if (Math.abs(bitmap.width / bitmap.height - w / h) < 0.03) source = bitmap;
+        else { try { bitmap.close(); } catch (e) {} bitmap = null; }
+      } catch (e) {
+        bitmap = null;
+      }
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    canvas.getContext("2d").drawImage(source, 0, 0, w, h);
+    const out = canvas.toDataURL("image/jpeg", quality);
+    canvas.width = 0;
+    canvas.height = 0;
+    if (bitmap) { try { bitmap.close(); } catch (e) {} }
+    return out;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }
 
 // Convertit un dataURL "data:image/jpeg;base64,XXXX" en {mediaType, data}
@@ -7571,6 +7640,7 @@ class ErrorBoundary extends React.Component {
   }
   componentDidCatch(error, info) {
     this.setState({ error: error.message + "\n\nSTACK:\n" + error.stack + "\n\nCOMPONENT STACK:\n" + (info && info.componentStack ? info.componentStack : "N/A") });
+    reportClientError("react", error, { componentStack: info && info.componentStack ? String(info.componentStack).slice(0, 1500) : null });
   }
   render() {
     if (this.state.error) {
@@ -8058,6 +8128,53 @@ const FB = {
 // Helper analytics — fire-and-forget
 function track(event, params) {
   try { window._fbLog && window._fbLog(event, params); } catch (e) {}
+}
+
+// v1.148.0 — Journal des plantages : envoie l'erreur au Worker (/client-error),
+// qui l'enregistre dans Firestore (collection clientErrors, lisible seulement
+// par l'administrateur). Fire-and-forget, dédoublonné et plafonné par session ;
+// aucune donnée de mesure ni contenu saisi : version, message, pile technique,
+// navigateur, langue, mémoire disponible.
+const __reportedErrors = new Set();
+let __reportedCount = 0;
+async function reportClientError(kind, err, extra) {
+  try {
+    const message = String((err && err.message) || err || "").slice(0, 500);
+    if (/ResizeObserver loop|^Script error\.?$/i.test(message)) return;
+    const sig = kind + "|" + message;
+    if (__reportedErrors.has(sig) || __reportedCount >= 8) return;
+    __reportedErrors.add(sig);
+    __reportedCount++;
+    const headers = { "Content-Type": "application/json" };
+    try {
+      const u = window._fbAuth && window._fbAuth.currentUser;
+      if (u) headers.Authorization = "Bearer " + (await u.getIdToken());
+    } catch (e) { /* envoi anonyme */ }
+    const { componentStack, ...rest } = extra || {};
+    let mem = null;
+    try {
+      if (performance && performance.memory) {
+        mem = { heapMB: Math.round(performance.memory.usedJSHeapSize / 1048576), limitMB: Math.round(performance.memory.jsHeapSizeLimit / 1048576) };
+      }
+      if (navigator.deviceMemory) mem = { ...(mem || {}), deviceGB: navigator.deviceMemory };
+    } catch (e) {}
+    fetch(`${PROXY_BASE_URL}/client-error`, {
+      method: "POST",
+      headers,
+      keepalive: true,
+      body: JSON.stringify({
+        kind,
+        message,
+        stack: err && err.stack ? String(err.stack) : null,
+        componentStack: componentStack || null,
+        version: APP_VERSION,
+        lang: CURRENT_LANG,
+        ua: navigator.userAgent,
+        path: window.location.pathname,
+        extra: { ...rest, ...(mem ? { mem } : {}) },
+      }),
+    }).catch(() => {});
+  } catch (e) { /* ne jamais faire planter l'app pour journaliser */ }
 }
 
 function LoginScreen({ lang, onSkip, onConsentChange, detectedLang, onChangeLang }) {
@@ -9079,6 +9196,9 @@ function PoolGenAIApp() {
     }
   }
   const [showAddPool, setShowAddPool] = useState(false);
+  // v1.147.0 — Le formulaire du premier bassin peut être fermé : l'app affiche
+  // alors un état vide (créer un bassin) au lieu d'un écran verrouillé.
+  const [firstPoolDismissed, setFirstPoolDismissed] = useState(false);
   const [lang, setLang] = useState(detectDeviceLang);
   const langRef = useRef(lang);
   langRef.current = lang;
@@ -9269,6 +9389,13 @@ function PoolGenAIApp() {
   // (donc au-delà de l'AppErrorBoundary), on considère l'app démarrée.
   useEffect(() => {
     window.__appMountConfirmed = true;
+    // v1.148.0 — Le filet de démarrage d'index.html (rechargement de la page à
+    // la moindre erreur JavaScript, une fois par session) ne doit servir qu'AU
+    // DÉMARRAGE : après le montage, une erreur isolée (gestionnaire d'événement,
+    // image qui ne charge pas...) rechargeait toute l'app et faisait perdre ce
+    // que l'utilisateur était en train de saisir — vécu comme un "plantage". Les
+    // erreurs sont désormais consignées (reportClientError) sans recharger.
+    window.__showBootError = function () {};
   }, []);
 
   // ── Vérification de version — force la mise à jour si une nouvelle version est déployée ──
@@ -11455,6 +11582,12 @@ function PoolGenAIApp() {
   }
 
   function handleWantAddPool() {
+    // v1.147.0 — Le tout premier bassin est toujours permis (compte gratuit
+    // compris) : pas de paywall tant qu'aucun bassin n'existe.
+    if (pools.filter((p) => !p.disabled).length === 0) {
+      setShowAddPool(true);
+      return;
+    }
     if (!isPremium) {
       openPaywall();
       return;
@@ -11853,8 +11986,8 @@ function PoolGenAIApp() {
         <div style={{ fontSize: 13.5, color: "var(--brand-text-secondary)" }}>{t("context_loading")}</div>
       </div>
     )}
-    {loaded && authUser && !suspended && !accountDeleted && !forceUpdate && !needsEmailVerification && !needsCguAcceptance && activePools.length === 0 && cloudConfigReceived && !viewContext && onboardingSeen && (
-      <AddPoolModal forced onSave={addPool} lang={lang} />
+    {loaded && authUser && !suspended && !accountDeleted && !forceUpdate && !needsEmailVerification && !needsCguAcceptance && activePools.length === 0 && cloudConfigReceived && !viewContext && onboardingSeen && !firstPoolDismissed && (
+      <AddPoolModal forced onClose={() => setFirstPoolDismissed(true)} onSave={addPool} lang={lang} />
     )}
     {/* v1.87.0 — L'onboarding doit venir AVANT la création du premier bassin, pas
         après (ordre inversé jusqu'ici : le formulaire de création s'affichait
@@ -11949,6 +12082,9 @@ function PoolGenAIApp() {
         lang={lang}
       />
       <main style={styles.main}>
+        {activePools.length === 0 && !viewContext && tab !== "settings" ? (
+          <NoPoolEmptyState lang={lang} onCreate={() => setShowAddPool(true)} />
+        ) : (<>
         {tab === "dashboard" && (
           <Dashboard
             latest={latest}
@@ -12153,6 +12289,7 @@ function PoolGenAIApp() {
           />
           </>
         )}
+        </>)}
       </main>
 
 
@@ -17330,16 +17467,19 @@ function AddStripModelModal({ onClose, onSubmitted, lang, initialBarcodePhoto })
     const file = e.target.files && e.target.files[0];
     e.target.value = "";
     if (!file) return;
-    const dataUrl = await compressImageDataUrl(await fileToDataUrl(file));
-    setter(dataUrl);
+    try {
+      setter(await compressImageFile(file));
+    } catch (err) { reportClientError("photo_process", err, { stage: "single", size: file.size, type: file.type }); }
   }
 
   async function handleScaleFile(e) {
     const file = e.target.files && e.target.files[0];
     e.target.value = "";
     if (!file) return;
-    const dataUrl = await compressImageDataUrl(await fileToDataUrl(file));
-    setScalePhotos((prev) => [...prev, dataUrl]);
+    try {
+      const dataUrl = await compressImageFile(file);
+      setScalePhotos((prev) => [...prev, dataUrl]);
+    } catch (err) { reportClientError("photo_process", err, { stage: "scale", size: file.size, type: file.type }); }
   }
 
   function stripDataUrlPrefix(dataUrl) {
@@ -17565,7 +17705,7 @@ function GuidedStripFlow({ onClose, onComplete, lang }) {
     setBarcodeScanError(null);
     setScanningBarcode(true);
     try {
-      const dataUrl = await compressImageDataUrl(await fileToDataUrl(file));
+      const dataUrl = await compressImageFile(file);
       const decoded = await decodeBarcodeFromDataUrl(dataUrl);
       if (!decoded) {
         setBarcodeScanError(t("strip_guided_barcode_not_detected"));
@@ -18154,9 +18294,8 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
       // aux photos d'analyse via compressImageDataUrl), donc stockées à leur
       // taille brute smartphone (3-8 Mo pièce) — un facteur aggravant du
       // dépassement de la limite Firestore de 1 Mio par document.
-      const dataUrls = await Promise.all(
-        files.map(async (f) => compressImageDataUrl(await fileToDataUrl(f)))
-      );
+      const dataUrls = [];
+      for (const f of files) dataUrls.push(await compressImageFile(f));
       setPoolPhotos((prev) => [...prev, ...dataUrls]);
     } catch (err) { /* silencieux */ } finally {
       setPoolPhotoBusy(false);
@@ -18169,9 +18308,8 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
     if (!files.length) return;
     setPhotoBusy(true);
     try {
-      const dataUrls = await Promise.all(
-        files.map(async (f) => compressImageDataUrl(await fileToDataUrl(f)))
-      );
+      const dataUrls = [];
+      for (const f of files) dataUrls.push(await compressImageFile(f));
       setPhotos((prev) => [...prev, ...dataUrls]);
     } catch (err) {
       // silencieux
@@ -21016,7 +21154,9 @@ function ProductModal({ product, onClose, onSave, onLinkCommonProduct, isPremium
     setAiError(null);
     setAiNote(null);
     try {
-      const dataUrl = await fileToDataUrl(file);
+      // v1.148.0 — Une seule décompression du fichier (version haute résolution),
+      // la miniature en est dérivée (image déjà réduite, donc légère).
+      const hiRes = await compressImageFile(file);
       // v1.29.9 — Fix : config/main (pools + products + réglages, tout dans le
       // même document Firestore) a une limite de 1 Mo. Chaque photo produit,
       // compressée à 1280px/qualité 0.72 par défaut, pèse encore plusieurs
@@ -21024,11 +21164,10 @@ function ProductModal({ product, onClose, onSave, onLinkCommonProduct, isPremium
       // la limite et TOUTE synchro échoue (pas seulement les photos). La
       // miniature produit ne fait que 40x40px à l'affichage : 300px/qualité 0.5
       // suffit largement et réduit le poids d'un facteur ~10.
-      const compressed = await compressImageDataUrl(dataUrl, 300, 0.5);
+      const compressed = await compressImageDataUrl(hiRes, 300, 0.5);
       // v1.121.0 — Version haute résolution (défauts 1280px/q0.72), gardée
       // uniquement en mémoire pour le décodage code-barre/l'analyse IA — voir
       // analysisPhotosHiRes. Ne sert jamais au stockage.
-      const hiRes = await compressImageDataUrl(dataUrl);
       // v1.49.0 — Ajoute au tableau (multi-photos), plafonné à 4 pour éviter
       // un payload IA disproportionné et un coût par appel qui grimpe.
       setAnalysisPhotos((prev) => (prev.length >= 4 ? prev : [...prev, compressed]));
@@ -23168,24 +23307,41 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced }) {
   const [photoBusy, setPhotoBusy] = useState(false);
   const fileInputRef = useRef(null);
   const galleryInputRef = useRef(null);
+  // v1.147.0 — Champs obligatoires : signalés (bordure + message + défilement)
+  // au clic sur "Créer" au lieu d'un bouton sans effet (retour testeur).
+  const [showErrors, setShowErrors] = useState(false);
+  const nameInputRef = useRef(null);
+  const volumeInputRef = useRef(null);
+  const nameInvalid = !name.trim();
+  const volumeInvalid = !(parseFloat(volume) > 0);
 
   async function handlePhotoChange(e) {
     const file = e.target.files?.[0];
     if (!file) return;
     setPhotoBusy(true);
     try {
-      const dataUrl = await fileToDataUrl(file);
       // v1.29.9 — Même fix que pour les photos produit : icône de bassin
       // affichée en 38x38px, 1280px par défaut était surdimensionné et
       // contribuait au dépassement de la limite 1 Mo de config/main.
-      const compressed = await compressImageDataUrl(dataUrl, 300, 0.5);
+      // v1.148.0 — Réduction directement depuis le fichier (voir compressImageFile).
+      const compressed = await compressImageFile(file, 300, 0.5);
       setPhoto(compressed);
-    } catch (err) {}
+    } catch (err) {
+      reportClientError("photo_process", err, { stage: "pool", size: file.size, type: file.type });
+    }
     finally { setPhotoBusy(false); }
   }
 
   function handleSave() {
-    if (!name.trim()) return;
+    if (nameInvalid || volumeInvalid) {
+      setShowErrors(true);
+      const el = nameInvalid ? nameInputRef.current : volumeInputRef.current;
+      if (el) {
+        try { el.scrollIntoView({ behavior: "smooth", block: "center" }); } catch (e) {}
+        try { el.focus({ preventScroll: true }); } catch (e) {}
+      }
+      return;
+    }
     onSave({
       ...(existingPool || {}),
       name: name.trim(),
@@ -23214,7 +23370,7 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced }) {
     <ModalShell
       onClose={onClose}
       title={isEdit ? t("edit_pool") : forced ? t("first_pool_title") : t("add_pool_title")}
-      forced={forced}
+      forced={forced && !onClose}
       footer={
         <button style={styles.primaryBtn} onClick={handleSave}>
           {isEdit ? t("save") : t("create_pool")}
@@ -23253,7 +23409,8 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced }) {
       {/* Nom */}
       <FieldLabel required>{t("pool_name")}</FieldLabel>
       <input
-        style={styles.input}
+        ref={nameInputRef}
+        style={{ ...styles.input, ...(showErrors && nameInvalid ? { borderColor: "#c0392b", background: "#fdf0ef" } : {}) }}
         value={name}
         onChange={e => setName(e.target.value)}
         placeholder={t("pool_name_placeholder")}
@@ -23262,15 +23419,29 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced }) {
         autoCorrect="off"
         autoCapitalize="off"
         spellCheck={false}
+        aria-invalid={showErrors && nameInvalid}
       />
+      {showErrors && nameInvalid && (
+        <div style={{ fontSize: 12, color: "#c0392b", marginTop: -6, marginBottom: 10 }}>{t("pool_name_required")}</div>
+      )}
 
       {/* Localisation */}
       <label style={styles.fieldLabel}>{t("location")}</label>
       <LocationAutocomplete value={location} onChange={setLocation} lang={lang || "fr"} placeholder={t("pool_location_placeholder")} />
 
       {/* Volume */}
-      <label style={styles.fieldLabel}>{t("volume")}</label>
-      <input type="number" style={styles.input} value={volume} onChange={e => setVolume(e.target.value)} />
+      <FieldLabel required>{t("volume")}</FieldLabel>
+      <input
+        ref={volumeInputRef}
+        type="number"
+        style={{ ...styles.input, ...(showErrors && volumeInvalid ? { borderColor: "#c0392b", background: "#fdf0ef" } : {}) }}
+        value={volume}
+        onChange={e => setVolume(e.target.value)}
+        aria-invalid={showErrors && volumeInvalid}
+      />
+      {showErrors && volumeInvalid && (
+        <div style={{ fontSize: 12, color: "#c0392b", marginTop: -6, marginBottom: 10 }}>{t("pool_volume_required")}</div>
+      )}
 
       {/* Lot B (v1.33.0) — Méthode de mesure préférée */}
       <label style={styles.fieldLabel}>{t("measure_device_label")}</label>
@@ -24624,6 +24795,21 @@ function FieldLabel({ children, required, style }) {
       {children}
       {required && <span style={{ color: "#c0392b" }}> *</span>}
     </label>
+  );
+}
+
+// v1.147.0 — État vide valide : aucun bassin (formulaire du premier bassin fermé).
+function NoPoolEmptyState({ lang, onCreate }) {
+  const t = useT(lang || "fr");
+  return (
+    <div style={styles.emptyState}>
+      <Droplets size={40} color="var(--brand-icon-light)" strokeWidth={1.5} />
+      <p style={styles.emptyTitle}>{t("first_pool_title")}</p>
+      <p style={styles.emptyText}>{t("first_pool_intro")}</p>
+      <button style={styles.primaryBtn} onClick={onCreate}>
+        <Plus size={18} /> {t("create_pool")}
+      </button>
+    </div>
   );
 }
 
@@ -26301,6 +26487,7 @@ let __fatalOverlayShown = false;
 function showFatalOverlay() {
   if (__fatalOverlayShown || document.getElementById("__fatal_overlay")) return;
   __fatalOverlayShown = true;
+  reportClientError("fatal_overlay", new Error("Écran de secours affiché (#root vide)"), {});
   const tt = getFatalOverlayTexts();
   const overlay = document.createElement("div");
   overlay.id = "__fatal_overlay";
@@ -26326,6 +26513,49 @@ function maybeShowFatalOverlay() {
 window.addEventListener("error", maybeShowFatalOverlay);
 window.addEventListener("unhandledrejection", maybeShowFatalOverlay);
 
+// v1.148.0 — Journal des plantages : erreurs JavaScript non gérées (les erreurs
+// de chargement d'image/script, sans objet d'erreur, sont ignorées).
+window.addEventListener("error", (e) => {
+  if (!e.error && !e.message) return;
+  reportClientError("window_error", e.error || e.message, { src: e.filename ? String(e.filename).slice(-120) : null, line: e.lineno, col: e.colno });
+});
+window.addEventListener("unhandledrejection", (e) => {
+  reportClientError("unhandled_rejection", e.reason || "unhandledrejection", {});
+});
+
+// v1.148.0 — Repère des sélecteurs de fichier (appareil photo / galerie) : si la
+// page est tuée par Android pendant ou juste après le choix d'une image, aucune
+// erreur JavaScript n'est émise. On note donc l'étape en cours (stockage local) ;
+// si l'app redémarre avec ce repère encore présent, on le signale au journal
+// avec la taille et le type du fichier choisi.
+(function installFilePickBreadcrumb() {
+  const KEY = "__pgai_pick";
+  let timer = null;
+  const write = (o) => { try { localStorage.setItem(KEY, JSON.stringify({ ...o, t: Date.now(), v: APP_VERSION })); } catch (e) {} };
+  const clear = () => { try { localStorage.removeItem(KEY); } catch (e) {} };
+  const arm = (ms) => { clearTimeout(timer); timer = setTimeout(clear, ms); };
+  const isFile = (el) => el && el.tagName === "INPUT" && el.type === "file";
+  document.addEventListener("click", (e) => {
+    if (isFile(e.target)) { write({ stage: "open", capture: e.target.getAttribute("capture") || null }); arm(180000); }
+  }, true);
+  document.addEventListener("change", (e) => {
+    if (!isFile(e.target)) return;
+    const f = e.target.files && e.target.files[0];
+    write({ stage: "selected", size: f ? f.size : null, type: f ? f.type : null, count: e.target.files ? e.target.files.length : 0 });
+    arm(20000);
+  }, true);
+  document.addEventListener("cancel", (e) => { if (isFile(e.target)) clear(); }, true);
+  setTimeout(() => {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (!raw) return;
+      localStorage.removeItem(KEY);
+      const p = JSON.parse(raw);
+      reportClientError("pick_interrupted", new Error("Sélecteur de fichier interrompu (étape : " + p.stage + ")"), { ...p, ageSec: Math.round((Date.now() - p.t) / 1000) });
+    } catch (e) {}
+  }, 5000);
+})();
+
 // v1.99.1 — Watchdog de démarrage : si l'app n'a pas confirmé son montage
 // (voir le useEffect correspondant dans PoolGenAIApp) passé ce délai, le
 // rendu React a probablement échoué silencieusement (pas d'exception
@@ -26348,6 +26578,7 @@ class AppErrorBoundary extends React.Component {
   }
   componentDidCatch(error, info) {
     console.error("AppErrorBoundary — erreur de rendu attrapée :", error, info?.componentStack);
+    reportClientError("react_root", error, { componentStack: info && info.componentStack ? String(info.componentStack).slice(0, 1500) : null });
   }
   render() {
     if (this.state.hasError) {
