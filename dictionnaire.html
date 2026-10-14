@@ -72,6 +72,7 @@
   .bar { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-top: 1px solid var(--line); padding: 10px 16px; z-index: 5; }
   .bar .in { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .more { text-align: center; margin: 12px 0; }
+  body.anon .gated { display: none !important; }
   .tablewrap { background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
   table.dict { width: 100%; border-collapse: collapse; table-layout: fixed; }
   table.dict th { background: var(--brand); color: #fff; font-size: 12px; letter-spacing: .03em; text-align: left; padding: 8px 10px; position: sticky; top: 0; z-index: 2; }
@@ -96,7 +97,7 @@
   }
 </style>
 </head>
-<body>
+<body class="anon">
 <header>
   <div class="row">
     <h1 id="t-title">Dictionnaire PoolGenAI</h1>
@@ -130,7 +131,7 @@
     </div>
   </div>
 
-  <div class="panel">
+  <div class="panel gated">
     <div class="filters">
       <div>
         <label class="f" for="target" id="t-target"></label>
@@ -155,12 +156,12 @@
     </div>
   </div>
 
-  <div class="count" id="count"></div>
-  <div class="tablewrap"><table class="dict"><thead><tr id="thead-row"></tr></thead><tbody id="list"></tbody></table></div>
-  <div class="more" id="more" style="display:none"><button class="ghost" id="more-btn" type="button"></button></div>
+  <div class="count gated" id="count"></div>
+  <div class="tablewrap gated"><table class="dict"><thead><tr id="thead-row"></tr></thead><tbody id="list"></tbody></table></div>
+  <div class="more gated" id="more" style="display:none"><button class="ghost" id="more-btn" type="button"></button></div>
 </main>
 
-<div class="bar">
+<div class="bar gated">
   <div class="in">
     <div id="bar-status" class="status" style="margin:0"></div>
     <button id="send" type="button"></button>
@@ -319,6 +320,8 @@ try {
   var variant = lsGet("pgai_dict_variant");
   if (["PT-PT", "PT-BR", "PT-ALL"].indexOf(variant) < 0) variant = "PT-PT";
   var user = null;            // utilisateur Firebase connecté
+  var authReady = false;      // vrai une fois l'état de connexion connu (évite d'afficher le formulaire par erreur)
+  var dictLoading = null;
   var pending = {};           // lang -> { key: [ {id, variant, proposed, votes, mine, voted} ] }
   var PAGE = 40;
   var shown = PAGE;
@@ -601,6 +604,8 @@ try {
 
   // ---------- Connexion : affichage ----------
   function renderAuth() {
+    document.body.classList.toggle("anon", !user);
+    $("auth-panel").style.visibility = authReady ? "visible" : "hidden";
     $("auth-out").style.display = user ? "none" : "";
     $("auth-in").style.display = user ? "" : "none";
     $("a-who").textContent = user ? t("who", { email: user.email || user.displayName || "" }) : "";
@@ -762,27 +767,49 @@ try {
   }
 
   // ---------- Démarrage ----------
+  // Aucun terme n'est chargé ni affiché tant que l'utilisateur n'est pas connecté.
+  function ensureDict() {
+    if (DICT.length) return Promise.resolve();
+    if (dictLoading) return dictLoading;
+    $("count").style.color = "";
+    $("count").textContent = t("loading");
+    dictLoading = loadDictionary().then(function (d) {
+      DICT = d; detBuild(DICT); checkCache = {}; buildSections(); updateCheckOptions();
+    }).catch(function () {
+      $("count").textContent = t("errLoad"); $("count").style.color = "var(--warn)";
+    }).then(function () { dictLoading = null; });
+    return dictLoading;
+  }
+  function clearSession() {
+    DICT = []; filtered = []; pending = {}; checkCache = {};
+    $("list").innerHTML = ""; $("count").textContent = "";
+    $("check").innerHTML = "";
+  }
+
   bind();
   applyUi();
-  $("count").textContent = t("loading");
   if (location.protocol === "file:") {
     // Ouverte depuis le disque : origine « null » (connexion Google refusée) et lecture de PoolGenAI.jsx bloquée.
-    $("count").textContent = t("errFile"); $("count").style.color = "var(--warn)";
+    authReady = true; renderAuth();
+    setAuthStatus(t("errFile"), "bad");
     $("a-google").disabled = true; $("a-login").disabled = true;
     return;
   }
-  if (auth) {
-    fb.onAuthStateChanged(auth, function (u) {
-      user = u || null;
-      if (!user) pending = {};
-      renderAuth();
-      if (user) loadPending().then(function () { if (DICT.length) applyFilters(); });
-      else if (DICT.length) applyFilters();
-    });
+  if (!auth) {
+    authReady = true; renderAuth();
+    setAuthStatus(t("authNone"), "bad");
+    return;
   }
-  loadDictionary().then(function (d) {
-    DICT = d; detBuild(DICT); checkCache = {}; buildSections(); updateCheckOptions(); applyFilters(); updateBar();
-  }).catch(function () { $("count").textContent = t("errLoad"); $("count").style.color = "var(--warn)"; });
+  fb.onAuthStateChanged(auth, function (u) {
+    authReady = true;
+    user = u || null;
+    renderAuth();
+    if (!user) { clearSession(); updateBar(); return; }
+    ensureDict().then(function () { return loadPending(); }).then(function () {
+      if (user && DICT.length) { updateCheckOptions(); applyFilters(); }
+      updateBar();
+    });
+  });
 })();
 </script>
 </body>
