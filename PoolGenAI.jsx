@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.148.0";
+const APP_VERSION = "1.149.0";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -2189,9 +2189,6 @@ const TRANSLATIONS = {
     first_pool_intro: "Richte dein erstes Becken ein, um mit der Wasserchemie-Überwachung zu beginnen.",
     pool_name_required: "Gib einen Namen für dein Becken ein.",
     pool_volume_required: "Gib das Beckenvolumen ein (größer als 0).",
-    ai_timer_hint: "L'analisi può richiedere fino a 30 secondi.",
-    ai_reliability: "Affidabilità dell'analisi",
-    ai_no_values: "Nessun valore leggibile su questa foto. Controlla la qualità e l'orientamento dell'immagine.",
     edit_pool_title: "Becken bearbeiten",
     pool_name_placeholder: "Mein Pool",
     pool_location_placeholder: "Stadt suchen...",
@@ -3037,9 +3034,9 @@ const TRANSLATIONS = {
     paywall_context_report: "Il rapporto PDF è riservato a Premium.",
     paywall_context_photos: "L'analisi foto IA è riservata a Premium.",
     paywall_context_stock: "La gestione dello stock è riservata a Premium.",
-    ai_timer_hint: "El análisis puede tardar hasta 30 segundos.",
-    ai_reliability: "Fiabilidad del análisis",
-    ai_no_values: "Ningún valor legible en esta foto. Verifica la calidad y orientación de la imagen.",
+    ai_timer_hint: "L'analisi può richiedere fino a 30 secondi.",
+    ai_reliability: "Affidabilità dell'analisi",
+    ai_no_values: "Nessun valore leggibile su questa foto. Controlla la qualità e l'orientamento dell'immagine.",
     paywall_btn: "Attiva Premium",
     paywall_close: "Più tardi",
     add_pool_title: "Nuova vasca",
@@ -3881,9 +3878,9 @@ const TRANSLATIONS = {
     reco_trend_note_max: "Rebote a la baja observado tras las últimas aplicaciones (últimas 3 mediciones): dosis calculada para apuntar al límite superior del rango objetivo ({target}) y compensar la deriva.",
     see_dosage: "Ver dosaje",
     paywall_title: "Pasar a Premium",
-    ai_timer_hint: "A análise pode levar até 30 segundos.",
-    ai_reliability: "Confiabilidade da análise",
-    ai_no_values: "Nenhum valor legível nesta foto. Verifique a qualidade e orientação da imagem.",
+    ai_timer_hint: "El análisis puede tardar hasta 30 segundos.",
+    ai_reliability: "Fiabilidad del análisis",
+    ai_no_values: "Ningún valor legible en esta foto. Verifica la calidad y orientación de la imagen.",
     paywall_desc: "Mediciones ilimitadas · Análisis IA de tiras · Informe PDF · Gestión de stock",
     paywall_context_measure_limit: "Has alcanzado el límite de 1 medición gratuita al día.",
     paywall_context_start_plan: "El seguimiento del tratamiento paso a paso está reservado a Premium.",
@@ -4733,6 +4730,9 @@ const TRANSLATIONS = {
     reco_trend_note_max: "Ressalto de descida observado após as últimas aplicações (últimas 3 medições): dose calculada para visar o limite superior da zona alvo ({target}) e compensar a deriva.",
     see_dosage: "Ver dosagem",
     paywall_title: "Passar para Premium",
+    ai_timer_hint: "A análise pode levar até 30 segundos.",
+    ai_reliability: "Confiabilidade da análise",
+    ai_no_values: "Nenhum valor legível nesta foto. Verifique a qualidade e orientação da imagem.",
     paywall_desc: "Medições ilimitadas · Análise IA de tiras · Relatório PDF · Gestão de estoque",
     paywall_context_measure_limit: "Você atingiu o limite de 1 medição gratuita por dia.",
     paywall_context_start_plan: "O acompanhamento passo a passo do tratamento é reservado ao Premium.",

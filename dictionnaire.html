@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Dictionnaire PoolGenAI</title>
+<link rel="icon" href="icon-192.png" />
+<style>
+  :root {
+    --brand: #0b3f3a;
+    --brand-2: #14796f;
+    --bg: #f5f8f7;
+    --card: #ffffff;
+    --line: #d9e3e0;
+    --muted: #5d706c;
+    --ink: #17302d;
+    --warn: #b3261e;
+    --ok: #1b7a3d;
+    --soft: #eef4f2;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 15px; line-height: 1.45; }
+  header { background: var(--brand); color: #fff; padding: 14px 16px; }
+  header .row { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  header h1 { margin: 0; font-size: 19px; font-weight: 700; }
+  header a { color: #cfe9e5; font-size: 13px; text-decoration: none; }
+  header select { font-size: 13px; padding: 4px 6px; border-radius: 6px; border: 0; }
+  main { max-width: 1500px; margin: 0 auto; padding: 14px 16px 120px; }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; }
+  .intro { color: var(--muted); font-size: 14px; margin: 0 0 4px; }
+  .grid { display: grid; gap: 10px; grid-template-columns: 1fr; }
+  @media (min-width: 720px) { .grid.cols3 { grid-template-columns: 1fr 1fr auto; } .grid.cols2 { grid-template-columns: 1fr 1fr; } }
+  label.f { display: block; font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 3px; }
+  input[type=text], input[type=email], input[type=password], input[type=search], textarea, select { width: 100%; font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); }
+  textarea { resize: vertical; min-height: 44px; }
+  input:focus, textarea:focus, select:focus { outline: 2px solid var(--brand-2); outline-offset: 0; }
+  .row-inline { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+  button { font: inherit; cursor: pointer; border: 0; border-radius: 8px; padding: 9px 14px; background: var(--brand-2); color: #fff; font-weight: 600; }
+  button.ghost { background: var(--soft); color: var(--brand); }
+  button.small { padding: 4px 10px; font-size: 13px; }
+  button:disabled { opacity: .5; cursor: default; }
+  .status { font-size: 13px; margin-top: 6px; min-height: 18px; }
+  .status.ok { color: var(--ok); } .status.bad { color: var(--warn); }
+  .who { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; font-size: 14px; }
+  .filters { display: grid; gap: 8px; grid-template-columns: 1fr; }
+  @media (min-width: 720px) { .filters { grid-template-columns: 1.2fr 1fr 1fr 1.4fr auto; align-items: end; } }
+  .chk { display: flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); }
+  .chk input { width: auto; }
+  .count { font-size: 13px; color: var(--muted); margin: 6px 2px 10px; }
+  .term { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 11px 13px; margin-bottom: 10px; }
+  .term.has { border-color: var(--brand-2); box-shadow: 0 0 0 1px var(--brand-2) inset; }
+  .term.err { border-color: var(--warn); box-shadow: 0 0 0 1px var(--warn) inset; }
+  .key { font-family: ui-monospace, Consolas, monospace; font-size: 11.5px; color: var(--muted); margin-bottom: 6px; word-break: break-all; }
+  .ro { background: var(--soft); border-radius: 8px; padding: 7px 10px; font-size: 14px; white-space: pre-wrap; word-break: break-word; }
+  .ro small { display: block; font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: .04em; margin-bottom: 1px; }
+  .ro.missing { color: var(--warn); font-style: italic; }
+  .pend { margin-top: 8px; border: 1px dashed var(--brand-2); border-radius: 8px; padding: 6px 10px; }
+  .pend h4 { margin: 0 0 4px; font-size: 11px; letter-spacing: .04em; color: var(--brand-2); }
+  .pp { display: flex; gap: 10px; align-items: center; justify-content: space-between; padding: 5px 0; border-top: 1px solid var(--soft); flex-wrap: wrap; }
+  .pp:first-of-type { border-top: 0; }
+  .pp .txt { flex: 1; min-width: 200px; white-space: pre-wrap; word-break: break-word; }
+  .pp .act { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); }
+  .tag { font-size: 11px; background: var(--soft); color: var(--brand); border-radius: 6px; padding: 1px 6px; margin-left: 6px; font-weight: 700; }
+  .tag.mine { background: #dff3e6; color: var(--ok); }
+  .prop { margin-top: 8px; }
+  .prop .opts { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; align-items: center; }
+  .prop .opts select { width: auto; font-size: 13px; padding: 5px 8px; }
+  .prop .opts input { flex: 1; min-width: 160px; font-size: 13px; padding: 5px 8px; }
+  .btn-link { background: none; color: var(--brand-2); padding: 2px 4px; font-size: 13px; font-weight: 600; }
+  .warn { color: var(--warn); font-size: 12.5px; margin-top: 4px; }
+  .bar { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-top: 1px solid var(--line); padding: 10px 16px; z-index: 5; }
+  .bar .in { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .more { text-align: center; margin: 12px 0; }
+  .tablewrap { background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  table.dict { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  table.dict th { background: var(--brand); color: #fff; font-size: 12px; letter-spacing: .03em; text-align: left; padding: 8px 10px; position: sticky; top: 0; z-index: 2; }
+  table.dict td { vertical-align: top; padding: 8px 10px; border-top: 1px solid var(--line); font-size: 14px; white-space: pre-wrap; word-break: break-word; }
+  table.dict th:nth-child(1) { width: 9%; } table.dict th:nth-child(2) { width: 12%; } table.dict th:nth-child(3) { width: 12%; }
+  table.dict th:nth-child(4) { width: 13%; } table.dict th:nth-child(5) { width: 19%; } table.dict th:nth-child(6) { width: 19%; } table.dict th:nth-child(7) { width: 16%; }
+  table.dict td.missing { color: var(--warn); font-style: italic; }
+  .tag.warn { background: #fff1d6; color: #b26a00; display: inline-block; margin: 4px 0 0 0; }
+  table.dict tr.term.has td { background: #f1faf5; }
+  table.dict tr.term.err td { background: #fdecea; }
+  table.dict td textarea { min-height: 38px; }
+  table.dict td input[type=text] { font-size: 13px; padding: 5px 8px; }
+  table.dict .pp { padding: 4px 0; }
+  table.dict .pp .txt { min-width: 0; flex-basis: 100%; }
+  @media (max-width: 899px) {
+    table.dict, table.dict tbody, table.dict tr, table.dict td { display: block; width: 100%; }
+    table.dict thead { display: none; }
+    table.dict tr.term { border-top: 8px solid var(--bg); padding: 4px 0; }
+    table.dict td { border-top: 0; padding: 4px 12px; }
+    table.dict td::before { content: attr(data-label); display: block; font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: .04em; }
+    table.dict td.c-pend:empty { display: none; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="row">
+    <h1 id="t-title">Dictionnaire PoolGenAI</h1>
+    <div style="display:flex;gap:12px;align-items:center">
+      <a id="t-back" href="./">← PoolGenAI</a>
+      <select id="ui-lang" aria-label="Language">
+        <option value="fr">Français</option><option value="en">English</option><option value="de">Deutsch</option>
+        <option value="it">Italiano</option><option value="es">Español</option><option value="pt">Português</option>
+      </select>
+    </div>
+  </div>
+</header>
+<main>
+  <div class="panel">
+    <p class="intro" id="t-intro"></p>
+  </div>
+
+  <div class="panel" id="auth-panel">
+    <div id="auth-out">
+      <p class="intro" id="t-need" style="margin-bottom:8px"></p>
+      <div class="grid cols3">
+        <div><label class="f" for="a-email" id="t-email"></label><input type="email" id="a-email" autocomplete="username" /></div>
+        <div><label class="f" for="a-pass" id="t-pass"></label><input type="password" id="a-pass" autocomplete="current-password" /></div>
+        <div class="row-inline"><button id="a-login" type="button"></button><button class="ghost" id="a-google" type="button"></button></div>
+      </div>
+      <div class="status" id="a-status"></div>
+    </div>
+    <div id="auth-in" class="who" style="display:none">
+      <span id="a-who"></span>
+      <button class="ghost small" id="a-logout" type="button"></button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="filters">
+      <div>
+        <label class="f" for="target" id="t-target"></label>
+        <select id="target">
+          </select>
+      </div>
+      <div>
+        <label class="f" for="search" id="t-search"></label>
+        <input type="search" id="search" autocomplete="off" />
+      </div>
+      <div>
+        <label class="f" for="section" id="t-section"></label>
+        <select id="section"></select>
+      </div>
+      <div>
+        <label class="f" for="check" id="t-check"></label>
+        <select id="check"></select>
+      </div>
+      <div>
+        <label class="chk"><input type="checkbox" id="only-mine" /> <span id="t-only-mine"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="count" id="count"></div>
+  <div class="tablewrap"><table class="dict"><thead><tr id="thead-row"></tr></thead><tbody id="list"></tbody></table></div>
+  <div class="more" id="more" style="display:none"><button class="ghost" id="more-btn" type="button"></button></div>
+</main>
+
+<div class="bar">
+  <div class="in">
+    <div id="bar-status" class="status" style="margin:0"></div>
+    <button id="send" type="button"></button>
+  </div>
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script type="module">
+// ---------- Connexion (mêmes comptes et même session que l'app) ----------
+// Config Firebase publique par environnement, identique à index.html : la session ouverte
+// dans l'app (même origine) est reprise automatiquement ici.
+const FIREBASE_CONFIGS = {
+  prod: { apiKey: "AIzaSyD6itW6p938sB7Qv55-JTtnFRZtvKImz3U", authDomain: "poolgenai-prod.firebaseapp.com", projectId: "poolgenai-prod", appId: "1:242443326246:web:a0e61e5786c4a7d7fda7e7" },
+  test: { apiKey: "AIzaSyDWSRu-Iaq4mG8ssrBUioktSprXSLSMnYo", authDomain: "poolgenai-test.firebaseapp.com", projectId: "poolgenai-test", appId: "1:29427727408:web:14cb19e2a28cbde6b0c1f5" },
+  dev: { apiKey: "AIzaSyA9_XUwBQME0ywvWvLjBI_-5TFZ_HbNqrI", authDomain: "poolgenai-dev.firebaseapp.com", projectId: "poolgenai-dev", appId: "1:1059394562193:web:bc7fccac63b244ca4c3730" }
+};
+const GOOGLE_CLIENT_IDS = {
+  prod: "242443326246-5t3ajnt5b2reo4kv57q1dnhf2sqkcv7n.apps.googleusercontent.com",
+  test: "29427727408-gs9bu3mfbqt1eb4usclem214sf1t6bdo.apps.googleusercontent.com",
+  dev: "1059394562193-8qliq2i8jf2tjehoabej6rgffibpb974.apps.googleusercontent.com"
+};
+const host = location.hostname;
+const ENV = host === "app.poolgenai.com" ? "prod" : host === "test.poolgenai.com" ? "test" : "dev";
+
+let auth = null, fb = null;
+try {
+  const appMod = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
+  fb = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
+  auth = fb.getAuth(appMod.initializeApp(FIREBASE_CONFIGS[ENV]));
+} catch (e) { auth = null; }
+
+(function () {
+  "use strict";
+
+  // ---------- Textes de la page (6 langues) ----------
+  var UI = {
+    fr: {
+      title: "Dictionnaire PoolGenAI", back: "← PoolGenAI",
+      intro: "Cette page présente les textes de l'application. Les colonnes EN et FR sont figées ; pour chaque terme de la langue choisie, vous pouvez proposer une meilleure formulation ou voter pour une proposition déjà faite. Toutes les propositions sont relues avant d'être publiées dans l'application.",
+      need: "Connectez-vous avec votre compte PoolGenAI pour proposer, voir les propositions en attente et voter.", email: "Email", pass: "Mot de passe", login: "Se connecter", google: "Continuer avec Google", logout: "Se déconnecter", who: "Connecté : {email}",
+      authBad: "Email ou mot de passe incorrect.", authMany: "Trop de tentatives, réessayez plus tard.", authErr: "Connexion impossible, réessayez.", authNone: "Le service de connexion n'a pas pu se charger. Rechargez la page.", authFill: "Saisissez votre email et votre mot de passe.", session: "Session expirée, reconnectez-vous.",
+      target: "Langue à relire", variant: "Variante du portugais", vPT: "Portugal (PT-PT)", vBR: "Brésil (PT-BR)", vALL: "Les deux / indifférent",
+      search: "Rechercher", section: "Rubrique", all: "Toutes", other: "Autres", onlyMine: "Mes propositions seulement", onlyMissing: "Termes manquants seulement",
+      terms: "{n} terme(s)", showMore: "Afficher plus", current: "ACTUEL", missing: "(absent : l'app affiche le français)", ph: "Votre proposition…", commentAdd: "+ commentaire", commentPh: "Pourquoi ce changement ? (facultatif)",
+      pending: "PROPOSITIONS EN ATTENTE", votes: "{n} vote(s)", vote: "Voter", voted: "✓ Voté", mine: "Votre proposition", withdraw: "Retirer", confirmWithdraw: "Retirer cette proposition ?",
+      send: "Envoyer {n} proposition(s)", nothing: "Aucune proposition pour l'instant", ready: "{n} proposition(s) prête(s)",
+      sentOk: "Merci ! {c} proposition(s) créée(s), {v} vote(s) ajouté(s).", sentSame: "Vous avez déjà voté pour ces propositions.", errPh: "Variable manquante : {v}", errPhSend: "Corrigez les variables manquantes (cartes en rouge) avant l'envoi.", errNeedLogin: "Connectez-vous pour envoyer vos propositions.",
+      errQuota: "Limite quotidienne atteinte, réessayez demain.", errGeneric: "Action impossible, réessayez plus tard.", errLoad: "Impossible de charger le dictionnaire.", errFile: "Page ouverte depuis un fichier : ouvrez-la via le serveur (ex. http://localhost:4000/dictionnaire.html).", loading: "Chargement…", sending: "Envoi…"
+    },
+    en: {
+      title: "PoolGenAI Dictionary", back: "← PoolGenAI",
+      intro: "This page lists the app's texts. The EN and FR columns are fixed; for each term in the chosen language you can suggest a better wording or vote for a suggestion already made. Every suggestion is reviewed before being published in the app.",
+      need: "Sign in with your PoolGenAI account to suggest, see pending suggestions and vote.", email: "Email", pass: "Password", login: "Sign in", google: "Continue with Google", logout: "Sign out", who: "Signed in: {email}",
+      authBad: "Incorrect email or password.", authMany: "Too many attempts, try again later.", authErr: "Could not sign in, please try again.", authNone: "The sign-in service could not load. Reload the page.", authFill: "Enter your email and password.", session: "Session expired, please sign in again.",
+      target: "Language to review", variant: "Portuguese variant", vPT: "Portugal (PT-PT)", vBR: "Brazil (PT-BR)", vALL: "Both / no preference",
+      search: "Search", section: "Section", all: "All", other: "Other", onlyMine: "My suggestions only", onlyMissing: "Missing terms only",
+      terms: "{n} term(s)", showMore: "Show more", current: "CURRENT", missing: "(missing: the app shows French)", ph: "Your suggestion…", commentAdd: "+ comment", commentPh: "Why this change? (optional)",
+      pending: "PENDING SUGGESTIONS", votes: "{n} vote(s)", vote: "Vote", voted: "✓ Voted", mine: "Your suggestion", withdraw: "Withdraw", confirmWithdraw: "Withdraw this suggestion?",
+      send: "Send {n} suggestion(s)", nothing: "No suggestion yet", ready: "{n} suggestion(s) ready",
+      sentOk: "Thank you! {c} suggestion(s) created, {v} vote(s) added.", sentSame: "You have already voted for these suggestions.", errPh: "Missing variable: {v}", errPhSend: "Fix the missing variables (red cards) before sending.", errNeedLogin: "Sign in to send your suggestions.",
+      errQuota: "Daily limit reached, try again tomorrow.", errGeneric: "Action failed, please try again later.", errLoad: "Could not load the dictionary.", errFile: "Page opened from a file: open it through the server (e.g. http://localhost:4000/dictionnaire.html).", loading: "Loading…", sending: "Sending…"
+    },
+    de: {
+      title: "PoolGenAI-Wörterbuch", back: "← PoolGenAI",
+      intro: "Diese Seite zeigt die Texte der App. Die Spalten EN und FR sind fest; zu jedem Begriff der gewählten Sprache können Sie eine bessere Formulierung vorschlagen oder für einen bereits gemachten Vorschlag abstimmen. Jeder Vorschlag wird geprüft, bevor er in der App veröffentlicht wird.",
+      need: "Melden Sie sich mit Ihrem PoolGenAI-Konto an, um Vorschläge zu machen, offene Vorschläge zu sehen und abzustimmen.", email: "E-Mail", pass: "Passwort", login: "Anmelden", google: "Weiter mit Google", logout: "Abmelden", who: "Angemeldet: {email}",
+      authBad: "E-Mail oder Passwort falsch.", authMany: "Zu viele Versuche, später erneut versuchen.", authErr: "Anmeldung nicht möglich, bitte erneut versuchen.", authNone: "Der Anmeldedienst konnte nicht geladen werden. Seite neu laden.", authFill: "Geben Sie E-Mail und Passwort ein.", session: "Sitzung abgelaufen, bitte erneut anmelden.",
+      target: "Zu prüfende Sprache", variant: "Portugiesische Variante", vPT: "Portugal (PT-PT)", vBR: "Brasilien (PT-BR)", vALL: "Beide / egal",
+      search: "Suchen", section: "Bereich", all: "Alle", other: "Sonstige", onlyMine: "Nur meine Vorschläge", onlyMissing: "Nur fehlende Begriffe",
+      terms: "{n} Begriff(e)", showMore: "Mehr anzeigen", current: "AKTUELL", missing: "(fehlt: die App zeigt Französisch)", ph: "Ihr Vorschlag…", commentAdd: "+ Kommentar", commentPh: "Warum diese Änderung? (optional)",
+      pending: "OFFENE VORSCHLÄGE", votes: "{n} Stimme(n)", vote: "Abstimmen", voted: "✓ Abgestimmt", mine: "Ihr Vorschlag", withdraw: "Zurückziehen", confirmWithdraw: "Diesen Vorschlag zurückziehen?",
+      send: "{n} Vorschlag/Vorschläge senden", nothing: "Noch kein Vorschlag", ready: "{n} Vorschlag/Vorschläge bereit",
+      sentOk: "Danke! {c} Vorschlag/Vorschläge erstellt, {v} Stimme(n) hinzugefügt.", sentSame: "Sie haben für diese Vorschläge bereits abgestimmt.", errPh: "Fehlende Variable: {v}", errPhSend: "Beheben Sie die fehlenden Variablen (rote Karten) vor dem Senden.", errNeedLogin: "Melden Sie sich an, um Ihre Vorschläge zu senden.",
+      errQuota: "Tageslimit erreicht, morgen erneut versuchen.", errGeneric: "Aktion nicht möglich, bitte später erneut versuchen.", errLoad: "Wörterbuch konnte nicht geladen werden.", loading: "Laden…", sending: "Senden…"
+    },
+    it: {
+      title: "Dizionario PoolGenAI", back: "← PoolGenAI",
+      intro: "Questa pagina mostra i testi dell'app. Le colonne EN e FR sono fisse; per ogni termine della lingua scelta puoi proporre una formulazione migliore o votare una proposta già fatta. Ogni proposta viene rivista prima di essere pubblicata nell'app.",
+      need: "Accedi con il tuo account PoolGenAI per proporre, vedere le proposte in attesa e votare.", email: "Email", pass: "Password", login: "Accedi", google: "Continua con Google", logout: "Esci", who: "Connesso: {email}",
+      authBad: "Email o password errata.", authMany: "Troppi tentativi, riprova più tardi.", authErr: "Accesso non riuscito, riprova.", authNone: "Il servizio di accesso non si è caricato. Ricarica la pagina.", authFill: "Inserisci email e password.", session: "Sessione scaduta, accedi di nuovo.",
+      target: "Lingua da rivedere", variant: "Variante del portoghese", vPT: "Portogallo (PT-PT)", vBR: "Brasile (PT-BR)", vALL: "Entrambe / indifferente",
+      search: "Cerca", section: "Sezione", all: "Tutte", other: "Altre", onlyMine: "Solo le mie proposte", onlyMissing: "Solo termini mancanti",
+      terms: "{n} termine/i", showMore: "Mostra altro", current: "ATTUALE", missing: "(manca: l'app mostra il francese)", ph: "La tua proposta…", commentAdd: "+ commento", commentPh: "Perché questa modifica? (facoltativo)",
+      pending: "PROPOSTE IN ATTESA", votes: "{n} voto/i", vote: "Vota", voted: "✓ Votato", mine: "La tua proposta", withdraw: "Ritira", confirmWithdraw: "Ritirare questa proposta?",
+      send: "Invia {n} proposta/e", nothing: "Nessuna proposta per ora", ready: "{n} proposta/e pronta/e",
+      sentOk: "Grazie! {c} proposta/e creata/e, {v} voto/i aggiunto/i.", sentSame: "Hai già votato per queste proposte.", errPh: "Variabile mancante: {v}", errPhSend: "Correggi le variabili mancanti (schede rosse) prima dell'invio.", errNeedLogin: "Accedi per inviare le tue proposte.",
+      errQuota: "Limite giornaliero raggiunto, riprova domani.", errGeneric: "Azione non riuscita, riprova più tardi.", errLoad: "Impossibile caricare il dizionario.", loading: "Caricamento…", sending: "Invio…"
+    },
+    es: {
+      title: "Diccionario PoolGenAI", back: "← PoolGenAI",
+      intro: "Esta página muestra los textos de la aplicación. Las columnas EN y FR son fijas; para cada término del idioma elegido puede proponer una mejor formulación o votar una propuesta ya hecha. Cada propuesta se revisa antes de publicarse en la aplicación.",
+      need: "Inicie sesión con su cuenta PoolGenAI para proponer, ver las propuestas pendientes y votar.", email: "Email", pass: "Contraseña", login: "Iniciar sesión", google: "Continuar con Google", logout: "Cerrar sesión", who: "Sesión iniciada: {email}",
+      authBad: "Email o contraseña incorrectos.", authMany: "Demasiados intentos, inténtelo más tarde.", authErr: "No se pudo iniciar sesión, inténtelo de nuevo.", authNone: "El servicio de inicio de sesión no se pudo cargar. Recargue la página.", authFill: "Introduzca su email y contraseña.", session: "Sesión caducada, vuelva a iniciar sesión.",
+      target: "Idioma a revisar", variant: "Variante del portugués", vPT: "Portugal (PT-PT)", vBR: "Brasil (PT-BR)", vALL: "Ambas / indiferente",
+      search: "Buscar", section: "Sección", all: "Todas", other: "Otras", onlyMine: "Solo mis propuestas", onlyMissing: "Solo términos que faltan",
+      terms: "{n} término(s)", showMore: "Mostrar más", current: "ACTUAL", missing: "(falta: la app muestra el francés)", ph: "Su propuesta…", commentAdd: "+ comentario", commentPh: "¿Por qué este cambio? (opcional)",
+      pending: "PROPUESTAS PENDIENTES", votes: "{n} voto(s)", vote: "Votar", voted: "✓ Votado", mine: "Su propuesta", withdraw: "Retirar", confirmWithdraw: "¿Retirar esta propuesta?",
+      send: "Enviar {n} propuesta(s)", nothing: "Ninguna propuesta todavía", ready: "{n} propuesta(s) lista(s)",
+      sentOk: "¡Gracias! {c} propuesta(s) creada(s), {v} voto(s) añadido(s).", sentSame: "Ya ha votado por estas propuestas.", errPh: "Variable que falta: {v}", errPhSend: "Corrija las variables que faltan (tarjetas rojas) antes de enviar.", errNeedLogin: "Inicie sesión para enviar sus propuestas.",
+      errQuota: "Límite diario alcanzado, inténtelo mañana.", errGeneric: "No se pudo realizar la acción, inténtelo más tarde.", errLoad: "No se pudo cargar el diccionario.", loading: "Cargando…", sending: "Enviando…"
+    },
+    pt: {
+      title: "Dicionário PoolGenAI", back: "← PoolGenAI",
+      intro: "Esta página apresenta os textos da aplicação. As colunas EN e FR são fixas; para cada termo do idioma escolhido, pode propor uma formulação melhor ou votar numa proposta já feita. Cada proposta é revista antes de ser publicada na aplicação.",
+      need: "Inicie sessão com a sua conta PoolGenAI para propor, ver as propostas pendentes e votar.", email: "Email", pass: "Palavra-passe", login: "Iniciar sessão", google: "Continuar com o Google", logout: "Terminar sessão", who: "Sessão iniciada: {email}",
+      authBad: "Email ou palavra-passe incorretos.", authMany: "Demasiadas tentativas, tente mais tarde.", authErr: "Não foi possível iniciar sessão, tente novamente.", authNone: "O serviço de início de sessão não carregou. Recarregue a página.", authFill: "Introduza o email e a palavra-passe.", session: "Sessão expirada, inicie sessão novamente.",
+      target: "Idioma a rever", variant: "Variante do português", vPT: "Portugal (PT-PT)", vBR: "Brasil (PT-BR)", vALL: "Ambas / indiferente",
+      search: "Pesquisar", section: "Secção", all: "Todas", other: "Outras", onlyMine: "Só as minhas propostas", onlyMissing: "Só termos em falta",
+      terms: "{n} termo(s)", showMore: "Mostrar mais", current: "ATUAL", missing: "(em falta: a app mostra o francês)", ph: "A sua proposta…", commentAdd: "+ comentário", commentPh: "Porquê esta alteração? (opcional)",
+      pending: "PROPOSTAS PENDENTES", votes: "{n} voto(s)", vote: "Votar", voted: "✓ Votado", mine: "A sua proposta", withdraw: "Retirar", confirmWithdraw: "Retirar esta proposta?",
+      send: "Enviar {n} proposta(s)", nothing: "Ainda sem propostas", ready: "{n} proposta(s) pronta(s)",
+      sentOk: "Obrigado! {c} proposta(s) criada(s), {v} voto(s) adicionado(s).", sentSame: "Já votou nestas propostas.", errPh: "Variável em falta: {v}", errPhSend: "Corrija as variáveis em falta (cartões vermelhos) antes de enviar.", errNeedLogin: "Inicie sessão para enviar as suas propostas.",
+      errQuota: "Limite diário atingido, tente amanhã.", errGeneric: "Não foi possível executar a ação, tente mais tarde.", errLoad: "Não foi possível carregar o dicionário.", loading: "A carregar…", sending: "A enviar…"
+    }
+  };
+
+  var TH = {
+    fr: { thKey: "Clé", thPending: "Propositions en attente", thProp: "Votre proposition", thComment: "Commentaire" },
+    en: { thKey: "Key", thPending: "Pending suggestions", thProp: "Your suggestion", thComment: "Comment" },
+    de: { thKey: "Schlüssel", thPending: "Offene Vorschläge", thProp: "Ihr Vorschlag", thComment: "Kommentar" },
+    it: { thKey: "Chiave", thPending: "Proposte in attesa", thProp: "La tua proposta", thComment: "Commento" },
+    es: { thKey: "Clave", thPending: "Propuestas pendientes", thProp: "Su propuesta", thComment: "Comentario" },
+    pt: { thKey: "Chave", thPending: "Propostas pendentes", thProp: "A sua proposta", thComment: "Comentário" }
+  };
+  Object.keys(TH).forEach(function (l) { Object.assign(UI[l], TH[l]); });
+  var TC = {
+    fr: { check: "Contrôle", chkAll: "Tous les termes", chkUntr: "Sans traduction", chkLang: "Langue inattendue", chkBoth: "À vérifier (les deux)", tagSame: "⚠ identique au {l}", tagOther: "⚠ ressemble à {l}" },
+    en: { check: "Check", chkAll: "All terms", chkUntr: "Not translated", chkLang: "Unexpected language", chkBoth: "To check (both)", tagSame: "⚠ same as {l}", tagOther: "⚠ looks like {l}" },
+    de: { check: "Prüfung", chkAll: "Alle Begriffe", chkUntr: "Nicht übersetzt", chkLang: "Unerwartete Sprache", chkBoth: "Zu prüfen (beide)", tagSame: "⚠ identisch mit {l}", tagOther: "⚠ sieht aus wie {l}" },
+    it: { check: "Controllo", chkAll: "Tutti i termini", chkUntr: "Non tradotti", chkLang: "Lingua inattesa", chkBoth: "Da verificare (entrambi)", tagSame: "⚠ identico a {l}", tagOther: "⚠ sembra {l}" },
+    es: { check: "Control", chkAll: "Todos los términos", chkUntr: "Sin traducir", chkLang: "Idioma inesperado", chkBoth: "Por revisar (ambos)", tagSame: "⚠ idéntico a {l}", tagOther: "⚠ parece {l}" },
+    pt: { check: "Controlo", chkAll: "Todos os termos", chkUntr: "Sem tradução", chkLang: "Idioma inesperado", chkBoth: "A verificar (ambos)", tagSame: "⚠ igual ao {l}", tagOther: "⚠ parece {l}" }
+  };
+  Object.keys(TC).forEach(function (l) { Object.assign(UI[l], TC[l]); });
+
+  // ---------- Worker (même logique que l'app) ----------
+  var PROXY_URLS = {
+    prod: "https://poolgenai-proxy.support-poolgenai.workers.dev",
+    test: "https://poolgenai-proxy-test.support-poolgenai.workers.dev",
+    dev: "https://poolgenai-proxy-dev.support-poolgenai.workers.dev"
+  };
+  var PROXY = PROXY_URLS[ENV];
+
+  // ---------- Stockage local (jamais bloquant) ----------
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+
+  // ---------- État ----------
+  var DICT = [];              // [{ key, en, fr, texts:{de,it,es,pt}, prefix }]
+  var drafts = {};            // "lang|key" -> { text, variant, comment }
+  try { drafts = JSON.parse(lsGet("pgai_dict_drafts") || "{}") || {}; } catch (e) { drafts = {}; }
+  var uiLang = lsGet("pgai_dict_ui") || (navigator.language || "en").slice(0, 2).toLowerCase();
+  if (!UI[uiLang]) uiLang = "en";
+  var target = lsGet("pgai_dict_target");
+  if (["de", "it", "es", "pt"].indexOf(target) < 0) target = ({ de: "de", it: "it", es: "es", pt: "pt" })[uiLang] || "pt";
+  var variant = lsGet("pgai_dict_variant");
+  if (["PT-PT", "PT-BR", "PT-ALL"].indexOf(variant) < 0) variant = "PT-PT";
+  var user = null;            // utilisateur Firebase connecté
+  var pending = {};           // lang -> { key: [ {id, variant, proposed, votes, mine, voted} ] }
+  var PAGE = 40;
+  var shown = PAGE;
+  var filtered = [];
+  var SECTION_MAIN = [];
+
+  var $ = function (id) { return document.getElementById(id); };
+  function t(k, vars) {
+    var s = (UI[uiLang] && UI[uiLang][k]) || UI.en[k] || k;
+    if (vars) Object.keys(vars).forEach(function (n) { s = s.replace("{" + n + "}", vars[n]); });
+    return s;
+  }
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]; });
+  }
+  function norm(s) { return String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
+  function placeholders(s) { return (String(s || "").match(/\{[A-Za-z0-9_]+\}/g) || []); }
+  function missingVars(d, text) {
+    var need = placeholders(d.fr);
+    return need.filter(function (v, i) { return need.indexOf(v) === i && text.indexOf(v) < 0; });
+  }
+  var LANG_NAMES = { de: "Deutsch", it: "Italiano", es: "Español" };
+  function langOptions() {
+    return ["de", "it", "es"].map(function (l) { return [l, LANG_NAMES[l]]; })
+      .concat(["PT-PT", "PT-BR", "PT-ALL"].map(function (v) { return ["pt:" + v, "Português · " + vLabel(v)]; }));
+  }
+  function visiblePending(key) {
+    var a = (pending[target] || {})[key] || [];
+    return target === "pt" ? a.filter(function (p) { return (p.variant || "PT-ALL") === variant; }) : a;
+  }
+  function vLabel(v) { return t(v === "PT-PT" ? "vPT" : v === "PT-BR" ? "vBR" : "vALL"); }
+
+  // ---- DETECT BEGIN ----
+  // Contrôle qualité d'un terme : « sans traduction » (absent, ou identique au FR/EN alors que le terme n'est pas neutre)
+  // et « langue inattendue » (le texte ressemble nettement plus à une autre langue). La détection s'appuie sur des
+  // profils de trigrammes de caractères APPRIS SUR LE DICTIONNAIRE LUI-MÊME (vocabulaire du domaine, 6 langues) ;
+  // le texte contrôlé est retiré de son propre profil (validation « leave-one-out »).
+  var DET_LANGS = ["fr", "en", "de", "it", "es", "pt"];
+  var DET_MARGIN = 0.30;   // écart de log-vraisemblance moyen par trigramme exigé pour signaler une autre langue
+  var DET_MIN_TRI = 10;    // sous ce nombre de trigrammes, pas de verdict
+  var PROF = null;
+  function detGrams(text) {
+    var s = " " + String(text || "").toLowerCase().replace(/\{[A-Za-z0-9_]+\}/g, " ").replace(/[^a-zà-ÿœß]+/g, " ").replace(/\s+/g, " ").trim() + " ";
+    var g = [];
+    for (var i = 0; i + 3 <= s.length; i++) g.push(s.substr(i, 3));
+    return g;
+  }
+  function detBuild(DICT) {
+    PROF = {};
+    DET_LANGS.forEach(function (l) { PROF[l] = { c: {}, n: 0 }; });
+    DICT.forEach(function (d) {
+      var src = { fr: d.fr, en: d.en, de: d.texts.de, it: d.texts.it, es: d.texts.es, pt: d.texts.pt };
+      DET_LANGS.forEach(function (l) {
+        detGrams(src[l]).forEach(function (g) { PROF[l].c[g] = (PROF[l].c[g] || 0) + 1; PROF[l].n++; });
+      });
+    });
+  }
+  function detScore(grams, lang, selfLang) {
+    var P = PROF[lang], own = {}, k;
+    if (lang === selfLang) grams.forEach(function (g) { own[g] = (own[g] || 0) + 1; });
+    var tot = P.n - (lang === selfLang ? grams.length : 0), ll = 0;
+    for (k = 0; k < grams.length; k++) {
+      var c = (P.c[grams[k]] || 0) - (own[grams[k]] || 0);
+      ll += Math.log((c + 0.3) / (tot + 0.3 * 12000));
+    }
+    return ll;
+  }
+  // Langue manifestement différente de `lang` pour ce texte (ou null).
+  function detectOther(text, lang) {
+    if (!PROF) return null;
+    var grams = detGrams(text);
+    if (grams.length < DET_MIN_TRI) return null;
+    var exp = detScore(grams, lang, lang), best = null, bestV = -Infinity;
+    DET_LANGS.forEach(function (l) {
+      if (l === lang) return;
+      var v = detScore(grams, l, null);
+      if (v > bestV) { bestV = v; best = l; }
+    });
+    return (bestV - exp) / grams.length > DET_MARGIN ? best : null;
+  }
+  // d : { fr, en, texts:{ de, it, es, pt } } ; renvoie { missing, same ("FR"/"EN"/null), other (code de langue/null) }
+  function checkTerm(d, lang) {
+    var cur = d.texts[lang];
+    var res = { missing: false, same: null, other: null };
+    if (!cur || !String(cur).trim()) { res.missing = true; return res; }
+    var c = String(cur).trim().toLowerCase();
+    var all = [d.fr, d.en, d.texts.de, d.texts.it, d.texts.es, d.texts.pt];
+    var sameCount = all.filter(function (x) { return String(x || "").trim().toLowerCase() === c; }).length;
+    var neutral = sameCount >= 4 || !/[a-zà-ÿ]{3}/i.test(c) || /@|:\/\//.test(c); // noms propres, adresses, valeurs techniques
+    if (!neutral) {
+      if (String(d.fr || "").trim().toLowerCase() === c) res.same = "FR";
+      else if (String(d.en || "").trim().toLowerCase() === c) res.same = "EN";
+    }
+    if (!res.same && !neutral && sameCount < 3) res.other = detectOther(cur, lang);
+    return res;
+  }
+  // ---- DETECT END ----
+
+  var checkCache = {};
+  function getCheck(d) {
+    var k = target + "|" + d.key;
+    return checkCache[k] || (checkCache[k] = checkTerm(d, target));
+  }
+  function isUntranslated(d) { var r = getCheck(d); return r.missing || !!r.same; }
+  function isWrongLang(d) { return !!getCheck(d).other; }
+  function updateCheckOptions() {
+    var sel = $("check"), cur = sel.value, nU = 0, nL = 0, nB = 0;
+    if (DICT.length) DICT.forEach(function (d) { var u = isUntranslated(d), w = isWrongLang(d); if (u) nU++; if (w) nL++; if (u || w) nB++; });
+    var cnt = DICT.length ? function (n) { return " (" + n + ")"; } : function () { return ""; };
+    sel.innerHTML = '<option value="">' + esc(t("chkAll")) + "</option>" +
+      '<option value="untr">' + esc(t("chkUntr") + cnt(nU)) + "</option>" +
+      '<option value="lang">' + esc(t("chkLang") + cnt(nL)) + "</option>" +
+      '<option value="both">' + esc(t("chkBoth") + cnt(nB)) + "</option>";
+    sel.value = cur || "";
+  }
+
+  // ---------- Chargement du dictionnaire (extrait de PoolGenAI.jsx) ----------
+  function loadDictionary() {
+    return fetch("PoolGenAI.jsx", { cache: "no-cache" }).then(function (r) {
+      if (!r.ok) throw new Error("http " + r.status);
+      return r.text();
+    }).then(function (src) {
+      var a = src.indexOf("const TRANSLATIONS = {");
+      if (a < 0) throw new Error("TRANSLATIONS introuvable");
+      var b = src.indexOf("\n};", a);
+      if (b < 0) throw new Error("fin de TRANSLATIONS introuvable");
+      var T = new Function("return " + src.slice(a + "const TRANSLATIONS = ".length, b + 2))();
+      return Object.keys(T.fr).map(function (k) {
+        return { key: k, en: T.en[k] || "", fr: T.fr[k] || "", prefix: k.split("_")[0], texts: { de: T.de[k], it: T.it[k], es: T.es[k], pt: T.pt[k] } };
+      });
+    });
+  }
+
+  // ---------- Réseau authentifié ----------
+  function authedPost(path, payload) {
+    if (!auth || !auth.currentUser) { var e0 = new Error("noauth"); e0.noauth = true; return Promise.reject(e0); }
+    return auth.currentUser.getIdToken().then(function (tok) {
+      return fetch(PROXY + path, { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + tok }, body: JSON.stringify(payload) });
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (b) { return { status: r.status, body: b }; });
+    });
+  }
+  function errMsg(r) {
+    if (r && r.status === 401) return t("session");
+    if (r && r.body && r.body.code === "i18n_quota") return t("errQuota");
+    return t("errGeneric");
+  }
+  function loadPending() {
+    if (!user) return Promise.resolve();
+    var lang = target;
+    return authedPost("/i18n/list", { lang: lang }).then(function (r) {
+      if (r.status !== 200) return;
+      var by = {};
+      (r.body.proposals || []).forEach(function (p) { (by[p.key] = by[p.key] || []).push(p); });
+      Object.keys(by).forEach(function (k) { by[k].sort(function (a, b) { return b.votes - a.votes; }); });
+      pending[lang] = by;
+    }).catch(function () {});
+  }
+  function myPending(key) { return visiblePending(key).filter(function (p) { return p.mine; }); }
+
+  // ---------- Rendu ----------
+  function draftId(key) { return target + "|" + key; }
+  function draftOf(key) { return drafts[draftId(key)]; }
+  function isReady(lang, key, d) {
+    var dr = drafts[lang + "|" + key];
+    if (!dr || !dr.text || !dr.text.trim()) return false;
+    return dr.text.trim() !== (d.texts[lang] || "").trim();
+  }
+  function readyEntries() {
+    var res = [];
+    DICT.forEach(function (d) {
+      ["de", "it", "es", "pt"].forEach(function (l) { if (isReady(l, d.key, d)) res.push({ d: d, lang: l, dr: drafts[l + "|" + d.key] }); });
+    });
+    return res;
+  }
+
+  function pendingHtml(d) {
+    var arr = visiblePending(d.key);
+    if (!user || !arr.length) return "";
+    var h = "";
+    arr.forEach(function (p) {
+      h += '<div class="pp"><div class="txt">' + esc(p.proposed) +
+        (p.mine ? '<span class="tag mine">' + esc(t("mine")) + "</span>" : "") + "</div>";
+      h += '<div class="act"><span>' + esc(t("votes", { n: p.votes })) + "</span>";
+      if (p.voted && p.mine) h += "<span>" + esc(t("voted")) + "</span>";
+      else if (p.voted) h += '<button type="button" class="ghost small" data-act="unvote" data-id="' + esc(p.id) + '">' + esc(t("voted")) + "</button>";
+      else h += '<button type="button" class="small" data-act="vote" data-id="' + esc(p.id) + '">' + esc(t("vote")) + "</button>";
+      if (p.mine) h += '<button type="button" class="btn-link" data-act="withdraw" data-id="' + esc(p.id) + '">' + esc(t("withdraw")) + "</button>";
+      h += "</div></div>";
+    });
+    return h;
+  }
+
+  function rowHtml(d) {
+    var cur = d.texts[target];
+    var dr = draftOf(d.key) || {};
+    var ready = isReady(target, d.key, d);
+    var miss = ready ? missingVars(d, dr.text.trim()) : [];
+    var cls = "term" + (ready ? (miss.length ? " err" : " has") : "");
+    var rows = Math.max(2, Math.min(8, Math.ceil(((dr.text || cur || d.fr || "").length) / 30)));
+    var h = '<tr class="' + cls + '" data-key="' + esc(d.key) + '">';
+    h += '<td data-label="' + esc(t("thKey")) + '"><span class="key">' + esc(d.key) + "</span></td>";
+    h += '<td data-label="EN">' + esc(d.en) + "</td>";
+    h += '<td data-label="FR">' + esc(d.fr) + "</td>";
+    var ck = getCheck(d);
+    var why = ck.same ? t("tagSame", { l: ck.same }) : ck.other ? t("tagOther", { l: ck.other.toUpperCase() }) : "";
+    h += '<td data-label="' + esc(t("current")) + " · " + target.toUpperCase() + '"' + (cur ? "" : ' class="missing"') + ">" + (cur ? esc(cur) : esc(t("missing"))) +
+      (why ? '<br><span class="tag warn">' + esc(why) + "</span>" : "") + "</td>";
+    h += '<td class="c-pend" data-label="' + esc(t("thPending")) + '">' + pendingHtml(d) + "</td>";
+    h += '<td data-label="' + esc(t("thProp")) + '"><textarea data-act="text" rows="' + rows + '" placeholder="' + esc(t("ph")) + '">' + esc(dr.text || "") + "</textarea>" +
+      '<div class="warn" data-role="warn">' + (miss.length ? esc(t("errPh", { v: miss.join(" ") })) : "") + "</div></td>";
+    h += '<td data-label="' + esc(t("thComment")) + '"><input type="text" data-act="comment" maxlength="300" placeholder="' + esc(t("commentPh")) + '" value="' + esc(dr.comment || "") + '" /></td>';
+    return h + "</tr>";
+  }
+
+  function applyFilters() {
+    var q = norm($("search").value.trim());
+    var sec = $("section").value;
+    var mine = $("only-mine").checked;
+    var chk = $("check").value;
+    filtered = DICT.filter(function (d) {
+      if (sec && (sec === "__other" ? SECTION_MAIN.indexOf(d.prefix) >= 0 : d.prefix !== sec)) return false;
+      if (chk === "untr" && !isUntranslated(d)) return false;
+      if (chk === "lang" && !isWrongLang(d)) return false;
+      if (chk === "both" && !(isUntranslated(d) || isWrongLang(d))) return false;
+      if (mine && !isReady(target, d.key, d) && !myPending(d.key).length) return false;
+      if (q && norm(d.key + " " + d.en + " " + d.fr + " " + (d.texts[target] || "")).indexOf(q) < 0) return false;
+      return true;
+    });
+    shown = PAGE;
+    renderList();
+  }
+  function renderList() {
+    $("count").textContent = t("terms", { n: filtered.length });
+    $("list").innerHTML = filtered.slice(0, shown).map(rowHtml).join("");
+    $("more").style.display = filtered.length > shown ? "" : "none";
+    $("more-btn").textContent = t("showMore");
+    $("list").querySelectorAll("textarea").forEach(autoSize);
+  }
+  function refreshCard(key) {
+    var d = DICT.filter(function (x) { return x.key === key; })[0];
+    var el = $("list").querySelector('.term[data-key="' + key + '"]');
+    if (!d || !el) return;
+    var tmp = document.createElement("tbody");
+    tmp.innerHTML = rowHtml(d);
+    el.parentNode.replaceChild(tmp.firstChild, el);
+    var ta = $("list").querySelector('.term[data-key="' + key + '"] textarea');
+    if (ta) autoSize(ta);
+  }
+  function autoSize(ta) { ta.style.height = "auto"; ta.style.height = Math.min(ta.scrollHeight + 2, 260) + "px"; }
+
+  function buildSections() {
+    var counts = {};
+    DICT.forEach(function (d) { counts[d.prefix] = (counts[d.prefix] || 0) + 1; });
+    SECTION_MAIN = Object.keys(counts).filter(function (p) { return counts[p] >= 8; }).sort();
+    var cur = $("section").value;
+    $("section").innerHTML = '<option value="">' + esc(t("all")) + "</option>" +
+      SECTION_MAIN.map(function (p) { return '<option value="' + esc(p) + '">' + esc(p) + " (" + counts[p] + ")</option>"; }).join("") +
+      '<option value="__other">' + esc(t("other")) + "</option>";
+    $("section").value = cur && $("section").querySelector('option[value="' + cur + '"]') ? cur : "";
+  }
+
+  function updateBar() {
+    var n = readyEntries().length;
+    $("send").textContent = t("send", { n: n });
+    $("send").disabled = n === 0;
+    if (!$("bar-status").classList.contains("keep")) {
+      $("bar-status").className = "status";
+      $("bar-status").textContent = n ? t("ready", { n: n }) : t("nothing");
+    }
+  }
+  function flashBar(msg, cls) {
+    $("bar-status").className = "status keep " + (cls || "");
+    $("bar-status").textContent = msg;
+  }
+  function saveDrafts() {
+    Object.keys(drafts).forEach(function (k) { var d = drafts[k]; if (!d || (!(d.text || "").trim() && !d.comment)) delete drafts[k]; });
+    lsSet("pgai_dict_drafts", JSON.stringify(drafts));
+  }
+
+  // ---------- Connexion : affichage ----------
+  function renderAuth() {
+    $("auth-out").style.display = user ? "none" : "";
+    $("auth-in").style.display = user ? "" : "none";
+    $("a-who").textContent = user ? t("who", { email: user.email || user.displayName || "" }) : "";
+  }
+  function setAuthStatus(msg, cls) { $("a-status").className = "status " + (cls || ""); $("a-status").textContent = msg || ""; }
+  function authErrorText(e) {
+    var c = (e && e.code) || "";
+    if (c === "auth/invalid-credential" || c === "auth/wrong-password" || c === "auth/user-not-found" || c === "auth/invalid-email") return t("authBad");
+    if (c === "auth/too-many-requests") return t("authMany");
+    return (e && e.message && !e.code) ? e.message : t("authErr");
+  }
+  function doLogin() {
+    var email = $("a-email").value.trim(), pass = $("a-pass").value;
+    if (!auth) { setAuthStatus(t("authNone"), "bad"); return; }
+    if (!email || !pass) { setAuthStatus(t("authFill"), "bad"); return; }
+    $("a-login").disabled = true; setAuthStatus("");
+    fb.signInWithEmailAndPassword(auth, email, pass).then(function () { $("a-pass").value = ""; })
+      .catch(function (e) { setAuthStatus(authErrorText(e), "bad"); })
+      .then(function () { $("a-login").disabled = false; });
+  }
+  function doGoogle() {
+    if (!auth) { setAuthStatus(t("authNone"), "bad"); return; }
+    if (!(window.google && window.google.accounts && window.google.accounts.oauth2)) { setAuthStatus(t("authNone"), "bad"); return; }
+    setAuthStatus("");
+    var client = window.google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_IDS[ENV],
+      scope: "openid email profile",
+      callback: function (resp) {
+        if (!resp || resp.error) { setAuthStatus(t("authErr"), "bad"); return; }
+        fb.signInWithCredential(auth, fb.GoogleAuthProvider.credential(null, resp.access_token)).catch(function (e) { setAuthStatus(authErrorText(e), "bad"); });
+      },
+      error_callback: function () { setAuthStatus(t("authErr"), "bad"); }
+    });
+    client.requestAccessToken();
+  }
+
+  // ---------- Textes statiques ----------
+  function applyUi() {
+    document.documentElement.lang = uiLang;
+    document.title = t("title");
+    [["t-title", "title"], ["t-back", "back"], ["t-intro", "intro"], ["t-need", "need"], ["t-email", "email"], ["t-pass", "pass"],
+      ["a-login", "login"], ["a-google", "google"], ["a-logout", "logout"], ["t-target", "target"],
+      ["t-search", "search"], ["t-section", "section"], ["t-only-mine", "onlyMine"], ["t-check", "check"]
+    ].forEach(function (p) { $(p[0]).textContent = t(p[1]); });
+    $("target").innerHTML = langOptions().map(function (o) { return '<option value="' + o[0] + '">' + esc(o[1]) + "</option>"; }).join("");
+    $("thead-row").innerHTML = [t("thKey"), "EN", "FR", t("current") + " · " + target.toUpperCase(), t("thPending"), t("thProp"), t("thComment")].map(function (x) { return "<th>" + esc(x) + "</th>"; }).join("");
+    $("ui-lang").value = uiLang;
+    $("target").value = target === "pt" ? "pt:" + variant : target;
+    renderAuth();
+    if (DICT.length) buildSections();
+    updateCheckOptions();
+    updateBar();
+  }
+
+  // ---------- Événements ----------
+  function bind() {
+    $("ui-lang").addEventListener("change", function () { uiLang = this.value; lsSet("pgai_dict_ui", uiLang); applyUi(); renderList(); });
+    $("target").addEventListener("change", function () {
+      var parts = this.value.split(":");
+      target = parts[0]; if (parts[1]) variant = parts[1];
+      lsSet("pgai_dict_target", target); lsSet("pgai_dict_variant", variant); applyUi(); applyFilters();
+      loadPending().then(function () { if (DICT.length) renderList(); });
+    });
+    var tmr;
+    $("search").addEventListener("input", function () { clearTimeout(tmr); tmr = setTimeout(applyFilters, 180); });
+    ["section", "only-mine", "check"].forEach(function (id) { $(id).addEventListener("change", applyFilters); });
+    $("more-btn").addEventListener("click", function () { shown += PAGE; renderList(); });
+    $("a-login").addEventListener("click", doLogin);
+    $("a-google").addEventListener("click", doGoogle);
+    $("a-pass").addEventListener("keydown", function (e) { if (e.key === "Enter") doLogin(); });
+    $("a-logout").addEventListener("click", function () { if (auth) fb.signOut(auth); });
+
+    var list = $("list");
+    list.addEventListener("input", function (e) {
+      var el = e.target, card = el.closest(".term");
+      if (!card) return;
+      var key = card.getAttribute("data-key"), id = draftId(key);
+      var d = DICT.filter(function (x) { return x.key === key; })[0];
+      var dr = drafts[id] || (drafts[id] = {});
+      var act = el.getAttribute("data-act");
+      if (act === "text") { dr.text = el.value; if (target === "pt") dr.variant = variant; autoSize(el); }
+      if (act === "comment") dr.comment = el.value;
+      var ready = isReady(target, key, d);
+      var miss = ready ? missingVars(d, dr.text.trim()) : [];
+      card.className = "term" + (ready ? (miss.length ? " err" : " has") : "");
+      card.querySelector('[data-role="warn"]').textContent = miss.length ? t("errPh", { v: miss.join(" ") }) : "";
+      saveDrafts();
+      $("bar-status").classList.remove("keep");
+      updateBar();
+    });
+    list.addEventListener("change", function (e) {
+      var el = e.target, card = el.closest(".term");
+      if (!card || el.getAttribute("data-act") !== "variant") return;
+      (drafts[draftId(card.getAttribute("data-key"))] || (drafts[draftId(card.getAttribute("data-key"))] = {})).variant = el.value;
+      saveDrafts();
+    });
+    list.addEventListener("click", function (e) {
+      var el = e.target.closest("[data-act]");
+      if (!el) return;
+      var act = el.getAttribute("data-act");
+      var card = el.closest(".term");
+      if (act === "addcomment") {
+        var inp = document.createElement("input");
+        inp.type = "text"; inp.maxLength = 300; inp.setAttribute("data-act", "comment"); inp.placeholder = t("commentPh");
+        el.parentNode.replaceChild(inp, el);
+        inp.focus();
+        return;
+      }
+      if (act !== "vote" && act !== "unvote" && act !== "withdraw") return;
+      var key = card.getAttribute("data-key"), id = el.getAttribute("data-id");
+      if (act === "withdraw" && !window.confirm(t("confirmWithdraw"))) return;
+      el.disabled = true;
+      var req = act === "withdraw" ? authedPost("/i18n/withdraw", { suggestionId: id })
+        : authedPost("/i18n/vote", act === "unvote" ? { suggestionId: id, remove: true } : { suggestionId: id });
+      req.then(function (r) {
+        if (r.status !== 200 && !(r.status === 404 && act !== "vote")) flashBar(errMsg(r), "bad");
+        return loadPending();
+      }).catch(function () { flashBar(t("errGeneric"), "bad"); })
+        .then(function () { refreshCard(key); });
+    });
+
+    $("send").addEventListener("click", send);
+  }
+
+  function send() {
+    if (!user) { flashBar(t("errNeedLogin"), "bad"); return; }
+    var entries = readyEntries();
+    if (!entries.length) return;
+    var bad = entries.filter(function (e) { return missingVars(e.d, e.dr.text.trim()).length; });
+    if (bad.length) { flashBar(t("errPhSend"), "bad"); return; }
+    var items = entries.map(function (e) {
+      var it = { key: e.d.key, lang: e.lang, current: e.d.texts[e.lang] || "", proposed: e.dr.text.trim(), comment: (e.dr.comment || "").trim() };
+      if (e.lang === "pt") it.variant = e.dr.variant || variant;
+      return it;
+    });
+    $("send").disabled = true;
+    flashBar(t("sending"), "");
+    var chunks = [];
+    for (var i = 0; i < items.length; i += 100) chunks.push(items.slice(i, i + 100));
+    var created = 0, voted = 0, already = 0;
+    chunks.reduce(function (p, chunk) {
+      return p.then(function () {
+        return authedPost("/i18n/suggest", { items: chunk }).then(function (r) {
+          if (r.status !== 200) { var err = new Error("send"); err.res = r; throw err; }
+          created += r.body.created || 0; voted += r.body.voted || 0; already += r.body.already || 0;
+          chunk.forEach(function (it) { delete drafts[it.lang + "|" + it.key]; });
+          saveDrafts();
+        });
+      });
+    }, Promise.resolve()).then(function () {
+      flashBar(created || voted ? t("sentOk", { c: created, v: voted }) : t("sentSame"), "ok");
+      return loadPending();
+    }).then(function () { renderList(); updateBar(); })
+      .catch(function (e) {
+        flashBar(errMsg(e && e.res), "bad");
+        $("send").disabled = false;
+        renderList();
+      });
+  }
+
+  // ---------- Démarrage ----------
+  bind();
+  applyUi();
+  $("count").textContent = t("loading");
+  if (location.protocol === "file:") {
+    // Ouverte depuis le disque : origine « null » (connexion Google refusée) et lecture de PoolGenAI.jsx bloquée.
+    $("count").textContent = t("errFile"); $("count").style.color = "var(--warn)";
+    $("a-google").disabled = true; $("a-login").disabled = true;
+    return;
+  }
+  if (auth) {
+    fb.onAuthStateChanged(auth, function (u) {
+      user = u || null;
+      if (!user) pending = {};
+      renderAuth();
+      if (user) loadPending().then(function () { if (DICT.length) applyFilters(); });
+      else if (DICT.length) applyFilters();
+    });
+  }
+  loadDictionary().then(function (d) {
+    DICT = d; detBuild(DICT); checkCache = {}; buildSections(); updateCheckOptions(); applyFilters(); updateBar();
+  }).catch(function () { $("count").textContent = t("errLoad"); $("count").style.color = "var(--warn)"; });
+})();
+</script>
+</body>
+</html>
