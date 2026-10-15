@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.150.0";
+const APP_VERSION = "1.150.1";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -8953,40 +8953,18 @@ function PoolGenAIApp() {
   );
   const [tab, setTab] = useState("dashboard"); // dashboard | history | products | settings
   // v1.150.0 — Balayage gauche/droite pour passer d'un onglet à l'autre (Bassin, Historique,
-  // Produits, Réglages). Posé uniquement sur <main> : les popups sont des couches plein écran
-  // distinctes (hors de <main>), donc jamais « balayables ». Voir swipeBlocked pour les zones
-  // où le geste appartient à autre chose (champs, graphiques, listes défilantes horizontalement).
-  const swipeRef = useRef(null);
-  const handleSwipeStart = (e) => {
-    swipeRef.current = null;
-    if (!e.touches || e.touches.length !== 1) return;
-    const p = e.touches[0];
-    // Bords de l'écran réservés aux gestes du système (retour arrière Android/iOS).
-    if (p.clientX < 24 || p.clientX > window.innerWidth - 24) return;
-    if (swipeBlocked(e.target, e.currentTarget)) return;
-    swipeRef.current = { x: p.clientX, y: p.clientY, t: Date.now() };
-  };
-  const handleSwipeMove = (e) => {
-    const s = swipeRef.current;
-    if (!s || !e.touches || e.touches.length !== 1) { swipeRef.current = null; return; }
-    // Défilement vertical clairement engagé : ce n'est pas un balayage d'onglet.
-    if (Math.abs(e.touches[0].clientY - s.y) > 14 && Math.abs(e.touches[0].clientY - s.y) > Math.abs(e.touches[0].clientX - s.x)) swipeRef.current = null;
-  };
-  const handleSwipeEnd = (e) => {
-    const s = swipeRef.current;
-    swipeRef.current = null;
-    if (!s || !e.changedTouches || !e.changedTouches[0]) return;
-    const dx = e.changedTouches[0].clientX - s.x;
-    const dy = e.changedTouches[0].clientY - s.y;
-    if (Date.now() - s.t > 700) return;
-    if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 2) return;
-    try { if (window.getSelection && String(window.getSelection())) return; } catch (err) { /* ignore */ }
-    const i = TAB_ORDER.indexOf(tab);
-    const j = dx < 0 ? i + 1 : i - 1; // balayage vers la gauche = onglet suivant
-    if (i < 0 || j < 0 || j >= TAB_ORDER.length) return;
-    setTab(TAB_ORDER[j]);
-    track("screen_view", { screen_name: TAB_ORDER[j], via: "swipe" });
-  };
+  // Produits, Réglages). v1.150.1 — l'écran suit le doigt (voir attachTabSwipe). Posé uniquement sur
+  // <main> : les popups sont des couches plein écran distinctes, donc jamais « balayables ».
+  const mainElRef = useRef(null);
+  if (!mainElRef.current) {
+    let detach = null;
+    mainElRef.current = (el) => {
+      if (detach) { detach(); detach = null; }
+      if (el) detach = attachTabSwipe(el, () => tabStateRef.current, (id) => setTab(id));
+    };
+  }
+  const tabStateRef = useRef(tab);
+  tabStateRef.current = tab;
   const [showAddMeasure, setShowAddMeasure] = useState(false);
   const [showAddProduct, setShowAddProduct] = useState(false);
   // v1.62.0 — Sous-page "Mes produits à acheter", accessible depuis l'onglet Produits.
@@ -12116,13 +12094,7 @@ function PoolGenAIApp() {
         viewContext={viewContext}
         lang={lang}
       />
-      <main
-        style={styles.main}
-        onTouchStart={handleSwipeStart}
-        onTouchMove={handleSwipeMove}
-        onTouchEnd={handleSwipeEnd}
-        onTouchCancel={() => { swipeRef.current = null; }}
-      >
+      <main style={styles.main} ref={mainElRef.current}>
         {activePools.length === 0 && !viewContext && tab !== "settings" ? (
           <NoPoolEmptyState lang={lang} onCreate={() => setShowAddPool(true)} />
         ) : (<>
@@ -12811,6 +12783,96 @@ function swipeBlocked(el, root) {
     if (n.scrollWidth > n.clientWidth + 2 && (cs.overflowX === "auto" || cs.overflowX === "scroll")) return true;
   }
   return false;
+}
+
+// Branche le balayage sur <main> (écouteurs natifs : touchmove doit pouvoir appeler preventDefault).
+//  - le contenu suit le doigt (translateX) dès qu'un geste horizontal est reconnu ; résistance aux extrémités ;
+//  - au relâchement, si la distance ou la vitesse suffit : le contenu sort de l'écran dans le sens du geste,
+//    l'onglet change, le nouvel écran entre par le côté opposé ; sinon il revient en place ;
+//  - transform / willChange sont TOUJOURS retirés à la fin (un transform créerait un bloc conteneur pour les
+//    éléments position:fixed contenus dans <main>). Mouvement réduit : changement d'onglet sans animation.
+function attachTabSwipe(el, getTab, goTab) {
+  let s = null;
+  let busy = false;
+  const reduced = () => { try { return window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } };
+  const clear = () => { el.style.transition = ""; el.style.transform = ""; el.style.willChange = ""; busy = false; };
+  const slideBack = () => {
+    busy = true;
+    el.style.transition = "transform 0.22s ease-out";
+    el.style.transform = "translate3d(0,0,0)";
+    setTimeout(clear, 250);
+  };
+  const commit = (dir, W) => {
+    // dir = +1 : onglet suivant (le contenu sort vers la gauche) ; -1 : précédent (sort vers la droite)
+    const next = TAB_ORDER[TAB_ORDER.indexOf(getTab()) + dir];
+    if (!next) { slideBack(); return; }
+    track("screen_view", { screen_name: next, via: "swipe" });
+    if (reduced()) { goTab(next); clear(); return; }
+    busy = true;
+    el.style.transition = "transform 0.17s ease-in";
+    el.style.transform = "translate3d(" + (-dir * W) + "px,0,0)";
+    setTimeout(() => {
+      // Nouveau contenu rendu tout de suite (flushSync), placé hors écran du côté d'arrivée, puis glissé en place.
+      const apply = () => goTab(next);
+      try { ReactDOM.flushSync(apply); } catch (e) { apply(); }
+      el.style.transition = "none";
+      el.style.transform = "translate3d(" + (dir * W) + "px,0,0)";
+      void el.offsetWidth; // force le calcul de style avant l'animation d'entrée
+      el.style.transition = "transform 0.22s ease-out";
+      el.style.transform = "translate3d(0,0,0)";
+      setTimeout(clear, 250);
+    }, 175);
+  };
+  const onStart = (e) => {
+    s = null;
+    if (busy || !e.touches || e.touches.length !== 1) return;
+    const p = e.touches[0];
+    // Bords de l'écran réservés aux gestes du système (retour arrière Android/iOS).
+    if (p.clientX < 24 || p.clientX > window.innerWidth - 24) return;
+    if (swipeBlocked(e.target, el)) return;
+    s = { x: p.clientX, y: p.clientY, t: Date.now(), mode: "pending" };
+  };
+  const onMove = (e) => {
+    if (!s) return;
+    if (!e.touches || e.touches.length !== 1) { if (s.mode === "drag") slideBack(); s = null; return; }
+    const dx = e.touches[0].clientX - s.x;
+    const dy = e.touches[0].clientY - s.y;
+    if (s.mode === "pending") {
+      if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) { s = null; return; } // défilement vertical
+      if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+        s.mode = "drag";
+        el.style.transition = "none";
+        el.style.willChange = "transform";
+      } else return;
+    }
+    if (e.cancelable) e.preventDefault();
+    const i = TAB_ORDER.indexOf(getTab());
+    const atEdge = (dx < 0 && i >= TAB_ORDER.length - 1) || (dx > 0 && i <= 0);
+    el.style.transform = "translate3d(" + (atEdge ? dx * 0.25 : dx) + "px,0,0)"; // résistance aux extrémités
+  };
+  const onEnd = (e) => {
+    const st = s;
+    s = null;
+    if (!st || st.mode !== "drag" || !e.changedTouches || !e.changedTouches[0]) return;
+    const dx = e.changedTouches[0].clientX - st.x;
+    const W = el.clientWidth || window.innerWidth;
+    const speed = Math.abs(dx) / Math.max(Date.now() - st.t, 1); // px/ms
+    try { if (window.getSelection && String(window.getSelection())) { slideBack(); return; } } catch (err) { /* ignore */ }
+    if (Math.abs(dx) > W * 0.28 || (speed > 0.5 && Math.abs(dx) > 40)) commit(dx < 0 ? 1 : -1, W);
+    else slideBack();
+  };
+  const onCancel = () => { const wasDrag = s && s.mode === "drag"; s = null; if (wasDrag) slideBack(); };
+  el.addEventListener("touchstart", onStart, { passive: true });
+  el.addEventListener("touchmove", onMove, { passive: false });
+  el.addEventListener("touchend", onEnd, { passive: true });
+  el.addEventListener("touchcancel", onCancel, { passive: true });
+  return () => {
+    el.removeEventListener("touchstart", onStart);
+    el.removeEventListener("touchmove", onMove);
+    el.removeEventListener("touchend", onEnd);
+    el.removeEventListener("touchcancel", onCancel);
+    clear();
+  };
 }
 
 // ---------- Tab bar ----------
