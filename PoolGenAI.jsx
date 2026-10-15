@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.149.0";
+const APP_VERSION = "1.150.0";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -8952,6 +8952,41 @@ function PoolGenAIApp() {
     DEFAULT_PRODUCTS.map((p) => ({ ...p, poolId: "default" }))
   );
   const [tab, setTab] = useState("dashboard"); // dashboard | history | products | settings
+  // v1.150.0 — Balayage gauche/droite pour passer d'un onglet à l'autre (Bassin, Historique,
+  // Produits, Réglages). Posé uniquement sur <main> : les popups sont des couches plein écran
+  // distinctes (hors de <main>), donc jamais « balayables ». Voir swipeBlocked pour les zones
+  // où le geste appartient à autre chose (champs, graphiques, listes défilantes horizontalement).
+  const swipeRef = useRef(null);
+  const handleSwipeStart = (e) => {
+    swipeRef.current = null;
+    if (!e.touches || e.touches.length !== 1) return;
+    const p = e.touches[0];
+    // Bords de l'écran réservés aux gestes du système (retour arrière Android/iOS).
+    if (p.clientX < 24 || p.clientX > window.innerWidth - 24) return;
+    if (swipeBlocked(e.target, e.currentTarget)) return;
+    swipeRef.current = { x: p.clientX, y: p.clientY, t: Date.now() };
+  };
+  const handleSwipeMove = (e) => {
+    const s = swipeRef.current;
+    if (!s || !e.touches || e.touches.length !== 1) { swipeRef.current = null; return; }
+    // Défilement vertical clairement engagé : ce n'est pas un balayage d'onglet.
+    if (Math.abs(e.touches[0].clientY - s.y) > 14 && Math.abs(e.touches[0].clientY - s.y) > Math.abs(e.touches[0].clientX - s.x)) swipeRef.current = null;
+  };
+  const handleSwipeEnd = (e) => {
+    const s = swipeRef.current;
+    swipeRef.current = null;
+    if (!s || !e.changedTouches || !e.changedTouches[0]) return;
+    const dx = e.changedTouches[0].clientX - s.x;
+    const dy = e.changedTouches[0].clientY - s.y;
+    if (Date.now() - s.t > 700) return;
+    if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 2) return;
+    try { if (window.getSelection && String(window.getSelection())) return; } catch (err) { /* ignore */ }
+    const i = TAB_ORDER.indexOf(tab);
+    const j = dx < 0 ? i + 1 : i - 1; // balayage vers la gauche = onglet suivant
+    if (i < 0 || j < 0 || j >= TAB_ORDER.length) return;
+    setTab(TAB_ORDER[j]);
+    track("screen_view", { screen_name: TAB_ORDER[j], via: "swipe" });
+  };
   const [showAddMeasure, setShowAddMeasure] = useState(false);
   const [showAddProduct, setShowAddProduct] = useState(false);
   // v1.62.0 — Sous-page "Mes produits à acheter", accessible depuis l'onglet Produits.
@@ -12045,7 +12080,7 @@ function PoolGenAIApp() {
         />
       </div>
     )}
-    <style>{"@media print { .app { position: static !important; inset: auto !important; height: auto !important; } }"}</style>
+    <style>{"@media print { .app { position: static !important; inset: auto !important; height: auto !important; } } html, body { overscroll-behavior-x: none; }"}</style>
     <div
       style={{
         ...styles.app,
@@ -12081,7 +12116,13 @@ function PoolGenAIApp() {
         viewContext={viewContext}
         lang={lang}
       />
-      <main style={styles.main}>
+      <main
+        style={styles.main}
+        onTouchStart={handleSwipeStart}
+        onTouchMove={handleSwipeMove}
+        onTouchEnd={handleSwipeEnd}
+        onTouchCancel={() => { swipeRef.current = null; }}
+      >
         {activePools.length === 0 && !viewContext && tab !== "settings" ? (
           <NoPoolEmptyState lang={lang} onCreate={() => setShowAddPool(true)} />
         ) : (<>
@@ -12751,6 +12792,25 @@ function Header({ poolName, location, poolPhoto, isPremium, entries, activeEntry
       )}
     </header>
   );
+}
+
+// ---------- Balayage entre onglets (v1.150.0) ----------
+const TAB_ORDER = ["dashboard", "history", "products", "settings"];
+// Vrai si le geste qui démarre sur `el` appartient à un autre élément : champ de saisie, curseur,
+// graphique (info-bulle / déplacement au doigt), zone à défilement horizontal, ou élément marqué
+// data-noswipe. On remonte jusqu'au conteneur `root` (<main>).
+function swipeBlocked(el, root) {
+  for (let n = el; n && n !== root; n = n.parentElement) {
+    const tag = n.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || tag === "CANVAS" || n.isContentEditable) return true;
+    if (n.getAttribute && n.getAttribute("data-noswipe") !== null) return true;
+    if (n.classList && n.classList.contains("recharts-wrapper")) return true;
+    const cs = window.getComputedStyle(n);
+    // Popup / fenêtre modale rendue à l'intérieur de <main> : couche en position fixe -> jamais balayable.
+    if (cs.position === "fixed") return true;
+    if (n.scrollWidth > n.clientWidth + 2 && (cs.overflowX === "auto" || cs.overflowX === "scroll")) return true;
+  }
+  return false;
 }
 
 // ---------- Tab bar ----------
