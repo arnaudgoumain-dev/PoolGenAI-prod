@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.150.1";
+const APP_VERSION = "1.150.2";
 const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -8955,12 +8955,24 @@ function PoolGenAIApp() {
   // v1.150.0 — Balayage gauche/droite pour passer d'un onglet à l'autre (Bassin, Historique,
   // Produits, Réglages). v1.150.1 — l'écran suit le doigt (voir attachTabSwipe). Posé uniquement sur
   // <main> : les popups sont des couches plein écran distinctes, donc jamais « balayables ».
+  // v1.150.2 — l'onglet voisin est rendu EN MÊME TEMPS que l'onglet courant pendant le geste
+  // (swipeNeighbor = { id, side, top, offset }), pour qu'il apparaisse sous le doigt. Les deux
+  // « panneaux » ont une clé = id d'onglet : à la fin du geste l'onglet voisin devient l'onglet
+  // courant SANS être remonté (même instance React), l'ancien est démonté.
+  const [swipeNeighbor, setSwipeNeighbor] = useState(null);
   const mainElRef = useRef(null);
   if (!mainElRef.current) {
     let detach = null;
     mainElRef.current = (el) => {
       if (detach) { detach(); detach = null; }
-      if (el) detach = attachTabSwipe(el, () => tabStateRef.current, (id) => setTab(id));
+      if (el) {
+        detach = attachTabSwipe(el, {
+          getTab: () => tabStateRef.current,
+          open: (id, side, top, offset, height) => ReactDOM.flushSync(() => setSwipeNeighbor({ id, side, top, offset, height })),
+          commit: (id) => ReactDOM.flushSync(() => { setTab(id); setSwipeNeighbor(null); }),
+          close: () => setSwipeNeighbor(null),
+        });
+      }
     };
   }
   const tabStateRef = useRef(tab);
@@ -11634,6 +11646,221 @@ function PoolGenAIApp() {
     "--brand-bg-tint": effectiveIsPremium ? "#f0f6fb" : "#eef6f1",
   };
 
+  // v1.150.2 — contenu d'un onglet (le paramètre `tab` masque volontairement l'état du même nom : le même
+  // code sert à l'onglet courant et à l'onglet voisin rendu pendant un balayage).
+  const renderTabContent = (tab) => (
+    <>
+        {activePools.length === 0 && !viewContext && tab !== "settings" ? (
+          <NoPoolEmptyState lang={lang} onCreate={() => setShowAddPool(true)} />
+        ) : (<>
+        {tab === "dashboard" && (
+          <Dashboard
+            latest={latest}
+            volume={activePool?.volume || 0}
+            products={poolProducts}
+            manageStock={!!activePool?.manageStock}
+            lang={lang}
+            onWantPremium={() => openPaywall()}
+            onAddMeasure={handleOpenAddMeasure}
+            onEditMeasure={handleEditMeasure}
+            onValidateApplication={handleValidateApplication}
+            applicationForLatest={latest ? poolApplications.find((a) => a.measureId === latest.id) : null}
+            blockedByLimit={blockedByLimit}
+            isPremium={effectiveIsPremium}
+            apiKey={aiEnabled && effectiveIsPremium ? apiKey : ""}
+            apiProvider={apiProvider}
+            recentMeasures={sortedMeasures}
+            recentApplications={poolApplications}
+            effectiveTargets={effectiveTargets}
+            activeParamKeys={activeParamKeys}
+            activePlan={activePlan}
+            onResumePlan={resumePlan}
+            onOpenManualApply={() => setShowManualApply(true)}
+            authUid={dataUid}
+          />
+        )}
+        {tab === "history" && (
+          <HistoryView
+            measures={sortedMeasures}
+            onDelete={deleteMeasure}
+            onDeleteManualApplication={deleteManualApplication}
+            onEdit={handleEditMeasure}
+            onAdd={handleOpenAddMeasure}
+            onAddPrefilled={(prefilled) => {
+              setEditingMeasure({ ...prefilled, __prefilled: true });
+              setEditingApplication(null);
+              setShowAddMeasure(true);
+            }}
+            onValidateApplication={handleValidateApplication}
+            onResumePlan={resumePlanForMeasure}
+            applications={poolApplications}
+            isPremium={effectiveIsPremium}
+            poolName={activePool?.name}
+            onGenerateReport={() => setShowReport(true)}
+            onWantPremiumForReport={() => openPaywall("report")}
+            lang={lang}
+            apiKey={aiEnabled && effectiveIsPremium ? apiKey : ""}
+            apiProvider={apiProvider}
+            authUid={dataUid}
+            pool={activePool}
+            activePlan={activePlan}
+            products={poolProducts}
+          />
+        )}
+        {tab === "products" && showProductsToBuy && (
+          <ProductsToBuyView
+            products={poolProducts}
+            plan={activePlan}
+            latest={latest}
+            recentMeasures={poolMeasures}
+            recentApplications={poolApplications}
+            volume={activePool?.volume || 0}
+            effectiveTargets={effectiveTargets}
+            activeParamKeys={activeParamKeys}
+            lang={lang}
+            manageStock={!!activePool?.manageStock}
+            poolName={activePool?.name}
+            treatmentType={activePool?.treatmentType}
+            onQuickAddProduct={(dp) => saveProduct({ ...dp, stockPercent: 0, isDefault: false, photo: null })}
+            onBack={() => setShowProductsToBuy(false)}
+            onEditProduct={(p) => {
+              setEditingProduct(p);
+              setShowAddProduct(true);
+              setShowProductsToBuy(false);
+            }}
+          />
+        )}
+        {tab === "products" && !showProductsToBuy && (
+          <ProductsView
+            products={poolProducts}
+            onEdit={(p) => {
+              setEditingProduct(p);
+              setShowAddProduct(true);
+            }}
+            onAddNew={() => {
+              setEditingProduct(null);
+              setShowAddProduct(true);
+            }}
+            onDelete={deleteProduct}
+            onResetAll={resetAllProducts}
+            isPremium={effectiveIsPremium}
+            poolName={activePool?.name}
+            manageStock={!!activePool?.manageStock}
+            onWantPremium={() => openPaywall("products")}
+            onWantSettings={() => setTab("settings")}
+            onWantProductsToBuy={() => setShowProductsToBuy(true)}
+            lang={lang}
+          />
+        )}
+        {tab === "settings" && (
+          <>
+          <SettingsView
+            pools={activePools}
+            activePoolId={activePoolId}
+            onUpdatePool={updatePool}
+            onDeletePool={deletePool}
+            onSwitchPool={setActivePoolId}
+            onWantAddPool={handleWantAddPool}
+            viewContext={viewContext}
+            onDeleteAllMeasures={deleteAllMeasuresForActivePool}
+            orphanedCount={orphanedCount}
+            onRepairOrphanedData={repairOrphanedData}
+            authUser={authUser}
+            onSignOut={handleSignOut}
+            onSignIn={() => setShowLogin(true)}
+            onDeleteAccount={async () => {
+              const isGoogle = authUser?.providerData?.some(p => p.providerId === "google.com");
+              if (isGoogle) {
+                try {
+                  try {
+                    await FB.reauthGoogle();
+                  } catch (reauthErr) {
+                    if (reauthErr.code !== "auth/cancelled-popup-request") throw reauthErr;
+                    return;
+                  }
+                  await performDeleteAccount();
+                } catch (e) {
+                  alert(e.message);
+                }
+                return;
+              }
+              // Compte email/mot de passe : demande le mot de passe avant de tenter la suppression
+              setDeleteReauthError(null);
+              setShowDeleteReauth(true);
+            }}
+            poolMeasureCount={poolMeasures.length}
+            onGenerateReport={() => setShowReport(true)}
+            onWantPremiumForReport={() => openPaywall("report")}
+            onWantPremium={() => openPaywall()}
+            isPremium={isPremium}
+            setIsPremium={setIsPremium}
+            onWantManageSubscription={handleOpenPortal}
+            testerUntil={testerUntil}
+            onToggleTesterPremium={handleToggleTesterPremium}
+            onRedeemTesterCode={handleRedeemTesterCode}
+            portalBusy={portalBusy}
+            portalError={portalError}
+            onReplayOnboarding={() => setShowOnboarding(true)}
+            aiEnabled={aiEnabled}
+            setAiEnabled={setAiEnabled}
+            calibrationContribution={calibrationContribution}
+            setCalibrationContribution={setCalibrationContribution}
+            stripTester={stripTester}
+            setStripTester={setStripTester}
+            lang={lang}
+            setLang={setLang}
+            cguAcceptedDate={cguAcceptedDate}
+            dataConsent={dataConsent}
+            myPseudo={myPseudo}
+            onRevokeDataConsent={() => {
+              setDataConsent(false);
+              if (authUser?.uid) {
+                FB.saveUser(authUser.uid, { dataConsent: false, dataConsentDate: null }).catch(() => {});
+              }
+            }}
+          />
+          {authUser && (
+            <DelegationSection
+              authUser={authUser}
+              lang={lang}
+              linkedPoolsInfo={linkedPoolsInfo}
+              onRequestRevocation={handleRequestRevocation}
+              isPremium={isPremium}
+            />
+          )}
+          <DangerZoneSection
+            lang={lang}
+            activePoolName={pools.find((p) => p.id === activePoolId)?.name}
+            poolMeasureCount={poolMeasures.length}
+            onDeleteAllMeasures={deleteAllMeasuresForActivePool}
+            authUser={authUser}
+            cguAcceptedDate={cguAcceptedDate}
+            onDeleteAccount={async () => {
+              const isGoogle = authUser?.providerData?.some(p => p.providerId === "google.com");
+              if (isGoogle) {
+                try {
+                  try {
+                    await FB.reauthGoogle();
+                  } catch (reauthErr) {
+                    if (reauthErr.code !== "auth/cancelled-popup-request") throw reauthErr;
+                    return;
+                  }
+                  await performDeleteAccount();
+                } catch (e) {
+                  alert(e.message);
+                }
+                return;
+              }
+              setDeleteReauthError(null);
+              setShowDeleteReauth(true);
+            }}
+          />
+          </>
+        )}
+        </>)}
+    </>
+  );
+
   return (
     <div style={themeVars}>
     {verifyLinkStatus && (
@@ -12095,214 +12322,28 @@ function PoolGenAIApp() {
         lang={lang}
       />
       <main style={styles.main} ref={mainElRef.current}>
-        {activePools.length === 0 && !viewContext && tab !== "settings" ? (
-          <NoPoolEmptyState lang={lang} onCreate={() => setShowAddPool(true)} />
-        ) : (<>
-        {tab === "dashboard" && (
-          <Dashboard
-            latest={latest}
-            volume={activePool?.volume || 0}
-            products={poolProducts}
-            manageStock={!!activePool?.manageStock}
-            lang={lang}
-            onWantPremium={() => openPaywall()}
-            onAddMeasure={handleOpenAddMeasure}
-            onEditMeasure={handleEditMeasure}
-            onValidateApplication={handleValidateApplication}
-            applicationForLatest={latest ? poolApplications.find((a) => a.measureId === latest.id) : null}
-            blockedByLimit={blockedByLimit}
-            isPremium={effectiveIsPremium}
-            apiKey={aiEnabled && effectiveIsPremium ? apiKey : ""}
-            apiProvider={apiProvider}
-            recentMeasures={sortedMeasures}
-            recentApplications={poolApplications}
-            effectiveTargets={effectiveTargets}
-            activeParamKeys={activeParamKeys}
-            activePlan={activePlan}
-            onResumePlan={resumePlan}
-            onOpenManualApply={() => setShowManualApply(true)}
-            authUid={dataUid}
-          />
-        )}
-        {tab === "history" && (
-          <HistoryView
-            measures={sortedMeasures}
-            onDelete={deleteMeasure}
-            onDeleteManualApplication={deleteManualApplication}
-            onEdit={handleEditMeasure}
-            onAdd={handleOpenAddMeasure}
-            onAddPrefilled={(prefilled) => {
-              setEditingMeasure({ ...prefilled, __prefilled: true });
-              setEditingApplication(null);
-              setShowAddMeasure(true);
-            }}
-            onValidateApplication={handleValidateApplication}
-            onResumePlan={resumePlanForMeasure}
-            applications={poolApplications}
-            isPremium={effectiveIsPremium}
-            poolName={activePool?.name}
-            onGenerateReport={() => setShowReport(true)}
-            onWantPremiumForReport={() => openPaywall("report")}
-            lang={lang}
-            apiKey={aiEnabled && effectiveIsPremium ? apiKey : ""}
-            apiProvider={apiProvider}
-            authUid={dataUid}
-            pool={activePool}
-            activePlan={activePlan}
-            products={poolProducts}
-          />
-        )}
-        {tab === "products" && showProductsToBuy && (
-          <ProductsToBuyView
-            products={poolProducts}
-            plan={activePlan}
-            latest={latest}
-            recentMeasures={poolMeasures}
-            recentApplications={poolApplications}
-            volume={activePool?.volume || 0}
-            effectiveTargets={effectiveTargets}
-            activeParamKeys={activeParamKeys}
-            lang={lang}
-            manageStock={!!activePool?.manageStock}
-            poolName={activePool?.name}
-            treatmentType={activePool?.treatmentType}
-            onQuickAddProduct={(dp) => saveProduct({ ...dp, stockPercent: 0, isDefault: false, photo: null })}
-            onBack={() => setShowProductsToBuy(false)}
-            onEditProduct={(p) => {
-              setEditingProduct(p);
-              setShowAddProduct(true);
-              setShowProductsToBuy(false);
-            }}
-          />
-        )}
-        {tab === "products" && !showProductsToBuy && (
-          <ProductsView
-            products={poolProducts}
-            onEdit={(p) => {
-              setEditingProduct(p);
-              setShowAddProduct(true);
-            }}
-            onAddNew={() => {
-              setEditingProduct(null);
-              setShowAddProduct(true);
-            }}
-            onDelete={deleteProduct}
-            onResetAll={resetAllProducts}
-            isPremium={effectiveIsPremium}
-            poolName={activePool?.name}
-            manageStock={!!activePool?.manageStock}
-            onWantPremium={() => openPaywall("products")}
-            onWantSettings={() => setTab("settings")}
-            onWantProductsToBuy={() => setShowProductsToBuy(true)}
-            lang={lang}
-          />
-        )}
-        {tab === "settings" && (
-          <>
-          <SettingsView
-            pools={activePools}
-            activePoolId={activePoolId}
-            onUpdatePool={updatePool}
-            onDeletePool={deletePool}
-            onSwitchPool={setActivePoolId}
-            onWantAddPool={handleWantAddPool}
-            viewContext={viewContext}
-            onDeleteAllMeasures={deleteAllMeasuresForActivePool}
-            orphanedCount={orphanedCount}
-            onRepairOrphanedData={repairOrphanedData}
-            authUser={authUser}
-            onSignOut={handleSignOut}
-            onSignIn={() => setShowLogin(true)}
-            onDeleteAccount={async () => {
-              const isGoogle = authUser?.providerData?.some(p => p.providerId === "google.com");
-              if (isGoogle) {
-                try {
-                  try {
-                    await FB.reauthGoogle();
-                  } catch (reauthErr) {
-                    if (reauthErr.code !== "auth/cancelled-popup-request") throw reauthErr;
-                    return;
-                  }
-                  await performDeleteAccount();
-                } catch (e) {
-                  alert(e.message);
-                }
-                return;
+        <div data-swipe-track style={{ position: "relative" }}>
+          {(swipeNeighbor ? [tab, swipeNeighbor.id] : [tab]).map((paneId) => (
+            <div
+              key={paneId}
+              style={
+                paneId === tab
+                  ? undefined
+                  : {
+                      position: "absolute",
+                      top: swipeNeighbor.top,
+                      left: swipeNeighbor.side * swipeNeighbor.offset,
+                      width: "100%",
+                      maxHeight: swipeNeighbor.height,
+                      overflow: "hidden",
+                      pointerEvents: "none",
+                    }
               }
-              // Compte email/mot de passe : demande le mot de passe avant de tenter la suppression
-              setDeleteReauthError(null);
-              setShowDeleteReauth(true);
-            }}
-            poolMeasureCount={poolMeasures.length}
-            onGenerateReport={() => setShowReport(true)}
-            onWantPremiumForReport={() => openPaywall("report")}
-            onWantPremium={() => openPaywall()}
-            isPremium={isPremium}
-            setIsPremium={setIsPremium}
-            onWantManageSubscription={handleOpenPortal}
-            testerUntil={testerUntil}
-            onToggleTesterPremium={handleToggleTesterPremium}
-            onRedeemTesterCode={handleRedeemTesterCode}
-            portalBusy={portalBusy}
-            portalError={portalError}
-            onReplayOnboarding={() => setShowOnboarding(true)}
-            aiEnabled={aiEnabled}
-            setAiEnabled={setAiEnabled}
-            calibrationContribution={calibrationContribution}
-            setCalibrationContribution={setCalibrationContribution}
-            stripTester={stripTester}
-            setStripTester={setStripTester}
-            lang={lang}
-            setLang={setLang}
-            cguAcceptedDate={cguAcceptedDate}
-            dataConsent={dataConsent}
-            myPseudo={myPseudo}
-            onRevokeDataConsent={() => {
-              setDataConsent(false);
-              if (authUser?.uid) {
-                FB.saveUser(authUser.uid, { dataConsent: false, dataConsentDate: null }).catch(() => {});
-              }
-            }}
-          />
-          {authUser && (
-            <DelegationSection
-              authUser={authUser}
-              lang={lang}
-              linkedPoolsInfo={linkedPoolsInfo}
-              onRequestRevocation={handleRequestRevocation}
-              isPremium={isPremium}
-            />
-          )}
-          <DangerZoneSection
-            lang={lang}
-            activePoolName={pools.find((p) => p.id === activePoolId)?.name}
-            poolMeasureCount={poolMeasures.length}
-            onDeleteAllMeasures={deleteAllMeasuresForActivePool}
-            authUser={authUser}
-            cguAcceptedDate={cguAcceptedDate}
-            onDeleteAccount={async () => {
-              const isGoogle = authUser?.providerData?.some(p => p.providerId === "google.com");
-              if (isGoogle) {
-                try {
-                  try {
-                    await FB.reauthGoogle();
-                  } catch (reauthErr) {
-                    if (reauthErr.code !== "auth/cancelled-popup-request") throw reauthErr;
-                    return;
-                  }
-                  await performDeleteAccount();
-                } catch (e) {
-                  alert(e.message);
-                }
-                return;
-              }
-              setDeleteReauthError(null);
-              setShowDeleteReauth(true);
-            }}
-          />
-          </>
-        )}
-        </>)}
+            >
+              {renderTabContent(paneId)}
+            </div>
+          ))}
+        </div>
       </main>
 
 
@@ -12786,42 +12827,47 @@ function swipeBlocked(el, root) {
 }
 
 // Branche le balayage sur <main> (écouteurs natifs : touchmove doit pouvoir appeler preventDefault).
-//  - le contenu suit le doigt (translateX) dès qu'un geste horizontal est reconnu ; résistance aux extrémités ;
-//  - au relâchement, si la distance ou la vitesse suffit : le contenu sort de l'écran dans le sens du geste,
-//    l'onglet change, le nouvel écran entre par le côté opposé ; sinon il revient en place ;
+//  - dès qu'un geste horizontal est reconnu, l'onglet voisin (dans le sens du geste) est rendu à côté de l'onglet
+//    courant (api.open) et le conteneur [data-swipe-track] suit le doigt (translateX) : on voit l'écran cible entrer ;
+//  - sans voisin (premier/dernier onglet) : déplacement amorti, aucun écran n'entre ;
+//  - au relâchement, si la distance ou la vitesse suffit : glissement jusqu'à l'écran cible, puis api.commit(id)
+//    (le voisin devient l'onglet courant sans être remonté, défilement remis en haut) ; sinon retour en place
+//    puis api.close() ;
 //  - transform / willChange sont TOUJOURS retirés à la fin (un transform créerait un bloc conteneur pour les
-//    éléments position:fixed contenus dans <main>). Mouvement réduit : changement d'onglet sans animation.
-function attachTabSwipe(el, getTab, goTab) {
+//    éléments position:fixed). Mouvement réduit : pas d'animation ni de voisin, l'onglet change au relâchement.
+function attachTabSwipe(el, api) {
   let s = null;
   let busy = false;
+  const track = () => el.querySelector("[data-swipe-track]");
   const reduced = () => { try { return window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } };
-  const clear = () => { el.style.transition = ""; el.style.transform = ""; el.style.willChange = ""; busy = false; };
+  const clear = () => {
+    const tr = track();
+    if (tr) { tr.style.transition = ""; tr.style.transform = ""; tr.style.willChange = ""; }
+    busy = false;
+  };
+  const setX = (x) => { const tr = track(); if (tr) tr.style.transform = "translate3d(" + x + "px,0,0)"; };
+  const animateTo = (x, ms, ease) => {
+    const tr = track();
+    if (!tr) return;
+    tr.style.transition = "transform " + ms + "s " + ease;
+    tr.style.transform = "translate3d(" + x + "px,0,0)";
+  };
   const slideBack = () => {
     busy = true;
-    el.style.transition = "transform 0.22s ease-out";
-    el.style.transform = "translate3d(0,0,0)";
-    setTimeout(clear, 250);
+    animateTo(0, 0.22, "ease-out");
+    setTimeout(() => { api.close(); clear(); }, 240);
   };
-  const commit = (dir, W) => {
-    // dir = +1 : onglet suivant (le contenu sort vers la gauche) ; -1 : précédent (sort vers la droite)
-    const next = TAB_ORDER[TAB_ORDER.indexOf(getTab()) + dir];
-    if (!next) { slideBack(); return; }
-    track("screen_view", { screen_name: next, via: "swipe" });
-    if (reduced()) { goTab(next); clear(); return; }
+  const commitTo = (next, targetX) => {
+    track_screen_view(next);
     busy = true;
-    el.style.transition = "transform 0.17s ease-in";
-    el.style.transform = "translate3d(" + (-dir * W) + "px,0,0)";
+    animateTo(targetX, 0.22, "ease-out");
     setTimeout(() => {
-      // Nouveau contenu rendu tout de suite (flushSync), placé hors écran du côté d'arrivée, puis glissé en place.
-      const apply = () => goTab(next);
-      try { ReactDOM.flushSync(apply); } catch (e) { apply(); }
-      el.style.transition = "none";
-      el.style.transform = "translate3d(" + (dir * W) + "px,0,0)";
-      void el.offsetWidth; // force le calcul de style avant l'animation d'entrée
-      el.style.transition = "transform 0.22s ease-out";
-      el.style.transform = "translate3d(0,0,0)";
-      setTimeout(clear, 250);
-    }, 175);
+      api.commit(next); // flushSync : le voisin devient l'onglet courant, l'ancien est démonté
+      const tr = track();
+      if (tr) { tr.style.transition = "none"; tr.style.transform = ""; tr.style.willChange = ""; }
+      el.scrollTop = 0; // le voisin était affiché en haut : l'onglet courant démarre en haut, sans saut visible
+      clear();
+    }, 235);
   };
   const onStart = (e) => {
     s = null;
@@ -12830,7 +12876,7 @@ function attachTabSwipe(el, getTab, goTab) {
     // Bords de l'écran réservés aux gestes du système (retour arrière Android/iOS).
     if (p.clientX < 24 || p.clientX > window.innerWidth - 24) return;
     if (swipeBlocked(e.target, el)) return;
-    s = { x: p.clientX, y: p.clientY, t: Date.now(), mode: "pending" };
+    s = { x: p.clientX, y: p.clientY, t: Date.now(), mode: "pending", side: 0, offset: 0 };
   };
   const onMove = (e) => {
     if (!s) return;
@@ -12839,16 +12885,30 @@ function attachTabSwipe(el, getTab, goTab) {
     const dy = e.touches[0].clientY - s.y;
     if (s.mode === "pending") {
       if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) { s = null; return; } // défilement vertical
-      if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.3) {
-        s.mode = "drag";
-        el.style.transition = "none";
-        el.style.willChange = "transform";
-      } else return;
+      if (!(Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.3)) return;
+      s.mode = "drag";
+      const tr = track();
+      if (tr) { tr.style.transition = "none"; tr.style.willChange = "transform"; }
+      const i = TAB_ORDER.indexOf(api.getTab());
+      const side = dx < 0 ? 1 : -1; // voisin à droite si on glisse vers la gauche
+      const neighbor = TAB_ORDER[i + side];
+      s.side = side;
+      s.neighbor = neighbor || null;
+      if (neighbor && !reduced() && tr) {
+        const cs = window.getComputedStyle(el);
+        const gap = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
+        s.offset = tr.clientWidth + gap;
+        api.open(neighbor, side, el.scrollTop, s.offset, el.clientHeight);
+      }
     }
     if (e.cancelable) e.preventDefault();
-    const i = TAB_ORDER.indexOf(getTab());
-    const atEdge = (dx < 0 && i >= TAB_ORDER.length - 1) || (dx > 0 && i <= 0);
-    el.style.transform = "translate3d(" + (atEdge ? dx * 0.25 : dx) + "px,0,0)"; // résistance aux extrémités
+    if (reduced()) return;
+    if (s.neighbor) {
+      // Le voisin suit : déplacement limité à une largeur d'écran, jamais dans le sens opposé au voisin.
+      setX(s.side > 0 ? Math.max(-s.offset, Math.min(0, dx)) : Math.min(s.offset, Math.max(0, dx)));
+    } else {
+      setX(dx * 0.25); // résistance : pas d'onglet de ce côté
+    }
   };
   const onEnd = (e) => {
     const st = s;
@@ -12857,8 +12917,16 @@ function attachTabSwipe(el, getTab, goTab) {
     const dx = e.changedTouches[0].clientX - st.x;
     const W = el.clientWidth || window.innerWidth;
     const speed = Math.abs(dx) / Math.max(Date.now() - st.t, 1); // px/ms
-    try { if (window.getSelection && String(window.getSelection())) { slideBack(); return; } } catch (err) { /* ignore */ }
-    if (Math.abs(dx) > W * 0.28 || (speed > 0.5 && Math.abs(dx) > 40)) commit(dx < 0 ? 1 : -1, W);
+    const wanted = st.side > 0 ? dx < 0 : dx > 0; // le doigt est bien parti vers le voisin
+    let selected = false;
+    try { selected = !!(window.getSelection && String(window.getSelection())); } catch (err) { /* ignore */ }
+    const enough = wanted && !selected && (Math.abs(dx) > W * 0.28 || (speed > 0.5 && Math.abs(dx) > 40));
+    if (reduced()) {
+      if (enough && st.neighbor) { track_screen_view(st.neighbor); api.commit(st.neighbor); el.scrollTop = 0; }
+      clear();
+      return;
+    }
+    if (enough && st.neighbor) commitTo(st.neighbor, -st.side * st.offset);
     else slideBack();
   };
   const onCancel = () => { const wasDrag = s && s.mode === "drag"; s = null; if (wasDrag) slideBack(); };
@@ -12874,6 +12942,7 @@ function attachTabSwipe(el, getTab, goTab) {
     clear();
   };
 }
+function track_screen_view(id) { track("screen_view", { screen_name: id, via: "swipe" }); }
 
 // ---------- Tab bar ----------
 function TabBar({ tab, setTab, lang, viewContext }) {
@@ -25336,7 +25405,7 @@ const styles = {
     cursor: "pointer",
     flexShrink: 0,
   },
-  main: { flex: 1, padding: "16px 16px 24px", overflowY: "auto", WebkitOverflowScrolling: "touch", maxWidth: 768, width: "100%", alignSelf: "center", boxSizing: "border-box" },
+  main: { flex: 1, padding: "16px 16px 24px", overflowY: "auto", overflowX: "hidden", WebkitOverflowScrolling: "touch", maxWidth: 768, width: "100%", alignSelf: "center", boxSizing: "border-box" },
   sectionRow: {
     display: "flex",
     alignItems: "center",
