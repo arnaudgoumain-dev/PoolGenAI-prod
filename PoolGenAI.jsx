@@ -9,8 +9,8 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.150.2";
-const CGU_VERSION = "1.3"; // v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
+const APP_VERSION = "1.151.0";
+const CGU_VERSION = "1.4"; // v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
 const MAX_POOLS_CLIENT = 3;
@@ -887,6 +887,71 @@ const TRANSLATIONS = {
     revocation_response_expired: "Cette demande de révocation a expiré.",
     revocation_response_mismatch: "Cette demande ne concerne pas ton compte connecté.",
     revocation_response_error: "Erreur lors du traitement de la demande.",
+    filt_title: "Filtration du jour",
+    filt_locked: "La durée de filtration recommandée, calculée avec la météo de ton bassin, est réservée à la version Premium.",
+    filt_unlock: "Passer à Premium",
+    filt_water_temp: "Eau",
+    filt_temp_entered: "Saisie",
+    filt_temp_estimated: "Estimée",
+    filt_continuous: "Filtration continue",
+    filt_spa_cycles: "{n} cycles de {d}",
+    filt_recommended: "Durée recommandée aujourd'hui",
+    filt_no_temp: "Aucune température d'eau disponible. Saisis-la ci-dessous pour obtenir une durée de filtration.",
+    filt_range: "Plage horaire",
+    filt_locating: "Recherche de la position du bassin…",
+    filt_no_location: "Renseigne la ville du bassin dans ses paramètres pour obtenir la plage horaire et la météo.",
+    filt_temp_input_label: "Température de l'eau ({unit})",
+    filt_temp_input_ph: "Ex. {ex}",
+    filt_temp_save: "Enregistrer",
+    filt_air_max: "Air max",
+    filt_uv: "UV",
+    filt_rain: "Pluie",
+    filt_wind: "Vent max",
+    filt_weather_loading: "Chargement de la météo…",
+    filt_weather_unavailable: "Météo indisponible pour le moment. La recommandation utilise la température saisie.",
+    filt_overheat: "Forte chaleur prévue : un spa isolé surchauffe quand la pompe tourne longtemps. Réduis les cycles ou retire le couvercle.",
+    filt_adjust_start: "Ajuste l'heure de démarrage",
+    filt_adjust_duration: "Ajuste la durée",
+    filt_current: "actuel",
+    filt_recommended_short: "conseillé",
+    filt_set_current: "Renseigne la programmation actuelle de ton coffret pour la comparer.",
+    filt_open_settings: "Ouvrir les paramètres",
+    filt_updated: "Météo mise à jour à {time} ({tz})",
+    filt_attribution: "Données météo : MET Norway",
+    pool_type_label: "Type de bassin",
+    pool_type_piscine: "Piscine",
+    pool_type_spa: "Spa",
+    spa_type_label: "Type de spa",
+    spa_type_portable: "Spa portable",
+    spa_type_swim_spa: "Spa de nage",
+    spa_type_circulation: "Circulation dédiée",
+    spa_usage_label: "Usage du spa",
+    spa_usage_occasionnel: "Occasionnel",
+    spa_usage_regulier: "Régulier",
+    filt_current_section: "Programmation actuelle de la filtration",
+    filt_current_start_label: "Heure de démarrage",
+    filt_current_duration_label: "Durée par jour (heures)",
+    filt_current_hint: "Facultatif : permet de signaler un écart avec l'heure et la durée recommandées.",
+    lcen_weather_title: "Météo et durée de filtration",
+    lcen_weather_val: "La fonction « Filtration du jour » (version Premium) recommande une durée et une plage horaire de filtration à partir de la température de l'eau (saisie ou estimée) et de la météo de votre bassin. Pour obtenir la météo, les coordonnées géographiques approximatives de la ville de votre bassin (4 décimales au maximum) sont transmises, par l'infrastructure technique de l'éditeur, à l'Institut météorologique norvégien (MET Norway, Norvège). Aucun autre élément — ni nom, ni adresse email, ni identifiant de compte — n'est transmis à MET Norway. Données météo : MET Norway, sous licence ouverte (NLOD 2.0 / CC BY 4.0). Ces recommandations sont indicatives : elles ne remplacent ni la notice de votre équipement ni votre appréciation de l'état de l'eau, et vous restez responsable de la programmation de votre filtration.",
+    wx_clear: "Ensoleillé",
+    wx_clear_night: "Ciel dégagé",
+    wx_fair: "Plutôt dégagé",
+    wx_partly: "Éclaircies",
+    wx_cloudy: "Nuageux",
+    wx_fog: "Brouillard",
+    wx_lightrain: "Pluie faible",
+    wx_rain: "Pluvieux",
+    wx_heavyrain: "Forte pluie",
+    wx_showers: "Averses",
+    wx_sleet: "Neige fondue",
+    wx_snow: "Neige",
+    wx_thunder: "Orageux",
+    temp_unit_label: "Unité de température",
+    temp_unit_c: "Celsius (°C)",
+    temp_unit_f: "Fahrenheit (°F)",
+    filt_temp_from_measure: "Mesure",
+    filt_temp_hint: "Cette valeur sert uniquement au calcul de la filtration : elle ne modifie pas vos mesures. Une température saisie dans une nouvelle mesure la remplace.",
   },
   en: {
     tab_pool: "Pool",
@@ -1741,6 +1806,71 @@ const TRANSLATIONS = {
     revocation_response_expired: "This revocation request has expired.",
     revocation_response_mismatch: "This request doesn't match your logged-in account.",
     revocation_response_error: "Error while processing the request.",
+    filt_title: "Today's filtration",
+    filt_locked: "The recommended filtration time, calculated with your pool's weather, is reserved for Premium.",
+    filt_unlock: "Go Premium",
+    filt_water_temp: "Water",
+    filt_temp_entered: "Entered",
+    filt_temp_estimated: "Estimated",
+    filt_continuous: "Continuous filtration",
+    filt_spa_cycles: "{n} cycles of {d}",
+    filt_recommended: "Recommended time today",
+    filt_no_temp: "No water temperature available. Enter it below to get a filtration time.",
+    filt_range: "Time range",
+    filt_locating: "Locating the pool…",
+    filt_no_location: "Set the pool's city in its settings to get the time range and the weather.",
+    filt_temp_input_label: "Water temperature ({unit})",
+    filt_temp_input_ph: "E.g. {ex}",
+    filt_temp_save: "Save",
+    filt_air_max: "Max air",
+    filt_uv: "UV",
+    filt_rain: "Rain",
+    filt_wind: "Max wind",
+    filt_weather_loading: "Loading weather…",
+    filt_weather_unavailable: "Weather unavailable for now. The recommendation uses the entered temperature.",
+    filt_overheat: "High heat expected: an insulated spa overheats when the pump runs for a long time. Reduce the cycles or remove the cover.",
+    filt_adjust_start: "Adjust the start time",
+    filt_adjust_duration: "Adjust the duration",
+    filt_current: "current",
+    filt_recommended_short: "advised",
+    filt_set_current: "Enter your control box's current schedule to compare it.",
+    filt_open_settings: "Open settings",
+    filt_updated: "Weather updated at {time} ({tz})",
+    filt_attribution: "Weather data: MET Norway",
+    pool_type_label: "Type of water body",
+    pool_type_piscine: "Pool",
+    pool_type_spa: "Spa",
+    spa_type_label: "Spa type",
+    spa_type_portable: "Portable spa",
+    spa_type_swim_spa: "Swim spa",
+    spa_type_circulation: "Dedicated circulation",
+    spa_usage_label: "Spa usage",
+    spa_usage_occasionnel: "Occasional",
+    spa_usage_regulier: "Regular",
+    filt_current_section: "Current filtration schedule",
+    filt_current_start_label: "Start time",
+    filt_current_duration_label: "Hours per day",
+    filt_current_hint: "Optional: lets the app flag a gap with the recommended time and duration.",
+    lcen_weather_title: "Weather and filtration time",
+    lcen_weather_val: "The \"Today's filtration\" feature (Premium) recommends a filtration time and time range based on the water temperature (entered or estimated) and your pool's weather. To obtain the weather, the approximate geographic coordinates of your pool's city (4 decimals at most) are sent, through the publisher's technical infrastructure, to the Norwegian Meteorological Institute (MET Norway, Norway). Nothing else — no name, email address or account identifier — is sent to MET Norway. Weather data: MET Norway, under an open licence (NLOD 2.0 / CC BY 4.0). These recommendations are indicative: they replace neither your equipment's manual nor your own judgement of the water condition, and you remain responsible for programming your filtration.",
+    wx_clear: "Sunny",
+    wx_clear_night: "Clear sky",
+    wx_fair: "Mostly clear",
+    wx_partly: "Partly cloudy",
+    wx_cloudy: "Cloudy",
+    wx_fog: "Fog",
+    wx_lightrain: "Light rain",
+    wx_rain: "Rain",
+    wx_heavyrain: "Heavy rain",
+    wx_showers: "Showers",
+    wx_sleet: "Sleet",
+    wx_snow: "Snow",
+    wx_thunder: "Thunderstorms",
+    temp_unit_label: "Temperature unit",
+    temp_unit_c: "Celsius (°C)",
+    temp_unit_f: "Fahrenheit (°F)",
+    filt_temp_from_measure: "Measured",
+    filt_temp_hint: "This value is only used to calculate the filtration time: it does not change your measurements. A temperature entered in a new measurement replaces it.",
   },
   de: {
     tab_pool: "Becken",
@@ -2593,6 +2723,71 @@ const TRANSLATIONS = {
     revocation_response_expired: "Diese Widerrufsanfrage ist abgelaufen.",
     revocation_response_mismatch: "Diese Anfrage passt nicht zu deinem angemeldeten Konto.",
     revocation_response_error: "Fehler bei der Bearbeitung der Anfrage.",
+    filt_title: "Filterzeit heute",
+    filt_locked: "Die empfohlene Filterzeit, berechnet mit dem Wetter deines Beckens, ist Premium vorbehalten.",
+    filt_unlock: "Premium holen",
+    filt_water_temp: "Wasser",
+    filt_temp_entered: "Eingegeben",
+    filt_temp_estimated: "Geschätzt",
+    filt_continuous: "Dauerfiltration",
+    filt_spa_cycles: "{n} Zyklen à {d}",
+    filt_recommended: "Empfohlene Dauer heute",
+    filt_no_temp: "Keine Wassertemperatur verfügbar. Gib sie unten ein, um eine Filterzeit zu erhalten.",
+    filt_range: "Zeitfenster",
+    filt_locating: "Position des Beckens wird gesucht…",
+    filt_no_location: "Gib die Stadt des Beckens in den Einstellungen an, um Zeitfenster und Wetter zu erhalten.",
+    filt_temp_input_label: "Wassertemperatur ({unit})",
+    filt_temp_input_ph: "Z. B. {ex}",
+    filt_temp_save: "Speichern",
+    filt_air_max: "Luft max.",
+    filt_uv: "UV",
+    filt_rain: "Regen",
+    filt_wind: "Wind max.",
+    filt_weather_loading: "Wetter wird geladen…",
+    filt_weather_unavailable: "Wetter derzeit nicht verfügbar. Die Empfehlung nutzt die eingegebene Temperatur.",
+    filt_overheat: "Große Hitze erwartet: Ein isolierter Spa überhitzt, wenn die Pumpe lange läuft. Verringere die Zyklen oder nimm die Abdeckung ab.",
+    filt_adjust_start: "Startzeit anpassen",
+    filt_adjust_duration: "Dauer anpassen",
+    filt_current: "aktuell",
+    filt_recommended_short: "empfohlen",
+    filt_set_current: "Gib die aktuelle Programmierung deiner Steuerung ein, um sie zu vergleichen.",
+    filt_open_settings: "Einstellungen öffnen",
+    filt_updated: "Wetter aktualisiert um {time} ({tz})",
+    filt_attribution: "Wetterdaten: MET Norway",
+    pool_type_label: "Beckentyp",
+    pool_type_piscine: "Pool",
+    pool_type_spa: "Spa",
+    spa_type_label: "Spa-Typ",
+    spa_type_portable: "Mobiler Spa",
+    spa_type_swim_spa: "Schwimmspa",
+    spa_type_circulation: "Eigener Kreislauf",
+    spa_usage_label: "Nutzung des Spas",
+    spa_usage_occasionnel: "Gelegentlich",
+    spa_usage_regulier: "Regelmäßig",
+    filt_current_section: "Aktuelle Filterprogrammierung",
+    filt_current_start_label: "Startzeit",
+    filt_current_duration_label: "Stunden pro Tag",
+    filt_current_hint: "Optional: ermöglicht einen Hinweis bei Abweichung von empfohlener Zeit und Dauer.",
+    lcen_weather_title: "Wetter und Filterlaufzeit",
+    lcen_weather_val: "Die Funktion „Filterzeit heute“ (Premium) empfiehlt eine Filterlaufzeit und ein Zeitfenster anhand der Wassertemperatur (eingegeben oder geschätzt) und des Wetters an Ihrem Becken. Um das Wetter abzurufen, werden die ungefähren geografischen Koordinaten der Stadt Ihres Beckens (höchstens 4 Dezimalstellen) über die technische Infrastruktur des Herausgebers an das Norwegische Meteorologische Institut (MET Norway, Norwegen) übermittelt. Nichts anderes — weder Name noch E-Mail-Adresse noch Kontokennung — wird an MET Norway übermittelt. Wetterdaten: MET Norway, unter offener Lizenz (NLOD 2.0 / CC BY 4.0). Diese Empfehlungen sind unverbindlich: Sie ersetzen weder die Anleitung Ihrer Anlage noch Ihre eigene Einschätzung des Wasserzustands, und Sie bleiben für die Programmierung Ihrer Filterung verantwortlich.",
+    wx_clear: "Sonnig",
+    wx_clear_night: "Klarer Himmel",
+    wx_fair: "Überwiegend klar",
+    wx_partly: "Teils bewölkt",
+    wx_cloudy: "Bewölkt",
+    wx_fog: "Nebel",
+    wx_lightrain: "Leichter Regen",
+    wx_rain: "Regen",
+    wx_heavyrain: "Starker Regen",
+    wx_showers: "Schauer",
+    wx_sleet: "Schneeregen",
+    wx_snow: "Schnee",
+    wx_thunder: "Gewitter",
+    temp_unit_label: "Temperatureinheit",
+    temp_unit_c: "Celsius (°C)",
+    temp_unit_f: "Fahrenheit (°F)",
+    filt_temp_from_measure: "Gemessen",
+    filt_temp_hint: "Dieser Wert dient nur zur Berechnung der Filterzeit: Er ändert Ihre Messungen nicht. Eine in einer neuen Messung eingegebene Temperatur ersetzt ihn.",
   },
   it: {
     tab_pool: "Vasca",
@@ -3445,6 +3640,71 @@ const TRANSLATIONS = {
     revocation_response_expired: "Questa richiesta di revoca è scaduta.",
     revocation_response_mismatch: "Questa richiesta non corrisponde al tuo account connesso.",
     revocation_response_error: "Errore durante l'elaborazione della richiesta.",
+    filt_title: "Filtrazione di oggi",
+    filt_locked: "La durata di filtrazione consigliata, calcolata con il meteo della tua vasca, è riservata a Premium.",
+    filt_unlock: "Passa a Premium",
+    filt_water_temp: "Acqua",
+    filt_temp_entered: "Inserita",
+    filt_temp_estimated: "Stimata",
+    filt_continuous: "Filtrazione continua",
+    filt_spa_cycles: "{n} cicli da {d}",
+    filt_recommended: "Durata consigliata oggi",
+    filt_no_temp: "Nessuna temperatura dell'acqua disponibile. Inseriscila qui sotto per ottenere una durata di filtrazione.",
+    filt_range: "Fascia oraria",
+    filt_locating: "Ricerca della posizione della vasca…",
+    filt_no_location: "Indica la città della vasca nelle impostazioni per ottenere la fascia oraria e il meteo.",
+    filt_temp_input_label: "Temperatura dell'acqua ({unit})",
+    filt_temp_input_ph: "Es. {ex}",
+    filt_temp_save: "Salva",
+    filt_air_max: "Aria max",
+    filt_uv: "UV",
+    filt_rain: "Pioggia",
+    filt_wind: "Vento max",
+    filt_weather_loading: "Caricamento del meteo…",
+    filt_weather_unavailable: "Meteo non disponibile al momento. Il consiglio usa la temperatura inserita.",
+    filt_overheat: "Caldo intenso previsto: una spa isolata si surriscalda quando la pompa funziona a lungo. Riduci i cicli o togli il coperchio.",
+    filt_adjust_start: "Modifica l'ora di avvio",
+    filt_adjust_duration: "Modifica la durata",
+    filt_current: "attuale",
+    filt_recommended_short: "consigliato",
+    filt_set_current: "Inserisci la programmazione attuale del quadro per confrontarla.",
+    filt_open_settings: "Apri le impostazioni",
+    filt_updated: "Meteo aggiornato alle {time} ({tz})",
+    filt_attribution: "Dati meteo: MET Norway",
+    pool_type_label: "Tipo di vasca",
+    pool_type_piscine: "Piscina",
+    pool_type_spa: "Spa",
+    spa_type_label: "Tipo di spa",
+    spa_type_portable: "Spa portatile",
+    spa_type_swim_spa: "Spa da nuoto",
+    spa_type_circulation: "Circolazione dedicata",
+    spa_usage_label: "Uso della spa",
+    spa_usage_occasionnel: "Occasionale",
+    spa_usage_regulier: "Regolare",
+    filt_current_section: "Programmazione attuale della filtrazione",
+    filt_current_start_label: "Ora di avvio",
+    filt_current_duration_label: "Ore al giorno",
+    filt_current_hint: "Facoltativo: permette di segnalare uno scarto rispetto a ora e durata consigliate.",
+    lcen_weather_title: "Meteo e durata di filtrazione",
+    lcen_weather_val: "La funzione «Filtrazione di oggi» (Premium) consiglia una durata e una fascia oraria di filtrazione in base alla temperatura dell'acqua (inserita o stimata) e al meteo della vostra vasca. Per ottenere il meteo, le coordinate geografiche approssimative della città della vostra vasca (al massimo 4 decimali) vengono trasmesse, tramite l'infrastruttura tecnica dell'editore, all'Istituto meteorologico norvegese (MET Norway, Norvegia). Nessun altro elemento — né nome, né indirizzo email, né identificativo dell'account — viene trasmesso a MET Norway. Dati meteo: MET Norway, con licenza aperta (NLOD 2.0 / CC BY 4.0). Questi consigli sono indicativi: non sostituiscono né il manuale della vostra attrezzatura né la vostra valutazione dello stato dell'acqua, e restate responsabili della programmazione della filtrazione.",
+    wx_clear: "Soleggiato",
+    wx_clear_night: "Cielo sereno",
+    wx_fair: "Prevalentemente sereno",
+    wx_partly: "Parzialmente nuvoloso",
+    wx_cloudy: "Nuvoloso",
+    wx_fog: "Nebbia",
+    wx_lightrain: "Pioggia debole",
+    wx_rain: "Pioggia",
+    wx_heavyrain: "Pioggia forte",
+    wx_showers: "Rovesci",
+    wx_sleet: "Nevischio",
+    wx_snow: "Neve",
+    wx_thunder: "Temporali",
+    temp_unit_label: "Unità di temperatura",
+    temp_unit_c: "Celsius (°C)",
+    temp_unit_f: "Fahrenheit (°F)",
+    filt_temp_from_measure: "Misurata",
+    filt_temp_hint: "Questo valore serve solo al calcolo della filtrazione: non modifica le vostre misure. Una temperatura inserita in una nuova misura lo sostituisce.",
   },
   es: {
     tab_pool: "Piscina",
@@ -4297,6 +4557,71 @@ const TRANSLATIONS = {
     revocation_response_expired: "Esta solicitud de revocación ha caducado.",
     revocation_response_mismatch: "Esta solicitud no corresponde a tu cuenta conectada.",
     revocation_response_error: "Error al procesar la solicitud.",
+    filt_title: "Filtración de hoy",
+    filt_locked: "La duración de filtración recomendada, calculada con el tiempo de tu piscina, está reservada para Premium.",
+    filt_unlock: "Pasar a Premium",
+    filt_water_temp: "Agua",
+    filt_temp_entered: "Introducida",
+    filt_temp_estimated: "Estimada",
+    filt_continuous: "Filtración continua",
+    filt_spa_cycles: "{n} ciclos de {d}",
+    filt_recommended: "Duración recomendada hoy",
+    filt_no_temp: "No hay temperatura del agua disponible. Introdúcela abajo para obtener una duración de filtración.",
+    filt_range: "Franja horaria",
+    filt_locating: "Buscando la posición de la piscina…",
+    filt_no_location: "Indica la ciudad de la piscina en sus ajustes para obtener la franja horaria y el tiempo.",
+    filt_temp_input_label: "Temperatura del agua ({unit})",
+    filt_temp_input_ph: "Ej. {ex}",
+    filt_temp_save: "Guardar",
+    filt_air_max: "Aire máx.",
+    filt_uv: "UV",
+    filt_rain: "Lluvia",
+    filt_wind: "Viento máx.",
+    filt_weather_loading: "Cargando el tiempo…",
+    filt_weather_unavailable: "Tiempo no disponible por ahora. La recomendación usa la temperatura introducida.",
+    filt_overheat: "Se prevé mucho calor: un spa aislado se sobrecalienta cuando la bomba funciona mucho tiempo. Reduce los ciclos o quita la tapa.",
+    filt_adjust_start: "Ajusta la hora de inicio",
+    filt_adjust_duration: "Ajusta la duración",
+    filt_current: "actual",
+    filt_recommended_short: "aconsejado",
+    filt_set_current: "Indica la programación actual de tu cuadro para compararla.",
+    filt_open_settings: "Abrir los ajustes",
+    filt_updated: "Tiempo actualizado a las {time} ({tz})",
+    filt_attribution: "Datos meteorológicos: MET Norway",
+    pool_type_label: "Tipo de vaso",
+    pool_type_piscine: "Piscina",
+    pool_type_spa: "Spa",
+    spa_type_label: "Tipo de spa",
+    spa_type_portable: "Spa portátil",
+    spa_type_swim_spa: "Spa de nado",
+    spa_type_circulation: "Circulación dedicada",
+    spa_usage_label: "Uso del spa",
+    spa_usage_occasionnel: "Ocasional",
+    spa_usage_regulier: "Regular",
+    filt_current_section: "Programación actual de la filtración",
+    filt_current_start_label: "Hora de inicio",
+    filt_current_duration_label: "Horas al día",
+    filt_current_hint: "Opcional: permite avisar de una diferencia con la hora y la duración recomendadas.",
+    lcen_weather_title: "Tiempo y duración de la filtración",
+    lcen_weather_val: "La función «Filtración de hoy» (Premium) recomienda una duración y una franja horaria de filtración a partir de la temperatura del agua (introducida o estimada) y del tiempo en su piscina. Para obtener el tiempo, las coordenadas geográficas aproximadas de la ciudad de su piscina (4 decimales como máximo) se transmiten, a través de la infraestructura técnica del editor, al Instituto Meteorológico de Noruega (MET Norway, Noruega). No se transmite a MET Norway ningún otro dato: ni nombre, ni dirección de correo, ni identificador de cuenta. Datos meteorológicos: MET Norway, con licencia abierta (NLOD 2.0 / CC BY 4.0). Estas recomendaciones son orientativas: no sustituyen el manual de su equipo ni su propia valoración del estado del agua, y usted sigue siendo responsable de la programación de su filtración.",
+    wx_clear: "Soleado",
+    wx_clear_night: "Cielo despejado",
+    wx_fair: "Mayormente despejado",
+    wx_partly: "Parcialmente nublado",
+    wx_cloudy: "Nublado",
+    wx_fog: "Niebla",
+    wx_lightrain: "Lluvia débil",
+    wx_rain: "Lluvia",
+    wx_heavyrain: "Lluvia fuerte",
+    wx_showers: "Chubascos",
+    wx_sleet: "Aguanieve",
+    wx_snow: "Nieve",
+    wx_thunder: "Tormentas",
+    temp_unit_label: "Unidad de temperatura",
+    temp_unit_c: "Celsius (°C)",
+    temp_unit_f: "Fahrenheit (°F)",
+    filt_temp_from_measure: "Medida",
+    filt_temp_hint: "Este valor solo sirve para calcular la filtración: no modifica sus mediciones. Una temperatura introducida en una nueva medición lo sustituye.",
   },
   pt: {
     tab_pool: "Piscina",
@@ -5149,6 +5474,71 @@ const TRANSLATIONS = {
     revocation_response_expired: "Este pedido de revogação expirou.",
     revocation_response_mismatch: "Este pedido não corresponde à tua conta ligada.",
     revocation_response_error: "Erro ao processar o pedido.",
+    filt_title: "Filtração de hoje",
+    filt_locked: "A duração de filtração recomendada, calculada com o tempo da sua piscina, está reservada para o Premium.",
+    filt_unlock: "Passar para Premium",
+    filt_water_temp: "Água",
+    filt_temp_entered: "Introduzida",
+    filt_temp_estimated: "Estimada",
+    filt_continuous: "Filtração contínua",
+    filt_spa_cycles: "{n} ciclos de {d}",
+    filt_recommended: "Duração recomendada hoje",
+    filt_no_temp: "Sem temperatura da água disponível. Introduza-a abaixo para obter uma duração de filtração.",
+    filt_range: "Intervalo horário",
+    filt_locating: "A procurar a posição da piscina…",
+    filt_no_location: "Indique a cidade da piscina nas definições para obter o intervalo horário e o tempo.",
+    filt_temp_input_label: "Temperatura da água ({unit})",
+    filt_temp_input_ph: "Ex. {ex}",
+    filt_temp_save: "Guardar",
+    filt_air_max: "Ar máx.",
+    filt_uv: "UV",
+    filt_rain: "Chuva",
+    filt_wind: "Vento máx.",
+    filt_weather_loading: "A carregar o tempo…",
+    filt_weather_unavailable: "Tempo indisponível de momento. A recomendação usa a temperatura introduzida.",
+    filt_overheat: "Prevê-se calor intenso: um spa isolado sobreaquece quando a bomba funciona muito tempo. Reduza os ciclos ou retire a tampa.",
+    filt_adjust_start: "Ajuste a hora de arranque",
+    filt_adjust_duration: "Ajuste a duração",
+    filt_current: "atual",
+    filt_recommended_short: "aconselhado",
+    filt_set_current: "Indique a programação atual do quadro para a comparar.",
+    filt_open_settings: "Abrir as definições",
+    filt_updated: "Tempo atualizado às {time} ({tz})",
+    filt_attribution: "Dados meteorológicos: MET Norway",
+    pool_type_label: "Tipo de tanque",
+    pool_type_piscine: "Piscina",
+    pool_type_spa: "Spa",
+    spa_type_label: "Tipo de spa",
+    spa_type_portable: "Spa portátil",
+    spa_type_swim_spa: "Spa de natação",
+    spa_type_circulation: "Circulação dedicada",
+    spa_usage_label: "Utilização do spa",
+    spa_usage_occasionnel: "Ocasional",
+    spa_usage_regulier: "Regular",
+    filt_current_section: "Programação atual da filtração",
+    filt_current_start_label: "Hora de arranque",
+    filt_current_duration_label: "Horas por dia",
+    filt_current_hint: "Opcional: permite assinalar uma diferença face à hora e à duração recomendadas.",
+    lcen_weather_title: "Tempo e duração da filtração",
+    lcen_weather_val: "A função «Filtração de hoje» (Premium) recomenda uma duração e um intervalo horário de filtração com base na temperatura da água (introduzida ou estimada) e no tempo na sua piscina. Para obter o tempo, as coordenadas geográficas aproximadas da cidade da sua piscina (no máximo 4 casas decimais) são transmitidas, através da infraestrutura técnica do editor, ao Instituto Meteorológico da Noruega (MET Norway, Noruega). Nenhum outro dado — nem nome, nem endereço de email, nem identificador de conta — é transmitido ao MET Norway. Dados meteorológicos: MET Norway, sob licença aberta (NLOD 2.0 / CC BY 4.0). Estas recomendações são indicativas: não substituem o manual do seu equipamento nem a sua própria avaliação do estado da água, e continua responsável pela programação da sua filtração.",
+    wx_clear: "Ensolarado",
+    wx_clear_night: "Céu limpo",
+    wx_fair: "Pouco nublado",
+    wx_partly: "Parcialmente nublado",
+    wx_cloudy: "Nublado",
+    wx_fog: "Nevoeiro",
+    wx_lightrain: "Chuva fraca",
+    wx_rain: "Chuva",
+    wx_heavyrain: "Chuva forte",
+    wx_showers: "Aguaceiros",
+    wx_sleet: "Aguaneve",
+    wx_snow: "Neve",
+    wx_thunder: "Trovoadas",
+    temp_unit_label: "Unidade de temperatura",
+    temp_unit_c: "Celsius (°C)",
+    temp_unit_f: "Fahrenheit (°F)",
+    filt_temp_from_measure: "Medida",
+    filt_temp_hint: "Este valor serve apenas para calcular a filtração: não altera as suas medições. Uma temperatura introduzida numa nova medição substitui-o.",
   },
 };
 
@@ -9367,6 +9757,11 @@ function PoolGenAIApp() {
   const [lightboxSrc, setLightboxSrc] = useState(null);
   const [apiKey, setApiKey] = useState(PROXY_BASE_URL); // v1.89.0 — cohérent avec l'environnement dès le premier rendu
   const [apiProvider, setApiProvider] = useState("anthropic"); // "anthropic" | "openai"
+  // v1.151.0 — Unité de température (réglage utilisateur, synchronisé dans config/main) : affichage et saisie uniquement,
+  // les valeurs restent stockées en °C. TEMP_UNIT (variable globale) est alignée à chaque rendu pour les composants sans prop.
+  const [tempUnit, setTempUnit] = useState("C");
+  TEMP_UNIT = tempUnit;
+  const [poolEditRequest, setPoolEditRequest] = useState(null); // id du bassin à ouvrir en édition dans Réglages (depuis la carte Filtration)
   const [aiEnabled, setAiEnabled] = useState(false);
   // v1.36.0 — Lot B : opt-out de la contribution aux données de calibration
   // partagées (CGU clause 11). Activé par défaut — données anonymes, coût nul
@@ -9790,6 +10185,10 @@ function PoolGenAIApp() {
       }
       if (config.aiEnabled !== undefined) {
         setAiEnabled((prev) => (prev === config.aiEnabled ? prev : config.aiEnabled));
+      }
+      if (config.tempUnit === "F" || config.tempUnit === "C") {
+        setTempUnit((prev) => (prev === config.tempUnit ? prev : config.tempUnit));
+        window.storage.set("app_temp_unit", JSON.stringify(config.tempUnit)).catch(() => {});
       }
       if (config.calibrationContribution !== undefined) {
         setCalibrationContribution((prev) => (prev === config.calibrationContribution ? prev : config.calibrationContribution));
@@ -10295,6 +10694,11 @@ function PoolGenAIApp() {
       try {
         const savedLang = await window.storage.get("app_lang");
         if (savedLang?.value) setLang(JSON.parse(savedLang.value));
+      } catch (e) {}
+      try {
+        const savedUnit = await window.storage.get("app_temp_unit");
+        const u = savedUnit?.value ? JSON.parse(savedUnit.value) : null;
+        if (u === "F" || u === "C") setTempUnit(u);
       } catch (e) {}
       try {
         const ap = await window.storage.get(STORAGE_KEYS.applications);
@@ -11582,6 +11986,13 @@ function PoolGenAIApp() {
     }
   }
 
+  function changeTempUnit(u) {
+    if (u !== "C" && u !== "F") return;
+    setTempUnit(u);
+    window.storage.set("app_temp_unit", JSON.stringify(u)).catch(() => {});
+    syncOwnConfig({ tempUnit: u });
+  }
+
   function updatePool(id, updates) {
     if (viewContext) return; // v1.55.0 — réservé au propriétaire du compte
     setPools((prev) => prev.map((p) => (p.id === id ? { ...p, ...updates } : p)));
@@ -11677,6 +12088,10 @@ function PoolGenAIApp() {
             onResumePlan={resumePlan}
             onOpenManualApply={() => setShowManualApply(true)}
             authUid={dataUid}
+            pool={activePool}
+            onUpdatePool={(u) => { if (activePool) updatePool(activePool.id, u); }}
+            canEditPool={!viewContext}
+            onOpenSettings={() => { if (activePool) setPoolEditRequest(activePool.id); setTab("settings"); }}
           />
         )}
         {tab === "history" && (
@@ -11812,6 +12227,10 @@ function PoolGenAIApp() {
             cguAcceptedDate={cguAcceptedDate}
             dataConsent={dataConsent}
             myPseudo={myPseudo}
+            tempUnit={tempUnit}
+            onChangeTempUnit={changeTempUnit}
+            openPoolEditId={poolEditRequest}
+            onPoolEditHandled={() => setPoolEditRequest(null)}
             onRevokeDataConsent={() => {
               setDataConsent(false);
               if (authUser?.uid) {
@@ -13265,7 +13684,497 @@ function DelegationSection({ authUser, lang, linkedPoolsInfo, onRequestRevocatio
 }
 
 // ---------- Dashboard ----------
-function Dashboard({ latest, recentApplications, volume, products, manageStock, onAddMeasure, onEditMeasure, onValidateApplication, applicationForLatest, blockedByLimit, isPremium, onWantPremium, apiKey, apiProvider, recentMeasures, effectiveTargets, activeParamKeys, lang, activePlan, onResumePlan, onOpenManualApply, authUid }) {
+// ---------- Durée de filtration (v1.151.0, Premium) ----------
+// Carte « Filtration du jour » du tableau de bord : durée recommandée, plage horaire centrée sur le midi
+// solaire, météo (Worker /weather/forecast, données MET Norway). Piscine : durée selon la température de
+// l'eau (saisie ou estimée). Spa : table (type, usage), indépendante de la température.
+// Les fonctions entre les repères PURE BEGIN / PURE END sont pures et isolées (testées par un script Node).
+// ---- FILTRATION PURE BEGIN ----
+const SPA_OVERHEAT_AIR_C = 30; // seuil provisoire (air max prévu, °C) au-delà duquel on alerte sur la surchauffe d'un spa
+const WATER_TEMP_MAX_AGE_DAYS = 3; // une température saisie plus ancienne n'est plus utilisée telle quelle
+const FILTRATION_ADJUST_TOLERANCE_H = 1; // écart toléré avec la programmation actuelle (démarrage et durée)
+// Repères issus de notices et de fabricants (pas de norme). (type, usage) -> durée totale (h) et cycles.
+const SPA_FILTRATION_TABLE = {
+  portable: { occasionnel: { hours: 4, cycles: 2 }, regulier: { hours: 8, cycles: 4 } },
+  swim_spa: { occasionnel: { hours: 12, cycles: 4 }, regulier: { hours: 16, cycles: 4 } },
+  circulation_dediree: { occasionnel: { hours: 12, cycles: 4 }, regulier: { hours: 24, cycles: 1, continuous: true } },
+};
+
+function roundUpQuarter(h) { return Math.ceil(h * 4 - 1e-9) / 4; }
+function roundNearestQuarter(h) { return Math.round(h * 4) / 4; }
+function truncCoord4(x) { return Math.trunc(Number(x) * 1e4) / 1e4; } // 4 décimales max (MET Norway renvoie 403 au-delà)
+
+// Durée de filtration d'une piscine (heures, arrondie au quart d'heure supérieur) selon la température de l'eau T.
+// Règle de garde : le résultat est le maximum du mode courant et des modes de plage inférieure évalués à T
+// (donc entre 20 et 24 °C, T/2 l'emporte sur T-12). T = 27 exactement relève du mode 24 h.
+function computePoolFiltrationHours(waterTempC) {
+  const T = Number(waterTempC);
+  if (!Number.isFinite(T)) return null;
+  const modes = [(x) => Math.max(2, x / 3), (x) => x / 2, (x) => x - 12, () => 24];
+  const idx = T <= 12 ? 0 : T <= 20 ? 1 : T < 27 ? 2 : 3;
+  let result = 0;
+  for (let i = 0; i <= idx; i++) result = Math.max(result, modes[i](T));
+  return Math.min(24, roundUpQuarter(result));
+}
+
+function tzParts(ms, timeZone) {
+  const f = new Intl.DateTimeFormat("en-CA", { timeZone, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const o = {};
+  f.formatToParts(new Date(ms)).forEach((p) => { if (p.type !== "literal") o[p.type] = parseInt(p.value, 10); });
+  return o;
+}
+function tzOffsetMinutes(ms, timeZone) {
+  const p = tzParts(ms, timeZone);
+  return (Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second) - Math.floor(ms / 1000) * 1000) / 60000;
+}
+function localDateKey(ms, timeZone) {
+  const p = tzParts(ms, timeZone);
+  return p.year + "-" + String(p.month).padStart(2, "0") + "-" + String(p.day).padStart(2, "0");
+}
+
+// Midi solaire en heure LOCALE (heures décimales, 0 à 24) pour la date et le fuseau IANA donnés. Aucun appel réseau.
+// Midi solaire (UTC) = 12:00 - longitude/15 h - équation du temps (formule NOAA). `lat` n'intervient pas
+// (conservé dans la signature). Le fuseau gère l'heure d'été/d'hiver via Intl.DateTimeFormat.
+function computeSolarNoon(lat, lon, date, timeZone) {
+  const ms = (date instanceof Date ? date : new Date(date)).getTime();
+  const tz = timeZone || "UTC";
+  const p = tzParts(ms, tz);
+  const dayOfYear = Math.round((Date.UTC(p.year, p.month - 1, p.day) - Date.UTC(p.year, 0, 1)) / 864e5) + 1;
+  const g = (2 * Math.PI / 365) * (dayOfYear - 1);
+  const eotMin = 229.18 * (0.000075 + 0.001868 * Math.cos(g) - 0.032077 * Math.sin(g) - 0.014615 * Math.cos(2 * g) - 0.040849 * Math.sin(2 * g));
+  const noonUtcMin = 720 - 4 * Number(lon) - eotMin;
+  const noonUtcMs = Date.UTC(p.year, p.month - 1, p.day) + noonUtcMin * 60000;
+  const local = (noonUtcMin + tzOffsetMinutes(noonUtcMs, tz)) / 60;
+  return ((local % 24) + 24) % 24;
+}
+
+// Plage d'une piscine : centrée sur le midi solaire, début arrondi au quart d'heure le plus proche.
+function computePoolSchedule(noonH, hours) {
+  if (hours >= 24) return [{ start: 0, end: 24 }];
+  let start = roundNearestQuarter(noonH - hours / 2);
+  if (start < 0) start = 0;
+  if (start + hours > 24) start = 24 - hours;
+  return [{ start, end: start + hours }];
+}
+
+// Plages d'un spa : N cycles de durée d, répartis symétriquement autour du midi solaire. Espacement entre les centres
+// = max(12 h / N, d) pour éviter tout chevauchement ; l'ensemble est décalé s'il sort de [0 ; 24]. Filtration continue : un bloc.
+function computeSpaSchedule(noonH, spec) {
+  if (!spec) return null;
+  if (spec.continuous) return [{ start: 0, end: 24 }];
+  const N = spec.cycles;
+  const d = spec.hours / N;
+  const spacing = Math.max(12 / N, d);
+  let starts = [];
+  for (let i = 0; i < N; i++) starts.push(noonH + (i - (N - 1) / 2) * spacing - d / 2);
+  const minStart = Math.min(...starts);
+  const maxEnd = Math.max(...starts) + d;
+  let shift = 0;
+  if (minStart < 0) shift = -minStart;
+  else if (maxEnd > 24) shift = 24 - maxEnd;
+  starts = starts.map((s) => roundNearestQuarter(s + shift));
+  return starts.map((s) => ({ start: s, end: s + d }));
+}
+
+// Estimation de la température de l'eau à partir de la météo (approximative, aucune formule validée) :
+// moyenne des températures moyennes de l'air sur 3 jours (2 jours précédents stockés + prévision du jour),
+// corrigée de l'écart (eau - air) relevé à la dernière saisie réelle.
+function estimateWaterTempFromWeather(opts) {
+  const v = ((opts && opts.airMeans) || []).filter(Number.isFinite);
+  if (!v.length) return null;
+  const mean = v.reduce((a, b) => a + b, 0) / v.length;
+  const off = opts && Number.isFinite(opts.offset) ? opts.offset : 0;
+  return Math.round((mean + off) * 10) / 10;
+}
+
+// Température de l'eau retenue : la valeur SAISIE le plus récemment, que ce soit dans le champ température d'une mesure
+// (horodatage = date de la mesure, ou instant de la saisie/modification si tempEnteredAt est renseigné) ou dans le champ de la
+// carte Filtration, si elle a moins de WATER_TEMP_MAX_AGE_DAYS jours ; sinon estimation météo.
+// Règles : (1) une température saisie dans une mesure devient la valeur utilisée par la carte ; (2) la saisie de la carte ne
+// modifie jamais les mesures (elle n'est stockée que sur le bassin). Retourne { value, source: "mesure" | "saisie" | "estimee" } ou null.
+function resolveWaterTemp(o) {
+  const cands = [];
+  (o.measures || []).forEach((m) => {
+    const v = parseFloat(m.temp);
+    const tDate = Date.parse(m.date);
+    const tEntry = Date.parse(m.tempEnteredAt);
+    const t = Number.isFinite(tEntry) ? Math.max(Number.isFinite(tDate) ? tDate : 0, tEntry) : tDate;
+    if (Number.isFinite(v) && Number.isFinite(t)) cands.push({ value: v, t, src: "mesure" });
+  });
+  if (o.manual) {
+    const v = parseFloat(o.manual.value);
+    const t = Date.parse(o.manual.at);
+    if (Number.isFinite(v) && Number.isFinite(t)) cands.push({ value: v, t, src: "saisie" });
+  }
+  cands.sort((a, b) => b.t - a.t);
+  const last = cands[0] || null;
+  if (last && o.nowMs - last.t <= WATER_TEMP_MAX_AGE_DAYS * 864e5) return { value: last.value, source: last.src, at: last.t };
+  const hist = o.airHistory || {};
+  const prev = [2, 1].map((n) => hist[localDateKey(o.nowMs - n * 864e5, o.timeZone)]).filter(Number.isFinite);
+  const means = prev.concat(Number.isFinite(o.todayAirMean) ? [o.todayAirMean] : []);
+  let offset = 0;
+  if (last) {
+    const am = hist[localDateKey(last.t, o.timeZone)];
+    if (Number.isFinite(am)) offset = Math.max(-8, Math.min(8, last.value - am));
+  }
+  const est = estimateWaterTempFromWeather({ airMeans: means, offset });
+  return est == null ? null : { value: est, source: "estimee", offset };
+}
+
+// Résumé météo d'une journée LOCALE à partir des heures du Worker { t, air, wind, uv, precip }.
+function summarizeWeatherForDay(hours, timeZone, dateKey) {
+  const rows = (hours || []).filter((h) => Number.isFinite(h.air) && localDateKey(Date.parse(h.t), timeZone) === dateKey);
+  if (!rows.length) return null;
+  const air = rows.map((r) => r.air);
+  const num = (x) => (Number.isFinite(x) ? x : 0);
+  return {
+    n: rows.length,
+    airMax: Math.max(...air),
+    airMean: air.reduce((a, b) => a + b, 0) / air.length,
+    uvMax: Math.max(0, ...rows.map((r) => num(r.uv))),
+    rainMm: rows.reduce((a, r) => a + num(r.precip), 0),
+    windMax: Math.max(0, ...rows.map((r) => num(r.wind))),
+  };
+}
+
+// Unité de température (réglage utilisateur) : les valeurs sont TOUJOURS stockées en °C ; seuls l'affichage et la saisie convertissent.
+function cToF(c) { return c * 9 / 5 + 32; }
+function fToC(f) { return (f - 32) * 5 / 9; }
+function tempToDisplay(c, unit) { const v = Number(c); if (c === null || c === "" || c === undefined || !Number.isFinite(v)) return null; return unit === "F" ? cToF(v) : v; }
+function tempFromDisplay(v, unit) { const x = Number(v); if (v === null || v === "" || v === undefined || !Number.isFinite(x)) return null; return unit === "F" ? fToC(x) : x; }
+function tempUnitLabel(unit) { return unit === "F" ? "°F" : "°C"; }
+function formatTemp(c, unit, digits) { const v = tempToDisplay(c, unit); return v == null ? "—" : v.toFixed(digits == null ? 1 : digits) + " " + tempUnitLabel(unit); }
+// Horodatage de la saisie de la température dans une mesure : nouvel instant si la valeur est nouvelle ou modifiée, sinon
+// l'horodatage d'origine (ou null) ; null si le champ est vide.
+function tempEntryStamp(newTempC, originalTemp, originalStamp, nowIso) {
+  const has = newTempC !== "" && newTempC !== null && newTempC !== undefined && Number.isFinite(parseFloat(newTempC));
+  if (!has) return null;
+  const hadOriginal = originalTemp !== "" && originalTemp !== null && originalTemp !== undefined && Number.isFinite(parseFloat(originalTemp));
+  const same = hadOriginal && Math.abs(parseFloat(newTempC) - parseFloat(originalTemp)) < 1e-9;
+  return same ? (originalStamp || null) : nowIso;
+}
+// Valeur saisie dans le formulaire de mesure (unité d'affichage) -> valeur à enregistrer (°C). Si le champ n'a pas été modifié,
+// on conserve la valeur d'origine telle quelle (évite une dérive d'arrondi °C -> °F -> °C).
+function tempForSave(entered, initialShown, original, unit) {
+  if (unit !== "F") return entered;
+  if (entered === initialShown) return original === undefined || original === null ? "" : original;
+  const c = tempFromDisplay(entered, "F");
+  return c == null ? "" : String(Math.round(c * 10) / 10);
+}
+function formatUtcOffset(minutes) {
+  const sign = minutes < 0 ? "-" : "+";
+  const a = Math.abs(minutes);
+  const h = Math.floor(a / 60);
+  const m = a % 60;
+  return "UTC" + sign + h + (m ? ":" + String(m).padStart(2, "0") : "");
+}
+// Code météo MET Norway (symbol_code, ex. « partlycloudy_day », « lightrainshowersandthunder_night ») -> catégorie d'affichage.
+function weatherCategory(code) {
+  const raw = String(code || "");
+  const base = raw.split("_")[0];
+  if (!base) return null;
+  const night = /_night$/.test(raw);
+  let cat = null;
+  if (/thunder/.test(base)) cat = "thunder";
+  else if (/snow/.test(base)) cat = "snow";
+  else if (/sleet/.test(base)) cat = "sleet";
+  else if (/showers/.test(base)) cat = "showers";
+  else if (base === "heavyrain") cat = "heavyrain";
+  else if (base === "lightrain") cat = "lightrain";
+  else if (base === "rain") cat = "rain";
+  else if (base === "fog") cat = "fog";
+  else if (base === "clearsky") cat = "clear";
+  else if (base === "fair") cat = "fair";
+  else if (base === "partlycloudy") cat = "partly";
+  else if (base === "cloudy") cat = "cloudy";
+  return cat ? { cat, night } : null;
+}
+function weatherIcon(cat, night) {
+  if (cat === "clear" || cat === "fair") return night ? "🌙" : cat === "clear" ? "☀️" : "🌤️";
+  return { partly: "⛅", cloudy: "☁️", fog: "🌫️", lightrain: "🌦️", rain: "🌧️", heavyrain: "🌧️", showers: "🌦️", sleet: "🌨️", snow: "❄️", thunder: "⛈️" }[cat] || "";
+}
+// ---- FILTRATION PURE END ----
+
+let TEMP_UNIT = "C"; // unité d'affichage courante (« C » ou « F »), alignée sur le réglage utilisateur par l'App à chaque rendu
+
+function getPoolType(pool) { return pool && pool.poolType === "spa" ? "spa" : "piscine"; } // anciens bassins : piscine
+function getDeviceTimeZone() {
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"; } catch (e) { return "UTC"; }
+}
+function isFiniteNum(x) { return typeof x === "number" && Number.isFinite(x); }
+function formatClock(h) {
+  if (h >= 24) return "24:00";
+  const total = Math.round(h * 60);
+  return String(Math.floor(total / 60)).padStart(2, "0") + ":" + String(total % 60).padStart(2, "0");
+}
+function formatDurationH(h) {
+  const total = Math.round(h * 60);
+  const hh = Math.floor(total / 60);
+  const mm = total % 60;
+  return hh + " h" + (mm ? " " + String(mm).padStart(2, "0") : "");
+}
+function parseClock(str) {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(String(str || "").trim());
+  return m ? parseInt(m[1], 10) + parseInt(m[2], 10) / 60 : null;
+}
+
+// Historique local des températures moyennes de l'air (par bassin, 7 jours max) : MET Norway ne fournit pas le passé.
+function loadAirHistory(poolId) {
+  try { return JSON.parse(localStorage.getItem("pgai_airhist_" + poolId) || "{}") || {}; } catch (e) { return {}; }
+}
+function saveAirHistory(poolId, hist) {
+  try {
+    const keys = Object.keys(hist).sort().slice(-7);
+    const out = {};
+    keys.forEach((k) => { out[k] = hist[k]; });
+    localStorage.setItem("pgai_airhist_" + poolId, JSON.stringify(out));
+    return out;
+  } catch (e) { return hist; }
+}
+
+// Prévisions via le Worker (jamais d'appel direct à MET Norway). Cache mémoire 30 min pour la session.
+const _weatherCache = new Map();
+async function fetchWeatherForecast(lat, lon) {
+  const key = lat + "," + lon;
+  const c = _weatherCache.get(key);
+  if (c && Date.now() - c.at < 30 * 60 * 1000) return c.data;
+  const headers = { "Content-Type": "application/json", ...(await getFirebaseAuthHeader()) };
+  const res = await fetch(PROXY_BASE_URL + "/weather/forecast", { method: "POST", headers, body: JSON.stringify({ lat, lon }) });
+  if (!res.ok) throw new Error("weather_" + res.status);
+  const data = await res.json();
+  _weatherCache.set(key, { at: Date.now(), data });
+  return data;
+}
+
+const FILT_STYLES = {
+  card: { background: "#fff", border: "1.5px solid #d0e4f5", borderRadius: 14, padding: "14px 14px 12px", marginTop: 18 },
+  head: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8 },
+  title: { display: "flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 700, color: "#2d4a6e", textTransform: "uppercase", letterSpacing: 0.4 },
+  badge: { fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 8, background: "#eaf3fb", color: "var(--brand-primary)" },
+  big: { fontSize: 36, fontWeight: 800, color: "var(--brand-text-strong)", lineHeight: 1.1 },
+  sub: { fontSize: 13, color: "var(--brand-text-muted)", marginTop: 2 },
+  stats: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 12 },
+  stat: { background: "#f5f9fc", borderRadius: 10, padding: "8px 10px", fontSize: 12.5, color: "var(--brand-text-muted)" },
+  statVal: { fontSize: 15, fontWeight: 700, color: "var(--brand-text-strong)" },
+  alert: { display: "flex", alignItems: "flex-start", gap: 8, background: "#fff6e5", border: "1px solid #f1d49a", color: "#8a5a00", borderRadius: 10, padding: "8px 10px", fontSize: 12.5, marginTop: 8, lineHeight: 1.45 },
+  hint: { fontSize: 12.5, color: "var(--brand-text-muted)", marginTop: 8, lineHeight: 1.45 },
+  foot: { fontSize: 11, color: "#9aa9b6", marginTop: 10, lineHeight: 1.5 },
+};
+
+function FiltrationLockedCard({ lang, onWantPremium }) {
+  const t = useT(lang);
+  return (
+    <div style={FILT_STYLES.card}>
+      <div style={FILT_STYLES.head}>
+        <span style={FILT_STYLES.title}><Clock size={15} /> {t("filt_title")}</span>
+        <Lock size={15} color="#9aa9b6" />
+      </div>
+      <p style={{ ...FILT_STYLES.hint, marginTop: 0 }}>{t("filt_locked")}</p>
+      <button type="button" style={{ ...styles.primaryBtn, marginTop: 10 }} onClick={onWantPremium}>
+        <Crown size={16} /> {t("filt_unlock")}
+      </button>
+    </div>
+  );
+}
+
+function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSettings }) {
+  const t = useT(lang);
+  const poolType = getPoolType(pool);
+  const tz = (pool && pool.timeZone) || getDeviceTimeZone();
+  const [nowMs] = useState(() => Date.now());
+  const [coords, setCoords] = useState(() => (isFiniteNum(pool?.lat) && isFiniteNum(pool?.lon) ? { lat: pool.lat, lon: pool.lon } : null));
+  const [geoFailed, setGeoFailed] = useState(false);
+  const [weather, setWeather] = useState(null);
+  const [wState, setWState] = useState("idle"); // idle | loading | ok | error
+  const [airHistory, setAirHistory] = useState(() => loadAirHistory(pool?.id));
+  const [tempDraft, setTempDraft] = useState("");
+  const geoTriedRef = useRef(false);
+  const todayKey = localDateKey(nowMs, tz);
+
+  // Coordonnées : celles du bassin si présentes, sinon géocodage unique de la ville (puis enregistrement sur le bassin).
+  useEffect(() => {
+    if (isFiniteNum(pool?.lat) && isFiniteNum(pool?.lon)) { setCoords({ lat: pool.lat, lon: pool.lon }); return; }
+    if (!pool?.location || geoTriedRef.current) return;
+    geoTriedRef.current = true;
+    let cancelled = false;
+    (async () => {
+      try {
+        const q = String(pool.location).replace(/\s*\(.*\)\s*$/, "").trim();
+        const results = await nominatimSearch(q, lang);
+        const best = results.find((r) => r.label === pool.location) || results[0];
+        if (!best || cancelled) { if (!cancelled) setGeoFailed(true); return; }
+        const c = { lat: truncCoord4(best.lat), lon: truncCoord4(best.lon) };
+        setCoords(c);
+        if (canEdit && onUpdatePool) onUpdatePool({ lat: c.lat, lon: c.lon });
+      } catch (e) {
+        if (!cancelled) setGeoFailed(true);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [pool?.id, pool?.lat, pool?.lon, pool?.location]);
+
+  // Météo : appelée à l'ouverture de la carte uniquement (pas de récupération en arrière-plan).
+  useEffect(() => {
+    if (!coords) return;
+    let cancelled = false;
+    setWState("loading");
+    fetchWeatherForecast(coords.lat, coords.lon)
+      .then((data) => { if (!cancelled) { setWeather(data); setWState("ok"); } })
+      .catch(() => { if (!cancelled) setWState("error"); });
+    return () => { cancelled = true; };
+  }, [coords?.lat, coords?.lon]);
+
+  const todayStats = useMemo(() => summarizeWeatherForDay(weather?.hours, tz, todayKey), [weather, tz, todayKey]);
+
+  // Temps du moment : heure de prévision la plus proche de maintenant (3 h au plus) -> vignette au-dessus de la température de l'eau.
+  const wxNow = useMemo(() => {
+    let best = null;
+    ((weather && weather.hours) || []).forEach((h) => {
+      const dt = Math.abs(Date.parse(h.t) - nowMs);
+      if (h.symbol && (!best || dt < best.dt)) best = { h, dt };
+    });
+    return best && best.dt <= 3 * 3600e3 ? best.h : null;
+  }, [weather, nowMs]);
+  const wxCat = wxNow ? weatherCategory(wxNow.symbol) : null;
+  const wxLabel = wxCat ? t(wxCat.cat === "clear" && wxCat.night ? "wx_clear_night" : "wx_" + wxCat.cat) : null;
+  const wxIcon = wxCat ? weatherIcon(wxCat.cat, wxCat.night) : "";
+
+  // Mémorise la moyenne de l'air du jour (première observation de la journée) pour l'estimation des jours suivants.
+  useEffect(() => {
+    if (!todayStats || !pool?.id || Number.isFinite(airHistory[todayKey])) return;
+    setAirHistory(saveAirHistory(pool.id, { ...airHistory, [todayKey]: Math.round(todayStats.airMean * 10) / 10 }));
+  }, [todayStats]);
+
+  const waterTemp = useMemo(
+    () => (poolType === "spa" ? null : resolveWaterTemp({ measures, manual: pool?.filtrationWaterTemp, nowMs, airHistory, todayAirMean: todayStats?.airMean, timeZone: tz })),
+    [poolType, measures, pool?.filtrationWaterTemp, nowMs, airHistory, todayStats, tz]
+  );
+
+  const spaSpec = poolType === "spa" ? (SPA_FILTRATION_TABLE[pool?.spaType || "portable"] || SPA_FILTRATION_TABLE.portable)[pool?.spaUsage || "occasionnel"] : null;
+  const hours = poolType === "spa" ? (spaSpec ? spaSpec.hours : null) : waterTemp ? computePoolFiltrationHours(waterTemp.value) : null;
+  const noon = coords ? computeSolarNoon(coords.lat, coords.lon, new Date(nowMs), tz) : null;
+  const slots = hours == null || noon == null ? null : poolType === "spa" ? computeSpaSchedule(noon, spaSpec) : computePoolSchedule(noon, hours);
+  const totalHours = slots ? slots.reduce((a, s) => a + (s.end - s.start), 0) : hours;
+
+  const curStart = parseClock(pool?.filtrationStartCurrent);
+  const curDur = parseFloat(pool?.filtrationDurationCurrent);
+  const hasCurrent = curStart != null || Number.isFinite(curDur);
+  const adjustStart = slots && curStart != null && Math.abs(curStart - slots[0].start) > FILTRATION_ADJUST_TOLERANCE_H;
+  const adjustDuration = totalHours != null && Number.isFinite(curDur) && Math.abs(curDur - totalHours) > FILTRATION_ADJUST_TOLERANCE_H;
+  const overheat = poolType === "spa" && todayStats && todayStats.airMax > SPA_OVERHEAT_AIR_C;
+
+  function saveTemp() {
+    const c = tempFromDisplay(String(tempDraft).replace(",", "."), TEMP_UNIT);
+    if (c == null || c < -5 || c > 45 || !canEdit || !onUpdatePool) return;
+    onUpdatePool({ filtrationWaterTemp: { value: Math.round(c * 10) / 10, at: new Date().toISOString() } });
+    setTempDraft("");
+  }
+
+  const updatedLabel = weather && weather.updatedAt ? new Date(weather.updatedAt).toLocaleTimeString(lang || "fr", { hour: "2-digit", minute: "2-digit", timeZone: tz }) : null;
+  const tzLabel = tz + ", " + formatUtcOffset(tzOffsetMinutes(nowMs, tz));
+  const tempValid = Number.isFinite(parseFloat(String(tempDraft).replace(",", "."))) && canEdit;
+
+  return (
+    <div style={FILT_STYLES.card}>
+      <div style={FILT_STYLES.head}>
+        <span style={FILT_STYLES.title}><Clock size={15} /> {t("filt_title")}</span>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+          {wxLabel && (
+            <span style={{ ...FILT_STYLES.badge, display: "inline-flex", alignItems: "center", gap: 6, padding: "2px 10px 2px 6px" }}>
+              {/* Pictogramme à 2,5 x la taille précédente (11 px -> 27,5 px) */}
+              <span style={{ fontSize: 27.5, lineHeight: 1 }}>{wxIcon}</span>
+              <span>{wxLabel}{wxNow && Number.isFinite(wxNow.air) ? " · " + formatTemp(wxNow.air, TEMP_UNIT, 0) : ""}</span>
+            </span>
+          )}
+          {waterTemp && <span style={FILT_STYLES.badge}>{t("filt_water_temp")} {formatTemp(waterTemp.value, TEMP_UNIT, 1)} · {waterTemp.source === "mesure" ? t("filt_temp_from_measure") : waterTemp.source === "saisie" ? t("filt_temp_entered") : t("filt_temp_estimated")}</span>}
+        </div>
+      </div>
+
+      {totalHours != null ? (
+        <>
+          <div style={FILT_STYLES.big}>{formatDurationH(totalHours)}</div>
+          <div style={FILT_STYLES.sub}>
+            {poolType === "spa" && spaSpec && (spaSpec.continuous ? t("filt_continuous") : t("filt_spa_cycles", { n: spaSpec.cycles, d: formatDurationH(spaSpec.hours / spaSpec.cycles) }))}
+            {poolType !== "spa" && t("filt_recommended")}
+          </div>
+        </>
+      ) : (
+        <p style={{ ...FILT_STYLES.hint, marginTop: 0 }}>{t("filt_no_temp")}</p>
+      )}
+
+      {slots && (
+        <div style={{ marginTop: 12 }}>
+          <div style={{ fontSize: 12, color: "var(--brand-text-muted)", marginBottom: 4 }}>
+            {t("filt_range")} : {slots.map((s) => formatClock(s.start) + " – " + formatClock(s.end)).join(" · ")}
+          </div>
+          <div style={{ position: "relative", height: 14, borderRadius: 7, background: "#e6eef3", overflow: "hidden" }}>
+            {slots.map((s, i) => (
+              <div key={i} style={{ position: "absolute", top: 0, bottom: 0, left: (s.start / 24 * 100) + "%", width: ((s.end - s.start) / 24 * 100) + "%", background: "var(--brand-primary)" }} />
+            ))}
+            {noon != null && <div style={{ position: "absolute", top: 0, bottom: 0, left: (noon / 24 * 100) + "%", width: 2, background: "#f5b700" }} />}
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#9aa9b6", marginTop: 2 }}>
+            <span>0 h</span><span>6 h</span><span>12 h</span><span>18 h</span><span>24 h</span>
+          </div>
+        </div>
+      )}
+      {!coords && <p style={FILT_STYLES.hint}>{pool?.location && !geoFailed ? t("filt_locating") : t("filt_no_location")}</p>}
+
+      {poolType !== "spa" && (
+        <div style={{ marginTop: 12 }}>
+          <div style={{ fontSize: 12, color: "var(--brand-text-muted)", marginBottom: 4 }}>{t("filt_temp_input_label", { unit: tempUnitLabel(TEMP_UNIT) })}</div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <input
+              type="number" step="0.5" inputMode="decimal" value={tempDraft}
+              onChange={(e) => setTempDraft(e.target.value)}
+              placeholder={t("filt_temp_input_ph", { ex: TEMP_UNIT === "F" ? "75" : "24" })}
+              disabled={!canEdit}
+              style={{ ...styles.input, flex: 1, marginBottom: 0 }}
+            />
+            <button type="button" onClick={saveTemp} disabled={!tempValid} style={{ ...styles.primaryBtn, width: "auto", padding: "0 16px", opacity: tempValid ? 1 : 0.5 }}>
+              {t("filt_temp_save")}
+            </button>
+          </div>
+          <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginTop: 4, lineHeight: 1.4 }}>{t("filt_temp_hint")}</div>
+        </div>
+      )}
+
+      {wState === "ok" && todayStats && (
+        <div style={FILT_STYLES.stats}>
+          <div style={FILT_STYLES.stat}>{t("filt_air_max")}<div style={FILT_STYLES.statVal}>{formatTemp(todayStats.airMax, TEMP_UNIT, 0)}</div></div>
+          <div style={FILT_STYLES.stat}>{t("filt_uv")}<div style={FILT_STYLES.statVal}>{todayStats.uvMax.toFixed(1)}</div></div>
+          <div style={FILT_STYLES.stat}>{t("filt_rain")}<div style={FILT_STYLES.statVal}>{todayStats.rainMm.toFixed(1)} mm</div></div>
+          <div style={FILT_STYLES.stat}>{t("filt_wind")}<div style={FILT_STYLES.statVal}>{Math.round(todayStats.windMax * 3.6)} km/h</div></div>
+        </div>
+      )}
+      {wState === "loading" && <p style={FILT_STYLES.hint}><Loader2 size={13} className="spin" /> {t("filt_weather_loading")}</p>}
+      {wState === "error" && <p style={FILT_STYLES.hint}>{t("filt_weather_unavailable")}</p>}
+
+      {overheat && (
+        <div style={FILT_STYLES.alert}><AlertTriangle size={15} style={{ flexShrink: 0, marginTop: 1 }} /><span>{t("filt_overheat")}</span></div>
+      )}
+      {adjustStart && (
+        <div style={FILT_STYLES.alert}><AlertTriangle size={15} style={{ flexShrink: 0, marginTop: 1 }} /><span>{t("filt_adjust_start")} ({t("filt_current")} {formatClock(curStart)} → {t("filt_recommended_short")} {formatClock(slots[0].start)})</span></div>
+      )}
+      {adjustDuration && (
+        <div style={FILT_STYLES.alert}><AlertTriangle size={15} style={{ flexShrink: 0, marginTop: 1 }} /><span>{t("filt_adjust_duration")} ({t("filt_current")} {formatDurationH(curDur)} → {t("filt_recommended_short")} {formatDurationH(totalHours)})</span></div>
+      )}
+      {!hasCurrent && totalHours != null && (
+        <p style={FILT_STYLES.hint}>
+          {t("filt_set_current")}{" "}
+          {onOpenSettings && canEdit && <button type="button" onClick={onOpenSettings} style={{ ...styles.editLinkBtn, display: "inline-flex", padding: 0 }}>{t("filt_open_settings")}</button>}
+        </p>
+      )}
+
+      <div style={FILT_STYLES.foot}>
+        {updatedLabel && <div>{t("filt_updated", { time: updatedLabel, tz: tzLabel })}</div>}
+        <div>{t("filt_attribution")}</div>
+      </div>
+    </div>
+  );
+}
+
+function Dashboard({ latest, recentApplications, volume, products, manageStock, onAddMeasure, onEditMeasure, onValidateApplication, applicationForLatest, blockedByLimit, isPremium, onWantPremium, apiKey, apiProvider, recentMeasures, effectiveTargets, activeParamKeys, lang, activePlan, onResumePlan, onOpenManualApply, authUid, pool, onUpdatePool, canEditPool, onOpenSettings }) {
   const t = useT(lang);
   const [aiComment, setAiComment] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -13357,15 +14266,27 @@ Réponds directement en français, sans titre ni introduction.`;
     [latest, volume, products, effectiveTargets, activeParamKeys, recentMeasures, recentApplications]
   );
 
+  // v1.151.0 — Carte « Filtration du jour » : Premium, ou version verrouillée (composants Premium existants).
+  const filtrationCard = pool ? (
+    isPremium ? (
+      <FiltrationCard pool={pool} measures={recentMeasures} lang={lang} onUpdatePool={onUpdatePool} canEdit={canEditPool} onOpenSettings={onOpenSettings} />
+    ) : (
+      <FiltrationLockedCard lang={lang} onWantPremium={onWantPremium} />
+    )
+  ) : null;
+
   if (!latest) {
     return (
-      <div style={styles.emptyState}>
-        <Droplets size={40} color="var(--brand-icon-light)" strokeWidth={1.5} />
-        <p style={styles.emptyTitle}>{t("no_measure")}</p>
-        <p style={styles.emptyText}>{t("no_measure_sub")}</p>
-        <button style={styles.primaryBtn} onClick={onAddMeasure}>
-          <Plus size={18} /> {t("add_measure")}
-        </button>
+      <div>
+        <div style={styles.emptyState}>
+          <Droplets size={40} color="var(--brand-icon-light)" strokeWidth={1.5} />
+          <p style={styles.emptyTitle}>{t("no_measure")}</p>
+          <p style={styles.emptyText}>{t("no_measure_sub")}</p>
+          <button style={styles.primaryBtn} onClick={onAddMeasure}>
+            <Plus size={18} /> {t("add_measure")}
+          </button>
+        </div>
+        {filtrationCard}
       </div>
     );
   }
@@ -13587,6 +14508,7 @@ Réponds directement en français, sans titre ni introduction.`;
         </button>
       )}
 
+      {filtrationCard}
     </div>
   );
 }
@@ -13601,6 +14523,12 @@ function ParamCard({ param, value, effectiveTargets, lang }) {
   // Utiliser la traduction du label si disponible
   const paramLabelKey = `param_${param.toLowerCase()}`;
   const paramLabel = t(paramLabelKey) !== paramLabelKey ? t(paramLabelKey).replace(/ \(mg\/L\)| \(°C\)| \(µg\/L\)/, "") : paramTarget.label;
+  // v1.151.0 — Température de l'eau en °F si demandé (le statut reste calculé sur la valeur en °C).
+  const asF = param === "temp" && TEMP_UNIT === "F";
+  const shownValue = asF && tempToDisplay(value, "F") != null ? tempToDisplay(value, "F").toFixed(1) : value;
+  const shownUnit = asF ? "°F" : paramTarget.unit;
+  const shownMin = asF ? Math.round(cToF(paramTarget.min)) : paramTarget.min;
+  const shownMax = asF ? Math.round(cToF(paramTarget.max)) : paramTarget.max;
   return (
     <div style={{ ...styles.paramCard, borderColor: color + "33" }}>
       <div style={styles.paramTop}>
@@ -13608,12 +14536,12 @@ function ParamCard({ param, value, effectiveTargets, lang }) {
         <span style={{ ...styles.paramDot, background: color }} />
       </div>
       <div style={styles.paramValue}>
-        {value}
-        <span style={styles.paramUnit}>{paramTarget.unit}</span>
+        {shownValue}
+        <span style={styles.paramUnit}>{shownUnit}</span>
       </div>
       <div style={{ ...styles.paramStatus, color }}>{statusLabel(status, t)}</div>
       <div style={styles.paramRange}>
-        {t("target")} {paramTarget.min}–{paramTarget.max} {paramTarget.unit}
+        {t("target")} {shownMin}–{shownMax} {shownUnit}
       </div>
     </div>
   );
@@ -16484,7 +17412,7 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, onResume
                     borderColor: statusColor(status) + "44",
                   }}
                 >
-                  {TARGETS[p].label}: {measure[p]} {TARGETS[p].unit}
+                  {TARGETS[p].label}: {p === "temp" && TEMP_UNIT === "F" && tempToDisplay(measure[p], "F") != null ? tempToDisplay(measure[p], "F").toFixed(1) : measure[p]} {p === "temp" && TEMP_UNIT === "F" ? "°F" : TARGETS[p].unit}
                 </span>
               );
             })}
@@ -18393,7 +19321,8 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
   const [tCl, setTCl] = useState(measure?.tCl ?? "");
   const [tac, setTac] = useState(measure?.tac ?? "");
   const [cya, setCya] = useState(measure?.cya ?? "");
-  const [temp, setTemp] = useState(measure?.temp ?? "");
+  const initialTemp = TEMP_UNIT === "F" && tempToDisplay(measure?.temp, "F") != null ? String(Math.round(tempToDisplay(measure.temp, "F") * 10) / 10) : (measure?.temp ?? "");
+  const [temp, setTemp] = useState(initialTemp); // saisi dans l'unité choisie (°C/°F) ; converti en °C à l'enregistrement
   const [sel, setSel] = useState(measure?.sel ?? "");
   const [brome, setBrome] = useState(measure?.brome ?? "");
   const [o2, setO2] = useState(measure?.o2 ?? "");
@@ -18956,7 +19885,7 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
       if (merged.phos   !== undefined) setPhos(String(merged.phos));
       if (merged.copper !== undefined) setCopper(String(merged.copper));
       if (merged.iron   !== undefined) setIron(String(merged.iron));
-      if (merged.temp   !== undefined) setTemp(String(merged.temp));
+      if (merged.temp   !== undefined) setTemp(TEMP_UNIT === "F" && tempToDisplay(merged.temp, "F") != null ? String(Math.round(tempToDisplay(merged.temp, "F") * 10) / 10) : String(merged.temp));
       if (merged.brome  !== undefined) setBrome(String(merged.brome));
       if (merged.o2     !== undefined) setO2(String(merged.o2));
       if (merged.sel    !== undefined) setSel(String(merged.sel));
@@ -19133,6 +20062,8 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
       onSaveApplication(application.id, buildUpdatedApplicationSteps());
     }
 
+    const tempC = tempForSave(temp, initialTemp, measure?.temp, TEMP_UNIT);
+    const tempStamp = tempEntryStamp(tempC, measure?.temp, measure?.tempEnteredAt, new Date().toISOString());
     onSave({
       ...(isEditing ? { id: measure.id } : {}),
       ...(isPrefilled && measure?.importedFromPdf ? { importedFromPdf: true } : {}),
@@ -19152,7 +20083,8 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
       phos,
       copper,
       iron,
-      temp,
+      temp: tempC,
+      ...(tempStamp ? { tempEnteredAt: tempStamp } : {}),
       sel,
       brome,
       o2,
@@ -19171,7 +20103,7 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
     { key: "ccl",  abbr: "CCL",  label: `CCL - ${t("param_ccl_long")}`,    value: ccl,    set: setCcl,    step: "0.01", placeholder: "0.00" },
     { key: "tac",  abbr: "TAC",  label: `TAC - ${t("param_tac_long")}`,    value: tac,    set: setTac,    step: "1",    placeholder: "100" },
     { key: "cya",  abbr: "CYA",  label: `CYA - ${t("param_cya_long")}`,    value: cya,    set: setCya,    step: "1",    placeholder: "40" },
-    { key: "temp", abbr: "°C",   label: `°C - ${t("param_temp_long")}`,    value: temp,   set: setTemp,   step: "0.1",  placeholder: "27" },
+    { key: "temp", abbr: tempUnitLabel(TEMP_UNIT), label: `${tempUnitLabel(TEMP_UNIT)} - ${t("param_temp_long")}`, value: temp, set: setTemp, step: "0.1", placeholder: TEMP_UNIT === "F" ? "80" : "27" },
     { key: "hard", abbr: "TH",   label: `TH - ${t("param_th_long")}`,      value: hard,   set: setHard,   step: "1",    placeholder: "250" },
     { key: "phos", abbr: "Phos", label: `Phos - ${t("param_phos_long")}`,  value: phos,   set: setPhos,   step: "1",    placeholder: "100" },
     { key: "copper",abbr: "Cu",  label: `Cu - ${t("param_cu_long")}`,      value: copper, set: setCopper, step: "0.01", placeholder: "0.10" },
@@ -22326,8 +23258,16 @@ function AccountDataRequestScreen({ lang, authUser, onClose, onSubmit }) {
   );
 }
 
-function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, viewContext, onDeleteAllMeasures: onDeleteAllMeasuresRaw, orphanedCount, onRepairOrphanedData, poolMeasureCount, onGenerateReport, onWantPremiumForReport, onWantPremium, isPremium, setIsPremium, onWantManageSubscription, testerUntil, onToggleTesterPremium, onRedeemTesterCode, portalBusy, portalError, onReplayOnboarding, aiEnabled, setAiEnabled, calibrationContribution, setCalibrationContribution, stripTester, setStripTester, lang, setLang, authUser, onSignOut, onSignIn, onDeleteAccount, dataConsent, onRevokeDataConsent, cguAcceptedDate, myPseudo }) {
+function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, viewContext, onDeleteAllMeasures: onDeleteAllMeasuresRaw, orphanedCount, onRepairOrphanedData, poolMeasureCount, onGenerateReport, onWantPremiumForReport, onWantPremium, isPremium, setIsPremium, onWantManageSubscription, testerUntil, onToggleTesterPremium, onRedeemTesterCode, portalBusy, portalError, onReplayOnboarding, aiEnabled, setAiEnabled, calibrationContribution, setCalibrationContribution, stripTester, setStripTester, lang, setLang, authUser, onSignOut, onSignIn, onDeleteAccount, dataConsent, onRevokeDataConsent, cguAcceptedDate, myPseudo, tempUnit, onChangeTempUnit, openPoolEditId, onPoolEditHandled }) {
   const [editingPool, setEditingPool] = useState(null);
+  const [editFocusFiltration, setEditFocusFiltration] = useState(false);
+  // Demande de la carte « Filtration du jour » : ouvre directement le formulaire du bassin, sur la section filtration.
+  useEffect(() => {
+    if (!openPoolEditId) return;
+    const target = (pools || []).find((p) => p.id === openPoolEditId);
+    if (target && !viewContext) { setEditFocusFiltration(true); setEditingPool(target); }
+    if (onPoolEditHandled) onPoolEditHandled();
+  }, [openPoolEditId]);
   const [showLangPicker, setShowLangPicker] = useState(false);
   const [pendingLang, setPendingLang] = useState(lang);
   const treatmentTypes = getTreatmentTypes(lang);
@@ -22438,6 +23378,28 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
         <span>{LANGUAGE_OPTIONS.find((o) => o.value === lang)?.label || "Français"}</span>
         <ChevronDown size={16} />
       </button>
+
+      <div style={styles.sectionRow}>
+        <span style={styles.sectionLabel}>{t("temp_unit_label")}</span>
+      </div>
+      <div style={{ display: "flex", gap: 8 }}>
+        {[["C", "temp_unit_c"], ["F", "temp_unit_f"]].map(([u, k]) => (
+          <button
+            key={u}
+            type="button"
+            onClick={() => onChangeTempUnit && onChangeTempUnit(u)}
+            style={{
+              flex: 1, padding: "11px 0", borderRadius: 11, fontSize: 14, cursor: "pointer",
+              border: "1.5px solid " + (tempUnit === u ? "var(--brand-primary)" : "#d0e4f5"),
+              background: tempUnit === u ? "#e8f4fd" : "#fafcfb",
+              color: tempUnit === u ? "var(--brand-primary)" : "var(--brand-text-strong)",
+              fontWeight: tempUnit === u ? 700 : 500,
+            }}
+          >
+            {t(k)}
+          </button>
+        ))}
+      </div>
 
       {showLangPicker && (
         <div style={styles.langPickerOverlay} onClick={() => setShowLangPicker(false)}>
@@ -22786,10 +23748,11 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
 
       {editingPool && (
         <AddPoolModal
-          onClose={() => setEditingPool(null)}
-          onSave={(updated) => { onUpdatePool(updated.id, updated); setEditingPool(null); }}
+          onClose={() => { setEditingPool(null); setEditFocusFiltration(false); }}
+          onSave={(updated) => { onUpdatePool(updated.id, updated); setEditingPool(null); setEditFocusFiltration(false); }}
           lang={lang}
           existingPool={editingPool}
+          focusFiltration={editFocusFiltration}
         />
       )}
     </div>
@@ -22821,6 +23784,7 @@ function CguLegalContent({ lang }) {
           { title: t("lcen_gdpr"), body: t("lcen_gdpr_val") },
           { title: t("lcen_calibration_title"), body: t("lcen_calibration_val") },
           { title: t("lcen_photocontrib_title"), body: t("lcen_photocontrib_val") },
+          { title: t("lcen_weather_title"), body: t("lcen_weather_val") },
         ].map((s, i) => (
           <div key={i} style={{ marginBottom: 10 }}>
             <div style={{ fontWeight: 700, color: "var(--brand-text-strong)", marginBottom: 2 }}>{i+1}. {s.title}</div>
@@ -23369,7 +24333,7 @@ function LocationAutocomplete({ value, onChange, lang, placeholder }) {
   }, []);
 
   function handleSelect(item) {
-    onChange(item.label);
+    onChange(item.label, { lat: parseFloat(item.lat), lon: parseFloat(item.lon) });
     setQuery(item.label);
     setResults([]);
     setOpen(false);
@@ -23379,7 +24343,7 @@ function LocationAutocomplete({ value, onChange, lang, placeholder }) {
     const v = e.target.value;
     setQuery(v);
     setOpen(true);
-    if (v !== value) onChange("");
+    if (v !== value) onChange("", null);
   }
 
   function handleGeoloc() {
@@ -23391,7 +24355,7 @@ function LocationAutocomplete({ value, onChange, lang, placeholder }) {
         try {
           const label = await nominatimReverse(pos.coords.latitude, pos.coords.longitude, lang);
           if (label) {
-            onChange(label);
+            onChange(label, { lat: pos.coords.latitude, lon: pos.coords.longitude });
             setQuery(label);
             setResults([]);
             setOpen(false);
@@ -23479,7 +24443,7 @@ function LocationAutocomplete({ value, onChange, lang, placeholder }) {
 }
 
 // ---------- Ajout d'un bassin ----------
-function AddPoolModal({ onClose, onSave, lang, existingPool, forced }) {
+function AddPoolModal({ onClose, onSave, lang, existingPool, forced, focusFiltration }) {
   const t = useT(lang || "fr");
   const isEdit = !!existingPool;
   const [name, setName] = useState(existingPool?.name || "");
@@ -23496,6 +24460,28 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced }) {
   const [reportEmail, setReportEmail] = useState(existingPool?.reportEmail || "");
   const [photo, setPhoto] = useState(existingPool?.photo || null);
   const [photoBusy, setPhotoBusy] = useState(false);
+  // v1.151.0 — Type de bassin (obligatoire ; les anciens bassins sont des piscines), paramètres du spa,
+  // coordonnées GPS (issues de la ville choisie) et programmation actuelle de la filtration.
+  const [poolType, setPoolType] = useState(existingPool?.poolType === "spa" ? "spa" : "piscine");
+  const [spaType, setSpaType] = useState(existingPool?.spaType || "portable");
+  const [spaUsage, setSpaUsage] = useState(existingPool?.spaUsage || "occasionnel");
+  const [coords, setCoords] = useState(
+    isFiniteNum(existingPool?.lat) && isFiniteNum(existingPool?.lon) ? { lat: existingPool.lat, lon: existingPool.lon } : null
+  );
+  const [filtStart, setFiltStart] = useState(existingPool?.filtrationStartCurrent || "");
+  const [filtDuration, setFiltDuration] = useState(existingPool?.filtrationDurationCurrent != null ? String(existingPool.filtrationDurationCurrent) : "");
+  function handleLocationChange(label, c) {
+    setLocation(label);
+    if (c && Number.isFinite(c.lat) && Number.isFinite(c.lon)) setCoords({ lat: c.lat, lon: c.lon });
+    else if (!label) setCoords(null);
+  }
+  // Ouvert depuis la carte « Filtration du jour » : on amène la section « Programmation actuelle » à l'écran.
+  const filtSectionRef = useRef(null);
+  useEffect(() => {
+    if (!focusFiltration) return;
+    const tm = setTimeout(() => { try { filtSectionRef.current && filtSectionRef.current.scrollIntoView({ behavior: "smooth", block: "center" }); } catch (e) {} }, 250);
+    return () => clearTimeout(tm);
+  }, []);
   const fileInputRef = useRef(null);
   const galleryInputRef = useRef(null);
   // v1.147.0 — Champs obligatoires : signalés (bordure + message + défilement)
@@ -23537,7 +24523,13 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced }) {
       ...(existingPool || {}),
       name: name.trim(),
       location: location.trim(),
+      lat: coords ? truncCoord4(coords.lat) : null,
+      lon: coords ? truncCoord4(coords.lon) : null,
       volume: parseFloat(volume) || 0,
+      poolType,
+      ...(poolType === "spa" ? { spaType, spaUsage } : {}),
+      filtrationStartCurrent: /^\d{1,2}:\d{2}$/.test(filtStart) ? filtStart : null,
+      filtrationDurationCurrent: parseFloat(filtDuration) > 0 ? parseFloat(filtDuration) : null,
       measureDevice,
       treatmentType,
       filtration,
@@ -23616,9 +24608,29 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced }) {
         <div style={{ fontSize: 12, color: "#c0392b", marginTop: -6, marginBottom: 10 }}>{t("pool_name_required")}</div>
       )}
 
+      {/* Type de bassin (v1.151.0) */}
+      <FieldLabel required>{t("pool_type_label")}</FieldLabel>
+      <select style={styles.input} value={poolType} onChange={e => setPoolType(e.target.value)}>
+        <option value="piscine">{t("pool_type_piscine")}</option>
+        <option value="spa">{t("pool_type_spa")}</option>
+      </select>
+      {poolType === "spa" && (<>
+        <label style={styles.fieldLabel}>{t("spa_type_label")}</label>
+        <select style={styles.input} value={spaType} onChange={e => setSpaType(e.target.value)}>
+          <option value="portable">{t("spa_type_portable")}</option>
+          <option value="swim_spa">{t("spa_type_swim_spa")}</option>
+          <option value="circulation_dediree">{t("spa_type_circulation")}</option>
+        </select>
+        <label style={styles.fieldLabel}>{t("spa_usage_label")}</label>
+        <select style={styles.input} value={spaUsage} onChange={e => setSpaUsage(e.target.value)}>
+          <option value="occasionnel">{t("spa_usage_occasionnel")}</option>
+          <option value="regulier">{t("spa_usage_regulier")}</option>
+        </select>
+      </>)}
+
       {/* Localisation */}
       <label style={styles.fieldLabel}>{t("location")}</label>
-      <LocationAutocomplete value={location} onChange={setLocation} lang={lang || "fr"} placeholder={t("pool_location_placeholder")} />
+      <LocationAutocomplete value={location} onChange={handleLocationChange} lang={lang || "fr"} placeholder={t("pool_location_placeholder")} />
 
       {/* Volume */}
       <FieldLabel required>{t("volume")}</FieldLabel>
@@ -23653,6 +24665,20 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced }) {
       <select style={styles.input} value={filtration} onChange={e => setFiltration(e.target.value)}>
         {filtrationOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
+
+      {/* Programmation actuelle de la filtration (v1.151.0, facultatif) */}
+      <label ref={filtSectionRef} style={styles.fieldLabel}>{t("filt_current_section")}</label>
+      <div style={{ display: "flex", gap: 10 }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginBottom: 3 }}>{t("filt_current_start_label")}</div>
+          <input type="time" style={styles.input} value={filtStart} onChange={e => setFiltStart(e.target.value)} />
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginBottom: 3 }}>{t("filt_current_duration_label")}</div>
+          <input type="number" step="0.25" min="0" max="24" inputMode="decimal" style={styles.input} value={filtDuration} onChange={e => setFiltDuration(e.target.value)} />
+        </div>
+      </div>
+      <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginTop: -6, marginBottom: 10 }}>{t("filt_current_hint")}</div>
 
       {/* Email rapport PDF */}
       <label style={styles.fieldLabel}>{t("pool_email")}</label>
