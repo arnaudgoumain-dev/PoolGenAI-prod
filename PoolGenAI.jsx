@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.151.0";
+const APP_VERSION = "1.151.1";
 const CGU_VERSION = "1.4"; // v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -3689,7 +3689,7 @@ const TRANSLATIONS = {
     lcen_weather_val: "La funzione «Filtrazione di oggi» (Premium) consiglia una durata e una fascia oraria di filtrazione in base alla temperatura dell'acqua (inserita o stimata) e al meteo della vostra vasca. Per ottenere il meteo, le coordinate geografiche approssimative della città della vostra vasca (al massimo 4 decimali) vengono trasmesse, tramite l'infrastruttura tecnica dell'editore, all'Istituto meteorologico norvegese (MET Norway, Norvegia). Nessun altro elemento — né nome, né indirizzo email, né identificativo dell'account — viene trasmesso a MET Norway. Dati meteo: MET Norway, con licenza aperta (NLOD 2.0 / CC BY 4.0). Questi consigli sono indicativi: non sostituiscono né il manuale della vostra attrezzatura né la vostra valutazione dello stato dell'acqua, e restate responsabili della programmazione della filtrazione.",
     wx_clear: "Soleggiato",
     wx_clear_night: "Cielo sereno",
-    wx_fair: "Prevalentemente sereno",
+    wx_fair: "Poco nuvoloso",
     wx_partly: "Parzialmente nuvoloso",
     wx_cloudy: "Nuvoloso",
     wx_fog: "Nebbia",
@@ -4606,7 +4606,7 @@ const TRANSLATIONS = {
     lcen_weather_val: "La función «Filtración de hoy» (Premium) recomienda una duración y una franja horaria de filtración a partir de la temperatura del agua (introducida o estimada) y del tiempo en su piscina. Para obtener el tiempo, las coordenadas geográficas aproximadas de la ciudad de su piscina (4 decimales como máximo) se transmiten, a través de la infraestructura técnica del editor, al Instituto Meteorológico de Noruega (MET Norway, Noruega). No se transmite a MET Norway ningún otro dato: ni nombre, ni dirección de correo, ni identificador de cuenta. Datos meteorológicos: MET Norway, con licencia abierta (NLOD 2.0 / CC BY 4.0). Estas recomendaciones son orientativas: no sustituyen el manual de su equipo ni su propia valoración del estado del agua, y usted sigue siendo responsable de la programación de su filtración.",
     wx_clear: "Soleado",
     wx_clear_night: "Cielo despejado",
-    wx_fair: "Mayormente despejado",
+    wx_fair: "Poco nublado",
     wx_partly: "Parcialmente nublado",
     wx_cloudy: "Nublado",
     wx_fog: "Niebla",
@@ -14078,12 +14078,12 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
     <div style={FILT_STYLES.card}>
       <div style={FILT_STYLES.head}>
         <span style={FILT_STYLES.title}><Clock size={15} /> {t("filt_title")}</span>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
           {wxLabel && (
             <span style={{ ...FILT_STYLES.badge, display: "inline-flex", alignItems: "center", gap: 6, padding: "2px 10px 2px 6px" }}>
               {/* Pictogramme à 2,5 x la taille précédente (11 px -> 27,5 px) */}
               <span style={{ fontSize: 27.5, lineHeight: 1 }}>{wxIcon}</span>
-              <span>{wxLabel}{wxNow && Number.isFinite(wxNow.air) ? " · " + formatTemp(wxNow.air, TEMP_UNIT, 0) : ""}</span>
+              <span style={{ whiteSpace: "nowrap" }}>{wxLabel}{wxNow && Number.isFinite(wxNow.air) ? " · " + formatTemp(wxNow.air, TEMP_UNIT, 0) : ""}</span>
             </span>
           )}
           {waterTemp && <span style={FILT_STYLES.badge}>{t("filt_water_temp")} {formatTemp(waterTemp.value, TEMP_UNIT, 1)} · {waterTemp.source === "mesure" ? t("filt_temp_from_measure") : waterTemp.source === "saisie" ? t("filt_temp_entered") : t("filt_temp_estimated")}</span>}
