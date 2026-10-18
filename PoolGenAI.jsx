@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.153.2";
+const APP_VERSION = "1.153.3";
 const CGU_VERSION = "1.5"; // v1.5 : section 6 complétée (altitude du bassin : IGN, Open Topo Data) ; v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -25164,7 +25164,7 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced, focusSectio
         aria-invalid={showErrors && nameInvalid}
       />
       {showErrors && nameInvalid && (
-        <div style={{ fontSize: 12, color: "#c0392b", marginTop: -6, marginBottom: 10 }}>{t("pool_name_required")}</div>
+        <div style={{ fontSize: 12, color: "#c0392b", marginTop: 4, marginBottom: 10 }}>{t("pool_name_required")}</div>
       )}
 
       {/* Type de bassin (v1.151.0) */}
@@ -25207,7 +25207,7 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced, focusSectio
         aria-invalid={showErrors && volumeInvalid}
       />
       {showErrors && volumeInvalid && (
-        <div style={{ fontSize: 12, color: "#c0392b", marginTop: -6, marginBottom: 10 }}>{t("pool_volume_required")}</div>
+        <div style={{ fontSize: 12, color: "#c0392b", marginTop: 4, marginBottom: 10 }}>{t("pool_volume_required")}</div>
       )}
 
       {/* Lot B (v1.33.0) — Méthode de mesure préférée */}
@@ -25275,7 +25275,7 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced, focusSectio
           <input type="number" step="0.25" min="0" max="24" inputMode="decimal" style={styles.input} value={filtDuration} onChange={e => setFiltDuration(e.target.value)} />
         </div>
       </div>
-      <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginTop: -6, marginBottom: 10 }}>{t("filt_current_hint")}</div>
+      <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginTop: 6, marginBottom: 10 }}>{t("filt_current_hint")}</div>
 
       {/* Email rapport PDF */}
       <label style={styles.fieldLabel}>{t("pool_email")}</label>
