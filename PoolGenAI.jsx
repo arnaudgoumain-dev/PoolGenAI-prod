@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.156.2";
+const APP_VERSION = "1.157.1";
 const CGU_VERSION = "1.5"; // v1.5 : section 6 complétée (altitude du bassin : IGN, Open Topo Data) ; v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -988,6 +988,7 @@ const TRANSLATIONS = {
     filt_legend_applied: "Durée de filtration programmée au coffret à la date de la mesure",
     filt_hist_temp_entry: "Température saisie (onglet Filtration)",
     filt_hist_temp_delete_confirm: "Supprimer cette température de l'historique ?",
+    filt_solar_noon: "Midi solaire",
   },
   en: {
     tab_pool: "Pool",
@@ -1943,6 +1944,7 @@ const TRANSLATIONS = {
     filt_legend_applied: "Filtration time programmed on the controller at the measurement date",
     filt_hist_temp_entry: "Temperature entered (Filtration tab)",
     filt_hist_temp_delete_confirm: "Delete this temperature from the history?",
+    filt_solar_noon: "Solar noon",
   },
   de: {
     tab_pool: "Becken",
@@ -2896,6 +2898,7 @@ const TRANSLATIONS = {
     filt_legend_applied: "Zum Zeitpunkt der Messung am Schaltkasten eingestellte Filterzeit",
     filt_hist_temp_entry: "Temperatur eingegeben (Reiter Filterung)",
     filt_hist_temp_delete_confirm: "Diese Temperatur aus dem Verlauf löschen?",
+    filt_solar_noon: "Sonnenhöchststand",
   },
   it: {
     tab_pool: "Vasca",
@@ -3849,6 +3852,7 @@ const TRANSLATIONS = {
     filt_legend_applied: "Durata di filtrazione programmata sul quadro alla data della misura",
     filt_hist_temp_entry: "Temperatura inserita (scheda Filtrazione)",
     filt_hist_temp_delete_confirm: "Eliminare questa temperatura dallo storico?",
+    filt_solar_noon: "Mezzogiorno solare",
   },
   es: {
     tab_pool: "Piscina",
@@ -4802,6 +4806,7 @@ const TRANSLATIONS = {
     filt_legend_applied: "Duración de filtración programada en el cuadro en la fecha de la medición",
     filt_hist_temp_entry: "Temperatura introducida (pestaña Filtración)",
     filt_hist_temp_delete_confirm: "¿Eliminar esta temperatura del historial?",
+    filt_solar_noon: "Mediodía solar",
   },
   pt: {
     tab_pool: "Piscina",
@@ -5755,6 +5760,7 @@ const TRANSLATIONS = {
     filt_legend_applied: "Duração de filtração programada no quadro na data da medição",
     filt_hist_temp_entry: "Temperatura introduzida (separador Filtração)",
     filt_hist_temp_delete_confirm: "Eliminar esta temperatura do histórico?",
+    filt_solar_noon: "Meio-dia solar",
   },
 };
 
@@ -14408,12 +14414,22 @@ function appendProgLog(log, entry) {
   return [...(Array.isArray(log) ? log : []), entry].slice(-FILTRATION_PROG_LOG_MAX);
 }
 // Programmation en vigueur à l'instant tMs : dernière entrée du journal antérieure ou égale ; null s'il n'y en a pas.
+// La toute première entrée (enregistrement d'une programmation déjà en place sur le coffret) est réputée en vigueur depuis le début
+// de son jour (heure locale) : une mesure ou une température saisie le matin, avant l'enregistrement du soir, la voit appliquée.
 function filtrationProgAt(log, tMs) {
   if (!Array.isArray(log) || !Number.isFinite(tMs)) return null;
+  let firstAt = Infinity;
+  log.forEach((e) => {
+    const at = Date.parse(e && e.at);
+    if (Number.isFinite(at) && at < firstAt) firstAt = at;
+  });
+  const dayStart = (ms) => { const d = new Date(ms); d.setHours(0, 0, 0, 0); return d.getTime(); };
   let found = null;
   log.forEach((e) => {
     const at = Date.parse(e && e.at);
-    if (Number.isFinite(at) && at <= tMs && (!found || at >= found.at)) found = { at, start: e.start || null, hours: finiteOrNull(e.hours) };
+    if (!Number.isFinite(at)) return;
+    const eff = at === firstAt ? dayStart(at) : at;
+    if (eff <= tMs && (!found || eff >= found.at)) found = { at: eff, start: e.start || null, hours: finiteOrNull(e.hours) };
   });
   return found;
 }
@@ -14763,6 +14779,13 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
           <div style={{ fontSize: 12, color: "var(--brand-text-muted)", marginBottom: 4 }}>
             {t("filt_range")} : {slots.map((s) => formatClock(s.start) + " – " + formatClock(s.end)).join(" · ")}
           </div>
+          {/* Repère du midi solaire : libellé (décalé vers l'intérieur près des bords) + petit triangle pointe en bas, à la verticale du trait jaune */}
+          {noon != null && (
+            <div style={{ position: "relative", height: 24 }}>
+              <span style={{ position: "absolute", top: 0, left: "calc(" + Math.min(88, Math.max(12, noon / 24 * 100)) + "% + 1px)", transform: "translateX(-50%)", fontSize: 10.5, fontWeight: 700, color: "#b7791f", whiteSpace: "nowrap" }}>{t("filt_solar_noon")}</span>
+              <span style={{ position: "absolute", top: 15, left: "calc(" + (noon / 24 * 100) + "% + 1px)", transform: "translateX(-50%)", width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: "7px solid #f5b700" }} />
+            </div>
+          )}
           <div style={{ position: "relative", height: 14, borderRadius: 7, background: "#e6eef3", overflow: "hidden" }}>
             {slots.map((s, i) => (
               <div key={i} style={{ position: "absolute", top: 0, bottom: 0, left: (s.start / 24 * 100) + "%", width: ((s.end - s.start) / 24 * 100) + "%", background: "var(--brand-primary)" }} />
