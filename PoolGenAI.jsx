@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.154.0";
+const APP_VERSION = "1.156.1";
 const CGU_VERSION = "1.5"; // v1.5 : section 6 complétée (altitude du bassin : IGN, Open Topo Data) ; v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -977,6 +977,17 @@ const TRANSLATIONS = {
     filt_week_indicative: "Eau projetée et durée par jour. Jours 4 à 7 : indicatif.",
     filt_configure_thermal: "Chauffage et bâche du bassin",
     tab_filtration: "Filtration",
+    filt_hist_reco: "Filtration conseillée (h)",
+    filt_hist_applied: "Filtration appliquée (h)",
+    filt_hist_title: "Filtration",
+    filt_hist_reco_short: "conseillée",
+    filt_hist_applied_short: "appliquée",
+    filt_pdf_reco: "Filt. cons.",
+    filt_pdf_applied: "Filt. appl.",
+    filt_legend_reco: "Durée de filtration conseillée selon la température de l'eau de la mesure",
+    filt_legend_applied: "Durée de filtration programmée au coffret à la date de la mesure",
+    filt_hist_temp_entry: "Température saisie (onglet Filtration)",
+    filt_hist_temp_delete_confirm: "Supprimer cette température de l'historique ?",
   },
   en: {
     tab_pool: "Pool",
@@ -1921,6 +1932,17 @@ const TRANSLATIONS = {
     filt_week_indicative: "Projected water temperature and duration per day. Days 4 to 7: indicative.",
     filt_configure_thermal: "Pool heating and cover",
     tab_filtration: "Filtration",
+    filt_hist_reco: "Recommended filtration (h)",
+    filt_hist_applied: "Applied filtration (h)",
+    filt_hist_title: "Filtration",
+    filt_hist_reco_short: "recommended",
+    filt_hist_applied_short: "applied",
+    filt_pdf_reco: "Filt. rec.",
+    filt_pdf_applied: "Filt. appl.",
+    filt_legend_reco: "Recommended filtration time based on the water temperature of the measurement",
+    filt_legend_applied: "Filtration time programmed on the controller at the measurement date",
+    filt_hist_temp_entry: "Temperature entered (Filtration tab)",
+    filt_hist_temp_delete_confirm: "Delete this temperature from the history?",
   },
   de: {
     tab_pool: "Becken",
@@ -2863,6 +2885,17 @@ const TRANSLATIONS = {
     filt_week_indicative: "Prognostizierte Wassertemperatur und Dauer pro Tag. Tage 4 bis 7: unverbindlich.",
     filt_configure_thermal: "Heizung und Abdeckung des Beckens",
     tab_filtration: "Filterung",
+    filt_hist_reco: "Empfohlene Filterzeit (h)",
+    filt_hist_applied: "Eingestellte Filterzeit (h)",
+    filt_hist_title: "Filterzeit",
+    filt_hist_reco_short: "empfohlen",
+    filt_hist_applied_short: "eingestellt",
+    filt_pdf_reco: "Filt. empf.",
+    filt_pdf_applied: "Filt. einger.",
+    filt_legend_reco: "Empfohlene Filterzeit nach der Wassertemperatur der Messung",
+    filt_legend_applied: "Zum Zeitpunkt der Messung am Schaltkasten eingestellte Filterzeit",
+    filt_hist_temp_entry: "Temperatur eingegeben (Reiter Filterung)",
+    filt_hist_temp_delete_confirm: "Diese Temperatur aus dem Verlauf löschen?",
   },
   it: {
     tab_pool: "Vasca",
@@ -3805,6 +3838,17 @@ const TRANSLATIONS = {
     filt_week_indicative: "Temperatura dell'acqua prevista e durata per giorno. Giorni 4-7: indicativi.",
     filt_configure_thermal: "Riscaldamento e copertura della vasca",
     tab_filtration: "Filtrazione",
+    filt_hist_reco: "Filtrazione consigliata (h)",
+    filt_hist_applied: "Filtrazione impostata (h)",
+    filt_hist_title: "Filtrazione",
+    filt_hist_reco_short: "consigliata",
+    filt_hist_applied_short: "impostata",
+    filt_pdf_reco: "Filtr. cons.",
+    filt_pdf_applied: "Filtr. imp.",
+    filt_legend_reco: "Durata di filtrazione consigliata in base alla temperatura dell'acqua della misura",
+    filt_legend_applied: "Durata di filtrazione programmata sul quadro alla data della misura",
+    filt_hist_temp_entry: "Temperatura inserita (scheda Filtrazione)",
+    filt_hist_temp_delete_confirm: "Eliminare questa temperatura dallo storico?",
   },
   es: {
     tab_pool: "Piscina",
@@ -4747,6 +4791,17 @@ const TRANSLATIONS = {
     filt_week_indicative: "Temperatura del agua prevista y duración por día. Días 4 a 7: orientativos.",
     filt_configure_thermal: "Calefacción y cubierta de la piscina",
     tab_filtration: "Filtración",
+    filt_hist_reco: "Filtración recomendada (h)",
+    filt_hist_applied: "Filtración aplicada (h)",
+    filt_hist_title: "Filtración",
+    filt_hist_reco_short: "recomendada",
+    filt_hist_applied_short: "aplicada",
+    filt_pdf_reco: "Filt. rec.",
+    filt_pdf_applied: "Filt. apl.",
+    filt_legend_reco: "Duración de filtración recomendada según la temperatura del agua de la medición",
+    filt_legend_applied: "Duración de filtración programada en el cuadro en la fecha de la medición",
+    filt_hist_temp_entry: "Temperatura introducida (pestaña Filtración)",
+    filt_hist_temp_delete_confirm: "¿Eliminar esta temperatura del historial?",
   },
   pt: {
     tab_pool: "Piscina",
@@ -5689,6 +5744,17 @@ const TRANSLATIONS = {
     filt_week_indicative: "Temperatura da água prevista e duração por dia. Dias 4 a 7: indicativos.",
     filt_configure_thermal: "Aquecimento e cobertura da piscina",
     tab_filtration: "Filtração",
+    filt_hist_reco: "Filtração recomendada (h)",
+    filt_hist_applied: "Filtração aplicada (h)",
+    filt_hist_title: "Filtração",
+    filt_hist_reco_short: "recomendada",
+    filt_hist_applied_short: "aplicada",
+    filt_pdf_reco: "Filt. rec.",
+    filt_pdf_applied: "Filt. apl.",
+    filt_legend_reco: "Duração de filtração recomendada com base na temperatura da água da medição",
+    filt_legend_applied: "Duração de filtração programada no quadro na data da medição",
+    filt_hist_temp_entry: "Temperatura introduzida (separador Filtração)",
+    filt_hist_temp_delete_confirm: "Eliminar esta temperatura do histórico?",
   },
 };
 
@@ -6273,6 +6339,11 @@ function computeTargetZone(activeKeys, params, targets) {
 const AXIS_RATIO_THRESHOLD = 3;
 const PH_FAMILY_KEYS = ["pH", "phProjected"];
 const CL_FAMILY_KEYS = ["fCl", "fclProjected", "tCl", "ccl"];
+// Champs du graphique pour la durée de filtration d'une mesure (heures) ; null = pas de point.
+function filtrationChartFields(fh) {
+  return { filtReco: fh && fh.reco !== null ? fh.reco : null, filtApplied: fh && fh.applied !== null ? fh.applied : null };
+}
+
 function withAdaptiveAxes(params, activeKeys, rows) {
   // v1.138.0 — Un seul paramètre affiché (seul et/ou avec sa valeur projetée) :
   // un seul axe vertical, à gauche — même pour un paramètre normalement lu à
@@ -12299,6 +12370,8 @@ function PoolGenAIApp() {
             pool={activePool}
             activePlan={activePlan}
             products={poolProducts}
+            onUpdatePool={(u) => { if (activePool) updatePool(activePool.id, u); }}
+            canEditPool={!viewContext}
           />
         )}
         {tab === "products" && showProductsToBuy && (
@@ -14324,6 +14397,79 @@ function weatherIcon(cat, night) {
   if (cat === "clear" || cat === "fair") return night ? "🌙" : cat === "clear" ? "☀️" : "🌤️";
   return { partly: "⛅", cloudy: "☁️", fog: "🌫️", lightrain: "🌦️", rain: "🌧️", heavyrain: "🌧️", showers: "🌦️", sleet: "🌨️", snow: "❄️", thunder: "⛈️" }[cat] || "";
 }
+// ---------- Historique de la filtration : durée conseillée / appliquée à la date d'une mesure ----------
+// Conseillée : piscine = règle de durée appliquée à la température de l'eau de la MESURE (rien si la mesure n'en a pas) ; spa = table
+// (type, usage), identique à chaque mesure. Appliquée : programmation du coffret en vigueur à la date de la mesure, d'après le journal
+// des modifications du bassin (filtrationProgLog : une entrée à chaque enregistrement de la programmation). Aucune valeur pour les
+// jours sans mesure : rien n'est reconstruit ni interpolé.
+const FILTRATION_PROG_LOG_MAX = 100;
+const FILT_CHART_KEYS = ["filtReco", "filtApplied"];
+function appendProgLog(log, entry) {
+  return [...(Array.isArray(log) ? log : []), entry].slice(-FILTRATION_PROG_LOG_MAX);
+}
+// Programmation en vigueur à l'instant tMs : dernière entrée du journal antérieure ou égale ; null s'il n'y en a pas.
+function filtrationProgAt(log, tMs) {
+  if (!Array.isArray(log) || !Number.isFinite(tMs)) return null;
+  let found = null;
+  log.forEach((e) => {
+    const at = Date.parse(e && e.at);
+    if (Number.isFinite(at) && at <= tMs && (!found || at >= found.at)) found = { at, start: e.start || null, hours: finiteOrNull(e.hours) };
+  });
+  return found;
+}
+function filtrationHistoryForMeasure(pool, m) {
+  if (!pool || !m) return null;
+  let reco = null;
+  if (pool.poolType === "spa") {
+    const spec = (SPA_FILTRATION_TABLE[pool.spaType || "portable"] || SPA_FILTRATION_TABLE.portable)[pool.spaUsage || "occasionnel"];
+    reco = spec ? spec.hours : null;
+  } else {
+    const T = finiteOrNull(m.temp);
+    reco = T === null ? null : computePoolFiltrationHours(T);
+  }
+  const prog = filtrationProgAt(pool.filtrationProgLog, Date.parse(m.date));
+  const applied = prog && prog.hours !== null ? prog.hours : null;
+  if (reco === null && applied === null) return null;
+  return { reco, applied, appliedStart: prog ? prog.start : null };
+}
+// Durée compacte pour les tableaux : 11 h 30 -> « 11h30 », 10 h -> « 10h ».
+function compactHours(h) {
+  if (h === null || h === undefined || !Number.isFinite(h)) return "—";
+  const total = Math.round(h * 60);
+  const mm = total % 60;
+  return Math.floor(total / 60) + "h" + (mm ? String(mm).padStart(2, "0") : "");
+}
+// ---------- Températures saisies dans l'onglet Filtration : entrées de l'historique ----------
+// Chaque saisie est conservée dans pool.filtrationTempLog ([{ at, value }], valeur en °C, 200 au plus) en plus de filtrationWaterTemp
+// (dernière valeur, utilisée par le calcul). Elles apparaissent dans l'historique comme des pseudo-mesures { id, date, temp,
+// fromFiltration } : point de la courbe de température, ligne du journal, ligne du rapport, avec la durée conseillée / appliquée.
+// Elles ne modifient jamais les mesures. filtrationWaterTemp seule (saisie antérieure au journal) est reprise aussi.
+const FILTRATION_TEMP_LOG_MAX = 200;
+function appendTempLog(log, entry) {
+  return [...(Array.isArray(log) ? log : []), entry].slice(-FILTRATION_TEMP_LOG_MAX);
+}
+function filtrationTempEntries(pool) {
+  if (!pool) return [];
+  const raw = Array.isArray(pool.filtrationTempLog) ? pool.filtrationTempLog.slice() : [];
+  if (pool.filtrationWaterTemp) raw.push(pool.filtrationWaterTemp);
+  const seen = new Set();
+  const out = [];
+  raw.forEach((e) => {
+    const v = finiteOrNull(e && e.value);
+    const t = Date.parse(e && e.at);
+    if (v === null || !Number.isFinite(t) || seen.has(t)) return;
+    seen.add(t);
+    out.push({ id: "ft" + t, date: new Date(t).toISOString(), temp: String(v), fromFiltration: true });
+  });
+  return out.sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
+}
+// Journal sans la saisie d'instant `at` ; filtrationWaterTemp redevient la saisie précédente (ou null).
+function removeFiltrationTempEntry(pool, at) {
+  const t = Date.parse(at);
+  const remaining = filtrationTempEntries(pool).filter((e) => Date.parse(e.date) !== t).map((e) => ({ at: e.date, value: parseFloat(e.temp) }));
+  const last = remaining.length ? remaining[remaining.length - 1] : null;
+  return { filtrationTempLog: remaining.slice(-FILTRATION_TEMP_LOG_MAX), filtrationWaterTemp: last };
+}
 // ---- FILTRATION PURE END ----
 
 let TEMP_UNIT = "C"; // unité d'affichage courante (« C » ou « F »), alignée sur le réglage utilisateur par l'App à chaque rendu
@@ -14543,13 +14689,26 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
   const progDirty = progStart !== progSaved.start || String(progDur).trim() !== progSaved.dur;
   function saveProg() {
     if (!canEdit || !onUpdatePool || !progValid || !progDirty) return;
-    onUpdatePool({ filtrationStartCurrent: progStart || null, filtrationDurationCurrent: String(progDur).trim() === "" ? null : Math.round(progDurNum * 100) / 100 });
+    const start = progStart || null;
+    const hours = String(progDur).trim() === "" ? null : Math.round(progDurNum * 100) / 100;
+    // Journal des modifications : sert à retrouver la durée appliquée à la date de chaque mesure (historique, rapport).
+    onUpdatePool({ filtrationStartCurrent: start, filtrationDurationCurrent: hours, filtrationProgLog: appendProgLog(pool && pool.filtrationProgLog, { at: new Date().toISOString(), start, hours }) });
   }
+  // Programmation enregistrée avant la tenue du journal : première entrée à la date d'aujourd'hui (l'historique démarre ici).
+  useEffect(() => {
+    if (!canEdit || !onUpdatePool || !pool || (Array.isArray(pool.filtrationProgLog) && pool.filtrationProgLog.length)) return;
+    if (pool.filtrationDurationCurrent == null && !pool.filtrationStartCurrent) return;
+    onUpdatePool({ filtrationProgLog: appendProgLog([], { at: new Date().toISOString(), start: pool.filtrationStartCurrent || null, hours: pool.filtrationDurationCurrent != null ? pool.filtrationDurationCurrent : null, migrated: true }) });
+  }, [pool && pool.id]);
 
   function saveTemp() {
     const c = tempFromDisplay(String(tempDraft).replace(",", "."), TEMP_UNIT);
     if (c == null || c < -5 || c > 45 || !canEdit || !onUpdatePool) return;
-    onUpdatePool({ filtrationWaterTemp: { value: Math.round(c * 10) / 10, at: new Date().toISOString() } });
+    const entry = { value: Math.round(c * 10) / 10, at: new Date().toISOString() };
+    // Journal des saisies (historique) : à la première saisie après la mise à jour, on y reprend aussi la saisie précédente.
+    const prior = pool && pool.filtrationWaterTemp;
+    const base = pool && Array.isArray(pool.filtrationTempLog) && pool.filtrationTempLog.length ? pool.filtrationTempLog : prior ? [prior] : [];
+    onUpdatePool({ filtrationWaterTemp: entry, filtrationTempLog: appendTempLog(base, entry) });
     setTempDraft("");
     if (onEnsureAltitude) onEnsureAltitude();
   }
@@ -16883,7 +17042,7 @@ function niceAxisBounds(dataMin, dataMax, fallbackMax) {
 }
 
 // ---------- Historique ----------
-function HistoryView({ measures, onDelete, onDeleteManualApplication, onEdit, onAdd, onAddPrefilled, onValidateApplication, onResumePlan, applications, isPremium, poolName, onGenerateReport, onWantPremiumForReport, lang, apiKey, apiProvider, authUid, pool, activePlan, products }) {
+function HistoryView({ measures, onDelete, onDeleteManualApplication, onEdit, onAdd, onAddPrefilled, onValidateApplication, onResumePlan, applications, isPremium, poolName, onGenerateReport, onWantPremiumForReport, lang, apiKey, apiProvider, authUid, pool, activePlan, products, onUpdatePool, canEditPool }) {
   const t = useT(lang);
   // v1.118.0 — Cibles/paramètres actifs du bassin, pour savoir si une mesure
   // du Journal est déjà entièrement dans sa cible (voir demande Arnaud : ne
@@ -17147,12 +17306,15 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
   // MANUELS (pas seulement les mesures) : un entretien saisi après la dernière
   // mesure tombait hors de la fenêtre (1 mois glissant...) et restait absent
   // du Journal — signalé par Pierre (stock décrémenté, rien dans l'historique).
+  // v1.156.0 — Températures saisies dans l'onglet Filtration (Premium) : entrées de l'historique à part entière.
+  const tempEntries = useMemo(() => (isPremium ? filtrationTempEntries(pool) : []), [pool, isPremium]);
   const allTimestamps = useMemo(
     () => [
       ...measures.map((m) => new Date(m.date).getTime()),
+      ...tempEntries.map((e) => new Date(e.date).getTime()),
       ...(applications || []).filter((a) => a.type === "manual").map((a) => new Date(a.appliedAt).getTime()),
     ].filter((ts) => !isNaN(ts)),
-    [measures, applications]
+    [measures, applications, tempEntries]
   );
   const minTs = allTimestamps.length ? Math.min(...allTimestamps) : null;
   const maxTs = allTimestamps.length ? Math.max(...allTimestamps) : null;
@@ -17197,6 +17359,10 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
     () => filterByWindow((applications || []).filter((a) => a.type === "manual"), (a) => a.appliedAt, zoomWindow, zoomEnd ?? maxTs),
     [applications, zoomWindow, zoomEnd, maxTs]
   );
+  const visibleTempEntries = useMemo(
+    () => filterByWindow(tempEntries, (e) => e.date, zoomWindow, zoomEnd ?? maxTs),
+    [tempEntries, zoomWindow, zoomEnd, maxTs]
+  );
   // v1.117.3 — L'historique des diagnostics IA suit lui aussi la fenêtre de
   // zoom, comme les mesures/consommations — voir demande Arnaud.
   const visibleDiagHistory = useMemo(
@@ -17205,7 +17371,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
   );
 
   const chartData = useMemo(() => {
-    return [...visibleMeasures]
+    return [...visibleMeasures, ...visibleTempEntries]
       .sort((a, b) => new Date(a.date) - new Date(b.date))
       .map((m) => ({
         date: formatDateShort(m.date),
@@ -17221,8 +17387,9 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
         copper: m.copper !== undefined && m.copper !== "" ? parseFloat(m.copper) : null,
         iron:   m.iron   !== undefined && m.iron   !== "" ? parseFloat(m.iron)   : null,
         temp:   m.temp   !== undefined && m.temp   !== "" ? parseFloat(m.temp)   : null,
+        ...filtrationChartFields(isPremium ? filtrationHistoryForMeasure(pool, m) : null),
       }));
-  }, [visibleMeasures]);
+  }, [visibleMeasures, visibleTempEntries, pool, isPremium]);
 
   // v1.113.2 — Points pH/fCl projetés (pas mesurés) à partir des quantités
   // réellement appliquées, un point par application (voir buildProjectedPoints).
@@ -17287,6 +17454,8 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
     return [...rows.values()].sort((a, b) => a.timestamp - b.timestamp);
   }, [chartData, visibleMeasures, measures, applications, products, pool?.volume]);
 
+  // v1.155.0 — Durée de filtration (heures, axe droit comme la température) : seulement si au moins une mesure en a une.
+  const hasFiltData = !!isPremium && [...measures, ...tempEntries].some((m) => filtrationHistoryForMeasure(pool, m));
   const chartParamsBase = [
     // v1.129.0 — Ordre des pastilles : chaque paramètre projeté précède son
     // paramètre mesuré (demande Arnaud).
@@ -17306,7 +17475,10 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
     { key: "copper",color: "#b8860b", label: t("copper_col"),                       axis: "left" },
     { key: "iron",  color: "#8b4513", label: t("iron_col"),                         axis: "left" },
     { key: "temp",  color: "#e0578a", label: t("temp_col"),                         axis: "right" },
-  ].map((cp) => (cp.projected ? cp : { ...cp, label: `${cp.label} (${t("measured_suffix")})` }));
+    { key: "filtReco",    color: "#00897b", label: t("filt_hist_reco"),    axis: "right", dashed: true, noSuffix: true },
+    { key: "filtApplied", color: "#00897b", label: t("filt_hist_applied"), axis: "right", noSuffix: true },
+  ].filter((cp) => !FILT_CHART_KEYS.includes(cp.key) || hasFiltData)
+   .map((cp) => (cp.projected || cp.noSuffix ? cp : { ...cp, label: `${cp.label} (${t("measured_suffix")})` }));
 
   const chartParams = useMemo(
     () => withAdaptiveAxes(chartParamsBase, activeParams, chartDataWithProjections),
@@ -17325,7 +17497,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
     setActiveParams(allActive ? [] : allKeys);
   }
 
-  if (measures.length === 0) {
+  if (measures.length === 0 && tempEntries.length === 0) {
     return (
       <div style={styles.emptyState}>
         <History size={40} color="var(--brand-icon-light)" strokeWidth={1.5} />
@@ -17610,9 +17782,18 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
           const items = [
             ...visibleMeasures.map((m) => ({ kind: "measure", date: m.date, m })),
             ...visibleManualApps.map((a) => ({ kind: "manual", date: a.appliedAt, a })),
+            ...visibleTempEntries.map((e) => ({ kind: "temp", date: e.date, e })),
           ].sort((x, y) => new Date(y.date) - new Date(x.date));
           return items.map((item) =>
-            item.kind === "measure" ? (
+            item.kind === "temp" ? (
+              <FiltrationTempRow
+                key={item.e.id}
+                entry={item.e}
+                filtration={filtrationHistoryForMeasure(pool, item.e)}
+                lang={lang}
+                onDelete={onUpdatePool && canEditPool ? () => onUpdatePool(removeFiltrationTempEntry(pool, item.e.date)) : undefined}
+              />
+            ) : item.kind === "measure" ? (
               <MeasureRow
                 key={item.m.id}
                 measure={item.m}
@@ -17628,6 +17809,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
                 authUid={authUid}
                 products={products}
                 volume={pool?.volume || 0}
+                filtration={isPremium ? filtrationHistoryForMeasure(pool, item.m) : null}
                 recs={computeRecommendations(item.m, pool?.volume || 0, products, recoTargets, recoParamKeys, t, computeParamTrends(measures, item.m, applications, products, pool?.volume || 0))}
               />
             ) : (
@@ -17829,7 +18011,52 @@ function ManualApplicationRow({ app, lang, onDelete }) {
   );
 }
 
-function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, onResumePlan, application, isPremium, manageStock, lang, activePlan, authUid, products, volume, recs }) {
+// Ligne « Filtration · conseillée … · appliquée … (écart) » d'une mesure ou d'une température saisie (historique).
+function FiltrationHistoryLine({ filtration, lang }) {
+  const t = useT(lang || "fr");
+  const gap = filtration.reco !== null && filtration.applied !== null ? filtration.applied - filtration.reco : null;
+  const warn = gap !== null && Math.abs(gap) > FILTRATION_ADJUST_TOLERANCE_H;
+  return (
+    <div style={{ fontSize: 12.5, marginTop: 8, color: warn ? "#a8721a" : "var(--brand-text-secondary)", lineHeight: 1.5 }}>
+      <strong>{t("filt_hist_title")}</strong> · {t("filt_hist_reco_short")} {filtration.reco !== null ? formatDurationH(filtration.reco) : "—"} · {t("filt_hist_applied_short")} {filtration.applied !== null ? formatDurationH(filtration.applied) : "—"}
+      {gap !== null && Math.abs(gap) >= 0.25 ? " (" + (gap > 0 ? "+" : "−") + formatDurationH(Math.abs(gap)) + ")" : ""}
+    </div>
+  );
+}
+
+// Température saisie dans l'onglet Filtration : entrée du journal de l'historique (suppression possible en cas d'erreur de saisie).
+function FiltrationTempRow({ entry, filtration, lang, onDelete }) {
+  const t = useT(lang || "fr");
+  return (
+    <div style={{ ...styles.productRow, cursor: "default" }}>
+      <div style={{ ...styles.productThumbPlaceholder, background: "#eef7fb" }}>
+        <Clock size={16} color="var(--brand-primary)" />
+      </div>
+      <div style={{ flex: 1, textAlign: "left" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--brand-primary)", background: "#eaf3fb", border: "1px solid #d0e4f5", borderRadius: 99, padding: "2px 8px" }}>
+            🌡️ {t("filt_hist_temp_entry")}
+          </span>
+          <span style={{ fontSize: 11.5, color: "var(--brand-text-muted)" }}>{formatDate(entry.date)}</span>
+        </div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: "var(--brand-text-strong)", marginTop: 4 }}>{formatTemp(parseFloat(entry.temp), TEMP_UNIT, 1)}</div>
+        {filtration && <FiltrationHistoryLine filtration={filtration} lang={lang} />}
+      </div>
+      {onDelete && (
+        <button
+          type="button"
+          onClick={() => { if (window.confirm(t("filt_hist_temp_delete_confirm"))) onDelete(); }}
+          style={{ background: "none", border: "none", padding: 6, cursor: "pointer", flexShrink: 0, alignSelf: "flex-start" }}
+          aria-label={t("delete")}
+        >
+          <Trash2 size={14} color="#c0392b" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, onResumePlan, application, isPremium, manageStock, lang, activePlan, authUid, products, volume, recs, filtration }) {
   const t = useT(lang || "fr");
   // v1.112.0 — Valeurs pH/fCl projetées à partir des quantités réellement
   // appliquées (voir buildProjectedPoints) — indexées par position dans
@@ -17948,6 +18175,8 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, onResume
               );
             })}
           </div>
+          {/* v1.155.0 — Durée de filtration conseillée (d'après la température de l'eau de la mesure) et appliquée (programmation du coffret à cette date) */}
+          {filtration && <FiltrationHistoryLine filtration={filtration} lang={lang} />}
           {measure.note && <div style={styles.measureNote}>{measure.note}</div>}
 
           {application ? (
@@ -25368,8 +25597,11 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
   const [zoomWindow, setZoomWindow] = useState(() => loadZoomPref(pool?.id)?.windowKey || "all");
   const [zoomEnd, setZoomEnd] = useState(() => loadZoomPref(pool?.id)?.windowEnd ?? null);
   // v1.139.1 — Comme l'Historique : la fenêtre suit aussi les entretiens manuels.
+  // v1.156.0 — Températures saisies dans l'onglet Filtration (Premium) : lignes du rapport, points de la courbe.
+  const tempEntries = useMemo(() => (isPremium ? filtrationTempEntries(pool) : []), [pool, isPremium]);
   const reportTimestamps = [
     ...sortedMeasures.map((m) => new Date(m.date).getTime()),
+    ...tempEntries.map((e) => new Date(e.date).getTime()),
     ...(applications || []).filter((a) => a.type === "manual").map((a) => new Date(a.appliedAt).getTime()),
   ].filter((ts) => !isNaN(ts));
   const minTs = reportTimestamps.length ? Math.min(...reportTimestamps) : null;
@@ -25398,6 +25630,10 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
     () => filterByWindow((applications || []).filter((a) => a.type === "manual"), (a) => a.appliedAt, zoomWindow, zoomEnd ?? maxTs),
     [applications, zoomWindow, zoomEnd, maxTs]
   );
+  const visibleTempEntries = useMemo(
+    () => filterByWindow(tempEntries, (e) => e.date, zoomWindow, zoomEnd ?? maxTs),
+    [tempEntries, zoomWindow, zoomEnd, maxTs]
+  );
   // v1.117.3 — L'historique des diagnostics IA suit lui aussi la fenêtre de
   // zoom, comme les mesures/consommations — voir demande Arnaud.
   const visibleDiagHistory = useMemo(
@@ -25407,7 +25643,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
 
   const chartData = useMemo(
     () =>
-      visibleMeasures.map((m) => ({
+      [...visibleMeasures, ...visibleTempEntries].sort((a, b) => new Date(a.date) - new Date(b.date)).map((m) => ({
         date: formatDateShort(m.date),
         timestamp: new Date(m.date).getTime(),
         pH:     m.pH     !== undefined && m.pH     !== "" ? parseFloat(m.pH)     : null,
@@ -25421,8 +25657,9 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
         copper: m.copper !== undefined && m.copper !== "" ? parseFloat(m.copper) : null,
         iron:   m.iron   !== undefined && m.iron   !== "" ? parseFloat(m.iron)   : null,
         temp:   m.temp   !== undefined && m.temp   !== "" ? parseFloat(m.temp)   : null,
+        ...filtrationChartFields(isPremium ? filtrationHistoryForMeasure(pool, m) : null),
       })),
-    [visibleMeasures]
+    [visibleMeasures, visibleTempEntries, pool, isPremium]
   );
 
   // v1.116.0 — Points projetés pH/fCl (pas mesurés) fusionnés dans le même
@@ -25488,6 +25725,9 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
   // Historique.
   const reportTargets = useMemo(() => getEffectiveTargets(pool?.treatmentType || "chlore"), [pool?.treatmentType]);
 
+  // v1.155.0 — Colonnes et courbes de durée de filtration : seulement si au moins une mesure du bassin en a une.
+  const hasFiltData = !!isPremium && [...measures, ...tempEntries].some((m) => filtrationHistoryForMeasure(pool, m));
+  const showFiltCols = !!isPremium && [...visibleMeasures, ...visibleTempEntries].some((m) => filtrationHistoryForMeasure(pool, m));
   const chartParamsBase = [
     // v1.129.0 — Ordre des pastilles : chaque paramètre projeté précède son
     // paramètre mesuré (demande Arnaud).
@@ -25507,12 +25747,15 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
     { key: "copper", color: "#b5651d", label: t("copper_col"),                               axis: "right" },
     { key: "iron",   color: "#c0392b", label: t("iron_col"),                                 axis: "right" },
     { key: "temp",   color: "#e0578a", label: t("temp_col"),                                 axis: "right" },
-  ].map((cp) => (cp.projected ? cp : { ...cp, label: `${cp.label} (${t("measured_suffix")})` }));
+    { key: "filtReco",    color: "#00897b", label: t("filt_hist_reco"),    axis: "right", dashed: true, noSuffix: true },
+    { key: "filtApplied", color: "#00897b", label: t("filt_hist_applied"), axis: "right", noSuffix: true },
+  ].filter((cp) => !FILT_CHART_KEYS.includes(cp.key) || hasFiltData)
+   .map((cp) => (cp.projected || cp.noSuffix ? cp : { ...cp, label: `${cp.label} (${t("measured_suffix")})` }));
 
   // v1.66.2 — Sélection des paramètres affichés sur le graphique du rapport
   // (aperçu HTML et PDF), même mécanisme de puces que le graphique de
   // l'onglet Historique. Tous actifs par défaut.
-  const [activeReportParams, setActiveReportParams] = useState(() => chartParamsBase.map((cp) => cp.key));
+  const [activeReportParams, setActiveReportParams] = useState(() => chartParamsBase.filter((cp) => !FILT_CHART_KEYS.includes(cp.key)).map((cp) => cp.key));
   const chartParams = useMemo(
     () => withAdaptiveAxes(chartParamsBase, activeReportParams, chartDataWithProjections),
     [activeReportParams, chartDataWithProjections]
@@ -25542,13 +25785,11 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
   // v1.63.1 — Tri décroissant (le plus récent en premier), sur demande d'Arnaud.
   const journalRows = useMemo(() => {
     const manualItems = visibleManualApps.map((a) => ({ manual: true, app: a }));
+    const tempItems = visibleTempEntries.map((e) => ({ manual: false, tempEntry: true, e }));
     const measureItems = rows.map((r) => ({ manual: false, ...r }));
-    return [...measureItems, ...manualItems].sort((a, b) => {
-      const da = a.manual ? new Date(a.app.appliedAt) : new Date(a.measure.date);
-      const db = b.manual ? new Date(b.app.appliedAt) : new Date(b.measure.date);
-      return db - da;
-    });
-  }, [rows, visibleManualApps]);
+    const dateOf = (x) => new Date(x.manual ? x.app.appliedAt : x.tempEntry ? x.e.date : x.measure.date);
+    return [...measureItems, ...manualItems, ...tempItems].sort((a, b) => dateOf(b) - dateOf(a));
+  }, [rows, visibleManualApps, visibleTempEntries]);
 
   // v1.40.0 — Fix : la section photos du rapport n'affichait plus rien pour les
   // mesures synchronisées cloud, car measure.photos/poolPhotos sont vides
@@ -25775,6 +26016,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
       { key: "copper",  label: "Cu",                w: 7  },
       { key: "iron",    label: "Fe",                w: 7  },
       { key: "temp",    label: "°C",                w: 7  },
+      ...(showFiltCols ? [{ key: "filtReco", label: t("filt_pdf_reco"), w: 9 }, { key: "filtApplied", label: t("filt_pdf_applied"), w: 9 }] : []),
       { key: "prod",    label: t("product_col"),    w: 40 },
       { key: "advised", label: t("advised_col"),    w: 13 },
       { key: "qty",     label: t("applied_col"),    w: 13 },
@@ -25819,10 +26061,10 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
     // au useMemo du composant.
     const manualEntries = visibleManualApps.map((a) => ({ manual: true, app: a }));
     const measureEntries = visibleMeasures.map((m) => ({ manual: false, m }));
-    const journalEntries = [...measureEntries, ...manualEntries].sort((a, b) => {
-      const da = a.manual ? new Date(a.app.appliedAt) : new Date(a.m.date);
-      const db = b.manual ? new Date(b.app.appliedAt) : new Date(b.m.date);
-      return db - da;
+    const tempEntryItems = visibleTempEntries.map((e) => ({ manual: false, temp: true, e }));
+    const journalEntries = [...measureEntries, ...manualEntries, ...tempEntryItems].sort((a, b) => {
+      const dateOf = (x) => new Date(x.manual ? x.app.appliedAt : x.temp ? x.e.date : x.m.date);
+      return dateOf(b) - dateOf(a);
     });
 
     journalEntries.forEach((entry, i) => {
@@ -25871,6 +26113,33 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
         return;
       }
 
+      if (entry.temp) {
+        // Température saisie dans l'onglet Filtration : une ligne (date, température, durées de filtration).
+        const e = entry.e;
+        const blockH = rowH;
+        checkPage(blockH);
+        if (i % 2 === 0) { pdf.setFillColor(247,250,254); pdf.rect(mL, y, cW, blockH, "F"); }
+        const d = new Date(e.date);
+        const dateStr = `${d.getDate().toString().padStart(2,"0")}/${(d.getMonth()+1).toString().padStart(2,"0")} ${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`;
+        const fh = filtrationHistoryForMeasure(pool, e);
+        const tVals = { date: dateStr, temp: String(e.temp), ...(showFiltCols ? { filtReco: fh ? compactHours(fh.reco) : "—", filtApplied: fh ? compactHours(fh.applied) : "—" } : {}) };
+        pdf.setTextColor(30,30,30);
+        x = paramStartX;
+        paramCols.forEach(c => {
+          pdf.text(String(tVals[c.key] ?? "—"), x+0.8, y + 3.8, { maxWidth: c.w - 1.5 });
+          x += c.w;
+        });
+        x = prodStartX;
+        prodCols.forEach((c, idx) => {
+          pdf.text(idx === 0 ? t("filt_hist_temp_entry") : "—", x+0.8, y + 3.8, { maxWidth: c.w - 1.5 });
+          x += c.w;
+        });
+        pdf.setDrawColor(200,212,228); pdf.setLineWidth(0.15);
+        pdf.line(mL, y+blockH, mL+cW, y+blockH);
+        y += blockH;
+        return;
+      }
+
       const m = entry.m;
       const app   = applications.find(a => a.measureId === m.id);
       const appliedSteps = app?.steps?.filter(s => !s.skipped) || [];
@@ -25902,6 +26171,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
         copper: m.copper != null && m.copper !== "" ? String(m.copper) : "—",
         iron:   m.iron   != null && m.iron   !== "" ? String(m.iron)   : "—",
         temp:   m.temp   != null && m.temp   !== "" ? String(m.temp)   : "—",
+        ...(showFiltCols ? (() => { const fh = filtrationHistoryForMeasure(pool, m); return { filtReco: fh ? compactHours(fh.reco) : "—", filtApplied: fh ? compactHours(fh.applied) : "—" }; })() : {}),
       };
 
       // Paramètres mesure — centrés verticalement dans le bloc
@@ -26002,6 +26272,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
       { abbr: "Cu",   label: t("param_cu_long"),   target: "0 – 0.2",       unit: "mg/L" },
       { abbr: "Fe",   label: t("param_fe_long"),   target: "0 – 0.1",       unit: "mg/L" },
       { abbr: "°C",   label: t("param_temp_long"), target: "24 – 30",       unit: "°C" },
+      ...(showFiltCols ? [{ abbr: t("filt_pdf_reco"), label: t("filt_legend_reco") }, { abbr: t("filt_pdf_applied"), label: t("filt_legend_applied") }] : []),
     ];
 
     // 2 colonnes
@@ -26014,7 +26285,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
       pdf.setFont("helvetica","bold"); pdf.setTextColor(10,110,189);
       pdf.text(item.abbr, cx, y);
       pdf.setFont("helvetica","normal"); pdf.setTextColor(50,50,50);
-      const detail = ` = ${item.label} · cible : ${item.target}${item.unit ? " " + item.unit : ""}`;
+      const detail = ` = ${item.label}${item.target ? ` · cible : ${item.target}${item.unit ? " " + item.unit : ""}` : ""}`;
       pdf.text(detail, cx + pdf.getTextWidth(item.abbr), y, { maxWidth: colW2 - pdf.getTextWidth(item.abbr) - 2 });
     });
     y += 6;
@@ -26425,6 +26696,8 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                 <th style={styles.reportThCell}>{t("copper_col")}</th>
                 <th style={styles.reportThCell}>{t("iron_col")}</th>
                 <th style={styles.reportThCell}>{t("temp_col")}</th>
+                {showFiltCols && <th style={styles.reportThCell}>{t("filt_pdf_reco")}</th>}
+                {showFiltCols && <th style={styles.reportThCell}>{t("filt_pdf_applied")}</th>}
                 <th style={styles.reportThCell}>{t("product_col")}</th>
                 <th style={styles.reportThCell}>{t("advised_col")}</th>
                 <th style={styles.reportThCell}>{t("applied_col")}</th>
@@ -26438,12 +26711,26 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                 // colonnes de mesure (Date + 11 paramètres) sont fusionnées
                 // en une seule cellule (même principe que la ligne "note"
                 // plus bas), le reste (produit/dose/heure) rempli normalement.
+                if (item.tempEntry) {
+                  const e = item.e;
+                  const fh = filtrationHistoryForMeasure(pool, e);
+                  return [(
+                    <tr key={`temp-${e.id}`} style={{ background: i % 2 === 0 ? "#f8fafd" : "#ffffff" }}>
+                      <td style={{ ...styles.reportTdCell, fontWeight: 600, color: "var(--brand-text-strong)" }}>{formatDate(e.date)}</td>
+                      <td colSpan={10} style={{ ...styles.reportTdCell, fontStyle: "italic", color: "var(--brand-text-secondary)" }}>🌡️ {t("filt_hist_temp_entry")}</td>
+                      <td style={styles.reportTdCell}>{e.temp}</td>
+                      {showFiltCols && <td style={styles.reportTdCell}>{fh ? compactHours(fh.reco) : "—"}</td>}
+                      {showFiltCols && <td style={styles.reportTdCell}>{fh ? compactHours(fh.applied) : "—"}</td>}
+                      <td colSpan={manageStock ? 5 : 4} style={styles.reportTdCell}>—</td>
+                    </tr>
+                  )];
+                }
                 if (item.manual) {
                   const a = item.app;
                   const prod = products.find((p) => p.name === a.productName);
                   return [(
                     <tr key={`manual-${a.id}`} style={{ background: i % 2 === 0 ? "#f8fafd" : "#ffffff" }}>
-                      <td colSpan={12} style={{ ...styles.reportTdCell, fontWeight: 600, color: "var(--brand-text-strong)" }}>
+                      <td colSpan={showFiltCols ? 14 : 12} style={{ ...styles.reportTdCell, fontWeight: 600, color: "var(--brand-text-strong)" }}>
                         {formatDate(a.appliedAt)} · <span style={{ fontStyle: "italic", color: "#c4502f" }}>🔧 {t("reason_manual_maintenance")}</span>
                       </td>
                       <td style={styles.reportTdCell}>{a.productName}</td>
@@ -26487,6 +26774,13 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                           <td style={styles.reportTdCell} rowSpan={totalRowSpan}>{measure.copper != null && measure.copper !== "" ? `${measure.copper}` : "—"}</td>
                           <td style={styles.reportTdCell} rowSpan={totalRowSpan}>{measure.iron != null && measure.iron !== "" ? `${measure.iron}` : "—"}</td>
                           <td style={styles.reportTdCell} rowSpan={totalRowSpan}>{measure.temp != null && measure.temp !== "" ? `${measure.temp}` : "—"}</td>
+                          {showFiltCols && (() => {
+                            const fh = filtrationHistoryForMeasure(pool, measure);
+                            return (<>
+                              <td style={styles.reportTdCell} rowSpan={totalRowSpan}>{fh ? compactHours(fh.reco) : "—"}</td>
+                              <td style={styles.reportTdCell} rowSpan={totalRowSpan}>{fh ? compactHours(fh.applied) : "—"}</td>
+                            </>);
+                          })()}
                         </>
                       )}
                       <td style={styles.reportTdCell}>
@@ -26552,11 +26846,12 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
               { abbr: "Cu",   label: t("param_cu_long"),   target: "0 – 0.2",          unit: "mg/L" },
               { abbr: "Fe",   label: t("param_fe_long"),   target: "0 – 0.1",          unit: "mg/L" },
               { abbr: "°C",   label: t("param_temp_long"), target: "24 – 30",          unit: "°C" },
+              ...(showFiltCols ? [{ abbr: t("filt_pdf_reco"), label: t("filt_legend_reco") }, { abbr: t("filt_pdf_applied"), label: t("filt_legend_applied") }] : []),
             ].map(({ abbr, label, target, unit }) => (
               <div key={abbr} style={{ fontSize: 10, color: "var(--brand-text-secondary)", minWidth: 180 }}>
                 <span style={{ fontWeight: 700, color: "var(--brand-primary)" }}>{abbr}</span>
                 {" = "}{label}
-                <span style={{ color: "var(--brand-text-muted)" }}> · cible : {target}{unit ? " " + unit : ""}</span>
+                {target && <span style={{ color: "var(--brand-text-muted)" }}> · cible : {target}{unit ? " " + unit : ""}</span>}
               </div>
             ))}
           </div>
