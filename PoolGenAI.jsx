@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.156.1";
+const APP_VERSION = "1.156.2";
 const CGU_VERSION = "1.5"; // v1.5 : section 6 complétée (altitude du bassin : IGN, Open Topo Data) ; v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -6324,7 +6324,7 @@ const PROJECTABLE_PHOS_ACTIONS = ["phos-"];
 // SEUL affiché, seul et/ou avec sa valeur projetée (pH, Cl libre, TAC, CYA,
 // TH, phosphates, cuivre, fer, température...). Renvoie null dès que deux
 // paramètres différents sont visibles ou si le paramètre n'a pas de cible.
-const TARGET_BASE_KEY = { phProjected: "pH", fclProjected: "fCl", tacProjected: "tac", hardProjected: "hard", phosProjected: "phos" };
+const TARGET_BASE_KEY = { phProjected: "pH", fclProjected: "fCl", tacProjected: "tac", hardProjected: "hard", phosProjected: "phos", filtApplied: "filtReco" };
 function computeTargetZone(activeKeys, params, targets) {
   const bases = [...new Set(activeKeys.map((k) => TARGET_BASE_KEY[k] || k))];
   if (bases.length !== 1) return null;
