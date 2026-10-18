@@ -9,8 +9,8 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.151.1";
-const CGU_VERSION = "1.4"; // v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
+const APP_VERSION = "1.153.1";
+const CGU_VERSION = "1.5"; // v1.5 : section 6 complétée (altitude du bassin : IGN, Open Topo Data) ; v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
 const MAX_POOLS_CLIENT = 3;
@@ -933,7 +933,7 @@ const TRANSLATIONS = {
     filt_current_duration_label: "Durée par jour (heures)",
     filt_current_hint: "Facultatif : permet de signaler un écart avec l'heure et la durée recommandées.",
     lcen_weather_title: "Météo et durée de filtration",
-    lcen_weather_val: "La fonction « Filtration du jour » (version Premium) recommande une durée et une plage horaire de filtration à partir de la température de l'eau (saisie ou estimée) et de la météo de votre bassin. Pour obtenir la météo, les coordonnées géographiques approximatives de la ville de votre bassin (4 décimales au maximum) sont transmises, par l'infrastructure technique de l'éditeur, à l'Institut météorologique norvégien (MET Norway, Norvège). Aucun autre élément — ni nom, ni adresse email, ni identifiant de compte — n'est transmis à MET Norway. Données météo : MET Norway, sous licence ouverte (NLOD 2.0 / CC BY 4.0). Ces recommandations sont indicatives : elles ne remplacent ni la notice de votre équipement ni votre appréciation de l'état de l'eau, et vous restez responsable de la programmation de votre filtration.",
+    lcen_weather_val: "La fonction « Filtration du jour » (version Premium) recommande une durée et une plage horaire de filtration à partir de la température de l'eau (saisie ou estimée) et de la météo de votre bassin. Pour obtenir la météo, les coordonnées géographiques approximatives de la ville de votre bassin (4 décimales au maximum) sont transmises, par l'infrastructure technique de l'éditeur, à l'Institut météorologique norvégien (MET Norway, Norvège). Aucun autre élément — ni nom, ni adresse email, ni identifiant de compte — n'est transmis à MET Norway. L'altitude de ce point est obtenue à partir de ces mêmes coordonnées auprès du service d'altimétrie de la Géoplateforme de l'IGN (France) ou, à défaut, du service Open Topo Data (données SRTM), puis enregistrée avec le bassin pour affiner la prévision ; ces services ne reçoivent que ces coordonnées. Données météo : MET Norway, sous licence ouverte (NLOD 2.0 / CC BY 4.0). Ces recommandations sont indicatives : elles ne remplacent ni la notice de votre équipement ni votre appréciation de l'état de l'eau, et vous restez responsable de la programmation de votre filtration.",
     wx_clear: "Ensoleillé",
     wx_clear_night: "Ciel dégagé",
     wx_fair: "Plutôt dégagé",
@@ -952,6 +952,30 @@ const TRANSLATIONS = {
     temp_unit_f: "Fahrenheit (°F)",
     filt_temp_from_measure: "Mesure",
     filt_temp_hint: "Cette valeur sert uniquement au calcul de la filtration : elle ne modifie pas vos mesures. Une température saisie dans une nouvelle mesure la remplace.",
+    pool_location_required: "Choisis une ville dans la liste ou utilise ta position.",
+    filt_ask_location: "Indique la ville du bassin pour obtenir la météo et la plage horaire.",
+    thermal_section: "Configuration thermique (facultatif)",
+    thermal_hint: "Ces informations affinent l'estimation de la température de l'eau et la durée de filtration.",
+    thermal_heated: "Bassin chauffé",
+    thermal_setpoint: "Température de consigne ({unit})",
+    thermal_heating_months: "Mois de chauffage",
+    thermal_cover: "Type de bâche",
+    thermal_cover_none: "Aucune",
+    thermal_cover_bubbles: "Bâche à bulles / solaire",
+    thermal_cover_shutter: "Volet roulant",
+    thermal_cover_winter: "Bâche d'hivernage",
+    thermal_cover_months: "Mois d'utilisation de la bâche",
+    thermal_depth: "Profondeur moyenne (m)",
+    thermal_all: "Tous",
+    thermal_clear: "Aucun",
+    thermal_months_needed: "Choisis aussi les mois de chauffage et la consigne pour que le chauffage soit pris en compte.",
+    filt_temp_estimated_low: "Estimée (peu fiable)",
+    filt_temp_setpoint: "Consigne",
+    filt_invite_temp: "Saisis la température de l'eau pour améliorer la précision.",
+    filt_rising_note: "Tient compte du réchauffement prévu demain.",
+    filt_week_title: "7 prochains jours",
+    filt_week_indicative: "Eau projetée et durée par jour. Jours 4 à 7 : indicatif.",
+    filt_configure_thermal: "Chauffage et bâche du bassin",
   },
   en: {
     tab_pool: "Pool",
@@ -1852,7 +1876,7 @@ const TRANSLATIONS = {
     filt_current_duration_label: "Hours per day",
     filt_current_hint: "Optional: lets the app flag a gap with the recommended time and duration.",
     lcen_weather_title: "Weather and filtration time",
-    lcen_weather_val: "The \"Today's filtration\" feature (Premium) recommends a filtration time and time range based on the water temperature (entered or estimated) and your pool's weather. To obtain the weather, the approximate geographic coordinates of your pool's city (4 decimals at most) are sent, through the publisher's technical infrastructure, to the Norwegian Meteorological Institute (MET Norway, Norway). Nothing else — no name, email address or account identifier — is sent to MET Norway. Weather data: MET Norway, under an open licence (NLOD 2.0 / CC BY 4.0). These recommendations are indicative: they replace neither your equipment's manual nor your own judgement of the water condition, and you remain responsible for programming your filtration.",
+    lcen_weather_val: "The \"Today's filtration\" feature (Premium) recommends a filtration time and time range based on the water temperature (entered or estimated) and your pool's weather. To obtain the weather, the approximate geographic coordinates of your pool's city (4 decimals at most) are sent, through the publisher's technical infrastructure, to the Norwegian Meteorological Institute (MET Norway, Norway). Nothing else — no name, email address or account identifier — is sent to MET Norway. The altitude of this point is obtained from the same coordinates from the altimetry service of the IGN Géoplateforme (France) or, failing that, the Open Topo Data service (SRTM data), then stored with the pool to refine the forecast; these services receive nothing but these coordinates. Weather data: MET Norway, under an open licence (NLOD 2.0 / CC BY 4.0). These recommendations are indicative: they replace neither your equipment's manual nor your own judgement of the water condition, and you remain responsible for programming your filtration.",
     wx_clear: "Sunny",
     wx_clear_night: "Clear sky",
     wx_fair: "Mostly clear",
@@ -1871,6 +1895,30 @@ const TRANSLATIONS = {
     temp_unit_f: "Fahrenheit (°F)",
     filt_temp_from_measure: "Measured",
     filt_temp_hint: "This value is only used to calculate the filtration time: it does not change your measurements. A temperature entered in a new measurement replaces it.",
+    pool_location_required: "Pick a city from the list or use your location.",
+    filt_ask_location: "Set the pool's city to get the weather and the time range.",
+    thermal_section: "Thermal setup (optional)",
+    thermal_hint: "This information refines the water temperature estimate and the filtration time.",
+    thermal_heated: "Heated pool",
+    thermal_setpoint: "Setpoint temperature ({unit})",
+    thermal_heating_months: "Heating months",
+    thermal_cover: "Cover type",
+    thermal_cover_none: "None",
+    thermal_cover_bubbles: "Bubble / solar cover",
+    thermal_cover_shutter: "Roller shutter",
+    thermal_cover_winter: "Winter cover",
+    thermal_cover_months: "Months the cover is used",
+    thermal_depth: "Average depth (m)",
+    thermal_all: "All",
+    thermal_clear: "None",
+    thermal_months_needed: "Also choose the heating months and the setpoint so that heating is taken into account.",
+    filt_temp_estimated_low: "Estimated (low reliability)",
+    filt_temp_setpoint: "Setpoint",
+    filt_invite_temp: "Enter the water temperature to improve accuracy.",
+    filt_rising_note: "Takes tomorrow's expected warming into account.",
+    filt_week_title: "Next 7 days",
+    filt_week_indicative: "Projected water temperature and duration per day. Days 4 to 7: indicative.",
+    filt_configure_thermal: "Pool heating and cover",
   },
   de: {
     tab_pool: "Becken",
@@ -2769,7 +2817,7 @@ const TRANSLATIONS = {
     filt_current_duration_label: "Stunden pro Tag",
     filt_current_hint: "Optional: ermöglicht einen Hinweis bei Abweichung von empfohlener Zeit und Dauer.",
     lcen_weather_title: "Wetter und Filterlaufzeit",
-    lcen_weather_val: "Die Funktion „Filterzeit heute“ (Premium) empfiehlt eine Filterlaufzeit und ein Zeitfenster anhand der Wassertemperatur (eingegeben oder geschätzt) und des Wetters an Ihrem Becken. Um das Wetter abzurufen, werden die ungefähren geografischen Koordinaten der Stadt Ihres Beckens (höchstens 4 Dezimalstellen) über die technische Infrastruktur des Herausgebers an das Norwegische Meteorologische Institut (MET Norway, Norwegen) übermittelt. Nichts anderes — weder Name noch E-Mail-Adresse noch Kontokennung — wird an MET Norway übermittelt. Wetterdaten: MET Norway, unter offener Lizenz (NLOD 2.0 / CC BY 4.0). Diese Empfehlungen sind unverbindlich: Sie ersetzen weder die Anleitung Ihrer Anlage noch Ihre eigene Einschätzung des Wasserzustands, und Sie bleiben für die Programmierung Ihrer Filterung verantwortlich.",
+    lcen_weather_val: "Die Funktion „Filterzeit heute“ (Premium) empfiehlt eine Filterlaufzeit und ein Zeitfenster anhand der Wassertemperatur (eingegeben oder geschätzt) und des Wetters an Ihrem Becken. Um das Wetter abzurufen, werden die ungefähren geografischen Koordinaten der Stadt Ihres Beckens (höchstens 4 Dezimalstellen) über die technische Infrastruktur des Herausgebers an das Norwegische Meteorologische Institut (MET Norway, Norwegen) übermittelt. Nichts anderes — weder Name noch E-Mail-Adresse noch Kontokennung — wird an MET Norway übermittelt. Die Höhe dieses Punktes wird anhand derselben Koordinaten beim Höhendienst der IGN-Géoplateforme (Frankreich) oder ersatzweise beim Dienst Open Topo Data (SRTM-Daten) abgerufen und zur Verfeinerung der Vorhersage mit dem Becken gespeichert; diese Dienste erhalten nur diese Koordinaten. Wetterdaten: MET Norway, unter offener Lizenz (NLOD 2.0 / CC BY 4.0). Diese Empfehlungen sind unverbindlich: Sie ersetzen weder die Anleitung Ihrer Anlage noch Ihre eigene Einschätzung des Wasserzustands, und Sie bleiben für die Programmierung Ihrer Filterung verantwortlich.",
     wx_clear: "Sonnig",
     wx_clear_night: "Klarer Himmel",
     wx_fair: "Überwiegend klar",
@@ -2788,6 +2836,30 @@ const TRANSLATIONS = {
     temp_unit_f: "Fahrenheit (°F)",
     filt_temp_from_measure: "Gemessen",
     filt_temp_hint: "Dieser Wert dient nur zur Berechnung der Filterzeit: Er ändert Ihre Messungen nicht. Eine in einer neuen Messung eingegebene Temperatur ersetzt ihn.",
+    pool_location_required: "Wähle eine Stadt aus der Liste oder nutze deinen Standort.",
+    filt_ask_location: "Gib die Stadt des Beckens an, um Wetter und Zeitfenster zu erhalten.",
+    thermal_section: "Thermische Konfiguration (optional)",
+    thermal_hint: "Diese Angaben verfeinern die Schätzung der Wassertemperatur und die Filterzeit.",
+    thermal_heated: "Beheiztes Becken",
+    thermal_setpoint: "Solltemperatur ({unit})",
+    thermal_heating_months: "Heizmonate",
+    thermal_cover: "Abdeckungsart",
+    thermal_cover_none: "Keine",
+    thermal_cover_bubbles: "Solar-/Luftpolsterabdeckung",
+    thermal_cover_shutter: "Rollladenabdeckung",
+    thermal_cover_winter: "Winterabdeckung",
+    thermal_cover_months: "Monate mit Abdeckung",
+    thermal_depth: "Mittlere Tiefe (m)",
+    thermal_all: "Alle",
+    thermal_clear: "Keine",
+    thermal_months_needed: "Wähle auch Heizmonate und Solltemperatur, damit die Heizung berücksichtigt wird.",
+    filt_temp_estimated_low: "Geschätzt (wenig zuverlässig)",
+    filt_temp_setpoint: "Sollwert",
+    filt_invite_temp: "Gib die Wassertemperatur ein, um die Genauigkeit zu verbessern.",
+    filt_rising_note: "Berücksichtigt die für morgen erwartete Erwärmung.",
+    filt_week_title: "Nächste 7 Tage",
+    filt_week_indicative: "Prognostizierte Wassertemperatur und Dauer pro Tag. Tage 4 bis 7: unverbindlich.",
+    filt_configure_thermal: "Heizung und Abdeckung des Beckens",
   },
   it: {
     tab_pool: "Vasca",
@@ -3686,7 +3758,7 @@ const TRANSLATIONS = {
     filt_current_duration_label: "Ore al giorno",
     filt_current_hint: "Facoltativo: permette di segnalare uno scarto rispetto a ora e durata consigliate.",
     lcen_weather_title: "Meteo e durata di filtrazione",
-    lcen_weather_val: "La funzione «Filtrazione di oggi» (Premium) consiglia una durata e una fascia oraria di filtrazione in base alla temperatura dell'acqua (inserita o stimata) e al meteo della vostra vasca. Per ottenere il meteo, le coordinate geografiche approssimative della città della vostra vasca (al massimo 4 decimali) vengono trasmesse, tramite l'infrastruttura tecnica dell'editore, all'Istituto meteorologico norvegese (MET Norway, Norvegia). Nessun altro elemento — né nome, né indirizzo email, né identificativo dell'account — viene trasmesso a MET Norway. Dati meteo: MET Norway, con licenza aperta (NLOD 2.0 / CC BY 4.0). Questi consigli sono indicativi: non sostituiscono né il manuale della vostra attrezzatura né la vostra valutazione dello stato dell'acqua, e restate responsabili della programmazione della filtrazione.",
+    lcen_weather_val: "La funzione «Filtrazione di oggi» (Premium) consiglia una durata e una fascia oraria di filtrazione in base alla temperatura dell'acqua (inserita o stimata) e al meteo della vostra vasca. Per ottenere il meteo, le coordinate geografiche approssimative della città della vostra vasca (al massimo 4 decimali) vengono trasmesse, tramite l'infrastruttura tecnica dell'editore, all'Istituto meteorologico norvegese (MET Norway, Norvegia). Nessun altro elemento — né nome, né indirizzo email, né identificativo dell'account — viene trasmesso a MET Norway. L'altitudine di questo punto viene ottenuta a partire dalle stesse coordinate presso il servizio altimetrico della Géoplateforme dell'IGN (Francia) oppure, in mancanza, presso il servizio Open Topo Data (dati SRTM), poi memorizzata con la vasca per affinare la previsione; questi servizi ricevono solo queste coordinate. Dati meteo: MET Norway, con licenza aperta (NLOD 2.0 / CC BY 4.0). Questi consigli sono indicativi: non sostituiscono né il manuale della vostra attrezzatura né la vostra valutazione dello stato dell'acqua, e restate responsabili della programmazione della filtrazione.",
     wx_clear: "Soleggiato",
     wx_clear_night: "Cielo sereno",
     wx_fair: "Poco nuvoloso",
@@ -3705,6 +3777,30 @@ const TRANSLATIONS = {
     temp_unit_f: "Fahrenheit (°F)",
     filt_temp_from_measure: "Misurata",
     filt_temp_hint: "Questo valore serve solo al calcolo della filtrazione: non modifica le vostre misure. Una temperatura inserita in una nuova misura lo sostituisce.",
+    pool_location_required: "Scegli una città dall'elenco o usa la tua posizione.",
+    filt_ask_location: "Indica la città della vasca per ottenere meteo e fascia oraria.",
+    thermal_section: "Configurazione termica (facoltativa)",
+    thermal_hint: "Queste informazioni affinano la stima della temperatura dell'acqua e la durata di filtrazione.",
+    thermal_heated: "Vasca riscaldata",
+    thermal_setpoint: "Temperatura impostata ({unit})",
+    thermal_heating_months: "Mesi di riscaldamento",
+    thermal_cover: "Tipo di copertura",
+    thermal_cover_none: "Nessuna",
+    thermal_cover_bubbles: "Copertura a bolle / solare",
+    thermal_cover_shutter: "Copertura a rullo",
+    thermal_cover_winter: "Copertura invernale",
+    thermal_cover_months: "Mesi di utilizzo della copertura",
+    thermal_depth: "Profondità media (m)",
+    thermal_all: "Tutti",
+    thermal_clear: "Nessuno",
+    thermal_months_needed: "Scegli anche i mesi di riscaldamento e la temperatura impostata affinché il riscaldamento sia considerato.",
+    filt_temp_estimated_low: "Stimata (poco affidabile)",
+    filt_temp_setpoint: "Impostata",
+    filt_invite_temp: "Inserisci la temperatura dell'acqua per migliorare la precisione.",
+    filt_rising_note: "Tiene conto del riscaldamento previsto per domani.",
+    filt_week_title: "Prossimi 7 giorni",
+    filt_week_indicative: "Temperatura dell'acqua prevista e durata per giorno. Giorni 4-7: indicativi.",
+    filt_configure_thermal: "Riscaldamento e copertura della vasca",
   },
   es: {
     tab_pool: "Piscina",
@@ -4603,7 +4699,7 @@ const TRANSLATIONS = {
     filt_current_duration_label: "Horas al día",
     filt_current_hint: "Opcional: permite avisar de una diferencia con la hora y la duración recomendadas.",
     lcen_weather_title: "Tiempo y duración de la filtración",
-    lcen_weather_val: "La función «Filtración de hoy» (Premium) recomienda una duración y una franja horaria de filtración a partir de la temperatura del agua (introducida o estimada) y del tiempo en su piscina. Para obtener el tiempo, las coordenadas geográficas aproximadas de la ciudad de su piscina (4 decimales como máximo) se transmiten, a través de la infraestructura técnica del editor, al Instituto Meteorológico de Noruega (MET Norway, Noruega). No se transmite a MET Norway ningún otro dato: ni nombre, ni dirección de correo, ni identificador de cuenta. Datos meteorológicos: MET Norway, con licencia abierta (NLOD 2.0 / CC BY 4.0). Estas recomendaciones son orientativas: no sustituyen el manual de su equipo ni su propia valoración del estado del agua, y usted sigue siendo responsable de la programación de su filtración.",
+    lcen_weather_val: "La función «Filtración de hoy» (Premium) recomienda una duración y una franja horaria de filtración a partir de la temperatura del agua (introducida o estimada) y del tiempo en su piscina. Para obtener el tiempo, las coordenadas geográficas aproximadas de la ciudad de su piscina (4 decimales como máximo) se transmiten, a través de la infraestructura técnica del editor, al Instituto Meteorológico de Noruega (MET Norway, Noruega). No se transmite a MET Norway ningún otro dato: ni nombre, ni dirección de correo, ni identificador de cuenta. La altitud de este punto se obtiene a partir de esas mismas coordenadas en el servicio de altimetría de la Géoplateforme del IGN (Francia) o, en su defecto, en el servicio Open Topo Data (datos SRTM), y se guarda con la piscina para afinar la previsión; estos servicios solo reciben esas coordenadas. Datos meteorológicos: MET Norway, con licencia abierta (NLOD 2.0 / CC BY 4.0). Estas recomendaciones son orientativas: no sustituyen el manual de su equipo ni su propia valoración del estado del agua, y usted sigue siendo responsable de la programación de su filtración.",
     wx_clear: "Soleado",
     wx_clear_night: "Cielo despejado",
     wx_fair: "Poco nublado",
@@ -4622,6 +4718,30 @@ const TRANSLATIONS = {
     temp_unit_f: "Fahrenheit (°F)",
     filt_temp_from_measure: "Medida",
     filt_temp_hint: "Este valor solo sirve para calcular la filtración: no modifica sus mediciones. Una temperatura introducida en una nueva medición lo sustituye.",
+    pool_location_required: "Elige una ciudad de la lista o usa tu ubicación.",
+    filt_ask_location: "Indica la ciudad de la piscina para obtener el tiempo y la franja horaria.",
+    thermal_section: "Configuración térmica (opcional)",
+    thermal_hint: "Estos datos afinan la estimación de la temperatura del agua y la duración de la filtración.",
+    thermal_heated: "Piscina climatizada",
+    thermal_setpoint: "Temperatura de consigna ({unit})",
+    thermal_heating_months: "Meses de calefacción",
+    thermal_cover: "Tipo de cubierta",
+    thermal_cover_none: "Ninguna",
+    thermal_cover_bubbles: "Cubierta de burbujas / solar",
+    thermal_cover_shutter: "Cubierta enrollable",
+    thermal_cover_winter: "Cubierta de invierno",
+    thermal_cover_months: "Meses de uso de la cubierta",
+    thermal_depth: "Profundidad media (m)",
+    thermal_all: "Todos",
+    thermal_clear: "Ninguno",
+    thermal_months_needed: "Elige también los meses de calefacción y la consigna para que se tenga en cuenta la calefacción.",
+    filt_temp_estimated_low: "Estimada (poco fiable)",
+    filt_temp_setpoint: "Consigna",
+    filt_invite_temp: "Introduce la temperatura del agua para mejorar la precisión.",
+    filt_rising_note: "Tiene en cuenta el calentamiento previsto para mañana.",
+    filt_week_title: "Próximos 7 días",
+    filt_week_indicative: "Temperatura del agua prevista y duración por día. Días 4 a 7: orientativos.",
+    filt_configure_thermal: "Calefacción y cubierta de la piscina",
   },
   pt: {
     tab_pool: "Piscina",
@@ -5520,7 +5640,7 @@ const TRANSLATIONS = {
     filt_current_duration_label: "Horas por dia",
     filt_current_hint: "Opcional: permite assinalar uma diferença face à hora e à duração recomendadas.",
     lcen_weather_title: "Tempo e duração da filtração",
-    lcen_weather_val: "A função «Filtração de hoje» (Premium) recomenda uma duração e um intervalo horário de filtração com base na temperatura da água (introduzida ou estimada) e no tempo na sua piscina. Para obter o tempo, as coordenadas geográficas aproximadas da cidade da sua piscina (no máximo 4 casas decimais) são transmitidas, através da infraestrutura técnica do editor, ao Instituto Meteorológico da Noruega (MET Norway, Noruega). Nenhum outro dado — nem nome, nem endereço de email, nem identificador de conta — é transmitido ao MET Norway. Dados meteorológicos: MET Norway, sob licença aberta (NLOD 2.0 / CC BY 4.0). Estas recomendações são indicativas: não substituem o manual do seu equipamento nem a sua própria avaliação do estado da água, e continua responsável pela programação da sua filtração.",
+    lcen_weather_val: "A função «Filtração de hoje» (Premium) recomenda uma duração e um intervalo horário de filtração com base na temperatura da água (introduzida ou estimada) e no tempo na sua piscina. Para obter o tempo, as coordenadas geográficas aproximadas da cidade da sua piscina (no máximo 4 casas decimais) são transmitidas, através da infraestrutura técnica do editor, ao Instituto Meteorológico da Noruega (MET Norway, Noruega). Nenhum outro dado — nem nome, nem endereço de email, nem identificador de conta — é transmitido ao MET Norway. A altitude deste ponto é obtida a partir dessas mesmas coordenadas junto do serviço de altimetria da Géoplateforme do IGN (França) ou, na sua falta, do serviço Open Topo Data (dados SRTM), e guardada com a piscina para afinar a previsão; estes serviços recebem apenas essas coordenadas. Dados meteorológicos: MET Norway, sob licença aberta (NLOD 2.0 / CC BY 4.0). Estas recomendações são indicativas: não substituem o manual do seu equipamento nem a sua própria avaliação do estado da água, e continua responsável pela programação da sua filtração.",
     wx_clear: "Ensolarado",
     wx_clear_night: "Céu limpo",
     wx_fair: "Pouco nublado",
@@ -5539,6 +5659,30 @@ const TRANSLATIONS = {
     temp_unit_f: "Fahrenheit (°F)",
     filt_temp_from_measure: "Medida",
     filt_temp_hint: "Este valor serve apenas para calcular a filtração: não altera as suas medições. Uma temperatura introduzida numa nova medição substitui-o.",
+    pool_location_required: "Escolha uma cidade da lista ou use a sua localização.",
+    filt_ask_location: "Indique a cidade da piscina para obter o tempo e o intervalo horário.",
+    thermal_section: "Configuração térmica (opcional)",
+    thermal_hint: "Estas informações afinam a estimativa da temperatura da água e a duração da filtração.",
+    thermal_heated: "Piscina aquecida",
+    thermal_setpoint: "Temperatura definida ({unit})",
+    thermal_heating_months: "Meses de aquecimento",
+    thermal_cover: "Tipo de cobertura",
+    thermal_cover_none: "Nenhuma",
+    thermal_cover_bubbles: "Cobertura de bolhas / solar",
+    thermal_cover_shutter: "Cobertura de enrolar",
+    thermal_cover_winter: "Cobertura de inverno",
+    thermal_cover_months: "Meses de utilização da cobertura",
+    thermal_depth: "Profundidade média (m)",
+    thermal_all: "Todos",
+    thermal_clear: "Nenhum",
+    thermal_months_needed: "Escolha também os meses de aquecimento e a temperatura definida para que o aquecimento seja considerado.",
+    filt_temp_estimated_low: "Estimada (pouco fiável)",
+    filt_temp_setpoint: "Definida",
+    filt_invite_temp: "Introduza a temperatura da água para melhorar a precisão.",
+    filt_rising_note: "Tem em conta o aquecimento previsto para amanhã.",
+    filt_week_title: "Próximos 7 dias",
+    filt_week_indicative: "Temperatura da água prevista e duração por dia. Dias 4 a 7: indicativos.",
+    filt_configure_thermal: "Aquecimento e cobertura da piscina",
   },
 };
 
@@ -9761,7 +9905,8 @@ function PoolGenAIApp() {
   // les valeurs restent stockées en °C. TEMP_UNIT (variable globale) est alignée à chaque rendu pour les composants sans prop.
   const [tempUnit, setTempUnit] = useState("C");
   TEMP_UNIT = tempUnit;
-  const [poolEditRequest, setPoolEditRequest] = useState(null); // id du bassin à ouvrir en édition dans Réglages (depuis la carte Filtration)
+  const [poolEditRequest, setPoolEditRequest] = useState(null); // { id, section } du bassin à ouvrir en édition dans Réglages (depuis la carte Filtration)
+  const altitudeBusyRef = useRef({}); // bassins dont l'altitude est en cours de récupération
   const [aiEnabled, setAiEnabled] = useState(false);
   // v1.36.0 — Lot B : opt-out de la contribution aux données de calibration
   // partagées (CGU clause 11). Activé par défaut — données anonymes, coût nul
@@ -11022,6 +11167,7 @@ function PoolGenAIApp() {
       if (dataUid) saveMeasureWithThumbnail(dataUid, newMeasure);
       track("measure_add", { has_photos: !!(entry.photos?.length || entry.photo), has_pool_photos: !!(entry.poolPhotos?.length) });
     }
+    if (finiteOrNull(entry.temp) !== null) ensurePoolAltitude(activePool);
     setShowAddMeasure(false);
     setEditingMeasure(null);
   }
@@ -11998,6 +12144,21 @@ function PoolGenAIApp() {
     setPools((prev) => prev.map((p) => (p.id === id ? { ...p, ...updates } : p)));
   }
 
+  // v1.152.0 — Altitude du bassin (affine la prévision MET Norway). Déclencheur « bassin historique » : appelée à la première saisie d'une
+  // température d'eau (mesure ou carte Filtration) quand le bassin a des coordonnées mais pas d'altitude (propriétaire Premium). Asynchrone :
+  // n'attend jamais l'enregistrement ; en cas d'échec, le prochain déclencheur applicable réessaie. Jamais appelée à l'ouverture de l'app ou de la carte.
+  function ensurePoolAltitude(pool) {
+    if (viewContext || !effectiveIsPremium || !pool || isFiniteNum(pool.altitudeM)) return;
+    if (!isFiniteNum(pool.lat) || !isFiniteNum(pool.lon) || altitudeBusyRef.current[pool.id]) return;
+    altitudeBusyRef.current[pool.id] = true;
+    fetchAltitude(pool.lat, pool.lon)
+      .then((alt) => {
+        if (alt === null) return;
+        setPools((prev) => prev.map((p) => (p.id === pool.id && p.lat === pool.lat && p.lon === pool.lon && !isFiniteNum(p.altitudeM) ? { ...p, altitudeM: alt } : p)));
+      })
+      .finally(() => { altitudeBusyRef.current[pool.id] = false; });
+  }
+
   // v1.28.0 — Soft delete : le bassin n'est plus retiré, il est marqué désactivé.
   // Measures/applications/products restent rattachées à son poolId, intactes en
   // base (exploitables pour des stats), et ne redeviennent jamais orphelines
@@ -12091,7 +12252,8 @@ function PoolGenAIApp() {
             pool={activePool}
             onUpdatePool={(u) => { if (activePool) updatePool(activePool.id, u); }}
             canEditPool={!viewContext}
-            onOpenSettings={() => { if (activePool) setPoolEditRequest(activePool.id); setTab("settings"); }}
+            onOpenSettings={(section) => { if (activePool) setPoolEditRequest({ id: activePool.id, section: section || "filtration" }); setTab("settings"); }}
+            onEnsureAltitude={() => ensurePoolAltitude(activePool)}
           />
         )}
         {tab === "history" && (
@@ -12229,7 +12391,7 @@ function PoolGenAIApp() {
             myPseudo={myPseudo}
             tempUnit={tempUnit}
             onChangeTempUnit={changeTempUnit}
-            openPoolEditId={poolEditRequest}
+            openPoolEdit={poolEditRequest}
             onPoolEditHandled={() => setPoolEditRequest(null)}
             onRevokeDataConsent={() => {
               setDataConsent(false);
@@ -12646,7 +12808,7 @@ function PoolGenAIApp() {
       </div>
     )}
     {loaded && authUser && !suspended && !accountDeleted && !forceUpdate && !needsEmailVerification && !needsCguAcceptance && activePools.length === 0 && cloudConfigReceived && !viewContext && onboardingSeen && !firstPoolDismissed && (
-      <AddPoolModal forced onClose={() => setFirstPoolDismissed(true)} onSave={addPool} lang={lang} />
+      <AddPoolModal forced onClose={() => setFirstPoolDismissed(true)} onSave={addPool} lang={lang} isPremium={isPremium} />
     )}
     {/* v1.87.0 — L'onboarding doit venir AVANT la création du premier bassin, pas
         après (ordre inversé jusqu'ici : le formulaire de création s'affichait
@@ -12854,7 +13016,7 @@ function PoolGenAIApp() {
       )}
 
       {showAddPool && (
-        <AddPoolModal onClose={() => setShowAddPool(false)} onSave={addPool} lang={lang} />
+        <AddPoolModal onClose={() => setShowAddPool(false)} onSave={addPool} lang={lang} isPremium={isPremium} />
       )}
 
       {showDeleteReauth && (
@@ -13776,49 +13938,288 @@ function computeSpaSchedule(noonH, spec) {
   return starts.map((s) => ({ start: s, end: s + d }));
 }
 
-// Estimation de la température de l'eau à partir de la météo (approximative, aucune formule validée) :
-// moyenne des températures moyennes de l'air sur 3 jours (2 jours précédents stockés + prévision du jour),
-// corrigée de l'écart (eau - air) relevé à la dernière saisie réelle.
-function estimateWaterTempFromWeather(opts) {
-  const v = ((opts && opts.airMeans) || []).filter(Number.isFinite);
-  if (!v.length) return null;
-  const mean = v.reduce((a, b) => a + b, 0) / v.length;
-  const off = opts && Number.isFinite(opts.offset) ? opts.offset : 0;
-  return Math.round((mean + off) * 10) / 10;
+// ---------- Température de l'eau : saisies et modèle d'inertie (piscine) ----------
+// Les saisies (mesures et carte) ancrent la température ; entre deux saisies, et pour la tendance des 7 jours, l'eau suit
+// l'air avec de l'inertie : T(j+1) = T(j) + k × (Tair(j) + décalage[régime] − T(j)). Le décalage (gain solaire, effet de la
+// bâche) est appris à chaque nouvelle saisie : décalage ← décalage + WATER_OFFSET_STEP × (saisie − T du modèle), borné.
+// Tout est recalculé à partir des saisies et de l'historique de l'air (aucun état intermédiaire stocké).
+const WATER_K_DEFAULT = 0.2; // inertie par jour à profondeur de référence (≈ 5 jours de constante de temps) — valeur de départ ; k est ensuite appris pour chaque bassin (fitWaterK)
+const WATER_DEFAULT_DEPTH_M = 1.5; // profondeur moyenne supposée quand elle est inconnue
+const WATER_K_MIN = 0.08; // bassin très profond : l'eau réagit plus lentement
+const WATER_K_MAX = 0.35;
+const WATER_OFFSET_STEP = 0.5; // facteur de calibrage provisoire
+const WATER_OFFSET_MAX = 5; // °C
+const WATER_STALE_DAYS = 7; // au-delà, invitation à saisir la température de l'eau
+const WATER_ANCHOR_MAX_AGE_DAYS = 30; // une saisie plus ancienne n'ancre plus l'estimation
+const WATER_ENTRIES_LOOKBACK_DAYS = 90; // saisies prises en compte pour apprendre les décalages
+const AIR_HISTORY_DAYS = 60; // jours de moyenne d'air conservés dans le bassin
+const WATER_PROJECTION_DAYS = 7; // aujourd'hui + 6 jours
+const WATER_K_LEARN_MIN = 0.05; // bornes de l'inertie apprise (par jour)
+const WATER_K_LEARN_MAX = 0.4;
+const WATER_K_LEARN_STEP = 0.025;
+const WATER_K_FIT_MAX_GAP_DAYS = 14; // entre deux saisies : au-delà, l'eau a rejoint l'air quelle que soit l'inertie (aucune information sur k)
+const WATER_K_PRIOR_WEIGHT = 3; // « poids » de la valeur de départ (en nombre de transitions) face à la valeur apprise
+
+function finiteOrNull(x) {
+  if (x === null || x === undefined || x === "") return null;
+  const n = Number(x);
+  return Number.isFinite(n) ? n : null;
+}
+function meanOf(arr) { return arr.reduce((a, b) => a + b, 0) / arr.length; }
+function keyToUtcMs(key) { const p = String(key).split("-").map(Number); return Date.UTC(p[0], p[1] - 1, p[2]); }
+function addDaysKey(key, n) { return new Date(keyToUtcMs(key) + n * 864e5).toISOString().slice(0, 10); }
+function daysBetweenKeys(a, b) { return Math.round((keyToUtcMs(b) - keyToUtcMs(a)) / 864e5); }
+function monthOfKey(key) { return parseInt(String(key).slice(5, 7), 10); }
+
+// Coefficient d'inertie selon la profondeur moyenne : plus profond, plus lent.
+function waterKForDepth(depthM) {
+  const d = finiteOrNull(depthM);
+  const depth = d !== null && d > 0 ? d : WATER_DEFAULT_DEPTH_M;
+  return Math.max(WATER_K_MIN, Math.min(WATER_K_MAX, (WATER_K_DEFAULT * WATER_DEFAULT_DEPTH_M) / depth));
 }
 
-// Température de l'eau retenue : la valeur SAISIE le plus récemment, que ce soit dans le champ température d'une mesure
-// (horodatage = date de la mesure, ou instant de la saisie/modification si tempEnteredAt est renseigné) ou dans le champ de la
-// carte Filtration, si elle a moins de WATER_TEMP_MAX_AGE_DAYS jours ; sinon estimation météo.
-// Règles : (1) une température saisie dans une mesure devient la valeur utilisée par la carte ; (2) la saisie de la carte ne
-// modifie jamais les mesures (elle n'est stockée que sur le bassin). Retourne { value, source: "mesure" | "saisie" | "estimee" } ou null.
-function resolveWaterTemp(o) {
-  const cands = [];
-  (o.measures || []).forEach((m) => {
+// Régime d'un mois (1 à 12) : « chauffe » (chauffage actif, consigne), « bache » (non chauffé, bâche en place) ou « libre ».
+function waterRegimeForMonth(cfg, month) {
+  const h = cfg && cfg.heating;
+  const c = cfg && cfg.cover;
+  if (h && h.enabled && finiteOrNull(h.setpointC) !== null && Array.isArray(h.months) && h.months.indexOf(month) >= 0) return "chauffe";
+  if (c && c.type && c.type !== "none" && Array.isArray(c.months) && c.months.indexOf(month) >= 0) return "bache";
+  return "libre";
+}
+
+// Série d'air continue de fromKey à toKey : les jours manquants sont interpolés linéairement entre les valeurs connues
+// (avant la première / après la dernière : valeur connue la plus proche). {} si aucune valeur connue.
+function fillAirSeries(known, fromKey, toKey) {
+  const keys = Object.keys(known || {}).filter((k) => Number.isFinite(known[k])).sort();
+  const out = {};
+  if (!keys.length) return out;
+  const n = daysBetweenKeys(fromKey, toKey);
+  for (let i = 0; i <= n; i++) {
+    const k = addDaysKey(fromKey, i);
+    if (Number.isFinite(known[k])) { out[k] = known[k]; continue; }
+    let prev = null;
+    let next = null;
+    for (const kk of keys) {
+      if (kk < k) prev = kk;
+      else if (kk > k) { next = kk; break; }
+    }
+    if (prev && next) out[k] = known[prev] + ((known[next] - known[prev]) * daysBetweenKeys(prev, k)) / daysBetweenKeys(prev, next);
+    else out[k] = known[prev || next];
+  }
+  return out;
+}
+
+// Températures de l'eau projetées : temps[i] = jour startKey + i. Le jour suivant d'un mois « chauffe » est à la consigne.
+function projectWaterTemps(o) {
+  const temps = [o.startTemp];
+  let T = o.startTemp;
+  for (let i = 0; i < o.steps; i++) {
+    const dayKey = addDaysKey(o.startKey, i);
+    const nextKey = addDaysKey(o.startKey, i + 1);
+    if (waterRegimeForMonth(o.cfg, monthOfKey(nextKey)) === "chauffe") {
+      T = Number(o.cfg.heating.setpointC);
+    } else {
+      const reg = waterRegimeForMonth(o.cfg, monthOfKey(dayKey));
+      const a = o.air[dayKey];
+      const off = (o.offsets && o.offsets[reg === "chauffe" ? "libre" : reg]) || 0;
+      if (Number.isFinite(a)) T = T + o.k * (a + off - T);
+    }
+    temps.push(T);
+  }
+  return temps;
+}
+
+// Saisies de température d'eau (mesures et saisie de la carte), du plus ancien au plus récent : { value, t (ms), src }.
+// Horodatage d'une mesure = max(date de la mesure, instant de saisie de la température s'il est connu).
+function collectWaterEntries(measures, manual) {
+  const out = [];
+  (measures || []).forEach((m) => {
     const v = parseFloat(m.temp);
     const tDate = Date.parse(m.date);
     const tEntry = Date.parse(m.tempEnteredAt);
     const t = Number.isFinite(tEntry) ? Math.max(Number.isFinite(tDate) ? tDate : 0, tEntry) : tDate;
-    if (Number.isFinite(v) && Number.isFinite(t)) cands.push({ value: v, t, src: "mesure" });
+    if (Number.isFinite(v) && Number.isFinite(t)) out.push({ value: v, t, src: "mesure" });
   });
-  if (o.manual) {
-    const v = parseFloat(o.manual.value);
-    const t = Date.parse(o.manual.at);
-    if (Number.isFinite(v) && Number.isFinite(t)) cands.push({ value: v, t, src: "saisie" });
+  if (manual) {
+    const v = parseFloat(manual.value);
+    const t = Date.parse(manual.at);
+    if (Number.isFinite(v) && Number.isFinite(t)) out.push({ value: v, t, src: "saisie" });
   }
-  cands.sort((a, b) => b.t - a.t);
-  const last = cands[0] || null;
-  if (last && o.nowMs - last.t <= WATER_TEMP_MAX_AGE_DAYS * 864e5) return { value: last.value, source: last.src, at: last.t };
-  const hist = o.airHistory || {};
-  const prev = [2, 1].map((n) => hist[localDateKey(o.nowMs - n * 864e5, o.timeZone)]).filter(Number.isFinite);
-  const means = prev.concat(Number.isFinite(o.todayAirMean) ? [o.todayAirMean] : []);
-  let offset = 0;
-  if (last) {
-    const am = hist[localDateKey(last.t, o.timeZone)];
-    if (Number.isFinite(am)) offset = Math.max(-8, Math.min(8, last.value - am));
+  return out.sort((a, b) => a.t - b.t);
+}
+
+// Rejoue les saisies pour apprendre les décalages par régime. entries : { key (jour local), value, t, src } du plus ancien au plus récent.
+// Premier relevé : comparé à la moyenne de l'air des 3 derniers jours ; relevés suivants : comparés au modèle projeté depuis le relevé précédent.
+function buildWaterModel(o) {
+  const offsets = { bache: 0, libre: 0 };
+  const calibrated = { bache: false, libre: false };
+  const errors = []; // écarts (relevé − modèle) AVANT apprentissage du décalage, pour ajuster k (fitWaterK)
+  const byDay = new Map();
+  (o.entries || []).forEach((e) => byDay.set(e.key, e)); // plusieurs relevés le même jour : le dernier l'emporte
+  const list = Array.from(byDay.values()).sort((a, b) => a.t - b.t);
+  const hist = o.airKnown || {};
+  const clamp = (x) => Math.max(-WATER_OFFSET_MAX, Math.min(WATER_OFFSET_MAX, x));
+  let anchor = null;
+  for (const e of list) {
+    const reg = waterRegimeForMonth(o.cfg, monthOfKey(e.key));
+    if (reg !== "chauffe") {
+      let modelT = null;
+      if (!anchor) {
+        const prev = [0, 1, 2].map((n) => hist[addDaysKey(e.key, -n)]).filter(Number.isFinite);
+        if (prev.length) modelT = meanOf(prev);
+      } else {
+        const air = fillAirSeries(hist, anchor.key, e.key);
+        if (Object.keys(air).length) {
+          const gap = daysBetweenKeys(anchor.key, e.key);
+          const temps = projectWaterTemps({ startTemp: anchor.value, startKey: anchor.key, steps: gap, air, cfg: o.cfg, offsets, k: o.k });
+          modelT = temps[temps.length - 1];
+          // Transition informative sur k : ni le même jour, ni trop espacée, et au moins la moitié des jours d'air réellement connus.
+          let known = 0;
+          for (let i = 0; i <= gap; i++) if (Number.isFinite(hist[addDaysKey(anchor.key, i)])) known++;
+          if (gap >= 1 && gap <= WATER_K_FIT_MAX_GAP_DAYS && known / (gap + 1) >= 0.5) errors.push(e.value - modelT);
+        }
+      }
+      if (modelT !== null) {
+        offsets[reg] = clamp(offsets[reg] + WATER_OFFSET_STEP * (e.value - modelT));
+        calibrated[reg] = true;
+      }
+    }
+    anchor = e;
   }
-  const est = estimateWaterTempFromWeather({ airMeans: means, offset });
-  return est == null ? null : { value: est, source: "estimee", offset };
+  return { offsets, calibrated, anchor, errors };
+}
+
+// Inertie propre au bassin : k est choisi parmi une grille pour minimiser l'erreur de prédiction de chaque saisie à partir de la
+// précédente (le modèle apprenant ses décalages au fil des saisies), puis ramené vers la valeur de départ (profondeur) tant que
+// les transitions sont peu nombreuses : k = (n × k_ajusté + poids × k_départ) / (n + poids). Moins de 2 transitions utilisables :
+// k de départ. Recalculé à chaque affichage à partir des saisies et de l'historique de l'air (rien n'est stocké).
+function fitWaterK(o) {
+  let best = null;
+  const steps = Math.round((WATER_K_LEARN_MAX - WATER_K_LEARN_MIN) / WATER_K_LEARN_STEP);
+  for (let i = 0; i <= steps; i++) {
+    const k = WATER_K_LEARN_MIN + i * WATER_K_LEARN_STEP;
+    const m = buildWaterModel({ entries: o.entries, airKnown: o.airKnown, cfg: o.cfg, k });
+    const n = m.errors.length;
+    if (n < 2) return { k: o.kPrior, n, fitted: null };
+    const sse = m.errors.reduce((a, e) => a + e * e, 0);
+    if (!best || sse < best.sse - 1e-9 || (Math.abs(sse - best.sse) <= 1e-9 && Math.abs(k - o.kPrior) < Math.abs(best.k - o.kPrior))) best = { k, sse, n };
+  }
+  const w = best.n / (best.n + WATER_K_PRIOR_WEIGHT);
+  const k = w * best.k + (1 - w) * o.kPrior;
+  return { k: Math.max(WATER_K_LEARN_MIN, Math.min(WATER_K_LEARN_MAX, k)), n: best.n, fitted: best.k };
+}
+
+// Estimation complète pour une piscine. o : { entries (collectWaterEntries), airHistory { "AAAA-MM-JJ": °C }, forecast
+// [{ date, tMean }] (aujourd'hui + à venir), nowMs, tz, cfg { heating, cover }, depthM }.
+// Retourne null s'il n'y a ni saisie ni donnée d'air. Sinon { t0, source ("mesure" | "saisie" | "consigne" | "estimee"),
+// confidence ("high" | "medium" | "low"), temps[7], hours[7], dates[7], ageDays, regimeToday, offsets, calibrated, k (inertie du bassin),
+// kPrior (valeur de départ selon la profondeur), kSamples (transitions utilisées pour apprendre k), needsInvite }.
+// Une saisie de moins de WATER_TEMP_MAX_AGE_DAYS jours est reprise telle quelle comme température du jour (même en régime chauffe).
+function computeWaterEstimate(o) {
+  const tz = o.tz || "UTC";
+  const todayKey = localDateKey(o.nowMs, tz);
+  const entries = (o.entries || [])
+    .map((e) => ({ ...e, key: localDateKey(e.t, tz) }))
+    .filter((e) => e.key >= addDaysKey(todayKey, -WATER_ENTRIES_LOOKBACK_DAYS) && e.key <= todayKey)
+    .sort((a, b) => a.t - b.t);
+  const hist = {};
+  Object.keys(o.airHistory || {}).forEach((key) => { if (Number.isFinite(o.airHistory[key])) hist[key] = o.airHistory[key]; });
+  const kPrior = waterKForDepth(o.depthM);
+  const fit = fitWaterK({ entries, airKnown: hist, cfg: o.cfg, kPrior });
+  const k = fit.k;
+  const model = buildWaterModel({ entries, airKnown: hist, cfg: o.cfg, k });
+  const known = { ...hist };
+  (o.forecast || []).forEach((d) => { if (d && d.date && Number.isFinite(d.tMean)) known[d.date] = d.tMean; });
+  const regimeToday = waterRegimeForMonth(o.cfg, monthOfKey(todayKey));
+  const anchor = model.anchor;
+  const ageDays = anchor ? (o.nowMs - anchor.t) / 864e5 : null;
+  const anchorUsable = !!anchor && ageDays <= WATER_ANCHOR_MAX_AGE_DAYS;
+  const air = fillAirSeries(known, anchorUsable ? anchor.key : todayKey, addDaysKey(todayKey, WATER_PROJECTION_DAYS - 1));
+
+  let t0;
+  let source;
+  let confidence;
+  if (anchor && ageDays <= WATER_TEMP_MAX_AGE_DAYS) {
+    t0 = anchor.value; source = anchor.src; confidence = "high";
+  } else if (regimeToday === "chauffe") {
+    t0 = Number(o.cfg.heating.setpointC); source = "consigne"; confidence = "high";
+  } else if (anchorUsable && Object.keys(air).length) {
+    const temps = projectWaterTemps({ startTemp: anchor.value, startKey: anchor.key, steps: daysBetweenKeys(anchor.key, todayKey), air, cfg: o.cfg, offsets: model.offsets, k });
+    t0 = temps[temps.length - 1]; source = "estimee"; confidence = model.calibrated[regimeToday] ? "medium" : "low";
+  } else {
+    // Aucune saisie exploitable : moyenne de l'air des jours stockés (au premier lancement : des 3 prochains jours).
+    const stored = Object.keys(hist).sort().slice(-7).map((key) => hist[key]);
+    const upcoming = (o.forecast || []).slice(0, 3).map((d) => d.tMean).filter(Number.isFinite);
+    const vals = stored.length ? stored : upcoming;
+    if (!vals.length) return null;
+    t0 = meanOf(vals) + (model.offsets[regimeToday] || 0); source = "estimee"; confidence = "low";
+  }
+  const temps = projectWaterTemps({ startTemp: t0, startKey: todayKey, steps: WATER_PROJECTION_DAYS - 1, air, cfg: o.cfg, offsets: model.offsets, k });
+  return {
+    t0,
+    source,
+    confidence,
+    ageDays,
+    regimeToday,
+    temps,
+    hours: temps.map((T) => computePoolFiltrationHours(T)),
+    dates: temps.map((_, i) => addDaysKey(todayKey, i)),
+    offsets: model.offsets,
+    calibrated: model.calibrated,
+    k,
+    kPrior,
+    kSamples: fit.n,
+    needsInvite: source !== "consigne" && (confidence === "low" || (ageDays !== null && ageDays > WATER_STALE_DAYS)),
+  };
+}
+
+// Durée recommandée aujourd'hui (piscine) : max(D(0), D(1)) — elle monte dès qu'un réchauffement est prévu (risque d'algues
+// si l'on sous-filtre) et ne baisse qu'avec la température réelle projetée.
+function recommendedPoolHours(est) {
+  if (!est) return null;
+  const a = est.hours[0];
+  const b = est.hours[1];
+  if (a === null || a === undefined) return null;
+  return b === null || b === undefined ? a : Math.max(a, b);
+}
+
+// Prévision journalière de secours (Worker sans daily[] : TEST/PROD avant recopie du Worker) : moyennes par jour local
+// d'après les heures ; seul le premier jour peut être incomplet (sa moyenne est celle des 24 prochaines heures).
+function dailyFromHours(hours, tz) {
+  const g = new Map();
+  (hours || []).forEach((h) => {
+    if (!Number.isFinite(h.air)) return;
+    const k = localDateKey(Date.parse(h.t), tz);
+    if (!g.has(k)) g.set(k, []);
+    g.get(k).push(h);
+  });
+  const out = [];
+  Array.from(g.entries()).forEach(([date, rows], idx) => {
+    const partial = rows.length < 22;
+    if (partial && idx > 0) return;
+    // pictogramme : symbole de l'heure la plus proche de midi (heure locale)
+    let sym = null;
+    let bestDist = Infinity;
+    rows.forEach((h) => {
+      if (!h.symbol) return;
+      const p = tzParts(Date.parse(h.t), tz);
+      const dist = Math.abs(p.hour + p.minute / 60 - 12);
+      if (dist < bestDist) { bestDist = dist; sym = h.symbol; }
+    });
+    // Aujourd'hui (premier jour) : moyenne des 24 prochaines heures (les heures restantes de la journée sont surtout celles de l'après-midi).
+    const next24 = idx === 0 ? (hours || []).filter((h) => Number.isFinite(h.air)).slice(0, 24) : null;
+    const mean = next24 && next24.length >= 12 ? meanOf(next24.map((h) => h.air)) : meanOf(rows.map((h) => h.air));
+    out.push({ date, tMean: mean, symbol: sym, partial });
+  });
+  return out;
+}
+
+// Historique de la moyenne d'air : ajoute une valeur et garde les AIR_HISTORY_DAYS derniers jours.
+function mergeAirHistory(hist, key, value) {
+  const merged = { ...(hist || {}), [key]: Math.round(value * 10) / 10 };
+  const out = {};
+  Object.keys(merged).sort().slice(-AIR_HISTORY_DAYS).forEach((k) => { out[k] = merged[k]; });
+  return out;
 }
 
 // Résumé météo d'une journée LOCALE à partir des heures du Worker { t, air, wind, uv, precip }.
@@ -13918,13 +14319,15 @@ function parseClock(str) {
   return m ? parseInt(m[1], 10) + parseInt(m[2], 10) / 60 : null;
 }
 
-// Historique local des températures moyennes de l'air (par bassin, 7 jours max) : MET Norway ne fournit pas le passé.
+// Historique des températures moyennes de l'air (par bassin, AIR_HISTORY_DAYS jours) : MET Norway ne fournit pas le passé.
+// Source principale : le document du bassin (pool.airDaily, partagé entre appareils) ; copie locale en secours (invités, hors ligne)
+// et pour reprendre l'ancien historique de 7 jours.
 function loadAirHistory(poolId) {
   try { return JSON.parse(localStorage.getItem("pgai_airhist_" + poolId) || "{}") || {}; } catch (e) { return {}; }
 }
 function saveAirHistory(poolId, hist) {
   try {
-    const keys = Object.keys(hist).sort().slice(-7);
+    const keys = Object.keys(hist).sort().slice(-AIR_HISTORY_DAYS);
     const out = {};
     keys.forEach((k) => { out[k] = hist[k]; });
     localStorage.setItem("pgai_airhist_" + poolId, JSON.stringify(out));
@@ -13932,18 +14335,35 @@ function saveAirHistory(poolId, hist) {
   } catch (e) { return hist; }
 }
 
-// Prévisions via le Worker (jamais d'appel direct à MET Norway). Cache mémoire 30 min pour la session.
+// Prévisions via le Worker (jamais d'appel direct à MET Norway). Cache mémoire 30 min pour la session. altitude (m, facultative) et
+// fuseau IANA du bassin : le Worker calcule daily[] (7 jours) par jour local et transmet l'altitude à MET Norway.
 const _weatherCache = new Map();
-async function fetchWeatherForecast(lat, lon) {
-  const key = lat + "," + lon;
+async function fetchWeatherForecast(lat, lon, altitude, tz) {
+  const alt = isFiniteNum(altitude) ? Math.round(altitude) : null;
+  const key = lat + "," + lon + "," + (alt === null ? "" : alt) + "," + (tz || "");
   const c = _weatherCache.get(key);
   if (c && Date.now() - c.at < 30 * 60 * 1000) return c.data;
   const headers = { "Content-Type": "application/json", ...(await getFirebaseAuthHeader()) };
-  const res = await fetch(PROXY_BASE_URL + "/weather/forecast", { method: "POST", headers, body: JSON.stringify({ lat, lon }) });
+  const res = await fetch(PROXY_BASE_URL + "/weather/forecast", { method: "POST", headers, body: JSON.stringify({ lat, lon, ...(alt === null ? {} : { altitude: alt }), ...(tz ? { tz } : {}) }) });
   if (!res.ok) throw new Error("weather_" + res.status);
   const data = await res.json();
   _weatherCache.set(key, { at: Date.now(), data });
   return data;
+}
+
+// Altitude du point (Worker : altimétrie IGN, repli Open Topo Data). Premium. Renvoie un entier en mètres ou null ; jamais d'erreur
+// remontée (l'altitude est un plus : sans elle, MET Norway utilise son modèle topographique). Les coordonnées viennent de Nominatim
+// (souvent le centre de la ville) : l'altitude est celle de ce point, pas forcément celle du bassin.
+async function fetchAltitude(lat, lon) {
+  try {
+    const headers = { "Content-Type": "application/json", ...(await getFirebaseAuthHeader()) };
+    const res = await fetch(PROXY_BASE_URL + "/altitude", { method: "POST", headers, body: JSON.stringify({ lat: truncCoord4(lat), lon: truncCoord4(lon) }) });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return isFiniteNum(data.altitudeM) ? Math.round(data.altitudeM) : null;
+  } catch (e) {
+    return null;
+  }
 }
 
 const FILT_STYLES = {
@@ -13977,7 +14397,7 @@ function FiltrationLockedCard({ lang, onWantPremium }) {
   );
 }
 
-function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSettings }) {
+function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSettings, onEnsureAltitude }) {
   const t = useT(lang);
   const poolType = getPoolType(pool);
   const tz = (pool && pool.timeZone) || getDeviceTimeZone();
@@ -13986,10 +14406,12 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
   const [geoFailed, setGeoFailed] = useState(false);
   const [weather, setWeather] = useState(null);
   const [wState, setWState] = useState("idle"); // idle | loading | ok | error
-  const [airHistory, setAirHistory] = useState(() => loadAirHistory(pool?.id));
+  const [localHist, setLocalHist] = useState(() => loadAirHistory(pool?.id));
   const [tempDraft, setTempDraft] = useState("");
   const geoTriedRef = useRef(false);
   const todayKey = localDateKey(nowMs, tz);
+  // Historique de l'air : celui du bassin (partagé entre appareils) prime sur la copie locale.
+  const airHistory = useMemo(() => ({ ...localHist, ...((pool && pool.airDaily) || {}) }), [localHist, pool?.airDaily]);
 
   // Coordonnées : celles du bassin si présentes, sinon géocodage unique de la ville (puis enregistrement sur le bassin).
   useEffect(() => {
@@ -14018,13 +14440,18 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
     if (!coords) return;
     let cancelled = false;
     setWState("loading");
-    fetchWeatherForecast(coords.lat, coords.lon)
+    fetchWeatherForecast(coords.lat, coords.lon, pool?.altitudeM, tz)
       .then((data) => { if (!cancelled) { setWeather(data); setWState("ok"); } })
       .catch(() => { if (!cancelled) setWState("error"); });
     return () => { cancelled = true; };
-  }, [coords?.lat, coords?.lon]);
+  }, [coords?.lat, coords?.lon, pool?.altitudeM, tz]);
 
   const todayStats = useMemo(() => summarizeWeatherForDay(weather?.hours, tz, todayKey), [weather, tz, todayKey]);
+  // Prévision par jour local : daily[] du Worker, sinon dérivée des heures (Worker pas encore à jour).
+  const forecast = useMemo(() => {
+    if (!weather) return [];
+    return Array.isArray(weather.daily) && weather.daily.length ? weather.daily : dailyFromHours(weather.hours, tz);
+  }, [weather, tz]);
 
   // Temps du moment : heure de prévision la plus proche de maintenant (3 h au plus) -> vignette au-dessus de la température de l'eau.
   const wxNow = useMemo(() => {
@@ -14039,22 +14466,35 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
   const wxLabel = wxCat ? t(wxCat.cat === "clear" && wxCat.night ? "wx_clear_night" : "wx_" + wxCat.cat) : null;
   const wxIcon = wxCat ? weatherIcon(wxCat.cat, wxCat.night) : "";
 
-  // Mémorise la moyenne de l'air du jour (première observation de la journée) pour l'estimation des jours suivants.
+  // Mémorise la moyenne de l'air du jour (première ouverture de la journée) : dans le bassin (60 jours glissants) et en copie locale.
   useEffect(() => {
-    if (!todayStats || !pool?.id || Number.isFinite(airHistory[todayKey])) return;
-    setAirHistory(saveAirHistory(pool.id, { ...airHistory, [todayKey]: Math.round(todayStats.airMean * 10) / 10 }));
-  }, [todayStats]);
+    if (!pool?.id || Number.isFinite(airHistory[todayKey])) return;
+    const mean = forecast.length && Number.isFinite(forecast[0].tMean) ? forecast[0].tMean : todayStats ? todayStats.airMean : null;
+    if (mean === null) return;
+    const merged = mergeAirHistory(airHistory, todayKey, mean);
+    setLocalHist(saveAirHistory(pool.id, merged));
+    if (canEdit && onUpdatePool) onUpdatePool({ airDaily: merged });
+  }, [forecast, todayStats]);
 
-  const waterTemp = useMemo(
-    () => (poolType === "spa" ? null : resolveWaterTemp({ measures, manual: pool?.filtrationWaterTemp, nowMs, airHistory, todayAirMean: todayStats?.airMean, timeZone: tz })),
-    [poolType, measures, pool?.filtrationWaterTemp, nowMs, airHistory, todayStats, tz]
+  const thermalCfg = useMemo(() => ({ heating: pool?.heating || null, cover: pool?.cover || null }), [pool?.heating, pool?.cover]);
+  const est = useMemo(
+    () => (poolType === "spa" ? null : computeWaterEstimate({ entries: collectWaterEntries(measures, pool?.filtrationWaterTemp), airHistory, forecast, nowMs, tz, cfg: thermalCfg, depthM: pool?.avgDepthM })),
+    [poolType, measures, pool?.filtrationWaterTemp, airHistory, forecast, nowMs, tz, thermalCfg, pool?.avgDepthM]
   );
 
   const spaSpec = poolType === "spa" ? (SPA_FILTRATION_TABLE[pool?.spaType || "portable"] || SPA_FILTRATION_TABLE.portable)[pool?.spaUsage || "occasionnel"] : null;
-  const hours = poolType === "spa" ? (spaSpec ? spaSpec.hours : null) : waterTemp ? computePoolFiltrationHours(waterTemp.value) : null;
+  const hours = poolType === "spa" ? (spaSpec ? spaSpec.hours : null) : recommendedPoolHours(est);
   const noon = coords ? computeSolarNoon(coords.lat, coords.lon, new Date(nowMs), tz) : null;
   const slots = hours == null || noon == null ? null : poolType === "spa" ? computeSpaSchedule(noon, spaSpec) : computePoolSchedule(noon, hours);
   const totalHours = slots ? slots.reduce((a, s) => a + (s.end - s.start), 0) : hours;
+  const risingNote = poolType !== "spa" && est && est.hours[1] != null && est.hours[0] != null && est.hours[1] > est.hours[0];
+  const showWeek = poolType !== "spa" && est && wState === "ok" && forecast.length >= 2;
+  // Pictogramme du jour (symbole MET de la journée, version « jour ») et son libellé pour l'infobulle.
+  const dayIcon = (date) => {
+    const f = forecast.find((x) => x.date === date);
+    const c = f && f.symbol ? weatherCategory(f.symbol) : null;
+    return c ? { icon: weatherIcon(c.cat, false), label: t("wx_" + c.cat) } : { icon: "", label: "" };
+  };
 
   const curStart = parseClock(pool?.filtrationStartCurrent);
   const curDur = parseFloat(pool?.filtrationDurationCurrent);
@@ -14068,11 +14508,24 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
     if (c == null || c < -5 || c > 45 || !canEdit || !onUpdatePool) return;
     onUpdatePool({ filtrationWaterTemp: { value: Math.round(c * 10) / 10, at: new Date().toISOString() } });
     setTempDraft("");
+    if (onEnsureAltitude) onEnsureAltitude();
+  }
+
+  // Bassin sans localisation : choix de la ville (ou de la position) directement depuis la carte.
+  function setPoolLocation(label, c) {
+    if (!label || !c || !Number.isFinite(c.lat) || !Number.isFinite(c.lon) || !canEdit || !onUpdatePool) return;
+    const lat = truncCoord4(c.lat);
+    const lon = truncCoord4(c.lon);
+    setCoords({ lat, lon });
+    setGeoFailed(false);
+    onUpdatePool({ location: label, lat, lon, altitudeM: null });
+    fetchAltitude(lat, lon).then((alt) => { if (alt !== null) onUpdatePool({ altitudeM: alt }); });
   }
 
   const updatedLabel = weather && weather.updatedAt ? new Date(weather.updatedAt).toLocaleTimeString(lang || "fr", { hour: "2-digit", minute: "2-digit", timeZone: tz }) : null;
   const tzLabel = tz + ", " + formatUtcOffset(tzOffsetMinutes(nowMs, tz));
   const tempValid = Number.isFinite(parseFloat(String(tempDraft).replace(",", "."))) && canEdit;
+  const sourceLabel = !est ? "" : est.source === "mesure" ? t("filt_temp_from_measure") : est.source === "saisie" ? t("filt_temp_entered") : est.source === "consigne" ? t("filt_temp_setpoint") : est.confidence === "low" ? t("filt_temp_estimated_low") : t("filt_temp_estimated");
 
   return (
     <div style={FILT_STYLES.card}>
@@ -14086,7 +14539,7 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
               <span style={{ whiteSpace: "nowrap" }}>{wxLabel}{wxNow && Number.isFinite(wxNow.air) ? " · " + formatTemp(wxNow.air, TEMP_UNIT, 0) : ""}</span>
             </span>
           )}
-          {waterTemp && <span style={FILT_STYLES.badge}>{t("filt_water_temp")} {formatTemp(waterTemp.value, TEMP_UNIT, 1)} · {waterTemp.source === "mesure" ? t("filt_temp_from_measure") : waterTemp.source === "saisie" ? t("filt_temp_entered") : t("filt_temp_estimated")}</span>}
+          {est && <span style={FILT_STYLES.badge}>{t("filt_water_temp")} {formatTemp(est.t0, TEMP_UNIT, 1)} · {sourceLabel}</span>}
         </div>
       </div>
 
@@ -14096,6 +14549,7 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
           <div style={FILT_STYLES.sub}>
             {poolType === "spa" && spaSpec && (spaSpec.continuous ? t("filt_continuous") : t("filt_spa_cycles", { n: spaSpec.cycles, d: formatDurationH(spaSpec.hours / spaSpec.cycles) }))}
             {poolType !== "spa" && t("filt_recommended")}
+            {risingNote && <span> · {t("filt_rising_note")}</span>}
           </div>
         </>
       ) : (
@@ -14118,7 +14572,14 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
           </div>
         </div>
       )}
-      {!coords && <p style={FILT_STYLES.hint}>{pool?.location && !geoFailed ? t("filt_locating") : t("filt_no_location")}</p>}
+      {!coords && (
+        <div style={{ marginTop: 10 }}>
+          <p style={{ ...FILT_STYLES.hint, marginTop: 0, marginBottom: 6 }}>{pool?.location && !geoFailed ? t("filt_locating") : t("filt_ask_location")}</p>
+          {canEdit && (!pool?.location || geoFailed) && (
+            <LocationAutocomplete value="" onChange={setPoolLocation} lang={lang || "fr"} placeholder={t("pool_location_placeholder")} />
+          )}
+        </div>
+      )}
 
       {poolType !== "spa" && (
         <div style={{ marginTop: 12 }}>
@@ -14136,6 +14597,24 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
             </button>
           </div>
           <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginTop: 4, lineHeight: 1.4 }}>{t("filt_temp_hint")}</div>
+          {est && est.needsInvite && canEdit && <div style={{ fontSize: 12, color: "var(--brand-primary)", marginTop: 4, lineHeight: 1.4 }}>{t("filt_invite_temp")}</div>}
+        </div>
+      )}
+
+      {showWeek && (
+        <div style={{ marginTop: 14 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#2d4a6e", marginBottom: 6 }}>{t("filt_week_title")}</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
+            {est.dates.map((d, i) => (
+              <div key={d} style={{ textAlign: "center", background: i < 3 ? "#f5f9fc" : "transparent", border: i < 3 ? "1px solid transparent" : "1px dashed #d0e4f5", borderRadius: 8, padding: "6px 1px", opacity: i < 3 ? 1 : 0.6 }}>
+                <div style={{ fontSize: 10.5, color: "var(--brand-text-muted)", textTransform: "capitalize", fontWeight: i === 0 ? 800 : 500 }}>{new Date(d + "T12:00:00Z").toLocaleDateString(lang || "fr", { weekday: "short", timeZone: "UTC" })}</div>
+                <div title={dayIcon(d).label} style={{ fontSize: 17, lineHeight: "22px", height: 22 }}>{dayIcon(d).icon}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--brand-text-strong)" }}>{formatTemp(est.temps[i], TEMP_UNIT, 0)}</div>
+                <div style={{ fontSize: 10.5, color: "var(--brand-text-muted)", whiteSpace: "nowrap" }}>{est.hours[i] == null ? "—" : formatDurationH(est.hours[i])}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ fontSize: 11, color: "#9aa9b6", marginTop: 4, lineHeight: 1.4 }}>{t("filt_week_indicative")}</div>
         </div>
       )}
 
@@ -14162,7 +14641,12 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
       {!hasCurrent && totalHours != null && (
         <p style={FILT_STYLES.hint}>
           {t("filt_set_current")}{" "}
-          {onOpenSettings && canEdit && <button type="button" onClick={onOpenSettings} style={{ ...styles.editLinkBtn, display: "inline-flex", padding: 0 }}>{t("filt_open_settings")}</button>}
+          {onOpenSettings && canEdit && <button type="button" onClick={() => onOpenSettings("filtration")} style={{ ...styles.editLinkBtn, display: "inline-flex", padding: 0 }}>{t("filt_open_settings")}</button>}
+        </p>
+      )}
+      {poolType !== "spa" && onOpenSettings && canEdit && (
+        <p style={{ ...FILT_STYLES.hint, marginTop: 6 }}>
+          <button type="button" onClick={() => onOpenSettings("thermal")} style={{ ...styles.editLinkBtn, display: "inline-flex", padding: 0 }}>{t("filt_configure_thermal")}</button>
         </p>
       )}
 
@@ -14174,7 +14658,7 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
   );
 }
 
-function Dashboard({ latest, recentApplications, volume, products, manageStock, onAddMeasure, onEditMeasure, onValidateApplication, applicationForLatest, blockedByLimit, isPremium, onWantPremium, apiKey, apiProvider, recentMeasures, effectiveTargets, activeParamKeys, lang, activePlan, onResumePlan, onOpenManualApply, authUid, pool, onUpdatePool, canEditPool, onOpenSettings }) {
+function Dashboard({ latest, recentApplications, volume, products, manageStock, onAddMeasure, onEditMeasure, onValidateApplication, applicationForLatest, blockedByLimit, isPremium, onWantPremium, apiKey, apiProvider, recentMeasures, effectiveTargets, activeParamKeys, lang, activePlan, onResumePlan, onOpenManualApply, authUid, pool, onUpdatePool, canEditPool, onOpenSettings, onEnsureAltitude }) {
   const t = useT(lang);
   const [aiComment, setAiComment] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -14269,7 +14753,7 @@ Réponds directement en français, sans titre ni introduction.`;
   // v1.151.0 — Carte « Filtration du jour » : Premium, ou version verrouillée (composants Premium existants).
   const filtrationCard = pool ? (
     isPremium ? (
-      <FiltrationCard pool={pool} measures={recentMeasures} lang={lang} onUpdatePool={onUpdatePool} canEdit={canEditPool} onOpenSettings={onOpenSettings} />
+      <FiltrationCard pool={pool} measures={recentMeasures} lang={lang} onUpdatePool={onUpdatePool} canEdit={canEditPool} onOpenSettings={onOpenSettings} onEnsureAltitude={onEnsureAltitude} />
     ) : (
       <FiltrationLockedCard lang={lang} onWantPremium={onWantPremium} />
     )
@@ -23258,16 +23742,16 @@ function AccountDataRequestScreen({ lang, authUser, onClose, onSubmit }) {
   );
 }
 
-function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, viewContext, onDeleteAllMeasures: onDeleteAllMeasuresRaw, orphanedCount, onRepairOrphanedData, poolMeasureCount, onGenerateReport, onWantPremiumForReport, onWantPremium, isPremium, setIsPremium, onWantManageSubscription, testerUntil, onToggleTesterPremium, onRedeemTesterCode, portalBusy, portalError, onReplayOnboarding, aiEnabled, setAiEnabled, calibrationContribution, setCalibrationContribution, stripTester, setStripTester, lang, setLang, authUser, onSignOut, onSignIn, onDeleteAccount, dataConsent, onRevokeDataConsent, cguAcceptedDate, myPseudo, tempUnit, onChangeTempUnit, openPoolEditId, onPoolEditHandled }) {
+function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, viewContext, onDeleteAllMeasures: onDeleteAllMeasuresRaw, orphanedCount, onRepairOrphanedData, poolMeasureCount, onGenerateReport, onWantPremiumForReport, onWantPremium, isPremium, setIsPremium, onWantManageSubscription, testerUntil, onToggleTesterPremium, onRedeemTesterCode, portalBusy, portalError, onReplayOnboarding, aiEnabled, setAiEnabled, calibrationContribution, setCalibrationContribution, stripTester, setStripTester, lang, setLang, authUser, onSignOut, onSignIn, onDeleteAccount, dataConsent, onRevokeDataConsent, cguAcceptedDate, myPseudo, tempUnit, onChangeTempUnit, openPoolEdit, onPoolEditHandled }) {
   const [editingPool, setEditingPool] = useState(null);
-  const [editFocusFiltration, setEditFocusFiltration] = useState(false);
-  // Demande de la carte « Filtration du jour » : ouvre directement le formulaire du bassin, sur la section filtration.
+  const [editFocusSection, setEditFocusSection] = useState(null); // "filtration" | "thermal" | null
+  // Demande de la carte « Filtration du jour » : ouvre directement le formulaire du bassin, sur la section demandée.
   useEffect(() => {
-    if (!openPoolEditId) return;
-    const target = (pools || []).find((p) => p.id === openPoolEditId);
-    if (target && !viewContext) { setEditFocusFiltration(true); setEditingPool(target); }
+    if (!openPoolEdit) return;
+    const target = (pools || []).find((p) => p.id === openPoolEdit.id);
+    if (target && !viewContext) { setEditFocusSection(openPoolEdit.section || "filtration"); setEditingPool(target); }
     if (onPoolEditHandled) onPoolEditHandled();
-  }, [openPoolEditId]);
+  }, [openPoolEdit]);
   const [showLangPicker, setShowLangPicker] = useState(false);
   const [pendingLang, setPendingLang] = useState(lang);
   const treatmentTypes = getTreatmentTypes(lang);
@@ -23748,11 +24232,12 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
 
       {editingPool && (
         <AddPoolModal
-          onClose={() => { setEditingPool(null); setEditFocusFiltration(false); }}
-          onSave={(updated) => { onUpdatePool(updated.id, updated); setEditingPool(null); setEditFocusFiltration(false); }}
+          onClose={() => { setEditingPool(null); setEditFocusSection(null); }}
+          onSave={(updated) => { onUpdatePool(updated.id, updated); setEditingPool(null); setEditFocusSection(null); }}
           lang={lang}
           existingPool={editingPool}
-          focusFiltration={editFocusFiltration}
+          focusSection={editFocusSection}
+          isPremium={isPremium}
         />
       )}
     </div>
@@ -24299,7 +24784,8 @@ function LocationAutocomplete({ value, onChange, lang, placeholder }) {
   const debounceRef = useRef(null);
   const wrapRef = useRef(null);
 
-  useEffect(() => { setQuery(value || ""); }, [value]);
+  // v1.152.0 — Ne pas effacer la saisie quand le parent vide la valeur à la première frappe (modification de la localisation d'un bassin existant).
+  useEffect(() => { if (value) setQuery(value); }, [value]);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -24353,9 +24839,12 @@ function LocationAutocomplete({ value, onChange, lang, placeholder }) {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         try {
-          const label = await nominatimReverse(pos.coords.latitude, pos.coords.longitude, lang);
+          // v1.152.0 — position tronquée à 4 décimales avant tout envoi (Nominatim) et avant enregistrement.
+          const gLat = truncCoord4(pos.coords.latitude);
+          const gLon = truncCoord4(pos.coords.longitude);
+          const label = await nominatimReverse(gLat, gLon, lang);
           if (label) {
-            onChange(label, { lat: pos.coords.latitude, lon: pos.coords.longitude });
+            onChange(label, { lat: gLat, lon: gLon });
             setQuery(label);
             setResults([]);
             setOpen(false);
@@ -24442,8 +24931,41 @@ function LocationAutocomplete({ value, onChange, lang, placeholder }) {
   );
 }
 
+// ---------- Choix de mois (v1.152.0) ----------
+function MonthChips({ value, onChange, lang }) {
+  const t = useT(lang || "fr");
+  const names = useMemo(() => Array.from({ length: 12 }, (_, i) => new Date(Date.UTC(2000, i, 15)).toLocaleDateString(lang || "fr", { month: "short", timeZone: "UTC" })), [lang]);
+  const sel = new Set(value || []);
+  function toggle(m) {
+    const next = new Set(sel);
+    if (next.has(m)) next.delete(m); else next.add(m);
+    onChange(Array.from(next).sort((a, b) => a - b));
+  }
+  return (
+    <div style={{ marginBottom: 4 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+        {names.map((n, i) => {
+          const m = i + 1;
+          const on = sel.has(m);
+          return (
+            <button key={m} type="button" aria-pressed={on} onClick={() => toggle(m)}
+              style={{ padding: "5px 9px", borderRadius: 14, fontSize: 12, fontWeight: 600, border: "1.5px solid " + (on ? "var(--brand-primary)" : "#d0e4f5"), background: on ? "var(--brand-primary)" : "#fff", color: on ? "#fff" : "var(--brand-text-secondary)", cursor: "pointer" }}>
+              {n}
+            </button>
+          );
+        })}
+      </div>
+      <div style={{ fontSize: 11.5, marginTop: 5 }}>
+        <button type="button" onClick={() => onChange([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])} style={{ ...styles.editLinkBtn, display: "inline-flex", padding: 0 }}>{t("thermal_all")}</button>
+        {" · "}
+        <button type="button" onClick={() => onChange([])} style={{ ...styles.editLinkBtn, display: "inline-flex", padding: 0 }}>{t("thermal_clear")}</button>
+      </div>
+    </div>
+  );
+}
+
 // ---------- Ajout d'un bassin ----------
-function AddPoolModal({ onClose, onSave, lang, existingPool, forced, focusFiltration }) {
+function AddPoolModal({ onClose, onSave, lang, existingPool, forced, focusSection, isPremium }) {
   const t = useT(lang || "fr");
   const isEdit = !!existingPool;
   const [name, setName] = useState(existingPool?.name || "");
@@ -24470,16 +24992,43 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced, focusFiltra
   );
   const [filtStart, setFiltStart] = useState(existingPool?.filtrationStartCurrent || "");
   const [filtDuration, setFiltDuration] = useState(existingPool?.filtrationDurationCurrent != null ? String(existingPool.filtrationDurationCurrent) : "");
+  // v1.152.0 — Altitude du point (service IGN, repli Open Topo Data), configuration thermique (piscine) et profondeur moyenne.
+  const [altitudeM, setAltitudeM] = useState(isFiniteNum(existingPool?.altitudeM) ? existingPool.altitudeM : null);
+  const altReqRef = useRef(0);
+  const [heatEnabled, setHeatEnabled] = useState(!!existingPool?.heating?.enabled);
+  const [heatSetpoint, setHeatSetpoint] = useState(() => { const v = tempToDisplay(existingPool?.heating?.setpointC, TEMP_UNIT); return v == null ? "" : String(Math.round(v * 10) / 10); });
+  const [heatMonths, setHeatMonths] = useState(Array.isArray(existingPool?.heating?.months) ? existingPool.heating.months : []);
+  const [coverType, setCoverType] = useState(existingPool?.cover?.type || "none");
+  const [coverMonths, setCoverMonths] = useState(Array.isArray(existingPool?.cover?.months) ? existingPool.cover.months : []);
+  const [avgDepth, setAvgDepth] = useState(existingPool?.avgDepthM != null ? String(existingPool.avgDepthM) : "");
+  const origCoords = isFiniteNum(existingPool?.lat) && isFiniteNum(existingPool?.lon) ? { lat: existingPool.lat, lon: existingPool.lon } : null;
+  function sameCoords(a, b) { return !!a && !!b && truncCoord4(a.lat) === truncCoord4(b.lat) && truncCoord4(a.lon) === truncCoord4(b.lon); }
   function handleLocationChange(label, c) {
     setLocation(label);
-    if (c && Number.isFinite(c.lat) && Number.isFinite(c.lon)) setCoords({ lat: c.lat, lon: c.lon });
-    else if (!label) setCoords(null);
+    if (c && Number.isFinite(c.lat) && Number.isFinite(c.lon)) {
+      setCoords({ lat: c.lat, lon: c.lon });
+      // Altitude : calculée à la création et à chaque changement de localisation (Premium). Asynchrone : ne bloque jamais l'enregistrement ;
+      // si la valeur n'arrive pas à temps, le bassin est créé sans altitude (elle sera récupérée à la première saisie de température d'eau).
+      const reqId = ++altReqRef.current;
+      if (sameCoords(c, origCoords)) {
+        setAltitudeM(isFiniteNum(existingPool?.altitudeM) ? existingPool.altitudeM : null);
+      } else {
+        setAltitudeM(null);
+        if (isPremium) fetchAltitude(c.lat, c.lon).then((alt) => { if (reqId === altReqRef.current && alt !== null) setAltitudeM(alt); });
+      }
+    } else if (!label) {
+      setCoords(null);
+      setAltitudeM(null);
+      altReqRef.current++;
+    }
   }
-  // Ouvert depuis la carte « Filtration du jour » : on amène la section « Programmation actuelle » à l'écran.
+  // Ouvert depuis la carte « Filtration du jour » : on amène la section demandée (programmation actuelle ou configuration thermique) à l'écran.
   const filtSectionRef = useRef(null);
+  const thermalSectionRef = useRef(null);
   useEffect(() => {
-    if (!focusFiltration) return;
-    const tm = setTimeout(() => { try { filtSectionRef.current && filtSectionRef.current.scrollIntoView({ behavior: "smooth", block: "center" }); } catch (e) {} }, 250);
+    if (!focusSection) return;
+    const target = focusSection === "thermal" ? thermalSectionRef : filtSectionRef;
+    const tm = setTimeout(() => { try { target.current && target.current.scrollIntoView({ behavior: "smooth", block: "center" }); } catch (e) {} }, 250);
     return () => clearTimeout(tm);
   }, []);
   const fileInputRef = useRef(null);
@@ -24491,6 +25040,11 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced, focusFiltra
   const volumeInputRef = useRef(null);
   const nameInvalid = !name.trim();
   const volumeInvalid = !(parseFloat(volume) > 0);
+  // v1.152.0 — Localisation obligatoire (ville choisie dans la liste ou position GPS) à la création ; en édition, seulement si le bassin
+  // en avait déjà (un ancien bassin sans coordonnées n'est pas bloqué : la carte Filtration les demande).
+  const locationRequired = !isEdit || !!origCoords;
+  const locationInvalid = locationRequired && !coords;
+  const locationRef = useRef(null);
 
   async function handlePhotoChange(e) {
     const file = e.target.files?.[0];
@@ -24510,24 +25064,29 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced, focusFiltra
   }
 
   function handleSave() {
-    if (nameInvalid || volumeInvalid) {
+    if (nameInvalid || volumeInvalid || locationInvalid) {
       setShowErrors(true);
-      const el = nameInvalid ? nameInputRef.current : volumeInputRef.current;
+      const el = nameInvalid ? nameInputRef.current : locationInvalid ? locationRef.current : volumeInputRef.current;
       if (el) {
         try { el.scrollIntoView({ behavior: "smooth", block: "center" }); } catch (e) {}
         try { el.focus({ preventScroll: true }); } catch (e) {}
       }
       return;
     }
+    const sp = tempFromDisplay(String(heatSetpoint).replace(",", "."), TEMP_UNIT);
     onSave({
       ...(existingPool || {}),
       name: name.trim(),
       location: location.trim(),
       lat: coords ? truncCoord4(coords.lat) : null,
       lon: coords ? truncCoord4(coords.lon) : null,
+      altitudeM: coords && isFiniteNum(altitudeM) ? altitudeM : null,
       volume: parseFloat(volume) || 0,
       poolType,
       ...(poolType === "spa" ? { spaType, spaUsage } : {}),
+      heating: poolType === "piscine" && (heatEnabled || heatMonths.length) ? { enabled: heatEnabled, setpointC: sp === null ? null : Math.round(sp * 10) / 10, months: heatMonths } : null,
+      cover: poolType === "piscine" && coverType !== "none" ? { type: coverType, months: coverMonths } : null,
+      avgDepthM: poolType === "piscine" && parseFloat(avgDepth) > 0 ? parseFloat(avgDepth) : null,
       filtrationStartCurrent: /^\d{1,2}:\d{2}$/.test(filtStart) ? filtStart : null,
       filtrationDurationCurrent: parseFloat(filtDuration) > 0 ? parseFloat(filtDuration) : null,
       measureDevice,
@@ -24628,9 +25187,14 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced, focusFiltra
         </select>
       </>)}
 
-      {/* Localisation */}
-      <label style={styles.fieldLabel}>{t("location")}</label>
-      <LocationAutocomplete value={location} onChange={handleLocationChange} lang={lang || "fr"} placeholder={t("pool_location_placeholder")} />
+      {/* Localisation (obligatoire à la création : ville ou position GPS) */}
+      <FieldLabel required={locationRequired}>{t("location")}</FieldLabel>
+      <div ref={locationRef} tabIndex={-1} style={{ outline: "none", ...(showErrors && locationInvalid ? { borderRadius: 11, boxShadow: "0 0 0 2px #c0392b" } : {}) }}>
+        <LocationAutocomplete value={location} onChange={handleLocationChange} lang={lang || "fr"} placeholder={t("pool_location_placeholder")} />
+      </div>
+      {showErrors && locationInvalid && (
+        <div style={{ fontSize: 12, color: "#c0392b", marginTop: 4, marginBottom: 10 }}>{t("pool_location_required")}</div>
+      )}
 
       {/* Volume */}
       <FieldLabel required>{t("volume")}</FieldLabel>
@@ -24665,6 +25229,39 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced, focusFiltra
       <select style={styles.input} value={filtration} onChange={e => setFiltration(e.target.value)}>
         {filtrationOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
+
+      {/* Configuration thermique (v1.152.0, piscine, facultatif) : chauffage, bâche, profondeur — affine l'estimation de la température de l'eau */}
+      {poolType === "piscine" && (
+        <div ref={thermalSectionRef}>
+          <label style={styles.fieldLabel}>{t("thermal_section")}</label>
+          <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginTop: -6, marginBottom: 8 }}>{t("thermal_hint")}</div>
+          <div style={{ border: "1.5px solid #d0e4f5", borderRadius: 11, padding: "10px 12px", marginBottom: 12, background: "#fafcfb" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5, fontWeight: 600, color: "var(--brand-text-strong)" }}>
+              <input type="checkbox" checked={heatEnabled} onChange={e => setHeatEnabled(e.target.checked)} /> {t("thermal_heated")}
+            </label>
+            {heatEnabled && (<>
+              <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", margin: "8px 0 3px" }}>{t("thermal_setpoint", { unit: tempUnitLabel(TEMP_UNIT) })}</div>
+              <input type="number" step="0.5" inputMode="decimal" style={styles.input} value={heatSetpoint} onChange={e => setHeatSetpoint(e.target.value)} placeholder={TEMP_UNIT === "F" ? "82" : "28"} />
+              <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", margin: "0 0 4px" }}>{t("thermal_heating_months")}</div>
+              <MonthChips value={heatMonths} onChange={setHeatMonths} lang={lang || "fr"} />
+              {(!heatMonths.length || !String(heatSetpoint).trim()) && <div style={{ fontSize: 11.5, color: "#8a5a00", marginTop: 6, lineHeight: 1.4 }}>{t("thermal_months_needed")}</div>}
+            </>)}
+            <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", margin: "12px 0 3px" }}>{t("thermal_cover")}</div>
+            <select style={styles.input} value={coverType} onChange={e => setCoverType(e.target.value)}>
+              <option value="none">{t("thermal_cover_none")}</option>
+              <option value="bulles_solaire">{t("thermal_cover_bubbles")}</option>
+              <option value="volet">{t("thermal_cover_shutter")}</option>
+              <option value="hivernage">{t("thermal_cover_winter")}</option>
+            </select>
+            {coverType !== "none" && (<>
+              <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", margin: "0 0 4px" }}>{t("thermal_cover_months")}</div>
+              <MonthChips value={coverMonths} onChange={setCoverMonths} lang={lang || "fr"} />
+            </>)}
+            <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", margin: "12px 0 3px" }}>{t("thermal_depth")}</div>
+            <input type="number" step="0.1" min="0" inputMode="decimal" style={{ ...styles.input, marginBottom: 0 }} value={avgDepth} onChange={e => setAvgDepth(e.target.value)} placeholder="1.5" />
+          </div>
+        </div>
+      )}
 
       {/* Programmation actuelle de la filtration (v1.151.0, facultatif) */}
       <label ref={filtSectionRef} style={styles.fieldLabel}>{t("filt_current_section")}</label>
