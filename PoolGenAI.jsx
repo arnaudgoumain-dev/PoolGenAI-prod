@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.153.3";
+const APP_VERSION = "1.154.0";
 const CGU_VERSION = "1.5"; // v1.5 : section 6 complétée (altitude du bassin : IGN, Open Topo Data) ; v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -976,6 +976,7 @@ const TRANSLATIONS = {
     filt_week_title: "7 prochains jours et durée de filtration",
     filt_week_indicative: "Eau projetée et durée par jour. Jours 4 à 7 : indicatif.",
     filt_configure_thermal: "Chauffage et bâche du bassin",
+    tab_filtration: "Filtration",
   },
   en: {
     tab_pool: "Pool",
@@ -1919,6 +1920,7 @@ const TRANSLATIONS = {
     filt_week_title: "Next 7 days and filtration time",
     filt_week_indicative: "Projected water temperature and duration per day. Days 4 to 7: indicative.",
     filt_configure_thermal: "Pool heating and cover",
+    tab_filtration: "Filtration",
   },
   de: {
     tab_pool: "Becken",
@@ -2860,6 +2862,7 @@ const TRANSLATIONS = {
     filt_week_title: "Nächste 7 Tage und Filterzeit",
     filt_week_indicative: "Prognostizierte Wassertemperatur und Dauer pro Tag. Tage 4 bis 7: unverbindlich.",
     filt_configure_thermal: "Heizung und Abdeckung des Beckens",
+    tab_filtration: "Filterung",
   },
   it: {
     tab_pool: "Vasca",
@@ -3801,6 +3804,7 @@ const TRANSLATIONS = {
     filt_week_title: "Prossimi 7 giorni e durata di filtrazione",
     filt_week_indicative: "Temperatura dell'acqua prevista e durata per giorno. Giorni 4-7: indicativi.",
     filt_configure_thermal: "Riscaldamento e copertura della vasca",
+    tab_filtration: "Filtrazione",
   },
   es: {
     tab_pool: "Piscina",
@@ -4742,6 +4746,7 @@ const TRANSLATIONS = {
     filt_week_title: "Próximos 7 días y duración de la filtración",
     filt_week_indicative: "Temperatura del agua prevista y duración por día. Días 4 a 7: orientativos.",
     filt_configure_thermal: "Calefacción y cubierta de la piscina",
+    tab_filtration: "Filtración",
   },
   pt: {
     tab_pool: "Piscina",
@@ -5683,6 +5688,7 @@ const TRANSLATIONS = {
     filt_week_title: "Próximos 7 dias e duração da filtração",
     filt_week_indicative: "Temperatura da água prevista e duração por dia. Dias 4 a 7: indicativos.",
     filt_configure_thermal: "Aquecimento e cobertura da piscina",
+    tab_filtration: "Filtração",
   },
 };
 
@@ -9485,7 +9491,7 @@ function PoolGenAIApp() {
   const [products, setProducts] = useState(() =>
     DEFAULT_PRODUCTS.map((p) => ({ ...p, poolId: "default" }))
   );
-  const [tab, setTab] = useState("dashboard"); // dashboard | history | products | settings
+  const [tab, setTab] = useState("dashboard"); // dashboard | filtration | history | products | settings
   // v1.150.0 — Balayage gauche/droite pour passer d'un onglet à l'autre (Bassin, Historique,
   // Produits, Réglages). v1.150.1 — l'écran suit le doigt (voir attachTabSwipe). Posé uniquement sur
   // <main> : les popups sont des couches plein écran distinctes, donc jamais « balayables ».
@@ -12249,12 +12255,23 @@ function PoolGenAIApp() {
             onResumePlan={resumePlan}
             onOpenManualApply={() => setShowManualApply(true)}
             authUid={dataUid}
-            pool={activePool}
-            onUpdatePool={(u) => { if (activePool) updatePool(activePool.id, u); }}
-            canEditPool={!viewContext}
-            onOpenSettings={(section) => { if (activePool) setPoolEditRequest({ id: activePool.id, section: section || "filtration" }); setTab("settings"); }}
-            onEnsureAltitude={() => ensurePoolAltitude(activePool)}
           />
+        )}
+        {tab === "filtration" && activePool && (
+          effectiveIsPremium ? (
+            <FiltrationCard
+              key={activePool.id}
+              pool={activePool}
+              measures={sortedMeasures}
+              lang={lang}
+              onUpdatePool={(u) => updatePool(activePool.id, u)}
+              canEdit={!viewContext}
+              onOpenSettings={(section) => { setPoolEditRequest({ id: activePool.id, section: section || "thermal" }); setTab("settings"); }}
+              onEnsureAltitude={() => ensurePoolAltitude(activePool)}
+            />
+          ) : (
+            <FiltrationLockedCard lang={lang} onWantPremium={() => openPaywall()} />
+          )
         )}
         {tab === "history" && (
           <HistoryView
@@ -13389,7 +13406,7 @@ function Header({ poolName, location, poolPhoto, isPremium, entries, activeEntry
 }
 
 // ---------- Balayage entre onglets (v1.150.0) ----------
-const TAB_ORDER = ["dashboard", "history", "products", "settings"];
+const TAB_ORDER = ["dashboard", "filtration", "history", "products", "settings"];
 // Vrai si le geste qui démarre sur `el` appartient à un autre élément : champ de saisie, curseur,
 // graphique (info-bulle / déplacement au doigt), zone à défilement horizontal, ou élément marqué
 // data-noswipe. On remonte jusqu'au conteneur `root` (<main>).
@@ -13526,10 +13543,23 @@ function attachTabSwipe(el, api) {
 function track_screen_view(id) { track("screen_view", { screen_name: id, via: "swipe" }); }
 
 // ---------- Tab bar ----------
+// Icône « vagues » (tracé Lucide « waves »), définie ici plutôt que dans lucide-shim.js : ce fichier est mis en cache par le service
+// worker, une icône ajoutée là manquerait tant que l'ancienne copie est servie.
+function WavesIcon({ size = 24, color = "currentColor", strokeWidth = 2, style, className }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" style={style} className={className}>
+      <path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" />
+      <path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" />
+      <path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" />
+    </svg>
+  );
+}
+
 function TabBar({ tab, setTab, lang, viewContext }) {
   const t = useT(lang);
   const tabs = [
     { id: "dashboard", label: t("tab_pool"), icon: Droplets },
+    { id: "filtration", label: t("tab_filtration"), icon: WavesIcon },
     { id: "history", label: t("tab_history"), icon: History },
     { id: "products", label: t("tab_products"), icon: Beaker },
     { id: "settings", label: t("tab_settings"), icon: Settings2 },
@@ -14367,7 +14397,7 @@ async function fetchAltitude(lat, lon) {
 }
 
 const FILT_STYLES = {
-  card: { background: "#fff", border: "1.5px solid #d0e4f5", borderRadius: 14, padding: "14px 14px 12px", marginTop: 18 },
+  card: { background: "#fff", border: "1.5px solid #d0e4f5", borderRadius: 14, padding: "14px 14px 12px" },
   head: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8 },
   title: { display: "flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 700, color: "#2d4a6e", textTransform: "uppercase", letterSpacing: 0.4 },
   badge: { fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 8, background: "#eaf3fb", color: "var(--brand-primary)" },
@@ -14408,6 +14438,11 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
   const [wState, setWState] = useState("idle"); // idle | loading | ok | error
   const [localHist, setLocalHist] = useState(() => loadAirHistory(pool?.id));
   const [tempDraft, setTempDraft] = useState("");
+  // Programmation actuelle de la filtration (coffret) : saisie dans l'onglet, enregistrée dans le bassin.
+  const progSaved = { start: (pool && pool.filtrationStartCurrent) || "", dur: pool && pool.filtrationDurationCurrent != null ? String(pool.filtrationDurationCurrent) : "" };
+  const [progStart, setProgStart] = useState(progSaved.start);
+  const [progDur, setProgDur] = useState(progSaved.dur);
+  useEffect(() => { setProgStart(progSaved.start); setProgDur(progSaved.dur); }, [progSaved.start, progSaved.dur]);
   const geoTriedRef = useRef(false);
   const todayKey = localDateKey(nowMs, tz);
   // Historique de l'air : celui du bassin (partagé entre appareils) prime sur la copie locale.
@@ -14502,6 +14537,14 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
   const adjustStart = slots && curStart != null && Math.abs(curStart - slots[0].start) > FILTRATION_ADJUST_TOLERANCE_H;
   const adjustDuration = totalHours != null && Number.isFinite(curDur) && Math.abs(curDur - totalHours) > FILTRATION_ADJUST_TOLERANCE_H;
   const overheat = poolType === "spa" && todayStats && todayStats.airMax > SPA_OVERHEAT_AIR_C;
+
+  const progDurNum = parseFloat(String(progDur).replace(",", "."));
+  const progValid = (String(progDur).trim() === "" || (progDurNum > 0 && progDurNum <= 24)) && (progStart === "" || /^\d{1,2}:\d{2}$/.test(progStart));
+  const progDirty = progStart !== progSaved.start || String(progDur).trim() !== progSaved.dur;
+  function saveProg() {
+    if (!canEdit || !onUpdatePool || !progValid || !progDirty) return;
+    onUpdatePool({ filtrationStartCurrent: progStart || null, filtrationDurationCurrent: String(progDur).trim() === "" ? null : Math.round(progDurNum * 100) / 100 });
+  }
 
   function saveTemp() {
     const c = tempFromDisplay(String(tempDraft).replace(",", "."), TEMP_UNIT);
@@ -14638,11 +14681,26 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
       {adjustDuration && (
         <div style={FILT_STYLES.alert}><AlertTriangle size={15} style={{ flexShrink: 0, marginTop: 1 }} /><span>{t("filt_adjust_duration")} ({t("filt_current")} {formatDurationH(curDur)} → {t("filt_recommended_short")} {formatDurationH(totalHours)})</span></div>
       )}
-      {!hasCurrent && totalHours != null && (
-        <p style={FILT_STYLES.hint}>
-          {t("filt_set_current")}{" "}
-          {onOpenSettings && canEdit && <button type="button" onClick={() => onOpenSettings("filtration")} style={{ ...styles.editLinkBtn, display: "inline-flex", padding: 0 }}>{t("filt_open_settings")}</button>}
-        </p>
+      {(canEdit || hasCurrent) && (
+        <div style={{ marginTop: 14 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#2d4a6e", marginBottom: 6 }}>{t("filt_current_section")}</div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginBottom: 3 }}>{t("filt_current_start_label")}</div>
+              <input type="time" style={{ ...styles.input, marginBottom: 0 }} value={progStart} disabled={!canEdit} onChange={(e) => setProgStart(e.target.value)} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginBottom: 3 }}>{t("filt_current_duration_label")}</div>
+              <input type="number" step="0.25" min="0" max="24" inputMode="decimal" style={{ ...styles.input, marginBottom: 0 }} value={progDur} disabled={!canEdit} onChange={(e) => setProgDur(e.target.value)} />
+            </div>
+          </div>
+          <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginTop: 6, lineHeight: 1.4 }}>{t("filt_current_hint")}</div>
+          {canEdit && (
+            <button type="button" onClick={saveProg} disabled={!progDirty || !progValid} style={{ ...styles.primaryBtn, marginTop: 8, opacity: progDirty && progValid ? 1 : 0.5 }}>
+              {t("save")}
+            </button>
+          )}
+        </div>
       )}
       {poolType !== "spa" && onOpenSettings && canEdit && (
         <p style={{ ...FILT_STYLES.hint, marginTop: 6 }}>
@@ -14658,7 +14716,7 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
   );
 }
 
-function Dashboard({ latest, recentApplications, volume, products, manageStock, onAddMeasure, onEditMeasure, onValidateApplication, applicationForLatest, blockedByLimit, isPremium, onWantPremium, apiKey, apiProvider, recentMeasures, effectiveTargets, activeParamKeys, lang, activePlan, onResumePlan, onOpenManualApply, authUid, pool, onUpdatePool, canEditPool, onOpenSettings, onEnsureAltitude }) {
+function Dashboard({ latest, recentApplications, volume, products, manageStock, onAddMeasure, onEditMeasure, onValidateApplication, applicationForLatest, blockedByLimit, isPremium, onWantPremium, apiKey, apiProvider, recentMeasures, effectiveTargets, activeParamKeys, lang, activePlan, onResumePlan, onOpenManualApply, authUid }) {
   const t = useT(lang);
   const [aiComment, setAiComment] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -14750,15 +14808,6 @@ Réponds directement en français, sans titre ni introduction.`;
     [latest, volume, products, effectiveTargets, activeParamKeys, recentMeasures, recentApplications]
   );
 
-  // v1.151.0 — Carte « Filtration du jour » : Premium, ou version verrouillée (composants Premium existants).
-  const filtrationCard = pool ? (
-    isPremium ? (
-      <FiltrationCard pool={pool} measures={recentMeasures} lang={lang} onUpdatePool={onUpdatePool} canEdit={canEditPool} onOpenSettings={onOpenSettings} onEnsureAltitude={onEnsureAltitude} />
-    ) : (
-      <FiltrationLockedCard lang={lang} onWantPremium={onWantPremium} />
-    )
-  ) : null;
-
   if (!latest) {
     return (
       <div>
@@ -14770,7 +14819,6 @@ Réponds directement en français, sans titre ni introduction.`;
             <Plus size={18} /> {t("add_measure")}
           </button>
         </div>
-        {filtrationCard}
       </div>
     );
   }
@@ -14992,7 +15040,6 @@ Réponds directement en français, sans titre ni introduction.`;
         </button>
       )}
 
-      {filtrationCard}
     </div>
   );
 }
@@ -24990,8 +25037,6 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced, focusSectio
   const [coords, setCoords] = useState(
     isFiniteNum(existingPool?.lat) && isFiniteNum(existingPool?.lon) ? { lat: existingPool.lat, lon: existingPool.lon } : null
   );
-  const [filtStart, setFiltStart] = useState(existingPool?.filtrationStartCurrent || "");
-  const [filtDuration, setFiltDuration] = useState(existingPool?.filtrationDurationCurrent != null ? String(existingPool.filtrationDurationCurrent) : "");
   // v1.152.0 — Altitude du point (service IGN, repli Open Topo Data), configuration thermique (piscine) et profondeur moyenne.
   const [altitudeM, setAltitudeM] = useState(isFiniteNum(existingPool?.altitudeM) ? existingPool.altitudeM : null);
   const altReqRef = useRef(0);
@@ -25022,13 +25067,11 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced, focusSectio
       altReqRef.current++;
     }
   }
-  // Ouvert depuis la carte « Filtration du jour » : on amène la section demandée (programmation actuelle ou configuration thermique) à l'écran.
-  const filtSectionRef = useRef(null);
+  // Ouvert depuis l'onglet Filtration : on amène la configuration thermique à l'écran.
   const thermalSectionRef = useRef(null);
   useEffect(() => {
-    if (!focusSection) return;
-    const target = focusSection === "thermal" ? thermalSectionRef : filtSectionRef;
-    const tm = setTimeout(() => { try { target.current && target.current.scrollIntoView({ behavior: "smooth", block: "center" }); } catch (e) {} }, 250);
+    if (focusSection !== "thermal") return;
+    const tm = setTimeout(() => { try { thermalSectionRef.current && thermalSectionRef.current.scrollIntoView({ behavior: "smooth", block: "center" }); } catch (e) {} }, 250);
     return () => clearTimeout(tm);
   }, []);
   const fileInputRef = useRef(null);
@@ -25087,8 +25130,6 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced, focusSectio
       heating: poolType === "piscine" && (heatEnabled || heatMonths.length) ? { enabled: heatEnabled, setpointC: sp === null ? null : Math.round(sp * 10) / 10, months: heatMonths } : null,
       cover: poolType === "piscine" && coverType !== "none" ? { type: coverType, months: coverMonths } : null,
       avgDepthM: poolType === "piscine" && parseFloat(avgDepth) > 0 ? parseFloat(avgDepth) : null,
-      filtrationStartCurrent: /^\d{1,2}:\d{2}$/.test(filtStart) ? filtStart : null,
-      filtrationDurationCurrent: parseFloat(filtDuration) > 0 ? parseFloat(filtDuration) : null,
       measureDevice,
       treatmentType,
       filtration,
@@ -25262,20 +25303,6 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced, focusSectio
           </div>
         </div>
       )}
-
-      {/* Programmation actuelle de la filtration (v1.151.0, facultatif) */}
-      <label ref={filtSectionRef} style={styles.fieldLabel}>{t("filt_current_section")}</label>
-      <div style={{ display: "flex", gap: 10 }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginBottom: 3 }}>{t("filt_current_start_label")}</div>
-          <input type="time" style={styles.input} value={filtStart} onChange={e => setFiltStart(e.target.value)} />
-        </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginBottom: 3 }}>{t("filt_current_duration_label")}</div>
-          <input type="number" step="0.25" min="0" max="24" inputMode="decimal" style={styles.input} value={filtDuration} onChange={e => setFiltDuration(e.target.value)} />
-        </div>
-      </div>
-      <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginTop: 6, marginBottom: 10 }}>{t("filt_current_hint")}</div>
 
       {/* Email rapport PDF */}
       <label style={styles.fieldLabel}>{t("pool_email")}</label>
