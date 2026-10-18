@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.153.1";
+const APP_VERSION = "1.153.2";
 const CGU_VERSION = "1.5"; // v1.5 : section 6 complétée (altitude du bassin : IGN, Open Topo Data) ; v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -973,7 +973,7 @@ const TRANSLATIONS = {
     filt_temp_setpoint: "Consigne",
     filt_invite_temp: "Saisis la température de l'eau pour améliorer la précision.",
     filt_rising_note: "Tient compte du réchauffement prévu demain.",
-    filt_week_title: "7 prochains jours",
+    filt_week_title: "7 prochains jours et durée de filtration",
     filt_week_indicative: "Eau projetée et durée par jour. Jours 4 à 7 : indicatif.",
     filt_configure_thermal: "Chauffage et bâche du bassin",
   },
@@ -1916,7 +1916,7 @@ const TRANSLATIONS = {
     filt_temp_setpoint: "Setpoint",
     filt_invite_temp: "Enter the water temperature to improve accuracy.",
     filt_rising_note: "Takes tomorrow's expected warming into account.",
-    filt_week_title: "Next 7 days",
+    filt_week_title: "Next 7 days and filtration time",
     filt_week_indicative: "Projected water temperature and duration per day. Days 4 to 7: indicative.",
     filt_configure_thermal: "Pool heating and cover",
   },
@@ -2857,7 +2857,7 @@ const TRANSLATIONS = {
     filt_temp_setpoint: "Sollwert",
     filt_invite_temp: "Gib die Wassertemperatur ein, um die Genauigkeit zu verbessern.",
     filt_rising_note: "Berücksichtigt die für morgen erwartete Erwärmung.",
-    filt_week_title: "Nächste 7 Tage",
+    filt_week_title: "Nächste 7 Tage und Filterzeit",
     filt_week_indicative: "Prognostizierte Wassertemperatur und Dauer pro Tag. Tage 4 bis 7: unverbindlich.",
     filt_configure_thermal: "Heizung und Abdeckung des Beckens",
   },
@@ -3798,7 +3798,7 @@ const TRANSLATIONS = {
     filt_temp_setpoint: "Impostata",
     filt_invite_temp: "Inserisci la temperatura dell'acqua per migliorare la precisione.",
     filt_rising_note: "Tiene conto del riscaldamento previsto per domani.",
-    filt_week_title: "Prossimi 7 giorni",
+    filt_week_title: "Prossimi 7 giorni e durata di filtrazione",
     filt_week_indicative: "Temperatura dell'acqua prevista e durata per giorno. Giorni 4-7: indicativi.",
     filt_configure_thermal: "Riscaldamento e copertura della vasca",
   },
@@ -4739,7 +4739,7 @@ const TRANSLATIONS = {
     filt_temp_setpoint: "Consigna",
     filt_invite_temp: "Introduce la temperatura del agua para mejorar la precisión.",
     filt_rising_note: "Tiene en cuenta el calentamiento previsto para mañana.",
-    filt_week_title: "Próximos 7 días",
+    filt_week_title: "Próximos 7 días y duración de la filtración",
     filt_week_indicative: "Temperatura del agua prevista y duración por día. Días 4 a 7: orientativos.",
     filt_configure_thermal: "Calefacción y cubierta de la piscina",
   },
@@ -5680,7 +5680,7 @@ const TRANSLATIONS = {
     filt_temp_setpoint: "Definida",
     filt_invite_temp: "Introduza a temperatura da água para melhorar a precisão.",
     filt_rising_note: "Tem em conta o aquecimento previsto para amanhã.",
-    filt_week_title: "Próximos 7 dias",
+    filt_week_title: "Próximos 7 dias e duração da filtração",
     filt_week_indicative: "Temperatura da água prevista e duração por dia. Dias 4 a 7: indicativos.",
     filt_configure_thermal: "Aquecimento e cobertura da piscina",
   },
