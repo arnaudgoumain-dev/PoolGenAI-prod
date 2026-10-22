@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.164.3";
+const APP_VERSION = "1.164.4";
 const CGU_VERSION = "1.5"; // v1.5 : section 6 complétée (altitude du bassin : IGN, Open Topo Data) ; v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -15256,8 +15256,8 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
             const st = { position: "absolute", top: 0, transform: "translateX(-50%)", whiteSpace: "nowrap", fontSize: 10.5, fontWeight: 700, color: "#b7791f" };
             return (
               <div data-testid="sun-times" style={{ position: "relative", height: 16, marginTop: 1 }}>
-                <span data-testid="sunrise-label" style={{ ...st, left: pos.rise + "%" }}>🌅 {formatClock(daylight.sunriseH)}</span>
-                <span data-testid="sunset-label" style={{ ...st, left: pos.set + "%" }}>🌇 {formatClock(daylight.sunsetH)}</span>
+                <span data-testid="sunrise-label" style={{ ...st, left: pos.rise + "%" }}>{formatClock(daylight.sunriseH)}</span>
+                <span data-testid="sunset-label" style={{ ...st, left: pos.set + "%" }}>{formatClock(daylight.sunsetH)}</span>
               </div>
             );
           })()}
