@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.159.1";
+const APP_VERSION = "1.161.0";
 const CGU_VERSION = "1.5"; // v1.5 : section 6 complétée (altitude du bassin : IGN, Open Topo Data) ; v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -998,6 +998,12 @@ const TRANSLATIONS = {
     wizard_time_old: "Choisis une date des 30 derniers jours.",
     wizard_time_before_prev: "Cette application ne peut pas précéder l'étape précédente ({time}).",
     filt_temp_when_hint: "Date et heure facultatives : sans elles, la température est datée de maintenant.",
+    filt_ref_note: "Calculée pour une eau estimée à {temp} au midi solaire, d'après la saisie et la météo prévue.",
+    filt_temp_saved: "Température enregistrée",
+    filt_temp_older_note: "Saisie de {temp} du {when} enregistrée dans l'historique. La température la plus récente ({latest}, {latestWhen}) reste celle utilisée pour le calcul.",
+    filt_temp_delete_link: "Supprimer une température saisie : onglet Historique →",
+    filt_now_marker: "Heure actuelle : {time}",
+    temp_projected_chart_label: "TEMP. (projetée)",
   },
   en: {
     tab_pool: "Pool",
@@ -1963,6 +1969,12 @@ const TRANSLATIONS = {
     wizard_time_old: "Pick a date within the last 30 days.",
     wizard_time_before_prev: "This application cannot be before the previous step ({time}).",
     filt_temp_when_hint: "Date and time are optional: without them, the temperature is dated now.",
+    filt_ref_note: "Calculated for water estimated at {temp} at solar noon, based on your entry and the forecast.",
+    filt_temp_saved: "Temperature saved",
+    filt_temp_older_note: "Entry of {temp} on {when} saved in the history. The most recent temperature ({latest}, {latestWhen}) remains the one used for the calculation.",
+    filt_temp_delete_link: "Delete an entered temperature: History tab →",
+    filt_now_marker: "Current time: {time}",
+    temp_projected_chart_label: "TEMP. (projected)",
   },
   de: {
     tab_pool: "Becken",
@@ -2926,6 +2938,12 @@ const TRANSLATIONS = {
     wizard_time_old: "Wähle ein Datum der letzten 30 Tage.",
     wizard_time_before_prev: "Diese Anwendung darf nicht vor dem vorherigen Schritt liegen ({time}).",
     filt_temp_when_hint: "Datum und Uhrzeit sind optional: Ohne Angabe gilt die Temperatur als jetzt erfasst.",
+    filt_ref_note: "Berechnet für eine auf {temp} geschätzte Wassertemperatur zum Sonnenhöchststand, anhand deiner Eingabe und der Wettervorhersage.",
+    filt_temp_saved: "Temperatur gespeichert",
+    filt_temp_older_note: "Eingabe von {temp} am {when} im Verlauf gespeichert. Die neueste Temperatur ({latest}, {latestWhen}) bleibt die für die Berechnung verwendete.",
+    filt_temp_delete_link: "Eingegebene Temperatur löschen: Reiter Verlauf →",
+    filt_now_marker: "Aktuelle Uhrzeit: {time}",
+    temp_projected_chart_label: "TEMP. (projiziert)",
   },
   it: {
     tab_pool: "Vasca",
@@ -3889,6 +3907,12 @@ const TRANSLATIONS = {
     wizard_time_old: "Scegli una data degli ultimi 30 giorni.",
     wizard_time_before_prev: "Questa applicazione non può precedere il passaggio precedente ({time}).",
     filt_temp_when_hint: "Data e ora sono facoltative: senza, la temperatura è datata adesso.",
+    filt_ref_note: "Calcolata per un'acqua stimata a {temp} a mezzogiorno solare, in base al tuo inserimento e alle previsioni.",
+    filt_temp_saved: "Temperatura salvata",
+    filt_temp_older_note: "Inserimento di {temp} del {when} salvato nello storico. La temperatura più recente ({latest}, {latestWhen}) resta quella usata per il calcolo.",
+    filt_temp_delete_link: "Eliminare una temperatura inserita: scheda Storico →",
+    filt_now_marker: "Ora attuale: {time}",
+    temp_projected_chart_label: "TEMP. (prevista)",
   },
   es: {
     tab_pool: "Piscina",
@@ -4852,6 +4876,12 @@ const TRANSLATIONS = {
     wizard_time_old: "Elige una fecha de los últimos 30 días.",
     wizard_time_before_prev: "Esta aplicación no puede ser anterior al paso anterior ({time}).",
     filt_temp_when_hint: "La fecha y la hora son opcionales: sin ellas, la temperatura se registra con la fecha y hora actuales.",
+    filt_ref_note: "Calculada para un agua estimada en {temp} al mediodía solar, según tu entrada y la previsión.",
+    filt_temp_saved: "Temperatura guardada",
+    filt_temp_older_note: "Entrada de {temp} del {when} guardada en el historial. La temperatura más reciente ({latest}, {latestWhen}) sigue siendo la que se usa para el cálculo.",
+    filt_temp_delete_link: "Eliminar una temperatura introducida: pestaña Historial →",
+    filt_now_marker: "Hora actual: {time}",
+    temp_projected_chart_label: "TEMP. (proyectada)",
   },
   pt: {
     tab_pool: "Piscina",
@@ -5815,6 +5845,12 @@ const TRANSLATIONS = {
     wizard_time_old: "Escolha uma data dos últimos 30 dias.",
     wizard_time_before_prev: "Esta aplicação não pode ser anterior ao passo anterior ({time}).",
     filt_temp_when_hint: "A data e a hora são opcionais: sem elas, a temperatura é registada com a data e hora atuais.",
+    filt_ref_note: "Calculada para uma água estimada em {temp} ao meio-dia solar, com base na sua entrada e na previsão.",
+    filt_temp_saved: "Temperatura guardada",
+    filt_temp_older_note: "Entrada de {temp} em {when} guardada no histórico. A temperatura mais recente ({latest}, {latestWhen}) continua a ser a usada no cálculo.",
+    filt_temp_delete_link: "Eliminar uma temperatura introduzida: separador Histórico →",
+    filt_now_marker: "Hora atual: {time}",
+    temp_projected_chart_label: "TEMP. (projetada)",
   },
 };
 
@@ -6384,7 +6420,7 @@ const PROJECTABLE_PHOS_ACTIONS = ["phos-"];
 // SEUL affiché, seul et/ou avec sa valeur projetée (pH, Cl libre, TAC, CYA,
 // TH, phosphates, cuivre, fer, température...). Renvoie null dès que deux
 // paramètres différents sont visibles ou si le paramètre n'a pas de cible.
-const TARGET_BASE_KEY = { phProjected: "pH", fclProjected: "fCl", tacProjected: "tac", hardProjected: "hard", phosProjected: "phos", filtApplied: "filtReco" };
+const TARGET_BASE_KEY = { tempProjected: "temp", phProjected: "pH", fclProjected: "fCl", tacProjected: "tac", hardProjected: "hard", phosProjected: "phos", filtApplied: "filtReco" };
 function computeTargetZone(activeKeys, params, targets) {
   const bases = [...new Set(activeKeys.map((k) => TARGET_BASE_KEY[k] || k))];
   if (bases.length !== 1) return null;
@@ -12398,6 +12434,7 @@ function PoolGenAIApp() {
               onUpdatePool={(u) => updatePool(activePool.id, u)}
               canEdit={!viewContext}
               onOpenSettings={(section) => { setPoolEditRequest({ id: activePool.id, section: section || "thermal" }); setTab("settings"); }}
+              onOpenHistory={() => setTab("history")}
               onEnsureAltitude={() => ensurePoolAltitude(activePool)}
             />
           ) : (
@@ -14274,7 +14311,8 @@ function fitWaterK(o) {
 }
 
 // Estimation complète pour une piscine. o : { entries (collectWaterEntries), airHistory { "AAAA-MM-JJ": °C }, forecast
-// [{ date, tMean }] (aujourd'hui + à venir), nowMs, tz, cfg { heating, cover }, depthM }.
+// [{ date, tMean }] (aujourd'hui + à venir), nowMs, tz, cfg { heating, cover }, depthM, day { noonMs, sun, range } (facultatif : midi solaire du
+// jour en ms, ensoleillement prévu 0..1, amplitude de l'air prévue en °C ; sans lui, pas de réchauffement diurne) }.
 // Retourne null s'il n'y a ni saisie ni donnée d'air. Sinon { t0, source ("mesure" | "saisie" | "consigne" | "estimee"),
 // confidence ("high" | "medium" | "low"), temps[7], hours[7], dates[7], ageDays, regimeToday, offsets, calibrated, k (inertie du bassin),
 // kPrior (valeur de départ selon la profondeur), kSamples (transitions utilisées pour apprendre k), needsInvite }.
@@ -14318,9 +14356,26 @@ function computeWaterEstimate(o) {
     if (!vals.length) return null;
     t0 = meanOf(vals) + (model.offsets[regimeToday] || 0); source = "estimee"; confidence = "low";
   }
-  const temps = projectWaterTemps({ startTemp: t0, startKey: todayKey, steps: WATER_PROJECTION_DAYS - 1, air, cfg: o.cfg, offsets: model.offsets, k });
+  // Température de CALCUL (celle qui sert à la durée) : pour une saisie fraîche, la valeur saisie évoluée jusqu'au midi solaire du jour
+  // (A : inertie depuis l'instant de la saisie ; B : réchauffement diurne prévu). t0 reste la valeur saisie / estimée, affichée telle quelle.
+  let tCalc = t0;
+  let driftC = 0;
+  let warmC = 0;
+  if ((source === "mesure" || source === "saisie") && regimeToday !== "chauffe") {
+    const hasNoon = !!o.day && Number.isFinite(o.day.noonMs) && anchor.t < o.day.noonMs;
+    const endMs = hasNoon ? o.day.noonMs : Math.max(anchor.t, o.nowMs);
+    const tProj = Object.keys(air).length ? projectToInstant({ startTemp: anchor.value, startMs: anchor.t, endMs, air, k, offsets: model.offsets, cfg: o.cfg, tz }) : t0;
+    driftC = tProj - t0;
+    warmC = hasNoon ? diurnalWarmingC(anchor.t, o.day.noonMs, tz, o.day, regimeToday) : 0;
+    tCalc = tProj + warmC;
+  }
+  const temps = projectWaterTemps({ startTemp: tCalc, startKey: todayKey, steps: WATER_PROJECTION_DAYS - 1, air, cfg: o.cfg, offsets: model.offsets, k });
   return {
     t0,
+    tCalc,
+    adjC: tCalc - t0,
+    driftC,
+    warmC,
     source,
     confidence,
     ageDays,
@@ -14598,6 +14653,161 @@ function wizardTimeProblem(ms, nowMs, prevMs) {
   if (Number.isFinite(prevMs) && ms < prevMs - 60 * 1000) return "wizard_time_before_prev";
   return null;
 }
+// ---------- Température saisie : évolution depuis la saisie (A) et réchauffement diurne prévu (B) ----------
+// A : depuis l'instant EXACT de la saisie jusqu'à l'instant de référence, l'eau suit l'air (inertie k par jour, en fractions de jour,
+//     air moyen de chaque jour local + décalage du régime) au lieu de rester figée à la valeur saisie.
+// B : une saisie faite le matin (l'eau est alors à son minimum journalier) est ramenée au midi solaire, milieu de la plage de filtration :
+//     cycle journalier de l'eau (minimum vers 5 h, maximum vers 17 h) d'amplitude DIURNAL_AMP_C pour un jour ensoleillé (sun = 1) dont
+//     l'air varie de DIURNAL_RANGE_REF_C ; proportionnel à l'ensoleillement prévu et à l'amplitude de l'air prévue, réduit sous bâche,
+//     plafonné, et JAMAIS vers le bas (une saisie faite après le midi solaire est reprise telle quelle).
+// Valeurs de départ, non calibrées : le bassin n'apprend pas encore son amplitude diurne.
+const DIURNAL_AMP_C = 0.75;
+const DIURNAL_RANGE_REF_C = 10;
+const DIURNAL_PEAK_HOUR = 17;
+const DIURNAL_MAX_WARMING_C = 1.2;
+const DIURNAL_COVER_FACTOR = 0.5;
+// Part du rayonnement solaire attendue selon le pictogramme MET du jour (0 à 1) ; 0,7 si inconnu.
+function sunFactorFromSymbol(code) {
+  const c = weatherCategory(code);
+  if (!c) return 0.7;
+  const f = { clear: 1, fair: 0.9, partly: 0.7, cloudy: 0.45, fog: 0.4, lightrain: 0.35, showers: 0.45, rain: 0.3, heavyrain: 0.2, sleet: 0.2, snow: 0.2, thunder: 0.3 }[c.cat];
+  return f === undefined ? 0.7 : f;
+}
+// Phase du cycle journalier de l'eau, de -1 (minimum, 5 h) à +1 (maximum, 17 h).
+function diurnalPhase(hour) { return -Math.cos((2 * Math.PI * (hour - (DIURNAL_PEAK_HOUR - 12))) / 24); }
+function localHourOf(ms, tz) { const p = tzParts(ms, tz); return p.hour + p.minute / 60; }
+// Instant (ms) du minuit local d'une date AAAA-MM-JJ dans le fuseau tz (heure d'été/hiver gérée).
+function localMidnightMs(key, tz) {
+  const guess = keyToUtcMs(key);
+  const off = tzOffsetMinutes(guess, tz);
+  let ms = guess - off * 60000;
+  const off2 = tzOffsetMinutes(ms, tz);
+  if (off2 !== off) ms = guess - off2 * 60000;
+  return ms;
+}
+// Réchauffement (°C, >= 0) attendu entre l'instant de la saisie et le midi solaire. day : { sun (0..1), range (°C) } ou null.
+function diurnalWarmingC(entryMs, noonMs, tz, day, regime) {
+  if (!day || !Number.isFinite(noonMs) || !Number.isFinite(entryMs) || entryMs >= noonMs) return 0;
+  const sun = Number.isFinite(day.sun) ? day.sun : 0.7;
+  const rangeScale = Number.isFinite(day.range) ? Math.max(0.3, Math.min(1.3, day.range / DIURNAL_RANGE_REF_C)) : 0.7;
+  const amp = DIURNAL_AMP_C * sun * rangeScale * (regime === "bache" ? DIURNAL_COVER_FACTOR : 1);
+  const d = amp * (diurnalPhase(localHourOf(noonMs, tz)) - diurnalPhase(localHourOf(entryMs, tz)));
+  return Math.max(0, Math.min(DIURNAL_MAX_WARMING_C, d));
+}
+// Température projetée de startMs à endMs : par segments (jusqu'au minuit local suivant), T -> cible + (T - cible) × (1 - k)^(durée en jours),
+// cible = air moyen du jour + décalage du régime ; mois de chauffe : consigne. Pour des jours entiers, identique à projectWaterTemps.
+function projectToInstant(o) {
+  let T = o.startTemp;
+  let cur = o.startMs;
+  if (!Number.isFinite(T) || !Number.isFinite(cur) || !(o.endMs > cur)) return T;
+  let guard = 0;
+  while (cur < o.endMs && guard++ < 400) {
+    const key = localDateKey(cur, o.tz);
+    const segEnd = Math.min(o.endMs, localMidnightMs(addDaysKey(key, 1), o.tz));
+    if (!(segEnd > cur)) break;
+    const reg = waterRegimeForMonth(o.cfg, monthOfKey(key));
+    if (reg === "chauffe") {
+      T = Number(o.cfg.heating.setpointC);
+    } else {
+      const a = o.air[key];
+      if (Number.isFinite(a)) {
+        const target = a + ((o.offsets && o.offsets[reg]) || 0);
+        T = target + (T - target) * Math.pow(1 - o.k, (segEnd - cur) / 864e5);
+      }
+    }
+    cur = segEnd;
+  }
+  return T;
+}
+// ---------- Courbe « température projetée » de l'historique ----------
+function noonOfKeyMs(key, tz) { return localMidnightMs(key, tz) + 12 * 3600e3; }
+
+// Midi solaire (ms), ensoleillement prévu (0..1) et amplitude de l'air des 24 prochaines heures du jour : voir computeWaterEstimate (option day).
+function computeDayInfo(weather, coords, nowMs, tz, forecast) {
+  if (!weather || !coords) return null;
+  const todayKey = localDateKey(nowMs, tz);
+  const noonH = computeSolarNoon(coords.lat, coords.lon, new Date(nowMs), tz);
+  const hrs = (weather.hours || []).filter((h) => Number.isFinite(h.air)).slice(0, 24);
+  const range = hrs.length >= 12 ? Math.max(...hrs.map((h) => h.air)) - Math.min(...hrs.map((h) => h.air)) : null;
+  let sym = null;
+  let bestDist = Infinity;
+  (weather.hours || []).forEach((h) => {
+    const ms = Date.parse(h.t);
+    if (!h.symbol || !Number.isFinite(ms) || localDateKey(ms, tz) !== todayKey) return;
+    const dist = Math.abs(localHourOf(ms, tz) - 12);
+    if (dist < bestDist) { bestDist = dist; sym = h.symbol; }
+  });
+  if (!sym && forecast && forecast.length && forecast[0].symbol) sym = forecast[0].symbol;
+  return { noonMs: localMidnightMs(todayKey, tz) + noonH * 3600e3, range, sun: sym ? sunFactorFromSymbol(sym) : null };
+}
+
+// Points de la courbe « projetée » : [{ t (ms), value (°C), kind, label (bool) }] triés par date.
+// Passé : de chaque saisie à la suivante, la température que le modèle avait prévue (une valeur par midi local, puis la valeur prévue pour
+// l'instant de la saisie suivante, placée 1 minute avant elle : l'écart avec la saisie est l'erreur du modèle) ; la courbe repart de la saisie.
+// Futur (withFuture) : depuis la dernière saisie, jours jusqu'à hier puis, comme dans la carte, aujourd'hui et les 6 jours suivants.
+// o : { entries (collectWaterEntries), airHistory, forecast [{ date, tMean }], nowMs, tz, cfg, depthM, day, withFuture }.
+// Un intervalle sans données d'air suffisantes (moins de la moitié des jours connus) n'est pas tracé.
+function buildTempProjection(o) {
+  const tz = o.tz || "UTC";
+  const entries = (o.entries || [])
+    .filter((e) => Number.isFinite(e.value) && Number.isFinite(e.t))
+    .sort((a, b) => a.t - b.t)
+    .map((e) => ({ ...e, key: localDateKey(e.t, tz) }));
+  const hist = {};
+  Object.keys(o.airHistory || {}).forEach((key) => { if (Number.isFinite(o.airHistory[key])) hist[key] = o.airHistory[key]; });
+  if (!entries.length || !Object.keys(hist).length) return [];
+  const k = fitWaterK({ entries, airKnown: hist, cfg: o.cfg, kPrior: waterKForDepth(o.depthM) }).k;
+  const model = buildWaterModel({ entries, airKnown: hist, cfg: o.cfg, k });
+  const known = { ...hist };
+  (o.forecast || []).forEach((d) => { if (d && d.date && Number.isFinite(d.tMean)) known[d.date] = d.tMean; });
+  const todayKey = localDateKey(o.nowMs, tz);
+  const r1 = (x) => Math.round(x * 10) / 10;
+  const out = [];
+  // jours dont l'air est connu entre deux clés (au moins la moitié) : sinon l'intervalle n'est pas tracé
+  const covered = (fromKey, toKey) => {
+    const n = daysBetweenKeys(fromKey, toKey);
+    let c = 0;
+    for (let i = 0; i <= n; i++) if (Number.isFinite(known[addDaysKey(fromKey, i)])) c++;
+    return c > 0 && c / (n + 1) >= 0.5;
+  };
+  const dayPoints = (a, toMs, air) => {
+    const pts = [];
+    const n = daysBetweenKeys(a.key, localDateKey(toMs, tz));
+    for (let i = 0; i <= n; i++) {
+      const noon = noonOfKeyMs(addDaysKey(a.key, i), tz);
+      if (noon <= a.t + 3 * 3600e3 || noon >= toMs - 3 * 3600e3) continue;
+      pts.push({ t: noon, value: r1(projectToInstant({ startTemp: a.value, startMs: a.t, endMs: noon, air, k, offsets: model.offsets, cfg: o.cfg, tz })), kind: "day", label: false });
+    }
+    return pts;
+  };
+  for (let i = 0; i < entries.length - 1; i++) {
+    const a = entries[i];
+    const b = entries[i + 1];
+    if (b.t - a.t < 120000 || !covered(a.key, b.key)) continue;
+    const air = fillAirSeries(known, a.key, b.key);
+    out.push({ t: a.t, value: r1(a.value), kind: "anchor", label: false });
+    dayPoints(a, b.t, air).forEach((p) => out.push(p));
+    out.push({ t: b.t - 60000, value: r1(projectToInstant({ startTemp: a.value, startMs: a.t, endMs: b.t, air, k, offsets: model.offsets, cfg: o.cfg, tz })), kind: "pred", label: true });
+  }
+  const last = entries[entries.length - 1];
+  if (last.t <= o.nowMs + 120000) {
+    out.push({ t: last.t, value: r1(last.value), kind: "anchor", label: false });
+    if (last.key < todayKey && covered(last.key, todayKey)) {
+      const air = fillAirSeries(known, last.key, todayKey);
+      dayPoints(last, noonOfKeyMs(todayKey, tz), air).forEach((p) => { if (localDateKey(p.t, tz) < todayKey) out.push(p); });
+    }
+    const est = computeWaterEstimate({ entries: o.entries, airHistory: o.airHistory, forecast: o.forecast, nowMs: o.nowMs, tz, cfg: o.cfg, depthM: o.depthM, day: o.day });
+    if (est) {
+      est.dates.forEach((date, i) => {
+        if (i > 0 && !o.withFuture) return;
+        const t = noonOfKeyMs(date, tz);
+        if (t <= last.t + 3 * 3600e3) return;
+        out.push({ t, value: r1(est.temps[i]), kind: i === 0 ? "today" : "future", label: true });
+      });
+    }
+  }
+  return out.sort((x, y) => x.t - y.t);
+}
 // ---- FILTRATION PURE END ----
 
 let TEMP_UNIT = "C"; // unité d'affichage courante (« C » ou « F »), alignée sur le réglage utilisateur par l'App à chaque rendu
@@ -14701,11 +14911,13 @@ function FiltrationLockedCard({ lang, onWantPremium }) {
   );
 }
 
-function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSettings, onEnsureAltitude }) {
+function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSettings, onOpenHistory, onEnsureAltitude }) {
   const t = useT(lang);
   const poolType = getPoolType(pool);
   const tz = (pool && pool.timeZone) || getDeviceTimeZone();
   const [nowMs] = useState(() => Date.now());
+  const [clockMs, setClockMs] = useState(() => Date.now()); // repère « heure actuelle » de la barre horaire, mis à jour chaque minute
+  useEffect(() => { const id = setInterval(() => setClockMs(Date.now()), 60000); return () => clearInterval(id); }, []);
   const [coords, setCoords] = useState(() => (isFiniteNum(pool?.lat) && isFiniteNum(pool?.lon) ? { lat: pool.lat, lon: pool.lon } : null));
   const [geoFailed, setGeoFailed] = useState(false);
   const [weather, setWeather] = useState(null);
@@ -14713,6 +14925,8 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
   const [localHist, setLocalHist] = useState(() => loadAirHistory(pool?.id));
   const [tempDraft, setTempDraft] = useState("");
   const [tempWhen, setTempWhen] = useState(""); // date et heure de la saisie (heure locale) ; vide = maintenant
+  // Dernière saisie enregistrée : valeur et heure restent affichées avec une coche ; { auto } = heure non choisie (datée de maintenant).
+  const [tempSaved, setTempSaved] = useState(null);
   // Programmation actuelle de la filtration (coffret) : saisie dans l'onglet, enregistrée dans le bassin.
   const progSaved = { start: (pool && pool.filtrationStartCurrent) || "", dur: pool && pool.filtrationDurationCurrent != null ? String(pool.filtrationDurationCurrent) : "" };
   const [progStart, setProgStart] = useState(progSaved.start);
@@ -14786,10 +15000,12 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
     if (canEdit && onUpdatePool) onUpdatePool({ airDaily: merged });
   }, [forecast, todayStats]);
 
+  // v1.160.0 — Midi solaire du jour, ensoleillement et amplitude de l'air prévus (24 prochaines heures) : réchauffement diurne d'une saisie du matin.
+  const dayInfo = useMemo(() => computeDayInfo(weather, coords, nowMs, tz, forecast), [weather, coords?.lat, coords?.lon, tz, todayKey, nowMs, forecast]);
   const thermalCfg = useMemo(() => ({ heating: pool?.heating || null, cover: pool?.cover || null }), [pool?.heating, pool?.cover]);
   const est = useMemo(
-    () => (poolType === "spa" ? null : computeWaterEstimate({ entries: collectWaterEntries(measures, filtrationTempEntries(pool).map((e) => ({ value: e.temp, at: e.date }))), airHistory, forecast, nowMs, tz, cfg: thermalCfg, depthM: pool?.avgDepthM })),
-    [poolType, measures, pool?.filtrationWaterTemp, pool?.filtrationTempLog, airHistory, forecast, nowMs, tz, thermalCfg, pool?.avgDepthM]
+    () => (poolType === "spa" ? null : computeWaterEstimate({ entries: collectWaterEntries(measures, filtrationTempEntries(pool).map((e) => ({ value: e.temp, at: e.date }))), airHistory, forecast, nowMs, tz, cfg: thermalCfg, depthM: pool?.avgDepthM, day: dayInfo })),
+    [poolType, measures, pool?.filtrationWaterTemp, pool?.filtrationTempLog, airHistory, forecast, nowMs, tz, thermalCfg, pool?.avgDepthM, dayInfo]
   );
 
   const spaSpec = poolType === "spa" ? (SPA_FILTRATION_TABLE[pool?.spaType || "portable"] || SPA_FILTRATION_TABLE.portable)[pool?.spaUsage || "occasionnel"] : null;
@@ -14842,9 +15058,11 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
     const base = pool && Array.isArray(pool.filtrationTempLog) && pool.filtrationTempLog.length ? pool.filtrationTempLog : prior ? [prior] : [];
     const log = appendTempLog(base, entry);
     // La température utilisée par le calcul est la saisie la plus RÉCENTE par date : une saisie antidatée ne la remplace pas.
-    onUpdatePool({ filtrationWaterTemp: latestTempEntry(log), filtrationTempLog: log });
-    setTempDraft("");
-    setTempWhen("");
+    const latest = latestTempEntry(log);
+    onUpdatePool({ filtrationWaterTemp: latest, filtrationTempLog: log });
+    // older : la saisie est antérieure à la plus récente, qui reste la température utilisée pour le calcul
+    setTempSaved({ auto: tempWhen === "", older: latest && Date.parse(latest.at) > Date.parse(entry.at) ? { entry, latest } : null });
+    if (tempWhen === "") setTempWhen(localInputValue(whenMs));
     if (onEnsureAltitude) onEnsureAltitude();
   }
 
@@ -14861,8 +15079,9 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
 
   const updatedLabel = weather && weather.updatedAt ? new Date(weather.updatedAt).toLocaleTimeString(lang || "fr", { hour: "2-digit", minute: "2-digit", timeZone: tz }) : null;
   const tzLabel = tz + ", " + formatUtcOffset(tzOffsetMinutes(nowMs, tz));
+  const nowHour = localHourOf(clockMs, tz);
   const whenValid = tempWhen === "" || validTempEntryTime(parseLocalInput(tempWhen), Date.now());
-  const tempValid = Number.isFinite(parseFloat(String(tempDraft).replace(",", "."))) && canEdit && whenValid;
+  const tempValid = Number.isFinite(parseFloat(String(tempDraft).replace(",", "."))) && canEdit && whenValid && !tempSaved;
   const sourceLabel = !est ? "" : est.source === "mesure" ? t("filt_temp_from_measure") : est.source === "saisie" ? t("filt_temp_entered") : est.source === "consigne" ? t("filt_temp_setpoint") : est.confidence === "low" ? t("filt_temp_estimated_low") : t("filt_temp_estimated");
 
   return (
@@ -14889,6 +15108,9 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
             {poolType !== "spa" && t("filt_recommended")}
             {risingNote && <span> · {t("filt_rising_note")}</span>}
           </div>
+          {poolType !== "spa" && est && Math.abs(est.adjC) >= 0.3 && (
+            <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginTop: 4, lineHeight: 1.4 }}>{t("filt_ref_note", { temp: formatTemp(est.tCalc, TEMP_UNIT, 1) })}</div>
+          )}
         </>
       ) : (
         <p style={{ ...FILT_STYLES.hint, marginTop: 0 }}>{t("filt_no_temp")}</p>
@@ -14900,12 +15122,15 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
             {t("filt_range")} : {slots.map((s) => formatClock(s.start) + " – " + formatClock(s.end)).join(" · ")}
           </div>
           {/* Repère du midi solaire : libellé (décalé vers l'intérieur près des bords) + petit triangle pointe en bas, à la verticale du trait jaune */}
-          {noon != null && (
-            <div style={{ position: "relative", height: 24 }}>
+          <div style={{ position: "relative", height: 24 }}>
+            {noon != null && (
               <span style={{ position: "absolute", top: 0, left: "calc(" + Math.min(88, Math.max(12, noon / 24 * 100)) + "% + 1px)", transform: "translateX(-50%)", fontSize: 10.5, fontWeight: 700, color: "#b7791f", whiteSpace: "nowrap" }}>{t("filt_solar_noon")}</span>
+            )}
+            {noon != null && (
               <span style={{ position: "absolute", top: 15, left: "calc(" + (noon / 24 * 100) + "% + 1px)", transform: "translateX(-50%)", width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: "7px solid #f5b700" }} />
-            </div>
-          )}
+            )}
+            <span data-testid="now-marker" title={t("filt_now_marker", { time: formatClock(nowHour) })} style={{ position: "absolute", top: 15, left: "calc(" + (nowHour / 24 * 100) + "% + 1px)", transform: "translateX(-50%)", width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: "7px solid #7e57c2" }} />
+          </div>
           <div style={{ position: "relative", height: 14, borderRadius: 7, background: "#e6eef3", overflow: "hidden" }}>
             {slots.map((s, i) => (
               <div key={i} style={{ position: "absolute", top: 0, bottom: 0, left: (s.start / 24 * 100) + "%", width: ((s.end - s.start) / 24 * 100) + "%", background: "var(--brand-primary)" }} />
@@ -14928,38 +15153,60 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
 
       {poolType !== "spa" && (
         <div style={{ marginTop: 12 }}>
-          {/* Température et date/heure (facultative) sur la même ligne ; le bouton Enregistrer en dessous */}
-          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 0.8fr) minmax(0, 1.4fr)", gap: 8, alignItems: "end" }}>
+          {/* Température, date/heure (facultative) et bouton Enregistrer sur la même ligne */}
+          <div style={{ display: "grid", gridTemplateColumns: "96px minmax(0, 190px) auto", columnGap: 10, justifyContent: "start", alignItems: "end" }}>
             <div>
               <div style={{ fontSize: 12, color: "var(--brand-text-muted)", marginBottom: 4 }}>{t("filt_temp_input_label", { unit: tempUnitLabel(TEMP_UNIT) })}</div>
               <input
                 type="number" step="0.5" inputMode="decimal" value={tempDraft}
-                onChange={(e) => setTempDraft(e.target.value)}
+                onChange={(e) => {
+                  setTempDraft(e.target.value);
+                  // Nouvelle saisie : la coche disparaît ; une heure qui n'avait pas été choisie redevient « maintenant ».
+                  if (tempSaved) { if (tempSaved.auto) setTempWhen(""); setTempSaved(null); }
+                }}
                 placeholder={t("filt_temp_input_ph", { ex: TEMP_UNIT === "F" ? "75" : "24" })}
                 disabled={!canEdit}
-                style={{ ...styles.input, marginBottom: 0 }}
+                style={{ ...styles.input, marginBottom: 0, padding: "11px 8px", height: 46, boxSizing: "border-box", width: 76, maxWidth: "100%" }}
               />
             </div>
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 6, fontSize: 12, color: "var(--brand-text-muted)", marginBottom: 4 }}>
                 <span>{t("filt_temp_when_label")}</span>
-                {tempWhen !== "" && <button type="button" onClick={() => setTempWhen("")} style={{ ...styles.editLinkBtn, display: "inline-flex", padding: 0, flexShrink: 0 }}>{t("filt_temp_when_now")}</button>}
+                {tempWhen !== "" && <button type="button" onClick={() => { setTempWhen(""); setTempSaved(null); }} style={{ ...styles.editLinkBtn, display: "inline-flex", padding: 0, flexShrink: 0 }}>{t("filt_temp_when_now")}</button>}
               </div>
               <input
                 type="datetime-local" value={tempWhen}
                 min={localInputValue(Date.now() - TEMP_ENTRY_MAX_AGE_DAYS * 864e5)} max={localInputValue(Date.now())}
-                onChange={(e) => setTempWhen(e.target.value)}
+                onChange={(e) => { setTempWhen(e.target.value); setTempSaved(null); }}
                 disabled={!canEdit}
-                style={{ ...styles.input, marginBottom: 0 }}
+                style={{ ...styles.input, marginBottom: 0, padding: "11px 8px", fontSize: 13, height: 46, boxSizing: "border-box" }}
               />
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, height: 46 }}>
+              {tempSaved && (
+                <span role="img" aria-label={t("filt_temp_saved")} title={t("filt_temp_saved")} data-testid="temp-saved-check" style={{ width: 22, height: 22, borderRadius: "50%", background: "#2e9e5b", color: "#fff", fontSize: 14, fontWeight: 700, lineHeight: "22px", textAlign: "center", flexShrink: 0 }}>✓</span>
+              )}
+              <button type="button" onClick={saveTemp} disabled={!tempValid} style={{ ...styles.primaryBtn, marginTop: 0, width: "auto", height: 46, padding: "0 12px", fontSize: 14, opacity: tempValid ? 1 : 0.5 }}>
+                {t("filt_temp_save")}
+              </button>
             </div>
           </div>
           {tempWhen !== "" && !whenValid && <div style={{ fontSize: 11.5, color: "#c0392b", marginTop: 4, lineHeight: 1.4 }}>{t("filt_temp_when_invalid")}</div>}
-          <button type="button" onClick={saveTemp} disabled={!tempValid} style={{ ...styles.primaryBtn, marginTop: 8, opacity: tempValid ? 1 : 0.5 }}>
-            {t("filt_temp_save")}
-          </button>
+          {tempSaved && tempSaved.older && (
+            <div data-testid="temp-older-note" style={{ fontSize: 11.5, color: "var(--brand-text)", background: "#eef7fb", border: "1px solid #d0e4f5", borderRadius: 8, padding: "6px 8px", marginTop: 6, lineHeight: 1.4 }}>
+              {t("filt_temp_older_note", {
+                temp: formatTemp(tempSaved.older.entry.value, TEMP_UNIT, 1),
+                when: new Date(tempSaved.older.entry.at).toLocaleString(lang || "fr", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: tz }),
+                latest: formatTemp(tempSaved.older.latest.value, TEMP_UNIT, 1),
+                latestWhen: new Date(tempSaved.older.latest.at).toLocaleString(lang || "fr", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: tz }),
+              })}
+            </div>
+          )}
           <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginTop: 6, lineHeight: 1.4 }}>{t("filt_temp_when_hint")}</div>
           <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginTop: 4, lineHeight: 1.4 }}>{t("filt_temp_hint")}</div>
+          {canEdit && onOpenHistory && filtrationTempEntries(pool).length > 0 && (
+            <button type="button" data-testid="temp-delete-link" onClick={onOpenHistory} style={{ ...styles.editLinkBtn, display: "inline-flex", padding: 0, marginTop: 6, fontSize: 12 }}>{t("filt_temp_delete_link")}</button>
+          )}
           {est && est.needsInvite && canEdit && <div style={{ fontSize: 12, color: "var(--brand-primary)", marginTop: 4, lineHeight: 1.4 }}>{t("filt_invite_temp")}</div>}
         </div>
       )}
@@ -17480,6 +17727,39 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
   const minTs = allTimestamps.length ? Math.min(...allTimestamps) : null;
   const maxTs = allTimestamps.length ? Math.max(...allTimestamps) : null;
 
+  // v1.161.0 — Courbe « TEMP. (projetée) » (Premium) : modèle d'inertie recalé à chaque saisie ; prévisions météo chargées seulement quand la
+  // courbe est affichée (un seul appel, cache de 30 min partagé avec la carte Filtration).
+  const tzHist = (pool && pool.timeZone) || getDeviceTimeZone();
+  const tempProjOn = !!isPremium && activeParams.includes("tempProjected");
+  const [histWeather, setHistWeather] = useState(null);
+  useEffect(() => {
+    if (!tempProjOn || !isFiniteNum(pool?.lat) || !isFiniteNum(pool?.lon)) return;
+    let cancelled = false;
+    fetchWeatherForecast(pool.lat, pool.lon, pool?.altitudeM, tzHist).then((d) => { if (!cancelled) setHistWeather(d); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [tempProjOn, pool?.id, pool?.lat, pool?.lon, pool?.altitudeM, tzHist]);
+  const histForecast = useMemo(() => (!histWeather ? [] : Array.isArray(histWeather.daily) && histWeather.daily.length ? histWeather.daily : dailyFromHours(histWeather.hours, tzHist)), [histWeather, tzHist]);
+  const histAir = useMemo(() => ({ ...loadAirHistory(pool?.id), ...((pool && pool.airDaily) || {}) }), [pool?.id, pool?.airDaily]);
+  const tempProj = useMemo(() => {
+    if (!isPremium) return [];
+    const nowMs = Date.now();
+    const entries = collectWaterEntries(measures, tempEntries.map((e) => ({ value: e.temp, at: e.date })));
+    const coords = isFiniteNum(pool?.lat) && isFiniteNum(pool?.lon) ? { lat: pool.lat, lon: pool.lon } : null;
+    return buildTempProjection({
+      entries, airHistory: histAir, forecast: histForecast, nowMs, tz: tzHist, cfg: { heating: pool?.heating || null, cover: pool?.cover || null },
+      depthM: pool?.avgDepthM, day: computeDayInfo(histWeather, coords, nowMs, tzHist, histForecast), withFuture: histForecast.length > 0,
+    });
+  }, [isPremium, measures, tempEntries, histAir, histForecast, histWeather, tzHist, pool?.lat, pool?.lon, pool?.heating, pool?.cover, pool?.avgDepthM]);
+  const hasTempProj = tempProj.length > 0;
+  // Fenêtre du graphique (bornes) et prolongement vers l'avenir quand la courbe projetée est affichée : au plus 7 jours, et au plus le tiers
+  // d'une fenêtre glissante (la durée de la fenêtre ne change pas) ; seulement quand la fenêtre est à la date la plus récente.
+  const histWindowMs = zoomWindow === "all" ? null : getPeriodWindowMs(zoomWindow);
+  const histEnd0 = zoomWindow === "all" ? maxTs : (zoomEnd ?? maxTs);
+  const histAtPresent = zoomWindow === "all" || zoomEnd == null || (maxTs != null && zoomEnd >= maxTs);
+  const futureExtMs = tempProjOn && hasTempProj && histAtPresent && histEnd0 != null
+    ? Math.max(0, Math.min(7 * 864e5, histWindowMs ? histWindowMs / 3 : 7 * 864e5, Date.now() + 7 * 864e5 - histEnd0))
+    : 0;
+
   // v1.123.2 — Fenêtre glissante qui suit vraiment la dernière mesure : sans
   // ça, zoomEnd restait figé sur l'instant où la puce (ou le curseur) a été
   // actionnée — une mesure ajoutée après coup tombait hors de la fenêtre
@@ -17612,8 +17892,20 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
         rows.set(mts, anchorRow);
       });
     });
+    // v1.161.0 — Courbe de température projetée (seulement les points de la fenêtre affichée, prolongement futur compris).
+    if (tempProjOn && hasTempProj && histEnd0 != null) {
+      const from = zoomWindow === "all" ? (minTs ?? -Infinity) : histEnd0 - histWindowMs;
+      const to = histEnd0 + futureExtMs;
+      tempProj.forEach((p) => {
+        if (p.t < from || p.t > to) return;
+        const row = rows.get(p.t) || { timestamp: p.t, date: formatDateShort(new Date(p.t).toISOString()) };
+        row.tempProjected = p.value;
+        if (p.label) row.tempProjLabel = true;
+        rows.set(p.t, row);
+      });
+    }
     return [...rows.values()].sort((a, b) => a.timestamp - b.timestamp);
-  }, [chartData, visibleMeasures, measures, applications, products, pool?.volume]);
+  }, [chartData, visibleMeasures, measures, applications, products, pool?.volume, tempProj, tempProjOn, hasTempProj, histEnd0, histWindowMs, futureExtMs, zoomWindow, minTs]);
 
   // v1.155.0 — Durée de filtration (heures, axe droit comme la température) : seulement si au moins une mesure en a une.
   const hasFiltData = !!isPremium && [...measures, ...tempEntries].some((m) => filtrationHistoryForMeasure(pool, m));
@@ -17635,10 +17927,12 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
     { key: "phos",  color: "#8a2b9c", label: t("phos_col"),                         axis: "right", dashed: true },
     { key: "copper",color: "#b8860b", label: t("copper_col"),                       axis: "left" },
     { key: "iron",  color: "#8b4513", label: t("iron_col"),                         axis: "left" },
+    { key: "tempProjected", color: "#e0578a", label: t("temp_projected_chart_label"), axis: "right", projected: true, dashed: true, noDot: true },
     { key: "temp",  color: "#e0578a", label: t("temp_col"),                         axis: "right" },
     { key: "filtReco",    color: "#00897b", label: t("filt_hist_reco"),    axis: "right", dashed: true, noSuffix: true },
     { key: "filtApplied", color: "#00897b", label: t("filt_hist_applied"), axis: "right", noSuffix: true },
   ].filter((cp) => !FILT_CHART_KEYS.includes(cp.key) || hasFiltData)
+   .filter((cp) => cp.key !== "tempProjected" || hasTempProj)
    .map((cp) => (cp.projected || cp.noSuffix ? cp : { ...cp, label: `${cp.label} (${t("measured_suffix")})` }));
 
   const chartParams = useMemo(
@@ -17758,8 +18052,9 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
          demande Arnaud. */}
       {(() => {
         const zoomWindowMs = getPeriodWindowMs(zoomWindow);
-        const domainEnd = zoomWindow === "all" ? maxTs : (zoomEnd ?? maxTs);
-        const domainStart = zoomWindow === "all" ? minTs : (domainEnd - zoomWindowMs);
+        const domainEnd0 = zoomWindow === "all" ? maxTs : (zoomEnd ?? maxTs);
+        const domainEnd = domainEnd0 + futureExtMs;
+        const domainStart = zoomWindow === "all" ? minTs : (domainEnd0 - zoomWindowMs);
         // v1.117.5 — Recharts n'affiche ni axe Y ni graduations d'axe X
         // correctement réparties sur toute l'échelle quand le tableau "data"
         // est vide (aucune mesure dans la fenêtre) : on ancre le graphique
@@ -17874,13 +18169,14 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
                   stroke={cp.color}
                   strokeWidth={cp.dashed ? 1.5 : 2}
                   strokeDasharray={cp.dashed ? "4 3" : undefined}
-                  dot={{ r: cp.dashed ? 2 : 3 }}
+                  dot={cp.noDot ? false : { r: cp.dashed ? 2 : 3 }}
                   connectNulls
                   label={
                     showValues
                       ? (props) => {
                           const { x, y, value } = props;
                           if (value == null) return null;
+                          if (cp.key === "tempProjected" && !(chartRenderData[props.index] && chartRenderData[props.index].tempProjLabel)) return null;
                           const text = Number(value).toFixed(1);
                           const ty = y + (cp.projected ? 16 : -9);
                           const w = text.length * 6 + 6;
