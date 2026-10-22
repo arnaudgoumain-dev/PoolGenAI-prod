@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.157.1";
+const APP_VERSION = "1.159.1";
 const CGU_VERSION = "1.5"; // v1.5 : section 6 complétée (altitude du bassin : IGN, Open Topo Data) ; v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -977,8 +977,8 @@ const TRANSLATIONS = {
     filt_week_indicative: "Eau projetée et durée par jour. Jours 4 à 7 : indicatif.",
     filt_configure_thermal: "Chauffage et bâche du bassin",
     tab_filtration: "Filtration",
-    filt_hist_reco: "Filtration conseillée (h)",
-    filt_hist_applied: "Filtration appliquée (h)",
+    filt_hist_reco: "Filt. conseillée (h)",
+    filt_hist_applied: "Filt. appliquée (h)",
     filt_hist_title: "Filtration",
     filt_hist_reco_short: "conseillée",
     filt_hist_applied_short: "appliquée",
@@ -989,6 +989,15 @@ const TRANSLATIONS = {
     filt_hist_temp_entry: "Température saisie (onglet Filtration)",
     filt_hist_temp_delete_confirm: "Supprimer cette température de l'historique ?",
     filt_solar_noon: "Midi solaire",
+    filt_temp_when_label: "Date et heure (facultatif)",
+    filt_temp_when_now: "Maintenant",
+    filt_temp_when_invalid: "Choisis une date et une heure passées (moins d'un an).",
+    wizard_apply_datetime: "Date et heure d'application",
+    wizard_time_invalid: "Saisis une date et une heure valides.",
+    wizard_time_future: "L'application ne peut pas être dans le futur.",
+    wizard_time_old: "Choisis une date des 30 derniers jours.",
+    wizard_time_before_prev: "Cette application ne peut pas précéder l'étape précédente ({time}).",
+    filt_temp_when_hint: "Date et heure facultatives : sans elles, la température est datée de maintenant.",
   },
   en: {
     tab_pool: "Pool",
@@ -1933,8 +1942,8 @@ const TRANSLATIONS = {
     filt_week_indicative: "Projected water temperature and duration per day. Days 4 to 7: indicative.",
     filt_configure_thermal: "Pool heating and cover",
     tab_filtration: "Filtration",
-    filt_hist_reco: "Recommended filtration (h)",
-    filt_hist_applied: "Applied filtration (h)",
+    filt_hist_reco: "Filt. recommended (h)",
+    filt_hist_applied: "Filt. applied (h)",
     filt_hist_title: "Filtration",
     filt_hist_reco_short: "recommended",
     filt_hist_applied_short: "applied",
@@ -1945,6 +1954,15 @@ const TRANSLATIONS = {
     filt_hist_temp_entry: "Temperature entered (Filtration tab)",
     filt_hist_temp_delete_confirm: "Delete this temperature from the history?",
     filt_solar_noon: "Solar noon",
+    filt_temp_when_label: "Date and time (optional)",
+    filt_temp_when_now: "Now",
+    filt_temp_when_invalid: "Pick a past date and time (within the last year).",
+    wizard_apply_datetime: "Application date and time",
+    wizard_time_invalid: "Enter a valid date and time.",
+    wizard_time_future: "The application cannot be in the future.",
+    wizard_time_old: "Pick a date within the last 30 days.",
+    wizard_time_before_prev: "This application cannot be before the previous step ({time}).",
+    filt_temp_when_hint: "Date and time are optional: without them, the temperature is dated now.",
   },
   de: {
     tab_pool: "Becken",
@@ -2887,8 +2905,8 @@ const TRANSLATIONS = {
     filt_week_indicative: "Prognostizierte Wassertemperatur und Dauer pro Tag. Tage 4 bis 7: unverbindlich.",
     filt_configure_thermal: "Heizung und Abdeckung des Beckens",
     tab_filtration: "Filterung",
-    filt_hist_reco: "Empfohlene Filterzeit (h)",
-    filt_hist_applied: "Eingestellte Filterzeit (h)",
+    filt_hist_reco: "Filt. empfohlen (h)",
+    filt_hist_applied: "Filt. eingestellt (h)",
     filt_hist_title: "Filterzeit",
     filt_hist_reco_short: "empfohlen",
     filt_hist_applied_short: "eingestellt",
@@ -2899,6 +2917,15 @@ const TRANSLATIONS = {
     filt_hist_temp_entry: "Temperatur eingegeben (Reiter Filterung)",
     filt_hist_temp_delete_confirm: "Diese Temperatur aus dem Verlauf löschen?",
     filt_solar_noon: "Sonnenhöchststand",
+    filt_temp_when_label: "Datum und Uhrzeit (optional)",
+    filt_temp_when_now: "Jetzt",
+    filt_temp_when_invalid: "Wähle ein Datum und eine Uhrzeit in der Vergangenheit (weniger als ein Jahr).",
+    wizard_apply_datetime: "Datum und Uhrzeit der Anwendung",
+    wizard_time_invalid: "Gib ein gültiges Datum und eine gültige Uhrzeit ein.",
+    wizard_time_future: "Die Anwendung darf nicht in der Zukunft liegen.",
+    wizard_time_old: "Wähle ein Datum der letzten 30 Tage.",
+    wizard_time_before_prev: "Diese Anwendung darf nicht vor dem vorherigen Schritt liegen ({time}).",
+    filt_temp_when_hint: "Datum und Uhrzeit sind optional: Ohne Angabe gilt die Temperatur als jetzt erfasst.",
   },
   it: {
     tab_pool: "Vasca",
@@ -3841,8 +3868,8 @@ const TRANSLATIONS = {
     filt_week_indicative: "Temperatura dell'acqua prevista e durata per giorno. Giorni 4-7: indicativi.",
     filt_configure_thermal: "Riscaldamento e copertura della vasca",
     tab_filtration: "Filtrazione",
-    filt_hist_reco: "Filtrazione consigliata (h)",
-    filt_hist_applied: "Filtrazione impostata (h)",
+    filt_hist_reco: "Filtr. consigliata (h)",
+    filt_hist_applied: "Filtr. impostata (h)",
     filt_hist_title: "Filtrazione",
     filt_hist_reco_short: "consigliata",
     filt_hist_applied_short: "impostata",
@@ -3853,6 +3880,15 @@ const TRANSLATIONS = {
     filt_hist_temp_entry: "Temperatura inserita (scheda Filtrazione)",
     filt_hist_temp_delete_confirm: "Eliminare questa temperatura dallo storico?",
     filt_solar_noon: "Mezzogiorno solare",
+    filt_temp_when_label: "Data e ora (facoltative)",
+    filt_temp_when_now: "Adesso",
+    filt_temp_when_invalid: "Scegli una data e un'ora passate (meno di un anno).",
+    wizard_apply_datetime: "Data e ora di applicazione",
+    wizard_time_invalid: "Inserisci una data e un'ora valide.",
+    wizard_time_future: "L'applicazione non può essere nel futuro.",
+    wizard_time_old: "Scegli una data degli ultimi 30 giorni.",
+    wizard_time_before_prev: "Questa applicazione non può precedere il passaggio precedente ({time}).",
+    filt_temp_when_hint: "Data e ora sono facoltative: senza, la temperatura è datata adesso.",
   },
   es: {
     tab_pool: "Piscina",
@@ -4795,8 +4831,8 @@ const TRANSLATIONS = {
     filt_week_indicative: "Temperatura del agua prevista y duración por día. Días 4 a 7: orientativos.",
     filt_configure_thermal: "Calefacción y cubierta de la piscina",
     tab_filtration: "Filtración",
-    filt_hist_reco: "Filtración recomendada (h)",
-    filt_hist_applied: "Filtración aplicada (h)",
+    filt_hist_reco: "Filt. recomendada (h)",
+    filt_hist_applied: "Filt. aplicada (h)",
     filt_hist_title: "Filtración",
     filt_hist_reco_short: "recomendada",
     filt_hist_applied_short: "aplicada",
@@ -4807,6 +4843,15 @@ const TRANSLATIONS = {
     filt_hist_temp_entry: "Temperatura introducida (pestaña Filtración)",
     filt_hist_temp_delete_confirm: "¿Eliminar esta temperatura del historial?",
     filt_solar_noon: "Mediodía solar",
+    filt_temp_when_label: "Fecha y hora (opcional)",
+    filt_temp_when_now: "Ahora",
+    filt_temp_when_invalid: "Elige una fecha y hora pasadas (menos de un año).",
+    wizard_apply_datetime: "Fecha y hora de aplicación",
+    wizard_time_invalid: "Introduce una fecha y una hora válidas.",
+    wizard_time_future: "La aplicación no puede estar en el futuro.",
+    wizard_time_old: "Elige una fecha de los últimos 30 días.",
+    wizard_time_before_prev: "Esta aplicación no puede ser anterior al paso anterior ({time}).",
+    filt_temp_when_hint: "La fecha y la hora son opcionales: sin ellas, la temperatura se registra con la fecha y hora actuales.",
   },
   pt: {
     tab_pool: "Piscina",
@@ -5749,8 +5794,8 @@ const TRANSLATIONS = {
     filt_week_indicative: "Temperatura da água prevista e duração por dia. Dias 4 a 7: indicativos.",
     filt_configure_thermal: "Aquecimento e cobertura da piscina",
     tab_filtration: "Filtração",
-    filt_hist_reco: "Filtração recomendada (h)",
-    filt_hist_applied: "Filtração aplicada (h)",
+    filt_hist_reco: "Filt. recomendada (h)",
+    filt_hist_applied: "Filt. aplicada (h)",
     filt_hist_title: "Filtração",
     filt_hist_reco_short: "recomendada",
     filt_hist_applied_short: "aplicada",
@@ -5761,6 +5806,15 @@ const TRANSLATIONS = {
     filt_hist_temp_entry: "Temperatura introduzida (separador Filtração)",
     filt_hist_temp_delete_confirm: "Eliminar esta temperatura do histórico?",
     filt_solar_noon: "Meio-dia solar",
+    filt_temp_when_label: "Data e hora (opcional)",
+    filt_temp_when_now: "Agora",
+    filt_temp_when_invalid: "Escolha uma data e hora passadas (menos de um ano).",
+    wizard_apply_datetime: "Data e hora de aplicação",
+    wizard_time_invalid: "Introduza uma data e uma hora válidas.",
+    wizard_time_future: "A aplicação não pode estar no futuro.",
+    wizard_time_old: "Escolha uma data dos últimos 30 dias.",
+    wizard_time_before_prev: "Esta aplicação não pode ser anterior ao passo anterior ({time}).",
+    filt_temp_when_hint: "A data e a hora são opcionais: sem elas, a temperatura é registada com a data e hora atuais.",
   },
 };
 
@@ -14149,11 +14203,12 @@ function collectWaterEntries(measures, manual) {
     const t = Number.isFinite(tEntry) ? Math.max(Number.isFinite(tDate) ? tDate : 0, tEntry) : tDate;
     if (Number.isFinite(v) && Number.isFinite(t)) out.push({ value: v, t, src: "mesure" });
   });
-  if (manual) {
-    const v = parseFloat(manual.value);
-    const t = Date.parse(manual.at);
+  // saisies de la carte : une seule ({ value, at }) ou toute la liste (journal des saisies de l'onglet Filtration)
+  (Array.isArray(manual) ? manual : manual ? [manual] : []).forEach((m) => {
+    const v = parseFloat(m && m.value);
+    const t = Date.parse(m && m.at);
     if (Number.isFinite(v) && Number.isFinite(t)) out.push({ value: v, t, src: "saisie" });
-  }
+  });
   return out.sort((a, b) => a.t - b.t);
 }
 
@@ -14461,8 +14516,38 @@ function compactHours(h) {
 // fromFiltration } : point de la courbe de température, ligne du journal, ligne du rapport, avec la durée conseillée / appliquée.
 // Elles ne modifient jamais les mesures. filtrationWaterTemp seule (saisie antérieure au journal) est reprise aussi.
 const FILTRATION_TEMP_LOG_MAX = 200;
+// Journal trié par date de saisie (une saisie peut être antidatée) ; deux saisies au même instant : la dernière remplace la première.
 function appendTempLog(log, entry) {
-  return [...(Array.isArray(log) ? log : []), entry].slice(-FILTRATION_TEMP_LOG_MAX);
+  const all = [...(Array.isArray(log) ? log : []), entry].filter((e) => e && Number.isFinite(Date.parse(e.at)));
+  const byAt = new Map();
+  all.forEach((e) => byAt.set(Date.parse(e.at), e));
+  return Array.from(byAt.entries()).sort((a, b) => a[0] - b[0]).map((x) => x[1]).slice(-FILTRATION_TEMP_LOG_MAX);
+}
+// Saisie la plus récente (par date) d'un journal : c'est elle que la carte utilise comme « dernière température saisie ».
+function latestTempEntry(log) {
+  let best = null;
+  (Array.isArray(log) ? log : []).forEach((e) => {
+    const t = Date.parse(e && e.at);
+    if (Number.isFinite(t) && (!best || t >= best.t)) best = { t, e };
+  });
+  return best ? best.e : null;
+}
+// Date et heure d'une saisie : champ « datetime-local » de l'appareil (heure locale) <-> instant. Une saisie ne peut pas être dans
+// le futur (tolérance de 2 min) ni remonter à plus d'un an.
+const TEMP_ENTRY_MAX_AGE_DAYS = 365;
+const TEMP_ENTRY_FUTURE_TOLERANCE_MS = 2 * 60 * 1000;
+function localInputValue(ms) {
+  const d = new Date(ms);
+  const p = (n) => String(n).padStart(2, "0");
+  return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + "T" + p(d.getHours()) + ":" + p(d.getMinutes());
+}
+function parseLocalInput(str) {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(String(str || ""))) return null;
+  const ms = new Date(str).getTime();
+  return Number.isFinite(ms) ? ms : null;
+}
+function validTempEntryTime(ms, nowMs) {
+  return Number.isFinite(ms) && ms <= nowMs + TEMP_ENTRY_FUTURE_TOLERANCE_MS && ms >= nowMs - TEMP_ENTRY_MAX_AGE_DAYS * 864e5;
 }
 function filtrationTempEntries(pool) {
   if (!pool) return [];
@@ -14485,6 +14570,33 @@ function removeFiltrationTempEntry(pool, at) {
   const remaining = filtrationTempEntries(pool).filter((e) => Date.parse(e.date) !== t).map((e) => ({ at: e.date, value: parseFloat(e.temp) }));
   const last = remaining.length ? remaining[remaining.length - 1] : null;
   return { filtrationTempLog: remaining.slice(-FILTRATION_TEMP_LOG_MAX), filtrationWaterTemp: last };
+}
+// ---------- Assistant de traitement : date et heure d'application d'une étape ----------
+// Les champs date (AAAA-MM-JJ) et heure (HH:MM) sont en heure locale de l'appareil. Une application peut être saisie après coup
+// (plan suivi mais non validé à temps) : jusqu'à WIZARD_APPLY_MAX_AGE_DAYS jours en arrière, pas dans le futur (tolérance de 10 min),
+// et pas avant l'étape précédente déjà appliquée.
+const WIZARD_APPLY_MAX_AGE_DAYS = 30;
+const WIZARD_APPLY_FUTURE_TOLERANCE_MS = 10 * 60 * 1000;
+function localDateValue(ms) {
+  const d = new Date(ms);
+  const p = (n) => String(n).padStart(2, "0");
+  return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate());
+}
+// Instant (ms) correspondant à une date et une heure locales ; null si l'une des deux est absente ou mal formée.
+function combineDateTime(dateStr, timeStr) {
+  const dm = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(dateStr || ""));
+  const tm = /^(\d{1,2}):(\d{2})/.exec(String(timeStr || ""));
+  if (!dm || !tm) return null;
+  const ms = new Date(+dm[1], +dm[2] - 1, +dm[3], +tm[1], +tm[2], 0, 0).getTime();
+  return Number.isFinite(ms) ? ms : null;
+}
+// Clé du message d'erreur d'une date d'application (null = valide). prevMs : instant de l'étape précédente appliquée (ou null).
+function wizardTimeProblem(ms, nowMs, prevMs) {
+  if (!Number.isFinite(ms)) return "wizard_time_invalid";
+  if (ms > nowMs + WIZARD_APPLY_FUTURE_TOLERANCE_MS) return "wizard_time_future";
+  if (ms < nowMs - WIZARD_APPLY_MAX_AGE_DAYS * 864e5) return "wizard_time_old";
+  if (Number.isFinite(prevMs) && ms < prevMs - 60 * 1000) return "wizard_time_before_prev";
+  return null;
 }
 // ---- FILTRATION PURE END ----
 
@@ -14600,6 +14712,7 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
   const [wState, setWState] = useState("idle"); // idle | loading | ok | error
   const [localHist, setLocalHist] = useState(() => loadAirHistory(pool?.id));
   const [tempDraft, setTempDraft] = useState("");
+  const [tempWhen, setTempWhen] = useState(""); // date et heure de la saisie (heure locale) ; vide = maintenant
   // Programmation actuelle de la filtration (coffret) : saisie dans l'onglet, enregistrée dans le bassin.
   const progSaved = { start: (pool && pool.filtrationStartCurrent) || "", dur: pool && pool.filtrationDurationCurrent != null ? String(pool.filtrationDurationCurrent) : "" };
   const [progStart, setProgStart] = useState(progSaved.start);
@@ -14675,8 +14788,8 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
 
   const thermalCfg = useMemo(() => ({ heating: pool?.heating || null, cover: pool?.cover || null }), [pool?.heating, pool?.cover]);
   const est = useMemo(
-    () => (poolType === "spa" ? null : computeWaterEstimate({ entries: collectWaterEntries(measures, pool?.filtrationWaterTemp), airHistory, forecast, nowMs, tz, cfg: thermalCfg, depthM: pool?.avgDepthM })),
-    [poolType, measures, pool?.filtrationWaterTemp, airHistory, forecast, nowMs, tz, thermalCfg, pool?.avgDepthM]
+    () => (poolType === "spa" ? null : computeWaterEstimate({ entries: collectWaterEntries(measures, filtrationTempEntries(pool).map((e) => ({ value: e.temp, at: e.date }))), airHistory, forecast, nowMs, tz, cfg: thermalCfg, depthM: pool?.avgDepthM })),
+    [poolType, measures, pool?.filtrationWaterTemp, pool?.filtrationTempLog, airHistory, forecast, nowMs, tz, thermalCfg, pool?.avgDepthM]
   );
 
   const spaSpec = poolType === "spa" ? (SPA_FILTRATION_TABLE[pool?.spaType || "portable"] || SPA_FILTRATION_TABLE.portable)[pool?.spaUsage || "occasionnel"] : null;
@@ -14720,12 +14833,18 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
   function saveTemp() {
     const c = tempFromDisplay(String(tempDraft).replace(",", "."), TEMP_UNIT);
     if (c == null || c < -5 || c > 45 || !canEdit || !onUpdatePool) return;
-    const entry = { value: Math.round(c * 10) / 10, at: new Date().toISOString() };
+    const nowMs = Date.now();
+    const whenMs = tempWhen === "" ? nowMs : parseLocalInput(tempWhen);
+    if (!validTempEntryTime(whenMs, nowMs)) return;
+    const entry = { value: Math.round(c * 10) / 10, at: new Date(whenMs).toISOString() };
     // Journal des saisies (historique) : à la première saisie après la mise à jour, on y reprend aussi la saisie précédente.
     const prior = pool && pool.filtrationWaterTemp;
     const base = pool && Array.isArray(pool.filtrationTempLog) && pool.filtrationTempLog.length ? pool.filtrationTempLog : prior ? [prior] : [];
-    onUpdatePool({ filtrationWaterTemp: entry, filtrationTempLog: appendTempLog(base, entry) });
+    const log = appendTempLog(base, entry);
+    // La température utilisée par le calcul est la saisie la plus RÉCENTE par date : une saisie antidatée ne la remplace pas.
+    onUpdatePool({ filtrationWaterTemp: latestTempEntry(log), filtrationTempLog: log });
     setTempDraft("");
+    setTempWhen("");
     if (onEnsureAltitude) onEnsureAltitude();
   }
 
@@ -14742,7 +14861,8 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
 
   const updatedLabel = weather && weather.updatedAt ? new Date(weather.updatedAt).toLocaleTimeString(lang || "fr", { hour: "2-digit", minute: "2-digit", timeZone: tz }) : null;
   const tzLabel = tz + ", " + formatUtcOffset(tzOffsetMinutes(nowMs, tz));
-  const tempValid = Number.isFinite(parseFloat(String(tempDraft).replace(",", "."))) && canEdit;
+  const whenValid = tempWhen === "" || validTempEntryTime(parseLocalInput(tempWhen), Date.now());
+  const tempValid = Number.isFinite(parseFloat(String(tempDraft).replace(",", "."))) && canEdit && whenValid;
   const sourceLabel = !est ? "" : est.source === "mesure" ? t("filt_temp_from_measure") : est.source === "saisie" ? t("filt_temp_entered") : est.source === "consigne" ? t("filt_temp_setpoint") : est.confidence === "low" ? t("filt_temp_estimated_low") : t("filt_temp_estimated");
 
   return (
@@ -14808,19 +14928,37 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
 
       {poolType !== "spa" && (
         <div style={{ marginTop: 12 }}>
-          <div style={{ fontSize: 12, color: "var(--brand-text-muted)", marginBottom: 4 }}>{t("filt_temp_input_label", { unit: tempUnitLabel(TEMP_UNIT) })}</div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <input
-              type="number" step="0.5" inputMode="decimal" value={tempDraft}
-              onChange={(e) => setTempDraft(e.target.value)}
-              placeholder={t("filt_temp_input_ph", { ex: TEMP_UNIT === "F" ? "75" : "24" })}
-              disabled={!canEdit}
-              style={{ ...styles.input, flex: 1, marginBottom: 0 }}
-            />
-            <button type="button" onClick={saveTemp} disabled={!tempValid} style={{ ...styles.primaryBtn, width: "auto", padding: "0 16px", opacity: tempValid ? 1 : 0.5 }}>
-              {t("filt_temp_save")}
-            </button>
+          {/* Température et date/heure (facultative) sur la même ligne ; le bouton Enregistrer en dessous */}
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 0.8fr) minmax(0, 1.4fr)", gap: 8, alignItems: "end" }}>
+            <div>
+              <div style={{ fontSize: 12, color: "var(--brand-text-muted)", marginBottom: 4 }}>{t("filt_temp_input_label", { unit: tempUnitLabel(TEMP_UNIT) })}</div>
+              <input
+                type="number" step="0.5" inputMode="decimal" value={tempDraft}
+                onChange={(e) => setTempDraft(e.target.value)}
+                placeholder={t("filt_temp_input_ph", { ex: TEMP_UNIT === "F" ? "75" : "24" })}
+                disabled={!canEdit}
+                style={{ ...styles.input, marginBottom: 0 }}
+              />
+            </div>
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 6, fontSize: 12, color: "var(--brand-text-muted)", marginBottom: 4 }}>
+                <span>{t("filt_temp_when_label")}</span>
+                {tempWhen !== "" && <button type="button" onClick={() => setTempWhen("")} style={{ ...styles.editLinkBtn, display: "inline-flex", padding: 0, flexShrink: 0 }}>{t("filt_temp_when_now")}</button>}
+              </div>
+              <input
+                type="datetime-local" value={tempWhen}
+                min={localInputValue(Date.now() - TEMP_ENTRY_MAX_AGE_DAYS * 864e5)} max={localInputValue(Date.now())}
+                onChange={(e) => setTempWhen(e.target.value)}
+                disabled={!canEdit}
+                style={{ ...styles.input, marginBottom: 0 }}
+              />
+            </div>
           </div>
+          {tempWhen !== "" && !whenValid && <div style={{ fontSize: 11.5, color: "#c0392b", marginTop: 4, lineHeight: 1.4 }}>{t("filt_temp_when_invalid")}</div>}
+          <button type="button" onClick={saveTemp} disabled={!tempValid} style={{ ...styles.primaryBtn, marginTop: 8, opacity: tempValid ? 1 : 0.5 }}>
+            {t("filt_temp_save")}
+          </button>
+          <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginTop: 6, lineHeight: 1.4 }}>{t("filt_temp_when_hint")}</div>
           <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginTop: 4, lineHeight: 1.4 }}>{t("filt_temp_hint")}</div>
           {est && est.needsInvite && canEdit && <div style={{ fontSize: 12, color: "var(--brand-primary)", marginTop: 4, lineHeight: 1.4 }}>{t("filt_invite_temp")}</div>}
         </div>
@@ -21433,6 +21571,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   const [now, setNow] = React.useState(Date.now());
   const [editAmount, setEditAmount] = React.useState(null);
   const [editTime, setEditTime] = React.useState("");
+  const [editDate, setEditDate] = React.useState(""); // v1.159.0 — date d'application (AAAA-MM-JJ, heure locale)
   const [editingPrev, setEditingPrev] = React.useState(false);
   // v1.144.0 — Étape précédente en cours de modification (n'importe laquelle
   // des étapes déjà appliquées, plus seulement la dernière) et sélecteur.
@@ -21441,6 +21580,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   const [prevProduct, setPrevProduct] = React.useState("");
   const [prevAmount, setPrevAmount] = React.useState("");
   const [prevTime, setPrevTime] = React.useState("");
+  const [prevDate, setPrevDate] = React.useState("");
   const [selectedProduct, setSelectedProduct] = React.useState(null);
   // v1.114.0 — Quand la quantité saisie est significativement inférieure à la
   // recommandation, on demande confirmation avant d'insérer une étape de
@@ -21544,6 +21684,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
         // Heure par défaut = maintenant en format HH:MM
         const d = new Date();
         setEditTime(`${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`);
+        setEditDate(localDateValue(d.getTime()));
         setSelectedProduct(defaultProductName);
         setFreeUnitMode("kg");
         setEditingPrev(false);
@@ -21615,6 +21756,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
     setPrevAmount(String(value ?? ""));
     const d = new Date(prev.appliedAt);
     setPrevTime(`${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`);
+    setPrevDate(localDateValue(d.getTime()));
     setPrevIdx(i);
     setEditingPrev(true);
     setPickingPrev(false);
@@ -21743,7 +21885,16 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
     onApplyStep(currentIdx, amount, appliedAt, productName, false);
   }
 
+  // v1.159.0 — Instant d'application = date + heure saisies (par défaut : maintenant). Contrôles : voir wizardTimeProblem.
+  const appliedMs = combineDateTime(editDate, editTime);
+  const prevAppliedMs = plan.steps.slice(0, currentIdx).filter((st) => st.appliedAt && !st.skipped).reduce((m, st) => Math.max(m, Date.parse(st.appliedAt) || 0), 0) || null;
+  const applyProblem = isInfoStep ? null : wizardTimeProblem(appliedMs === null && editDate === "" && editTime === "" ? Date.now() : appliedMs, Date.now(), prevAppliedMs);
+  function appliedAtFromInputs() {
+    return appliedMs === null ? new Date().toISOString() : new Date(appliedMs).toISOString();
+  }
+
   function handleApply() {
+    if (applyProblem) return;
     if (isInfoStep) {
       // Carte informative : rien à saisir, ferme et termine le plan.
       onApplyStep(currentIdx, null, new Date().toISOString(), null);
@@ -21754,13 +21905,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
       // la valeur saisie EST le pourcentage.
       const v = parseFloat(editAmount);
       const amount = isNaN(v) ? null : v;
-      let appliedAt = new Date().toISOString();
-      if (editTime) {
-        const [h, m] = editTime.split(":").map(Number);
-        const d = new Date();
-        d.setHours(h, m, 0, 0);
-        appliedAt = d.toISOString();
-      }
+      const appliedAt = appliedAtFromInputs();
       onApplyStep(currentIdx, amount, appliedAt, null);
       return;
     }
@@ -21770,13 +21915,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
       // une fiche produit.
       const v = parseFloat(editAmount);
       const amount = isNaN(v) ? null : (freeUnitMode === "kg" ? v * 1000 : v);
-      let appliedAt = new Date().toISOString();
-      if (editTime) {
-        const [h, m] = editTime.split(":").map(Number);
-        const d = new Date();
-        d.setHours(h, m, 0, 0);
-        appliedAt = d.toISOString();
-      }
+      const appliedAt = appliedAtFromInputs();
       finalizeApply(amount, appliedAt, null);
       return;
     }
@@ -21787,13 +21926,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
     const actualBaseUnit = actualProd?.doseUnit || baseUnit;
     const { displayUnit: actualDisplayUnit } = toDisplayUnit(null, actualBaseUnit, actualProd);
     const amount = toBaseUnit(editAmount, actualProd ? actualDisplayUnit : displayUnit, actualBaseUnit, actualProd);
-    let appliedAt = new Date().toISOString();
-    if (editTime) {
-      const [h, m] = editTime.split(":").map(Number);
-      const d = new Date();
-      d.setHours(h, m, 0, 0);
-      appliedAt = d.toISOString();
-    }
+    const appliedAt = appliedAtFromInputs();
     finalizeApply(amount, appliedAt, selectedProduct);
   }
 
@@ -21821,14 +21954,8 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   })();
 
   function handleApplyRemainingStock() {
-    if (!stockShortfall) return;
-    let appliedAt = new Date().toISOString();
-    if (editTime) {
-      const [h, m] = editTime.split(":").map(Number);
-      const d = new Date();
-      d.setHours(h, m, 0, 0);
-      appliedAt = d.toISOString();
-    }
+    if (!stockShortfall || applyProblem) return;
+    const appliedAt = appliedAtFromInputs();
     onApplyStep(currentIdx, stockShortfall.applicable, appliedAt, selectedProduct, true);
   }
 
@@ -22059,24 +22186,42 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
           </div>
         )}
 
-        {/* Heure d'application */}
+        {/* Date et heure d'application (v1.159.0 : la date est modifiable, pour valider après coup un plan déjà suivi) */}
         <div style={{ marginBottom: 16 }}>
           <label style={{ fontSize: 12, fontWeight: 600, color: "var(--brand-text-secondary)", display: "block", marginBottom: 6 }}>
-            {t("wizard_apply_time")}
+            {t("wizard_apply_datetime")}
           </label>
-          <input
-            type="time"
-            value={editTime}
-            onChange={(e) => setEditTime(e.target.value)}
-            style={{ width: "100%", boxSizing: "border-box", fontSize: 18, fontWeight: 700, color: "var(--brand-primary)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 12px", outline: "none" }}
-          />
+          <div style={{ display: "flex", gap: 8 }}>
+            <input
+              type="date"
+              value={editDate}
+              max={localDateValue(Date.now())}
+              min={localDateValue(Date.now() - WIZARD_APPLY_MAX_AGE_DAYS * 864e5)}
+              onChange={(e) => setEditDate(e.target.value)}
+              aria-label={t("wizard_apply_datetime")}
+              style={{ flex: 1.3, minWidth: 0, boxSizing: "border-box", fontSize: 16, fontWeight: 700, color: "var(--brand-primary)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 10px", outline: "none" }}
+            />
+            <input
+              type="time"
+              value={editTime}
+              onChange={(e) => setEditTime(e.target.value)}
+              aria-label={t("wizard_apply_time")}
+              style={{ flex: 1, minWidth: 0, boxSizing: "border-box", fontSize: 18, fontWeight: 700, color: "var(--brand-primary)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 10px", outline: "none" }}
+            />
+          </div>
+          {applyProblem && (
+            <div style={{ fontSize: 12, color: "#c0392b", marginTop: 6, lineHeight: 1.4 }}>
+              {t(applyProblem, { time: prevAppliedMs ? formatDate(new Date(prevAppliedMs).toISOString()) : "" })}
+            </div>
+          )}
         </div>
 
         {/* Boutons */}
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <button
-            style={{ display:"flex",alignItems:"center",justifyContent:"center",gap:8,width:"100%",padding:"14px 0",borderRadius:12,border:"none",background:"var(--brand-primary)",color:"#fff",fontWeight:700,fontSize:16,cursor:"pointer" }}
+            style={{ display:"flex",alignItems:"center",justifyContent:"center",gap:8,width:"100%",padding:"14px 0",borderRadius:12,border:"none",background:"var(--brand-primary)",color:"#fff",fontWeight:700,fontSize:16,cursor:applyProblem?"default":"pointer",opacity:applyProblem?0.5:1 }}
             onClick={handleApply}
+            disabled={!!applyProblem}
           >
             <CheckCircle2 size={18} /> {t("wizard_done")}
           </button>
@@ -22167,11 +22312,21 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
                 />
                 <span style={{ fontSize: 14, fontWeight: 700, color: "var(--brand-text-secondary)" }}>{du}</span>
               </div>
-              <label style={{ fontSize: 11, fontWeight: 600, color: "var(--brand-text-secondary)", display: "block", marginBottom: 4 }}>{t("wizard_apply_time")}</label>
+              <label style={{ fontSize: 11, fontWeight: 600, color: "var(--brand-text-secondary)", display: "block", marginBottom: 4 }}>{t("wizard_apply_datetime")}</label>
+              <input
+                type="date"
+                value={prevDate}
+                max={localDateValue(Date.now())}
+                min={localDateValue(Date.now() - WIZARD_APPLY_MAX_AGE_DAYS * 864e5)}
+                onChange={(e) => setPrevDate(e.target.value)}
+                aria-label={t("wizard_apply_datetime")}
+                style={{ width: "100%", boxSizing: "border-box", fontSize: 16, fontWeight: 700, color: "var(--brand-primary)", border: "1.5px solid #d0e4f5", borderRadius: 8, padding: "8px 10px", outline: "none", marginBottom: 8 }}
+              />
               <input
                 type="time"
                 value={prevTime}
                 onChange={(e) => setPrevTime(e.target.value)}
+                aria-label={t("wizard_apply_time")}
                 style={{ width: "100%", boxSizing: "border-box", fontSize: 16, fontWeight: 700, color: "var(--brand-primary)", border: "1.5px solid #d0e4f5", borderRadius: 8, padding: "8px 10px", outline: "none", marginBottom: 10 }}
               />
               <div style={{ display: "flex", gap: 8 }}>
@@ -22183,11 +22338,14 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
                     const newAmount = toBaseUnit(prevAmount, du2, baseU, chosenProd);
                     if (newAmount != null && newAmount <= 0) { window.alert(t("wizard_amount_required")); return; }
                     let newAppliedAt = prev.appliedAt;
-                    if (prevTime) {
-                      const [h, m] = prevTime.split(":").map(Number);
-                      const d = new Date(prev.appliedAt || new Date());
-                      d.setHours(h, m, 0, 0);
-                      newAppliedAt = d.toISOString();
+                    const prevMsNew = combineDateTime(prevDate, prevTime);
+                    if (prevMsNew !== null) {
+                      // v1.159.0 — la date est modifiable ; mêmes contrôles que l'étape en cours (pas dans le futur, 30 jours au plus),
+                      // et pas avant l'étape appliquée qui précède celle-ci.
+                      const before = plan.steps.slice(0, prevIdx).filter((st) => st.appliedAt && !st.skipped).reduce((m, st) => Math.max(m, Date.parse(st.appliedAt) || 0), 0) || null;
+                      const problem = wizardTimeProblem(prevMsNew, Date.now(), before);
+                      if (problem) { window.alert(t(problem, { time: before ? formatDate(new Date(before).toISOString()) : "" })); return; }
+                      newAppliedAt = new Date(prevMsNew).toISOString();
                     }
                     onEditPrevStep(prevIdx, newAmount, newAppliedAt, prevProduct);
                     setEditingPrev(false);
