@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.163.1";
+const APP_VERSION = "1.164.2";
 const CGU_VERSION = "1.5"; // v1.5 : section 6 complétée (altitude du bassin : IGN, Open Topo Data) ; v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -14785,12 +14785,11 @@ function computeDayInfo(weather, coords, nowMs, tz, forecast) {
   return { noonMs: localMidnightMs(todayKey, tz) + noonH * 3600e3, range, sun: sym ? sunFactorFromSymbol(sym) : null };
 }
 
-// Points de la courbe « projetée » : [{ t (ms), value (°C), kind, label (bool) }] triés par date.
-// Passé : de chaque saisie à la suivante, la température que le modèle avait prévue (une valeur par midi local, puis la valeur prévue pour
-// l'instant de la saisie suivante, placée 1 minute avant elle : l'écart avec la saisie est l'erreur du modèle) ; la courbe repart de la saisie.
-// Futur (withFuture) : depuis la dernière saisie, jours jusqu'à hier puis, comme dans la carte, aujourd'hui et les 6 jours suivants.
+// Points de la courbe « projetée » : [{ t (ms), value (°C), kind, label (bool) }] triés par date. La courbe DÉMARRE à la dernière saisie (valeur
+// saisie) et ne trace rien avant : aucune courbe prévue entre deux saisies passées. Ensuite : un point par midi local jusqu'à hier, puis,
+// avec withFuture, comme dans la carte, le midi d'aujourd'hui et des 6 jours suivants (7 jours à venir).
 // o : { entries (collectWaterEntries), airHistory, forecast [{ date, tMean }], nowMs, tz, cfg, depthM, day, withFuture }.
-// Un intervalle sans données d'air suffisantes (moins de la moitié des jours connus) n'est pas tracé.
+// Sans donnée d'air suffisante entre la dernière saisie et aujourd'hui (moins de la moitié des jours connus), les jours écoulés ne sont pas tracés.
 function buildTempProjection(o) {
   const tz = o.tz || "UTC";
   const entries = (o.entries || [])
@@ -14814,31 +14813,17 @@ function buildTempProjection(o) {
     for (let i = 0; i <= n; i++) if (Number.isFinite(known[addDaysKey(fromKey, i)])) c++;
     return c > 0 && c / (n + 1) >= 0.5;
   };
-  const dayPoints = (a, toMs, air) => {
-    const pts = [];
-    const n = daysBetweenKeys(a.key, localDateKey(toMs, tz));
-    for (let i = 0; i <= n; i++) {
-      const noon = noonOfKeyMs(addDaysKey(a.key, i), tz);
-      if (noon <= a.t + 3 * 3600e3 || noon >= toMs - 3 * 3600e3) continue;
-      pts.push({ t: noon, value: r1(projectToInstant({ startTemp: a.value, startMs: a.t, endMs: noon, air, k, offsets: model.offsets, cfg: o.cfg, tz })), kind: "day", label: false });
-    }
-    return pts;
-  };
-  for (let i = 0; i < entries.length - 1; i++) {
-    const a = entries[i];
-    const b = entries[i + 1];
-    if (b.t - a.t < 120000 || !covered(a.key, b.key)) continue;
-    const air = fillAirSeries(known, a.key, b.key);
-    out.push({ t: a.t, value: r1(a.value), kind: "anchor", label: false });
-    dayPoints(a, b.t, air).forEach((p) => out.push(p));
-    out.push({ t: b.t - 60000, value: r1(projectToInstant({ startTemp: a.value, startMs: a.t, endMs: b.t, air, k, offsets: model.offsets, cfg: o.cfg, tz })), kind: "pred", label: true });
-  }
   const last = entries[entries.length - 1];
   if (last.t <= o.nowMs + 120000) {
     out.push({ t: last.t, value: r1(last.value), kind: "anchor", label: false });
     if (last.key < todayKey && covered(last.key, todayKey)) {
       const air = fillAirSeries(known, last.key, todayKey);
-      dayPoints(last, noonOfKeyMs(todayKey, tz), air).forEach((p) => { if (localDateKey(p.t, tz) < todayKey) out.push(p); });
+      const n = daysBetweenKeys(last.key, todayKey);
+      for (let i = 0; i < n; i++) {
+        const noon = noonOfKeyMs(addDaysKey(last.key, i), tz);
+        if (noon <= last.t + 3 * 3600e3) continue;
+        out.push({ t: noon, value: r1(projectToInstant({ startTemp: last.value, startMs: last.t, endMs: noon, air, k, offsets: model.offsets, cfg: o.cfg, tz })), kind: "day", label: false });
+      }
     }
     const est = computeWaterEstimate({ entries: o.entries, airHistory: o.airHistory, forecast: o.forecast, nowMs: o.nowMs, tz, cfg: o.cfg, depthM: o.depthM, day: o.day });
     if (est) {
@@ -14861,10 +14846,29 @@ function getDeviceTimeZone() {
   try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"; } catch (e) { return "UTC"; }
 }
 function isFiniteNum(x) { return typeof x === "number" && Number.isFinite(x); }
+// Format horaire du terminal : 12 h (AM/PM) ou 24 h, d'après ses réglages régionaux (aucun réglage dans l'app : automatique).
+const DEVICE_HOUR12 = (() => {
+  try {
+    const hc = new Intl.DateTimeFormat(undefined, { hour: "numeric" }).resolvedOptions().hourCycle;
+    return hc === "h12" || hc === "h11";
+  } catch (e) { return false; }
+})();
+// Options d'heure à joindre à toLocale(Time)String : { hour, minute, hour12 | hourCycle }.
+const HM = DEVICE_HOUR12 ? { hour: "numeric", minute: "2-digit", hour12: true } : { hour: "2-digit", minute: "2-digit", hourCycle: "h23" };
+// Heure locale d'une date, dans le format du terminal (« 21:05 » ou « 9:05 PM »).
+function fmtHM(d) {
+  if (!DEVICE_HOUR12) return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  return d.toLocaleTimeString(undefined, HM);
+}
+// Heure décimale (0 à 24) dans le format du terminal ; 24 h = fin de journée (« 24:00 » / « 12:00 AM »).
 function formatClock(h) {
-  if (h >= 24) return "24:00";
   const total = Math.round(h * 60);
-  return String(Math.floor(total / 60)).padStart(2, "0") + ":" + String(total % 60).padStart(2, "0");
+  if (!DEVICE_HOUR12) {
+    if (h >= 24) return "24:00";
+    return String(Math.floor(total / 60)).padStart(2, "0") + ":" + String(total % 60).padStart(2, "0");
+  }
+  const d = new Date(2000, 0, 1, Math.floor(total / 60) % 24, total % 60);
+  return d.toLocaleTimeString(undefined, HM);
 }
 function formatDurationH(h) {
   const total = Math.round(h * 60);
@@ -15162,7 +15166,7 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
     fetchAltitude(lat, lon).then((alt) => { if (alt !== null) onUpdatePool({ altitudeM: alt }); });
   }
 
-  const updatedLabel = weather && weather.updatedAt ? new Date(weather.updatedAt).toLocaleTimeString(lang || "fr", { hour: "2-digit", minute: "2-digit", timeZone: tz }) : null;
+  const updatedLabel = weather && weather.updatedAt ? new Date(weather.updatedAt).toLocaleTimeString(lang || "fr", { ...HM, timeZone: tz }) : null;
   const tzLabel = tz + ", " + formatUtcOffset(tzOffsetMinutes(nowMs, tz));
   const nowHour = localHourOf(clockMs, tz);
   const daylight = coords ? computeDaylight(coords.lat, coords.lon, new Date(nowMs), tz) : null;
@@ -15290,9 +15294,9 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
             <div data-testid="temp-older-note" style={{ fontSize: 11.5, color: "var(--brand-text)", background: "#eef7fb", border: "1px solid #d0e4f5", borderRadius: 8, padding: "6px 8px", marginTop: 6, lineHeight: 1.4 }}>
               {t("filt_temp_older_note", {
                 temp: formatTemp(tempSaved.older.entry.value, TEMP_UNIT, 1),
-                when: new Date(tempSaved.older.entry.at).toLocaleString(lang || "fr", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: tz }),
+                when: new Date(tempSaved.older.entry.at).toLocaleString(lang || "fr", { day: "2-digit", month: "2-digit", ...HM, timeZone: tz }),
                 latest: formatTemp(tempSaved.older.latest.value, TEMP_UNIT, 1),
-                latestWhen: new Date(tempSaved.older.latest.at).toLocaleString(lang || "fr", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: tz }),
+                latestWhen: new Date(tempSaved.older.latest.at).toLocaleString(lang || "fr", { day: "2-digit", month: "2-digit", ...HM, timeZone: tz }),
               })}
             </div>
           )}
@@ -17467,7 +17471,7 @@ function TimeCursorSlider({ windowKey, windowEnd, onWindowEndChange, minTs, maxT
 function DateTimeAxisTick({ x, y, payload, fill, fontSize }) {
   const d = new Date(payload.value);
   const datePart = `${d.getDate().toString().padStart(2,"0")}/${(d.getMonth()+1).toString().padStart(2,"0")}`;
-  const timePart = `${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`;
+  const timePart = fmtHM(d);
   return (
     <text x={x} y={y} textAnchor="middle" fontSize={fontSize || 9} fill={fill || "var(--brand-text-muted)"}>
       <tspan x={x} dy="0.9em">{datePart}</tspan>
@@ -17845,13 +17849,13 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
     });
   }, [isPremium, measures, tempEntries, histAir, histForecast, histWeather, tzHist, pool?.lat, pool?.lon, pool?.heating, pool?.cover, pool?.avgDepthM]);
   const hasTempProj = tempProj.length > 0;
-  // Fenêtre du graphique (bornes) et prolongement vers l'avenir quand la courbe projetée est affichée : au plus 7 jours, et au plus le tiers
-  // d'une fenêtre glissante (la durée de la fenêtre ne change pas) ; seulement quand la fenêtre est à la date la plus récente.
+  // Fenêtre du graphique (bornes) et prolongement vers l'avenir quand la courbe projetée est affichée : de la dernière mesure jusqu'à
+  // 7 jours après maintenant (les 7 jours à venir sont toujours visibles) ; seulement quand la fenêtre est à la date la plus récente.
   const histWindowMs = zoomWindow === "all" ? null : getPeriodWindowMs(zoomWindow);
   const histEnd0 = zoomWindow === "all" ? maxTs : (zoomEnd ?? maxTs);
   const histAtPresent = zoomWindow === "all" || zoomEnd == null || (maxTs != null && zoomEnd >= maxTs);
   const futureExtMs = tempProjOn && hasTempProj && histAtPresent && histEnd0 != null
-    ? Math.max(0, Math.min(7 * 864e5, histWindowMs ? histWindowMs / 3 : 7 * 864e5, Date.now() + 7 * 864e5 - histEnd0))
+    ? Math.max(0, Date.now() + 7 * 864e5 - histEnd0)
     : 0;
 
   // v1.123.2 — Fenêtre glissante qui suit vraiment la dernière mesure : sans
@@ -18540,7 +18544,7 @@ function ManualApplicationRow({ app, lang, onDelete }) {
             🔧 {t("reason_manual_maintenance")}
           </span>
           <span style={{ fontSize: 11.5, color: "var(--brand-text-muted)" }}>
-            {formatDate(app.appliedAt)} · {new Date(app.appliedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            {formatDate(app.appliedAt)} · {fmtHM(new Date(app.appliedAt))}
           </span>
         </div>
         <div style={{ fontSize: 14, fontWeight: 700, color: "var(--brand-text-strong)", marginTop: 4 }}>
@@ -18753,7 +18757,7 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, onResume
                     </div>
                     {s.appliedAt && (
                       <div style={{ fontSize: 11, color: s.skipped ? "#b0c4d4" : "#4a8fd1", marginTop: 1 }}>
-                        {s.skipped ? t("treatment_skipped") : t("treatment_at")} {new Date(s.appliedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        {s.skipped ? t("treatment_skipped") : t("treatment_at")} {fmtHM(new Date(s.appliedAt))}
                       </div>
                     )}
                     {/* v1.112.0 — Valeur pH/fCl projetée compte tenu de la quantité
@@ -21946,7 +21950,7 @@ function PlanStatusCard({ plan, onResume, lang }) {
             {remaining !== null
               ? isReady
                 ? t("countdown_done")
-                : `${t("wizard_in")} ${formatCountdown(remaining)} — ${new Date(currentStep.scheduledAt).toLocaleDateString(lang, { day: "2-digit", month: "2-digit" })} ${t("wizard_at")} ${new Date(currentStep.scheduledAt).toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" })}`
+                : `${t("wizard_in")} ${formatCountdown(remaining)} — ${new Date(currentStep.scheduledAt).toLocaleDateString(lang, { day: "2-digit", month: "2-digit" })} ${t("wizard_at")} ${fmtHM(new Date(currentStep.scheduledAt))}`
               : t("wizard_now")}
           </div>
         </div>
@@ -22420,7 +22424,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
               </div>
             </div>
             <div style={{ textAlign: "right", fontSize: 12, color: "var(--brand-text-secondary)" }}>
-              {new Date(step.scheduledAt).toLocaleDateString(lang, { day: "2-digit", month: "2-digit" })} {t("wizard_at")} {new Date(step.scheduledAt).toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" })}
+              {new Date(step.scheduledAt).toLocaleDateString(lang, { day: "2-digit", month: "2-digit" })} {t("wizard_at")} {fmtHM(new Date(step.scheduledAt))}
             </div>
           </div>
         )}
@@ -22777,7 +22781,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
                     <div style={{ fontSize: 11, color: "var(--brand-text-muted)", marginLeft: 21 }}>
                       {t("wizard_next_step_from", {
                         h: prevWaitHours,
-                        date: new Date(s.scheduledAt).toLocaleString(lang, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }),
+                        date: new Date(s.scheduledAt).toLocaleString(lang, { day: "2-digit", month: "2-digit", ...HM }),
                       })}
                     </div>
                   )}
@@ -26648,7 +26652,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
         if (i % 2 === 0) { pdf.setFillColor(247,250,254); pdf.rect(mL, y, cW, blockH, "F"); }
 
         const d = new Date(a.appliedAt);
-        const dateStr = `${d.getDate().toString().padStart(2,"0")}/${(d.getMonth()+1).toString().padStart(2,"0")} ${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`;
+        const dateStr = `${d.getDate().toString().padStart(2,"0")}/${(d.getMonth()+1).toString().padStart(2,"0")} ${fmtHM(d)}`;
 
         // Cellule fusionnée (paramCols) : date + libellé entretien manuel
         pdf.setTextColor(30,30,30);
@@ -26691,7 +26695,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
         checkPage(blockH);
         if (i % 2 === 0) { pdf.setFillColor(247,250,254); pdf.rect(mL, y, cW, blockH, "F"); }
         const d = new Date(e.date);
-        const dateStr = `${d.getDate().toString().padStart(2,"0")}/${(d.getMonth()+1).toString().padStart(2,"0")} ${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`;
+        const dateStr = `${d.getDate().toString().padStart(2,"0")}/${(d.getMonth()+1).toString().padStart(2,"0")} ${fmtHM(d)}`;
         const fh = filtrationHistoryForMeasure(pool, e);
         const tVals = { date: dateStr, temp: String(e.temp), ...(showFiltCols ? { filtReco: fh ? compactHours(fh.reco) : "—", filtApplied: fh ? compactHours(fh.applied) : "—" } : {}) };
         pdf.setTextColor(30,30,30);
@@ -26727,7 +26731,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
       if (i % 2 === 0) { pdf.setFillColor(247,250,254); pdf.rect(mL, y, cW, blockH, "F"); }
 
       const d = new Date(m.date);
-      const dateStr = `${d.getDate().toString().padStart(2,"0")}/${(d.getMonth()+1).toString().padStart(2,"0")} ${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`;
+      const dateStr = `${d.getDate().toString().padStart(2,"0")}/${(d.getMonth()+1).toString().padStart(2,"0")} ${fmtHM(d)}`;
 
       const paramVals = {
         date:   dateStr,
@@ -26784,7 +26788,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           // le temps ou application partielle avec reliquat).
           time:    step?.appliedAt ? (() => {
             const sd = new Date(step.appliedAt);
-            return `${sd.getDate().toString().padStart(2,"0")}/${(sd.getMonth()+1).toString().padStart(2,"0")} ${sd.getHours().toString().padStart(2,"0")}:${sd.getMinutes().toString().padStart(2,"0")}`;
+            return `${sd.getDate().toString().padStart(2,"0")}/${(sd.getMonth()+1).toString().padStart(2,"0")} ${fmtHM(sd)}`;
           })() : "—",
           stock:   stockVal,
         };
@@ -27308,7 +27312,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                       <td style={{ ...styles.reportTdCell, color: "var(--brand-text-secondary)" }}>—</td>
                       <td style={{ ...styles.reportTdCell, fontWeight: 700, color: "var(--brand-primary)" }}>{formatDose(a.appliedAmount, a.doseUnit || "g")}</td>
                       <td style={{ ...styles.reportTdCell, color: "var(--brand-text-secondary)" }}>
-                        {formatDateShort(a.appliedAt)} {new Date(a.appliedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        {formatDateShort(a.appliedAt)} {fmtHM(new Date(a.appliedAt))}
                       </td>
                       {manageStock && <td style={{ ...styles.reportTdCell, color: prod && (prod.stockPercent ?? 100) <= 20 ? "#c0392b" : "var(--brand-text-secondary)", fontWeight: 600 }}>
                         {prod ? formatDose(Math.round((prod.stockPercent ?? 100) / 100 * (prod.containerAmount ?? 1) * 10) / 10, prod.containerUnit || "kg") : "—"}
@@ -27377,7 +27381,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                             appliquée un autre jour que la date de la mesure affichée à
                             gauche (plan fractionné dans le temps, voir application
                             partielle/reliquat). */}
-                        {step?.appliedAt ? `${formatDateShort(step.appliedAt)} ${new Date(step.appliedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "—"}
+                        {step?.appliedAt ? `${formatDateShort(step.appliedAt)} ${fmtHM(new Date(step.appliedAt))}` : "—"}
                       </td>
                       {manageStock && <td style={{ ...styles.reportTdCell, color: prod && (prod.stockPercent ?? 100) <= 20 ? "#c0392b" : "var(--brand-text-secondary)", fontWeight: 600 }}>
                         {prod ? formatDose(Math.round((prod.stockPercent ?? 100) / 100 * (prod.containerAmount ?? 1) * 10) / 10, prod.containerUnit || "kg") : "—"}
@@ -27583,8 +27587,7 @@ function formatDate(iso) {
     weekday: "short",
     day: "2-digit",
     month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
+    ...HM,
   });
 }
 // "Sam. 26 sept. 14:05" (weekday capitalisé, sans virgule) — badge de fin de plan.
