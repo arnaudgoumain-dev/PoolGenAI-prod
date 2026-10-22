@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.164.2";
+const APP_VERSION = "1.164.3";
 const CGU_VERSION = "1.5"; // v1.5 : section 6 complétée (altitude du bassin : IGN, Open Topo Data) ; v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -332,6 +332,7 @@ const TRANSLATIONS = {
     modify_measure: "Modifier la mesure",
     delete_measure: "Supprimer la mesure",
     confirm_delete_measure: "Supprimer la mesure du {date} ? Cette action est irréversible.",
+    plan_switch_confirm: "Un plan de traitement est déjà en cours pour la mesure du {date}. Le mettre en pause ? Vous pourrez le reprendre depuis l'historique.",
     wizard_completed: "Plan de traitement terminé ✓",
     wizard_partial: "Plan en cours",
     wizard_completed_partial: "Plan terminé — {n} étape(s) non appliquée(s)",
@@ -1311,6 +1312,7 @@ const TRANSLATIONS = {
     modify_measure: "Edit measurement",
     delete_measure: "Delete measurement",
     confirm_delete_measure: "Delete the measurement from {date}? This cannot be undone.",
+    plan_switch_confirm: "A treatment plan is already in progress for the {date} measurement. Pause it? You can resume it from the history.",
     wizard_completed: "Treatment plan completed ✓",
     wizard_partial: "Plan in progress",
     wizard_completed_partial: "Plan completed — {n} step(s) not applied",
@@ -2280,6 +2282,7 @@ const TRANSLATIONS = {
     modify_measure: "Messung bearbeiten",
     delete_measure: "Messung löschen",
     confirm_delete_measure: "Die Messung vom {date} löschen? Das kann nicht rückgängig gemacht werden.",
+    plan_switch_confirm: "Für die Messung vom {date} läuft bereits ein Behandlungsplan. Ihn pausieren? Sie können ihn im Verlauf fortsetzen.",
     wizard_completed: "Behandlungsplan abgeschlossen ✓",
     wizard_partial: "Plan läuft",
     wizard_completed_partial: "Plan abgeschlossen — {n} Schritt/Schritte nicht angewendet",
@@ -3248,6 +3251,7 @@ const TRANSLATIONS = {
     modify_measure: "Modifica la misurazione",
     delete_measure: "Elimina la misurazione",
     confirm_delete_measure: "Eliminare la misurazione del {date}? L'azione è irreversibile.",
+    plan_switch_confirm: "Un piano di trattamento è già in corso per la misurazione del {date}. Metterlo in pausa? Potrai riprenderlo dalla cronologia.",
     wizard_completed: "Piano di trattamento completato ✓",
     wizard_partial: "Piano in corso",
     wizard_completed_partial: "Piano completato — {n} passaggi non applicati",
@@ -4216,6 +4220,7 @@ const TRANSLATIONS = {
     modify_measure: "Editar la medición",
     delete_measure: "Eliminar la medición",
     confirm_delete_measure: "¿Eliminar la medición del {date}? Esta acción no se puede deshacer.",
+    plan_switch_confirm: "Ya hay un plan de tratamiento en curso para la medición del {date}. ¿Ponerlo en pausa? Podrá reanudarlo desde el historial.",
     wizard_completed: "Plan de tratamiento completado ✓",
     wizard_partial: "Plan en curso",
     wizard_completed_partial: "Plan completado — {n} paso(s) no aplicado(s)",
@@ -5184,6 +5189,7 @@ const TRANSLATIONS = {
     modify_measure: "Editar a medição",
     delete_measure: "Excluir a medição",
     confirm_delete_measure: "Excluir a medição de {date}? Esta ação é irreversível.",
+    plan_switch_confirm: "Já existe um plano de tratamento em curso para a medição de {date}. Pausá-lo? Pode retomá-lo a partir do histórico.",
     wizard_completed: "Plano de tratamento concluído ✓",
     wizard_partial: "Plano em andamento",
     wizard_completed_partial: "Plano concluído — {n} etapa(s) não aplicada(s)",
@@ -11661,14 +11667,17 @@ function PoolGenAIApp() {
   // v1.146.6 — Reprise d'un plan depuis l'historique : le plan en cours de cette
   // mesure, ou à défaut reconstitué depuis l'application enregistrée (plan non
   // clos perdu localement). Sans effet si le plan d'une autre mesure est en cours.
+  // v1.164.3 — Reprise aussi quand le plan actif porte sur une autre mesure (plan démarré par erreur, jamais appliqué : il est remplacé ;
+  // plan avancé : confirmation, il reste reprenable depuis son application enregistrée).
   function resumePlanForMeasure(measure) {
     if (!measure) return;
-    if (activePlan) {
-      if (activePlan.measureId === measure.id) resumePlan();
+    if (activePlan && activePlan.measureId === measure.id) {
+      resumePlan();
       return;
     }
     const saved = (applications || []).find((a) => a.measureId === measure.id);
     if (!saved || !(saved.steps || []).some((st) => !stepIsResolved(st))) return;
+    if (!confirmPlanSwitch(measure.id)) return;
     const volume = activePool?.volume || 0;
     const recsNow = computeRecommendations(measure, volume, poolProducts, effectiveTargets, activeParamKeys, tFn, computeParamTrends(poolMeasures, measure, poolApplications, poolProducts, volume));
     const restored = saved.steps.map((st) => {
@@ -12133,6 +12142,15 @@ function PoolGenAIApp() {
   // v1.29.6 — Le démarrage du plan exige maintenant isPremium ET manageStock
   // activé (pas seulement isPremium). Un utilisateur premium qui n'a pas activé
   // la gestion de stock retombe aussi sur le paywall.
+  // v1.164.3 — Changer de plan : un plan en cours dont au moins une étape est appliquée n'est plus remplacé sans confirmation (il reste
+  // reprenable depuis l'historique, son application étant enregistrée). Un plan sans étape appliquée n'a rien à perdre : remplacé tel quel.
+  function confirmPlanSwitch(targetMeasureId) {
+    if (!activePlan || activePlan.measureId === targetMeasureId) return true;
+    if (!(activePlan.steps || []).some((st) => st.appliedAt && !st.skipped)) return true;
+    const other = poolMeasures.find((mm) => mm.id === activePlan.measureId);
+    return window.confirm(tFn("plan_switch_confirm", { date: other ? formatDate(other.date) : "" }));
+  }
+
   function handleValidateApplication(m, recsOverride, selectedRecsOverride, adjustMode) {
     if (!effectiveIsPremium || !activePool?.manageStock) {
       openPaywall("start_plan");
@@ -12143,6 +12161,7 @@ function PoolGenAIApp() {
       resumePlan();
       return;
     }
+    if (!confirmPlanSwitch(m.id)) return;
     // Sinon démarrer un nouveau plan
     const recs = recsOverride || computeRecommendations(m, activePool?.volume || 0, poolProducts, effectiveTargets, activeParamKeys, tFn, computeParamTrends(poolMeasures, m, poolApplications, poolProducts, activePool?.volume || 0));
     startPlan(m.id, recs);
@@ -12414,6 +12433,7 @@ function PoolGenAIApp() {
             activeParamKeys={activeParamKeys}
             activePlan={activePlan}
             onResumePlan={resumePlan}
+            onResumePlanForMeasure={resumePlanForMeasure}
             onOpenManualApply={() => setShowManualApply(true)}
             authUid={dataUid}
           />
@@ -15381,7 +15401,7 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
   );
 }
 
-function Dashboard({ latest, recentApplications, volume, products, manageStock, onAddMeasure, onEditMeasure, onValidateApplication, applicationForLatest, blockedByLimit, isPremium, onWantPremium, apiKey, apiProvider, recentMeasures, effectiveTargets, activeParamKeys, lang, activePlan, onResumePlan, onOpenManualApply, authUid }) {
+function Dashboard({ latest, recentApplications, volume, products, manageStock, onAddMeasure, onEditMeasure, onValidateApplication, applicationForLatest, blockedByLimit, isPremium, onWantPremium, apiKey, apiProvider, recentMeasures, effectiveTargets, activeParamKeys, lang, activePlan, onResumePlan, onResumePlanForMeasure, onOpenManualApply, authUid }) {
   const t = useT(lang);
   const [aiComment, setAiComment] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -15652,12 +15672,24 @@ Réponds directement en français, sans titre ni introduction.`;
 
             {(() => {
               if (applicationForLatest && !planForLatest) {
+                // v1.164.3 — Plan inachevé sans plan actif sur cette mesure (plan remplacé ou perdu) : reprise depuis l'application enregistrée.
+                const canResume = !!onResumePlanForMeasure && !applicationForLatest.allDone && (applicationForLatest.steps || []).some((st) => !stepIsResolved(st));
                 return (
                   <div style={styles.applyConfirmedCard}>
                     <CheckCircle2 size={16} color="#1a8fd1" />
                     <span style={{ flex: 1 }}>
                       {wizardStatusLabel(applicationForLatest, t)}
                     </span>
+                    {canResume && (
+                      <button
+                        type="button"
+                        data-testid="dash-resume-plan"
+                        onClick={() => onResumePlanForMeasure(latest)}
+                        style={{ background: "var(--brand-primary)", color: "#fff", border: "none", borderRadius: 8, padding: "5px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+                      >
+                        {t("wizard_resume")}
+                      </button>
+                    )}
                   </div>
                 );
               }
@@ -18339,6 +18371,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
             ...visibleManualApps.map((a) => ({ kind: "manual", date: a.appliedAt, a })),
             ...visibleTempEntries.map((e) => ({ kind: "temp", date: e.date, e })),
           ].sort((x, y) => new Date(y.date) - new Date(x.date));
+          const latestMeasureId = (measures || []).reduce((best, m) => (!best || new Date(m.date) > new Date(best.date) ? m : best), null)?.id;
           return items.map((item) =>
             item.kind === "temp" ? (
               <FiltrationTempRow
@@ -18356,6 +18389,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
                 onEdit={() => onEdit(item.m, applications.find((a) => a.measureId === item.m.id))}
                 onValidateApplication={() => onValidateApplication(item.m)}
                 onResumePlan={onResumePlan ? () => onResumePlan(item.m) : undefined}
+                isLatest={item.m.id === latestMeasureId}
                 application={applications.find((a) => a.measureId === item.m.id)}
                 isPremium={isPremium}
                 manageStock={!!pool?.manageStock}
@@ -18611,7 +18645,7 @@ function FiltrationTempRow({ entry, filtration, lang, onDelete }) {
   );
 }
 
-function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, onResumePlan, application, isPremium, manageStock, lang, activePlan, authUid, products, volume, recs, filtration }) {
+function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, onResumePlan, application, isPremium, manageStock, lang, activePlan, authUid, products, volume, recs, filtration, isLatest = true }) {
   const t = useT(lang || "fr");
   // v1.112.0 — Valeurs pH/fCl projetées à partir des quantités réellement
   // appliquées (voir buildProjectedPoints) — indexées par position dans
@@ -18777,7 +18811,7 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, onResume
               </div>
               {/* v1.146.6 — Plan inachevé : on peut le reprendre depuis l'historique
                   (sauf si le plan d'une autre mesure est en cours). */}
-              {onResumePlan && !application.allDone && (!activePlan || activePlan.measureId === measure.id) && (
+              {onResumePlan && !application.allDone && (
                 <button
                   type="button"
                   onClick={onResumePlan}
@@ -18802,8 +18836,10 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, onResume
                   <CheckCircle2 size={14} color="#1a8fd1" />
                   {t("all_in_range")}
                 </div>
-              ) : (
+              ) : !isLatest ? null : (
+                // v1.164.3 — « Démarrer le plan » n'est proposé que sur la dernière mesure : un plan sur une mesure ancienne remplaçait le plan en cours.
                 <button
+                  data-testid="hist-start-plan"
                   style={{
                     ...styles.validateApplyBtnSmall,
                     ...(!manageStock ? { background: "#c3d6e6", color: "#f0f5fa" } : {}),
