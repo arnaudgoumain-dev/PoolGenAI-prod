@@ -1,4 +1,4 @@
-const { useState, useEffect, useMemo, useRef } = React;
+const { useState, useEffect, useLayoutEffect, useMemo, useRef } = React;
 const {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceArea, Legend
 } = Recharts;
@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.161.0";
+const APP_VERSION = "1.163.1";
 const CGU_VERSION = "1.5"; // v1.5 : section 6 complétée (altitude du bassin : IGN, Open Topo Data) ; v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -900,7 +900,7 @@ const TRANSLATIONS = {
     filt_range: "Plage horaire",
     filt_locating: "Recherche de la position du bassin…",
     filt_no_location: "Renseigne la ville du bassin dans ses paramètres pour obtenir la plage horaire et la météo.",
-    filt_temp_input_label: "Température de l'eau ({unit})",
+    filt_temp_input_label: "Eau ({unit})",
     filt_temp_input_ph: "Ex. {ex}",
     filt_temp_save: "Enregistrer",
     filt_air_max: "Air max",
@@ -990,7 +990,6 @@ const TRANSLATIONS = {
     filt_hist_temp_delete_confirm: "Supprimer cette température de l'historique ?",
     filt_solar_noon: "Midi solaire",
     filt_temp_when_label: "Date et heure (facultatif)",
-    filt_temp_when_now: "Maintenant",
     filt_temp_when_invalid: "Choisis une date et une heure passées (moins d'un an).",
     wizard_apply_datetime: "Date et heure d'application",
     wizard_time_invalid: "Saisis une date et une heure valides.",
@@ -1871,7 +1870,7 @@ const TRANSLATIONS = {
     filt_range: "Time range",
     filt_locating: "Locating the pool…",
     filt_no_location: "Set the pool's city in its settings to get the time range and the weather.",
-    filt_temp_input_label: "Water temperature ({unit})",
+    filt_temp_input_label: "Water ({unit})",
     filt_temp_input_ph: "E.g. {ex}",
     filt_temp_save: "Save",
     filt_air_max: "Max air",
@@ -1961,7 +1960,6 @@ const TRANSLATIONS = {
     filt_hist_temp_delete_confirm: "Delete this temperature from the history?",
     filt_solar_noon: "Solar noon",
     filt_temp_when_label: "Date and time (optional)",
-    filt_temp_when_now: "Now",
     filt_temp_when_invalid: "Pick a past date and time (within the last year).",
     wizard_apply_datetime: "Application date and time",
     wizard_time_invalid: "Enter a valid date and time.",
@@ -2840,7 +2838,7 @@ const TRANSLATIONS = {
     filt_range: "Zeitfenster",
     filt_locating: "Position des Beckens wird gesucht…",
     filt_no_location: "Gib die Stadt des Beckens in den Einstellungen an, um Zeitfenster und Wetter zu erhalten.",
-    filt_temp_input_label: "Wassertemperatur ({unit})",
+    filt_temp_input_label: "Wasser ({unit})",
     filt_temp_input_ph: "Z. B. {ex}",
     filt_temp_save: "Speichern",
     filt_air_max: "Luft max.",
@@ -2930,7 +2928,6 @@ const TRANSLATIONS = {
     filt_hist_temp_delete_confirm: "Diese Temperatur aus dem Verlauf löschen?",
     filt_solar_noon: "Sonnenhöchststand",
     filt_temp_when_label: "Datum und Uhrzeit (optional)",
-    filt_temp_when_now: "Jetzt",
     filt_temp_when_invalid: "Wähle ein Datum und eine Uhrzeit in der Vergangenheit (weniger als ein Jahr).",
     wizard_apply_datetime: "Datum und Uhrzeit der Anwendung",
     wizard_time_invalid: "Gib ein gültiges Datum und eine gültige Uhrzeit ein.",
@@ -3809,7 +3806,7 @@ const TRANSLATIONS = {
     filt_range: "Fascia oraria",
     filt_locating: "Ricerca della posizione della vasca…",
     filt_no_location: "Indica la città della vasca nelle impostazioni per ottenere la fascia oraria e il meteo.",
-    filt_temp_input_label: "Temperatura dell'acqua ({unit})",
+    filt_temp_input_label: "Acqua ({unit})",
     filt_temp_input_ph: "Es. {ex}",
     filt_temp_save: "Salva",
     filt_air_max: "Aria max",
@@ -3899,7 +3896,6 @@ const TRANSLATIONS = {
     filt_hist_temp_delete_confirm: "Eliminare questa temperatura dallo storico?",
     filt_solar_noon: "Mezzogiorno solare",
     filt_temp_when_label: "Data e ora (facoltative)",
-    filt_temp_when_now: "Adesso",
     filt_temp_when_invalid: "Scegli una data e un'ora passate (meno di un anno).",
     wizard_apply_datetime: "Data e ora di applicazione",
     wizard_time_invalid: "Inserisci una data e un'ora valide.",
@@ -4778,7 +4774,7 @@ const TRANSLATIONS = {
     filt_range: "Franja horaria",
     filt_locating: "Buscando la posición de la piscina…",
     filt_no_location: "Indica la ciudad de la piscina en sus ajustes para obtener la franja horaria y el tiempo.",
-    filt_temp_input_label: "Temperatura del agua ({unit})",
+    filt_temp_input_label: "Agua ({unit})",
     filt_temp_input_ph: "Ej. {ex}",
     filt_temp_save: "Guardar",
     filt_air_max: "Aire máx.",
@@ -4868,7 +4864,6 @@ const TRANSLATIONS = {
     filt_hist_temp_delete_confirm: "¿Eliminar esta temperatura del historial?",
     filt_solar_noon: "Mediodía solar",
     filt_temp_when_label: "Fecha y hora (opcional)",
-    filt_temp_when_now: "Ahora",
     filt_temp_when_invalid: "Elige una fecha y hora pasadas (menos de un año).",
     wizard_apply_datetime: "Fecha y hora de aplicación",
     wizard_time_invalid: "Introduce una fecha y una hora válidas.",
@@ -5747,7 +5742,7 @@ const TRANSLATIONS = {
     filt_range: "Intervalo horário",
     filt_locating: "A procurar a posição da piscina…",
     filt_no_location: "Indique a cidade da piscina nas definições para obter o intervalo horário e o tempo.",
-    filt_temp_input_label: "Temperatura da água ({unit})",
+    filt_temp_input_label: "Água ({unit})",
     filt_temp_input_ph: "Ex. {ex}",
     filt_temp_save: "Guardar",
     filt_air_max: "Ar máx.",
@@ -5837,7 +5832,6 @@ const TRANSLATIONS = {
     filt_hist_temp_delete_confirm: "Eliminar esta temperatura do histórico?",
     filt_solar_noon: "Meio-dia solar",
     filt_temp_when_label: "Data e hora (opcional)",
-    filt_temp_when_now: "Agora",
     filt_temp_when_invalid: "Escolha uma data e hora passadas (menos de um ano).",
     wizard_apply_datetime: "Data e hora de aplicação",
     wizard_time_invalid: "Introduza uma data e uma hora válidas.",
@@ -14604,6 +14598,17 @@ function parseLocalInput(str) {
 function validTempEntryTime(ms, nowMs) {
   return Number.isFinite(ms) && ms <= nowMs + TEMP_ENTRY_FUTURE_TOLERANCE_MS && ms >= nowMs - TEMP_ENTRY_MAX_AGE_DAYS * 864e5;
 }
+// Dernière température saisie du bassin (la plus récente par date) telle qu'on la réaffiche dans les champs de la carte Filtration :
+// { draft (valeur dans l'unité d'affichage), when (valeur du champ date/heure) } ; null si aucune, ou si elle est trop ancienne pour être resaisie.
+function restoredTempInput(pool, unit, nowMs) {
+  if (!pool) return null;
+  const last = latestTempEntry([...(Array.isArray(pool.filtrationTempLog) ? pool.filtrationTempLog : []), pool.filtrationWaterTemp].filter(Boolean));
+  if (!last) return null;
+  const v = tempToDisplay(parseFloat(last.value), unit);
+  const ms = Date.parse(last.at);
+  if (v === null || !Number.isFinite(ms) || !validTempEntryTime(ms, nowMs)) return null;
+  return { draft: String(Math.round(v * 10) / 10), when: localInputValue(ms) };
+}
 function filtrationTempEntries(pool) {
   if (!pool) return [];
   const raw = Array.isArray(pool.filtrationTempLog) ? pool.filtrationTempLog.slice() : [];
@@ -14719,6 +14724,45 @@ function projectToInstant(o) {
   }
   return T;
 }
+// ---------- Lever / coucher du soleil ----------
+// Heures locales décimales du lever et du coucher du soleil (soleil centré sur le midi solaire), durée du jour et hauteur relative de l'arc
+// du soleil : aspect = hauteur / demi-largeur de l'arc (1 = demi-cercle, au solstice d'été ; plus faible vers le solstice d'hiver : ellipse aplatie).
+// Formules NOAA ; aucun appel réseau.
+function computeDaylight(lat, lon, date, timeZone) {
+  const ms = (date instanceof Date ? date : new Date(date)).getTime();
+  const tz = timeZone || "UTC";
+  const p = tzParts(ms, tz);
+  const dayOfYear = Math.round((Date.UTC(p.year, p.month - 1, p.day) - Date.UTC(p.year, 0, 1)) / 864e5) + 1;
+  const g = (2 * Math.PI / 365) * (dayOfYear - 1);
+  const decl = 0.006918 - 0.399912 * Math.cos(g) + 0.070257 * Math.sin(g) - 0.006758 * Math.cos(2 * g) + 0.000907 * Math.sin(2 * g) - 0.002697 * Math.cos(3 * g) + 0.00148 * Math.sin(3 * g);
+  const phi = (Number(lat) * Math.PI) / 180;
+  const noonH = computeSolarNoon(lat, lon, new Date(ms), tz);
+  const cosH0 = (Math.sin((-0.833 * Math.PI) / 180) - Math.sin(phi) * Math.sin(decl)) / (Math.cos(phi) * Math.cos(decl));
+  const halfDayH = cosH0 <= -1 ? 12 : cosH0 >= 1 ? 0 : (Math.acos(cosH0) * 180) / Math.PI / 15;
+  const declDeg = (decl * 180) / Math.PI;
+  const elevNoonDeg = Math.max(0, 90 - Math.abs(Number(lat) - declDeg));
+  const elevMaxDeg = Math.min(90, 90 - Math.abs(Number(lat)) + 23.44); // hauteur du soleil à midi au solstice d'été
+  const aspect = halfDayH === 0 ? 0 : Math.max(0.1, Math.min(1, Math.sin((elevNoonDeg * Math.PI) / 180) / Math.sin((elevMaxDeg * Math.PI) / 180)));
+  return { sunriseH: noonH - halfDayH, sunsetH: noonH + halfDayH, noonH, dayLengthH: 2 * halfDayH, elevNoonDeg, aspect };
+}
+
+// Positions (en % de la largeur de la barre horaire) des étiquettes de lever et de coucher : centrées sous l'extrémité de l'arc, ramenées dans la
+// carte (marge de 9 %) et écartées d'au moins 20 % quand le jour est très court (latitudes élevées en hiver).
+const SUN_LABEL_EDGE_PCT = 9;
+const SUN_LABEL_MIN_GAP_PCT = 20;
+function sunLabelPositions(sunriseH, sunsetH) {
+  const lo = SUN_LABEL_EDGE_PCT;
+  const hi = 100 - SUN_LABEL_EDGE_PCT;
+  let rise = Math.min(hi, Math.max(lo, (sunriseH / 24) * 100));
+  let set = Math.min(hi, Math.max(lo, (sunsetH / 24) * 100));
+  if (set - rise < SUN_LABEL_MIN_GAP_PCT) {
+    const mid = (rise + set) / 2;
+    rise = Math.max(lo, Math.min(hi - SUN_LABEL_MIN_GAP_PCT, mid - SUN_LABEL_MIN_GAP_PCT / 2));
+    set = rise + SUN_LABEL_MIN_GAP_PCT;
+  }
+  return { rise, set };
+}
+
 // ---------- Courbe « température projetée » de l'historique ----------
 function noonOfKeyMs(key, tz) { return localMidnightMs(key, tz) + 12 * 3600e3; }
 
@@ -14881,7 +14925,7 @@ async function fetchAltitude(lat, lon) {
 }
 
 const FILT_STYLES = {
-  card: { background: "#fff", border: "1.5px solid #d0e4f5", borderRadius: 14, padding: "14px 14px 12px" },
+  card: { background: "#fff", border: "1.5px solid #d0e4f5", borderRadius: 14, padding: "14px 14px 12px", position: "relative", isolation: "isolate" },
   head: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8 },
   title: { display: "flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 700, color: "#2d4a6e", textTransform: "uppercase", letterSpacing: 0.4 },
   badge: { fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 8, background: "#eaf3fb", color: "var(--brand-primary)" },
@@ -14911,6 +14955,45 @@ function FiltrationLockedCard({ lang, onWantPremium }) {
   );
 }
 
+// Arc du soleil en arrière-plan de la carte Filtration : demi-ellipse posée sur la barre horaire (repérée par data-sun-bar), du lever au coucher
+// du soleil ; son rapport hauteur / demi-largeur suit la hauteur du soleil à midi (demi-cercle au solstice d'été, ellipse aplatie en hiver),
+// sans jamais toucher le haut de la carte.
+function SunArcLayer({ daylight, resizeKey }) {
+  const ref = useRef(null);
+  const [box, setBox] = useState(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    const card = el && el.parentElement;
+    const bar = card && card.querySelector("[data-sun-bar]");
+    if (!bar) { setBox(null); return undefined; }
+    const measure = () => {
+      const c = card.getBoundingClientRect();
+      const b = bar.getBoundingClientRect();
+      const next = { left: Math.round(b.left - c.left), w: Math.round(b.width), base: Math.round(b.top - c.top + b.height / 2) };
+      setBox((prev) => (prev && prev.left === next.left && prev.w === next.w && prev.base === next.base ? prev : next));
+    };
+    measure();
+    let ro = null;
+    if (typeof ResizeObserver !== "undefined") { ro = new ResizeObserver(measure); ro.observe(card); }
+    window.addEventListener("resize", measure);
+    return () => { if (ro) ro.disconnect(); window.removeEventListener("resize", measure); };
+  }, [resizeKey]);
+  let path = null;
+  if (box && daylight && daylight.dayLengthH > 0 && box.w > 0) {
+    const xs = (Math.max(0, daylight.sunriseH) / 24) * box.w;
+    const xe = (Math.min(24, daylight.sunsetH) / 24) * box.w;
+    const rx = (xe - xs) / 2;
+    const ry = Math.max(6, Math.min(daylight.aspect * rx, box.base - 8));
+    if (rx > 1) path = { fill: "M " + xs + " " + box.base + " A " + rx + " " + ry + " 0 0 1 " + xe + " " + box.base + " Z", line: "M " + xs + " " + box.base + " A " + rx + " " + ry + " 0 0 1 " + xe + " " + box.base };
+  }
+  return (
+    <svg ref={ref} aria-hidden="true" data-testid="sun-arc" style={{ position: "absolute", left: box ? box.left : 0, top: 0, width: box ? box.w : 0, height: box ? box.base : 0, zIndex: -1, pointerEvents: "none", overflow: "visible" }}>
+      {path && <path d={path.fill} fill="rgba(255, 214, 102, 0.22)" stroke="none" />}
+      {path && <path d={path.line} fill="none" stroke="rgba(240, 180, 40, 0.55)" strokeWidth="1.5" />}
+    </svg>
+  );
+}
+
 function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSettings, onOpenHistory, onEnsureAltitude }) {
   const t = useT(lang);
   const poolType = getPoolType(pool);
@@ -14923,10 +15006,12 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
   const [weather, setWeather] = useState(null);
   const [wState, setWState] = useState("idle"); // idle | loading | ok | error
   const [localHist, setLocalHist] = useState(() => loadAirHistory(pool?.id));
-  const [tempDraft, setTempDraft] = useState("");
-  const [tempWhen, setTempWhen] = useState(""); // date et heure de la saisie (heure locale) ; vide = maintenant
-  // Dernière saisie enregistrée : valeur et heure restent affichées avec une coche ; { auto } = heure non choisie (datée de maintenant).
-  const [tempSaved, setTempSaved] = useState(null);
+  // Dernière saisie enregistrée : valeur et heure restent affichées avec une coche (y compris en revenant sur l'onglet) ;
+  // { auto } = heure non choisie (datée de maintenant) : une nouvelle température repart de « maintenant ».
+  const [restored] = useState(() => restoredTempInput(pool, TEMP_UNIT, Date.now()));
+  const [tempDraft, setTempDraft] = useState(restored ? restored.draft : "");
+  const [tempWhen, setTempWhen] = useState(restored ? restored.when : ""); // date et heure de la saisie (heure locale) ; vide = maintenant
+  const [tempSaved, setTempSaved] = useState(restored ? { auto: true, older: null } : null);
   // Programmation actuelle de la filtration (coffret) : saisie dans l'onglet, enregistrée dans le bassin.
   const progSaved = { start: (pool && pool.filtrationStartCurrent) || "", dur: pool && pool.filtrationDurationCurrent != null ? String(pool.filtrationDurationCurrent) : "" };
   const [progStart, setProgStart] = useState(progSaved.start);
@@ -15080,6 +15165,7 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
   const updatedLabel = weather && weather.updatedAt ? new Date(weather.updatedAt).toLocaleTimeString(lang || "fr", { hour: "2-digit", minute: "2-digit", timeZone: tz }) : null;
   const tzLabel = tz + ", " + formatUtcOffset(tzOffsetMinutes(nowMs, tz));
   const nowHour = localHourOf(clockMs, tz);
+  const daylight = coords ? computeDaylight(coords.lat, coords.lon, new Date(nowMs), tz) : null;
   const whenValid = tempWhen === "" || validTempEntryTime(parseLocalInput(tempWhen), Date.now());
   const tempValid = Number.isFinite(parseFloat(String(tempDraft).replace(",", "."))) && canEdit && whenValid && !tempSaved;
   const sourceLabel = !est ? "" : est.source === "mesure" ? t("filt_temp_from_measure") : est.source === "saisie" ? t("filt_temp_entered") : est.source === "consigne" ? t("filt_temp_setpoint") : est.confidence === "low" ? t("filt_temp_estimated_low") : t("filt_temp_estimated");
@@ -15116,6 +15202,7 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
         <p style={{ ...FILT_STYLES.hint, marginTop: 0 }}>{t("filt_no_temp")}</p>
       )}
 
+      {slots && daylight && <SunArcLayer daylight={daylight} resizeKey={slots.length + "-" + (noon != null ? 1 : 0)} />}
       {slots && (
         <div style={{ marginTop: 12 }}>
           <div style={{ fontSize: 12, color: "var(--brand-text-muted)", marginBottom: 4 }}>
@@ -15131,7 +15218,7 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
             )}
             <span data-testid="now-marker" title={t("filt_now_marker", { time: formatClock(nowHour) })} style={{ position: "absolute", top: 15, left: "calc(" + (nowHour / 24 * 100) + "% + 1px)", transform: "translateX(-50%)", width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: "7px solid #7e57c2" }} />
           </div>
-          <div style={{ position: "relative", height: 14, borderRadius: 7, background: "#e6eef3", overflow: "hidden" }}>
+          <div data-sun-bar="1" style={{ position: "relative", height: 14, borderRadius: 7, background: "#e6eef3", overflow: "hidden" }}>
             {slots.map((s, i) => (
               <div key={i} style={{ position: "absolute", top: 0, bottom: 0, left: (s.start / 24 * 100) + "%", width: ((s.end - s.start) / 24 * 100) + "%", background: "var(--brand-primary)" }} />
             ))}
@@ -15140,6 +15227,16 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#9aa9b6", marginTop: 2 }}>
             <span>0 h</span><span>6 h</span><span>12 h</span><span>18 h</span><span>24 h</span>
           </div>
+          {daylight && daylight.dayLengthH > 0 && daylight.dayLengthH < 24 && (() => {
+            const pos = sunLabelPositions(daylight.sunriseH, daylight.sunsetH);
+            const st = { position: "absolute", top: 0, transform: "translateX(-50%)", whiteSpace: "nowrap", fontSize: 10.5, fontWeight: 700, color: "#b7791f" };
+            return (
+              <div data-testid="sun-times" style={{ position: "relative", height: 16, marginTop: 1 }}>
+                <span data-testid="sunrise-label" style={{ ...st, left: pos.rise + "%" }}>🌅 {formatClock(daylight.sunriseH)}</span>
+                <span data-testid="sunset-label" style={{ ...st, left: pos.set + "%" }}>🌇 {formatClock(daylight.sunsetH)}</span>
+              </div>
+            );
+          })()}
         </div>
       )}
       {!coords && (
@@ -15154,7 +15251,7 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
       {poolType !== "spa" && (
         <div style={{ marginTop: 12 }}>
           {/* Température, date/heure (facultative) et bouton Enregistrer sur la même ligne */}
-          <div style={{ display: "grid", gridTemplateColumns: "96px minmax(0, 190px) auto", columnGap: 10, justifyContent: "start", alignItems: "end" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "64px minmax(0, 190px) auto", columnGap: 10, justifyContent: "start", alignItems: "end" }}>
             <div>
               <div style={{ fontSize: 12, color: "var(--brand-text-muted)", marginBottom: 4 }}>{t("filt_temp_input_label", { unit: tempUnitLabel(TEMP_UNIT) })}</div>
               <input
@@ -15166,20 +15263,17 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
                 }}
                 placeholder={t("filt_temp_input_ph", { ex: TEMP_UNIT === "F" ? "75" : "24" })}
                 disabled={!canEdit}
-                style={{ ...styles.input, marginBottom: 0, padding: "11px 8px", height: 46, boxSizing: "border-box", width: 76, maxWidth: "100%" }}
+                style={{ ...styles.input, marginBottom: 0, padding: "11px 6px", height: 46, boxSizing: "border-box", width: "100%" }}
               />
             </div>
             <div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 6, fontSize: 12, color: "var(--brand-text-muted)", marginBottom: 4 }}>
-                <span>{t("filt_temp_when_label")}</span>
-                {tempWhen !== "" && <button type="button" onClick={() => { setTempWhen(""); setTempSaved(null); }} style={{ ...styles.editLinkBtn, display: "inline-flex", padding: 0, flexShrink: 0 }}>{t("filt_temp_when_now")}</button>}
-              </div>
+              <div style={{ fontSize: 12, color: "var(--brand-text-muted)", marginBottom: 4 }}>{t("filt_temp_when_label")}</div>
               <input
                 type="datetime-local" value={tempWhen}
                 min={localInputValue(Date.now() - TEMP_ENTRY_MAX_AGE_DAYS * 864e5)} max={localInputValue(Date.now())}
                 onChange={(e) => { setTempWhen(e.target.value); setTempSaved(null); }}
                 disabled={!canEdit}
-                style={{ ...styles.input, marginBottom: 0, padding: "11px 8px", fontSize: 13, height: 46, boxSizing: "border-box" }}
+                style={{ ...styles.input, marginBottom: 0, padding: "11px 6px", fontSize: 12, height: 46, boxSizing: "border-box" }}
               />
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 4, height: 46 }}>
