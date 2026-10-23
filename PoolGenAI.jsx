@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.164.4";
+const APP_VERSION = "1.165.0";
 const CGU_VERSION = "1.5"; // v1.5 : section 6 complétée (altitude du bassin : IGN, Open Topo Data) ; v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -978,6 +978,7 @@ const TRANSLATIONS = {
     filt_week_indicative: "Eau projetée et durée par jour. Jours 4 à 7 : indicatif.",
     filt_configure_thermal: "Chauffage et bâche du bassin",
     tab_filtration: "Filtration",
+    tab_weather: "Météo",
     filt_hist_reco: "Filt. conseillée (h)",
     filt_hist_applied: "Filt. appliquée (h)",
     filt_hist_title: "Filtration",
@@ -1949,6 +1950,7 @@ const TRANSLATIONS = {
     filt_week_indicative: "Projected water temperature and duration per day. Days 4 to 7: indicative.",
     filt_configure_thermal: "Pool heating and cover",
     tab_filtration: "Filtration",
+    tab_weather: "Weather",
     filt_hist_reco: "Filt. recommended (h)",
     filt_hist_applied: "Filt. applied (h)",
     filt_hist_title: "Filtration",
@@ -2918,6 +2920,7 @@ const TRANSLATIONS = {
     filt_week_indicative: "Prognostizierte Wassertemperatur und Dauer pro Tag. Tage 4 bis 7: unverbindlich.",
     filt_configure_thermal: "Heizung und Abdeckung des Beckens",
     tab_filtration: "Filterung",
+    tab_weather: "Wetter",
     filt_hist_reco: "Filt. empfohlen (h)",
     filt_hist_applied: "Filt. eingestellt (h)",
     filt_hist_title: "Filterzeit",
@@ -3887,6 +3890,7 @@ const TRANSLATIONS = {
     filt_week_indicative: "Temperatura dell'acqua prevista e durata per giorno. Giorni 4-7: indicativi.",
     filt_configure_thermal: "Riscaldamento e copertura della vasca",
     tab_filtration: "Filtrazione",
+    tab_weather: "Meteo",
     filt_hist_reco: "Filtr. consigliata (h)",
     filt_hist_applied: "Filtr. impostata (h)",
     filt_hist_title: "Filtrazione",
@@ -4856,6 +4860,7 @@ const TRANSLATIONS = {
     filt_week_indicative: "Temperatura del agua prevista y duración por día. Días 4 a 7: orientativos.",
     filt_configure_thermal: "Calefacción y cubierta de la piscina",
     tab_filtration: "Filtración",
+    tab_weather: "Tiempo",
     filt_hist_reco: "Filt. recomendada (h)",
     filt_hist_applied: "Filt. aplicada (h)",
     filt_hist_title: "Filtración",
@@ -5825,6 +5830,7 @@ const TRANSLATIONS = {
     filt_week_indicative: "Temperatura da água prevista e duração por dia. Dias 4 a 7: indicativos.",
     filt_configure_thermal: "Aquecimento e cobertura da piscina",
     tab_filtration: "Filtração",
+    tab_weather: "Clima",
     filt_hist_reco: "Filt. recomendada (h)",
     filt_hist_applied: "Filt. aplicada (h)",
     filt_hist_title: "Filtração",
@@ -12455,6 +12461,7 @@ function PoolGenAIApp() {
             <FiltrationLockedCard lang={lang} onWantPremium={() => openPaywall()} />
           )
         )}
+        {tab === "weather" && <div data-testid="weather-tab" />}
         {tab === "history" && (
           <HistoryView
             measures={sortedMeasures}
@@ -13590,7 +13597,7 @@ function Header({ poolName, location, poolPhoto, isPremium, entries, activeEntry
 }
 
 // ---------- Balayage entre onglets (v1.150.0) ----------
-const TAB_ORDER = ["dashboard", "filtration", "history", "products", "settings"];
+const TAB_ORDER = ["dashboard", "filtration", "weather", "history", "products", "settings"];
 // Vrai si le geste qui démarre sur `el` appartient à un autre élément : champ de saisie, curseur,
 // graphique (info-bulle / déplacement au doigt), zone à défilement horizontal, ou élément marqué
 // data-noswipe. On remonte jusqu'au conteneur `root` (<main>).
@@ -13739,11 +13746,26 @@ function WavesIcon({ size = 24, color = "currentColor", strokeWidth = 2, style, 
   );
 }
 
+// Icône « nuage et soleil » (tracé Lucide « cloud-sun »), ici pour la même raison que WavesIcon.
+function CloudSunIcon({ size = 24, color = "currentColor", strokeWidth = 2, style, className }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" style={style} className={className}>
+      <path d="M12 2v2" />
+      <path d="m4.93 4.93 1.41 1.41" />
+      <path d="M20 12h2" />
+      <path d="m19.07 4.93-1.41 1.41" />
+      <path d="M15.947 12.65a4 4 0 0 0-5.925-4.128" />
+      <path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z" />
+    </svg>
+  );
+}
+
 function TabBar({ tab, setTab, lang, viewContext }) {
   const t = useT(lang);
   const tabs = [
     { id: "dashboard", label: t("tab_pool"), icon: Droplets },
     { id: "filtration", label: t("tab_filtration"), icon: WavesIcon },
+    { id: "weather", label: t("tab_weather"), icon: CloudSunIcon },
     { id: "history", label: t("tab_history"), icon: History },
     { id: "products", label: t("tab_products"), icon: Beaker },
     { id: "settings", label: t("tab_settings"), icon: Settings2 },
