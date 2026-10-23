@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.167.1";
+const APP_VERSION = "1.167.2";
 const CGU_VERSION = "1.5"; // v1.5 : section 6 complétée (altitude du bassin : IGN, Open Topo Data) ; v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -991,6 +991,10 @@ const TRANSLATIONS = {
     filt_legend_reco: "Durée de filtration conseillée selon la température de l'eau de la mesure",
     filt_legend_applied: "Durée de filtration programmée au coffret à la date de la mesure",
     filt_hist_temp_entry: "Température saisie (onglet Filtration)",
+    filt_hist_prog_entry: "Programmation de la filtration modifiée",
+    filt_hist_prog_start: "Démarrage à {time}",
+    filt_hist_prog_dur: "{d} par jour",
+    filt_hist_prog_cleared: "Programmation effacée",
     filt_hist_temp_delete_confirm: "Supprimer cette température de l'historique ?",
     filt_solar_noon: "Midi solaire",
     filt_temp_when_label: "Date et heure (facultatif)",
@@ -1965,6 +1969,10 @@ const TRANSLATIONS = {
     filt_legend_reco: "Recommended filtration time based on the water temperature of the measurement",
     filt_legend_applied: "Filtration time programmed on the controller at the measurement date",
     filt_hist_temp_entry: "Temperature entered (Filtration tab)",
+    filt_hist_prog_entry: "Filtration schedule changed",
+    filt_hist_prog_start: "Starts at {time}",
+    filt_hist_prog_dur: "{d} per day",
+    filt_hist_prog_cleared: "Schedule cleared",
     filt_hist_temp_delete_confirm: "Delete this temperature from the history?",
     filt_solar_noon: "Solar noon",
     filt_temp_when_label: "Date and time (optional)",
@@ -2937,6 +2945,10 @@ const TRANSLATIONS = {
     filt_legend_reco: "Empfohlene Filterzeit nach der Wassertemperatur der Messung",
     filt_legend_applied: "Zum Zeitpunkt der Messung am Schaltkasten eingestellte Filterzeit",
     filt_hist_temp_entry: "Temperatur eingegeben (Reiter Filterung)",
+    filt_hist_prog_entry: "Filterprogramm geändert",
+    filt_hist_prog_start: "Start um {time}",
+    filt_hist_prog_dur: "{d} pro Tag",
+    filt_hist_prog_cleared: "Programm gelöscht",
     filt_hist_temp_delete_confirm: "Diese Temperatur aus dem Verlauf löschen?",
     filt_solar_noon: "Sonnenhöchststand",
     filt_temp_when_label: "Datum und Uhrzeit (optional)",
@@ -3909,6 +3921,10 @@ const TRANSLATIONS = {
     filt_legend_reco: "Durata di filtrazione consigliata in base alla temperatura dell'acqua della misura",
     filt_legend_applied: "Durata di filtrazione programmata sul quadro alla data della misura",
     filt_hist_temp_entry: "Temperatura inserita (scheda Filtrazione)",
+    filt_hist_prog_entry: "Programmazione della filtrazione modificata",
+    filt_hist_prog_start: "Avvio alle {time}",
+    filt_hist_prog_dur: "{d} al giorno",
+    filt_hist_prog_cleared: "Programmazione cancellata",
     filt_hist_temp_delete_confirm: "Eliminare questa temperatura dallo storico?",
     filt_solar_noon: "Mezzogiorno solare",
     filt_temp_when_label: "Data e ora (facoltative)",
@@ -4881,6 +4897,10 @@ const TRANSLATIONS = {
     filt_legend_reco: "Duración de filtración recomendada según la temperatura del agua de la medición",
     filt_legend_applied: "Duración de filtración programada en el cuadro en la fecha de la medición",
     filt_hist_temp_entry: "Temperatura introducida (pestaña Filtración)",
+    filt_hist_prog_entry: "Programación de la filtración modificada",
+    filt_hist_prog_start: "Inicio a las {time}",
+    filt_hist_prog_dur: "{d} al día",
+    filt_hist_prog_cleared: "Programación borrada",
     filt_hist_temp_delete_confirm: "¿Eliminar esta temperatura del historial?",
     filt_solar_noon: "Mediodía solar",
     filt_temp_when_label: "Fecha y hora (opcional)",
@@ -5853,6 +5873,10 @@ const TRANSLATIONS = {
     filt_legend_reco: "Duração de filtração recomendada com base na temperatura da água da medição",
     filt_legend_applied: "Duração de filtração programada no quadro na data da medição",
     filt_hist_temp_entry: "Temperatura introduzida (separador Filtração)",
+    filt_hist_prog_entry: "Programação da filtração alterada",
+    filt_hist_prog_start: "Início às {time}",
+    filt_hist_prog_dur: "{d} por dia",
+    filt_hist_prog_cleared: "Programação apagada",
     filt_hist_temp_delete_confirm: "Eliminar esta temperatura do histórico?",
     filt_solar_noon: "Meio-dia solar",
     filt_temp_when_label: "Data e hora (opcional)",
@@ -14618,6 +14642,20 @@ function filtrationProgAt(log, tMs) {
   });
   return found;
 }
+// Modifications de la programmation du coffret (journal filtrationProgLog) : entrées de l'historique à part entière (ligne du journal + point de la
+// courbe « appliquée » à l'instant de l'enregistrement), même sans mesure à cette date. { id, date (ISO), start ("hh:mm" ou null), hours, migrated }.
+function filtrationProgEntries(pool) {
+  const log = pool && Array.isArray(pool.filtrationProgLog) ? pool.filtrationProgLog : [];
+  const seen = new Set();
+  const out = [];
+  log.forEach((e) => {
+    const t = Date.parse(e && e.at);
+    if (!Number.isFinite(t) || seen.has(t)) return;
+    seen.add(t);
+    out.push({ id: "fp" + t, date: new Date(t).toISOString(), start: e.start && /^[0-9]{1,2}:[0-9]{2}$/.test(String(e.start)) ? String(e.start) : null, hours: finiteOrNull(e.hours), migrated: !!e.migrated });
+  });
+  return out.sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
+}
 function filtrationHistoryForMeasure(pool, m) {
   if (!pool || !m) return null;
   let reco = null;
@@ -17991,13 +18029,16 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
   // du Journal — signalé par Pierre (stock décrémenté, rien dans l'historique).
   // v1.156.0 — Températures saisies dans l'onglet Filtration (Premium) : entrées de l'historique à part entière.
   const tempEntries = useMemo(() => (isPremium ? filtrationTempEntries(pool) : []), [pool, isPremium]);
+  // v1.167.2 — Modifications de la programmation de la filtration (Premium) : ligne du journal + point de la courbe « Filt. appliquée ».
+  const progEntries = useMemo(() => (isPremium ? filtrationProgEntries(pool) : []), [pool, isPremium]);
   const allTimestamps = useMemo(
     () => [
       ...measures.map((m) => new Date(m.date).getTime()),
       ...tempEntries.map((e) => new Date(e.date).getTime()),
+      ...progEntries.map((e) => new Date(e.date).getTime()),
       ...(applications || []).filter((a) => a.type === "manual").map((a) => new Date(a.appliedAt).getTime()),
     ].filter((ts) => !isNaN(ts)),
-    [measures, applications, tempEntries]
+    [measures, applications, tempEntries, progEntries]
   );
   const minTs = allTimestamps.length ? Math.min(...allTimestamps) : null;
   const maxTs = allTimestamps.length ? Math.max(...allTimestamps) : null;
@@ -18079,6 +18120,10 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
     () => filterByWindow(tempEntries, (e) => e.date, zoomWindow, zoomEnd ?? maxTs),
     [tempEntries, zoomWindow, zoomEnd, maxTs]
   );
+  const visibleProgEntries = useMemo(
+    () => filterByWindow(progEntries, (e) => e.date, zoomWindow, zoomEnd ?? maxTs),
+    [progEntries, zoomWindow, zoomEnd, maxTs]
+  );
   // v1.117.3 — L'historique des diagnostics IA suit lui aussi la fenêtre de
   // zoom, comme les mesures/consommations — voir demande Arnaud.
   const visibleDiagHistory = useMemo(
@@ -18087,7 +18132,10 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
   );
 
   const chartData = useMemo(() => {
-    return [...visibleMeasures, ...visibleTempEntries]
+    const progRows = visibleProgEntries
+      .filter((e) => e.hours !== null)
+      .map((e) => ({ date: formatDateShort(e.date), timestamp: new Date(e.date).getTime(), ...filtrationChartFields({ reco: null, applied: e.hours }) }));
+    const rows = [...visibleMeasures, ...visibleTempEntries]
       .sort((a, b) => new Date(a.date) - new Date(b.date))
       .map((m) => ({
         date: formatDateShort(m.date),
@@ -18105,7 +18153,8 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
         temp:   m.temp   !== undefined && m.temp   !== "" ? parseFloat(m.temp)   : null,
         ...filtrationChartFields(isPremium ? filtrationHistoryForMeasure(pool, m) : null),
       }));
-  }, [visibleMeasures, visibleTempEntries, pool, isPremium]);
+    return [...rows, ...progRows].sort((a, b) => a.timestamp - b.timestamp);
+  }, [visibleMeasures, visibleTempEntries, visibleProgEntries, pool, isPremium]);
 
   // v1.113.2 — Points pH/fCl projetés (pas mesurés) à partir des quantités
   // réellement appliquées, un point par application (voir buildProjectedPoints).
@@ -18515,10 +18564,13 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
             ...visibleMeasures.map((m) => ({ kind: "measure", date: m.date, m })),
             ...visibleManualApps.map((a) => ({ kind: "manual", date: a.appliedAt, a })),
             ...visibleTempEntries.map((e) => ({ kind: "temp", date: e.date, e })),
+            ...visibleProgEntries.map((e) => ({ kind: "prog", date: e.date, e })),
           ].sort((x, y) => new Date(y.date) - new Date(x.date));
           const latestMeasureId = (measures || []).reduce((best, m) => (!best || new Date(m.date) > new Date(best.date) ? m : best), null)?.id;
           return items.map((item) =>
-            item.kind === "temp" ? (
+            item.kind === "prog" ? (
+              <FiltrationProgRow key={item.e.id} entry={item.e} lang={lang} />
+            ) : item.kind === "temp" ? (
               <FiltrationTempRow
                 key={item.e.id}
                 entry={item.e}
@@ -18754,6 +18806,31 @@ function FiltrationHistoryLine({ filtration, lang }) {
     <div style={{ fontSize: 12.5, marginTop: 8, color: warn ? "#a8721a" : "var(--brand-text-secondary)", lineHeight: 1.5 }}>
       <strong>{t("filt_hist_title")}</strong> · {t("filt_hist_reco_short")} {filtration.reco !== null ? formatDurationH(filtration.reco) : "—"} · {t("filt_hist_applied_short")} {filtration.applied !== null ? formatDurationH(filtration.applied) : "—"}
       {gap !== null && Math.abs(gap) >= 0.25 ? " (" + (gap > 0 ? "+" : "−") + formatDurationH(Math.abs(gap)) + ")" : ""}
+    </div>
+  );
+}
+
+// Programmation de la filtration enregistrée (onglet Filtration) : entrée du journal de l'historique (heure de démarrage et durée par jour).
+function FiltrationProgRow({ entry, lang }) {
+  const t = useT(lang || "fr");
+  const startH = entry.start ? parseClock(entry.start) : null;
+  const parts = [];
+  if (startH !== null) parts.push(t("filt_hist_prog_start", { time: formatClock(startH) }));
+  if (entry.hours !== null) parts.push(t("filt_hist_prog_dur", { d: formatDurationH(entry.hours) }));
+  return (
+    <div style={{ ...styles.productRow, cursor: "default" }} data-testid="prog-row">
+      <div style={{ ...styles.productThumbPlaceholder, background: "#eef7fb" }}>
+        <Clock size={16} color="var(--brand-primary)" />
+      </div>
+      <div style={{ flex: 1, textAlign: "left" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--brand-primary)", background: "#eaf3fb", border: "1px solid #d0e4f5", borderRadius: 99, padding: "2px 8px" }}>
+            ⚙️ {t("filt_hist_prog_entry")}
+          </span>
+          <span style={{ fontSize: 11.5, color: "var(--brand-text-muted)" }}>{formatDate(entry.date)}</span>
+        </div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: "var(--brand-text-strong)", marginTop: 4 }}>{parts.length ? parts.join(" · ") : t("filt_hist_prog_cleared")}</div>
+      </div>
     </div>
   );
 }
