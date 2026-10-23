@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.165.0";
+const APP_VERSION = "1.167.0";
 const CGU_VERSION = "1.5"; // v1.5 : section 6 complétée (altitude du bassin : IGN, Open Topo Data) ; v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -971,6 +971,8 @@ const TRANSLATIONS = {
     thermal_clear: "Aucun",
     thermal_months_needed: "Choisis aussi les mois de chauffage et la consigne pour que le chauffage soit pris en compte.",
     filt_temp_estimated_low: "Estimée (peu fiable)",
+    filt_temp_projected: "Calculée",
+    filt_day_temp: "Eau estimée aujourd'hui",
     filt_temp_setpoint: "Consigne",
     filt_invite_temp: "Saisis la température de l'eau pour améliorer la précision.",
     filt_rising_note: "Tient compte du réchauffement prévu demain.",
@@ -1943,6 +1945,8 @@ const TRANSLATIONS = {
     thermal_clear: "None",
     thermal_months_needed: "Also choose the heating months and the setpoint so that heating is taken into account.",
     filt_temp_estimated_low: "Estimated (low reliability)",
+    filt_temp_projected: "Calculated",
+    filt_day_temp: "Estimated water today",
     filt_temp_setpoint: "Setpoint",
     filt_invite_temp: "Enter the water temperature to improve accuracy.",
     filt_rising_note: "Takes tomorrow's expected warming into account.",
@@ -2913,6 +2917,8 @@ const TRANSLATIONS = {
     thermal_clear: "Keine",
     thermal_months_needed: "Wähle auch Heizmonate und Solltemperatur, damit die Heizung berücksichtigt wird.",
     filt_temp_estimated_low: "Geschätzt (wenig zuverlässig)",
+    filt_temp_projected: "Berechnet",
+    filt_day_temp: "Geschätztes Wasser heute",
     filt_temp_setpoint: "Sollwert",
     filt_invite_temp: "Gib die Wassertemperatur ein, um die Genauigkeit zu verbessern.",
     filt_rising_note: "Berücksichtigt die für morgen erwartete Erwärmung.",
@@ -3883,6 +3889,8 @@ const TRANSLATIONS = {
     thermal_clear: "Nessuno",
     thermal_months_needed: "Scegli anche i mesi di riscaldamento e la temperatura impostata affinché il riscaldamento sia considerato.",
     filt_temp_estimated_low: "Stimata (poco affidabile)",
+    filt_temp_projected: "Calcolata",
+    filt_day_temp: "Acqua stimata oggi",
     filt_temp_setpoint: "Impostata",
     filt_invite_temp: "Inserisci la temperatura dell'acqua per migliorare la precisione.",
     filt_rising_note: "Tiene conto del riscaldamento previsto per domani.",
@@ -4853,6 +4861,8 @@ const TRANSLATIONS = {
     thermal_clear: "Ninguno",
     thermal_months_needed: "Elige también los meses de calefacción y la consigna para que se tenga en cuenta la calefacción.",
     filt_temp_estimated_low: "Estimada (poco fiable)",
+    filt_temp_projected: "Calculada",
+    filt_day_temp: "Agua estimada hoy",
     filt_temp_setpoint: "Consigna",
     filt_invite_temp: "Introduce la temperatura del agua para mejorar la precisión.",
     filt_rising_note: "Tiene en cuenta el calentamiento previsto para mañana.",
@@ -5823,6 +5833,8 @@ const TRANSLATIONS = {
     thermal_clear: "Nenhum",
     thermal_months_needed: "Escolha também os meses de aquecimento e a temperatura definida para que o aquecimento seja considerado.",
     filt_temp_estimated_low: "Estimada (pouco fiável)",
+    filt_temp_projected: "Calculada",
+    filt_day_temp: "Água estimada hoje",
     filt_temp_setpoint: "Definida",
     filt_invite_temp: "Introduza a temperatura da água para melhorar a precisão.",
     filt_rising_note: "Tem em conta o aquecimento previsto para amanhã.",
@@ -12461,7 +12473,20 @@ function PoolGenAIApp() {
             <FiltrationLockedCard lang={lang} onWantPremium={() => openPaywall()} />
           )
         )}
-        {tab === "weather" && <div data-testid="weather-tab" />}
+        {tab === "weather" && activePool && (
+          effectiveIsPremium ? (
+            <WeatherCard
+              key={activePool.id}
+              pool={activePool}
+              measures={sortedMeasures}
+              lang={lang}
+              canEdit={!viewContext}
+              onUpdatePool={(u) => updatePool(activePool.id, u)}
+            />
+          ) : (
+            <FiltrationLockedCard lang={lang} onWantPremium={() => openPaywall()} />
+          )
+        )}
         {tab === "history" && (
           <HistoryView
             measures={sortedMeasures}
@@ -14406,8 +14431,14 @@ function computeWaterEstimate(o) {
     tCalc = tProj + warmC;
   }
   const temps = projectWaterTemps({ startTemp: tCalc, startKey: todayKey, steps: WATER_PROJECTION_DAYS - 1, air, cfg: o.cfg, offsets: model.offsets, k });
+  // Température projetée à l'INSTANT PRÉSENT depuis la dernière saisie (inertie + air depuis) : elle remplace une saisie de plus de 12 h à l'affichage.
+  const tNow = anchorUsable && Object.keys(air).length
+    ? projectToInstant({ startTemp: anchor.value, startMs: anchor.t, endMs: Math.max(anchor.t, o.nowMs), air, k, offsets: model.offsets, cfg: o.cfg, tz })
+    : null;
   return {
     t0,
+    tNow,
+    ageH: anchor ? (o.nowMs - anchor.t) / 36e5 : null,
     tCalc,
     adjC: tCalc - t0,
     driftC,
@@ -14426,6 +14457,14 @@ function computeWaterEstimate(o) {
     kSamples: fit.n,
     needsInvite: source !== "consigne" && (confidence === "low" || (ageDays !== null && ageDays > WATER_STALE_DAYS)),
   };
+}
+
+// Température de l'eau à AFFICHER : la dernière saisie / mesure tant qu'elle a au plus 12 h, au-delà la température calculée (projetée à maintenant).
+// Sans projection possible (pas de données d'air), la saisie reste affichée. { value (°C), projected (bool) }.
+const WATER_PROJECTED_AFTER_H = 12;
+function waterDisplay(est) {
+  if (est && (est.source === "mesure" || est.source === "saisie") && Number.isFinite(est.ageH) && est.ageH > WATER_PROJECTED_AFTER_H && Number.isFinite(est.tNow)) return { value: est.tNow, projected: true };
+  return { value: est ? est.t0 : null, projected: false };
 }
 
 // Durée recommandée aujourd'hui (piscine) : max(D(0), D(1)) — elle monte dès qu'un réchauffement est prévu (risque d'algues
@@ -14788,21 +14827,21 @@ function computeDaylight(lat, lon, date, timeZone) {
   return { sunriseH: noonH - halfDayH, sunsetH: noonH + halfDayH, noonH, dayLengthH: 2 * halfDayH, elevNoonDeg, aspect };
 }
 
-// Positions (en % de la largeur de la barre horaire) des étiquettes de lever et de coucher : centrées sous l'extrémité de l'arc, ramenées dans la
-// carte (marge de 9 %) et écartées d'au moins 20 % quand le jour est très court (latitudes élevées en hiver).
+// Positions (en % de la largeur de la barre horaire) des étiquettes de lever, de midi solaire et de coucher : centrées sous leur repère, ramenées
+// dans la carte (marge de 9 %) et écartées d'au moins 16 % l'une de l'autre quand le jour est très court (latitudes élevées en hiver).
 const SUN_LABEL_EDGE_PCT = 9;
-const SUN_LABEL_MIN_GAP_PCT = 20;
-function sunLabelPositions(sunriseH, sunsetH) {
+const SUN_LABEL_MIN_GAP_PCT = 16;
+function sunLabelPositions(sunriseH, sunsetH, noonH) {
   const lo = SUN_LABEL_EDGE_PCT;
   const hi = 100 - SUN_LABEL_EDGE_PCT;
-  let rise = Math.min(hi, Math.max(lo, (sunriseH / 24) * 100));
-  let set = Math.min(hi, Math.max(lo, (sunsetH / 24) * 100));
-  if (set - rise < SUN_LABEL_MIN_GAP_PCT) {
-    const mid = (rise + set) / 2;
-    rise = Math.max(lo, Math.min(hi - SUN_LABEL_MIN_GAP_PCT, mid - SUN_LABEL_MIN_GAP_PCT / 2));
-    set = rise + SUN_LABEL_MIN_GAP_PCT;
-  }
-  return { rise, set };
+  const g = SUN_LABEL_MIN_GAP_PCT;
+  const clamp = (x) => Math.min(hi, Math.max(lo, x));
+  const noonRaw = Number.isFinite(noonH) ? noonH : (sunriseH + sunsetH) / 2;
+  // le midi garde sa place si possible, sinon il laisse la place à ses deux voisines ; lever et coucher ne se rapprochent jamais de lui à moins de g
+  const noon = Math.min(hi - g, Math.max(lo + g, (noonRaw / 24) * 100));
+  const rise = Math.min(clamp((sunriseH / 24) * 100), noon - g);
+  const set = Math.max(clamp((sunsetH / 24) * 100), noon + g);
+  return { rise, noon, set };
 }
 
 // ---------- Courbe « température projetée » de l'historique ----------
@@ -15040,7 +15079,9 @@ function SunArcLayer({ daylight, resizeKey }) {
   );
 }
 
-function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSettings, onOpenHistory, onEnsureAltitude }) {
+// v1.166.0 — Données partagées par la carte Filtration et l'onglet Météo : coordonnées du bassin, prévisions (cache de 30 min), historique de l'air,
+// estimation de la température de l'eau, durée recommandée et plage horaire autour du midi solaire.
+function useFiltrationBase({ pool, measures, lang, canEdit, onUpdatePool }) {
   const t = useT(lang);
   const poolType = getPoolType(pool);
   const tz = (pool && pool.timeZone) || getDeviceTimeZone();
@@ -15052,17 +15093,6 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
   const [weather, setWeather] = useState(null);
   const [wState, setWState] = useState("idle"); // idle | loading | ok | error
   const [localHist, setLocalHist] = useState(() => loadAirHistory(pool?.id));
-  // Dernière saisie enregistrée : valeur et heure restent affichées avec une coche (y compris en revenant sur l'onglet) ;
-  // { auto } = heure non choisie (datée de maintenant) : une nouvelle température repart de « maintenant ».
-  const [restored] = useState(() => restoredTempInput(pool, TEMP_UNIT, Date.now()));
-  const [tempDraft, setTempDraft] = useState(restored ? restored.draft : "");
-  const [tempWhen, setTempWhen] = useState(restored ? restored.when : ""); // date et heure de la saisie (heure locale) ; vide = maintenant
-  const [tempSaved, setTempSaved] = useState(restored ? { auto: true, older: null } : null);
-  // Programmation actuelle de la filtration (coffret) : saisie dans l'onglet, enregistrée dans le bassin.
-  const progSaved = { start: (pool && pool.filtrationStartCurrent) || "", dur: pool && pool.filtrationDurationCurrent != null ? String(pool.filtrationDurationCurrent) : "" };
-  const [progStart, setProgStart] = useState(progSaved.start);
-  const [progDur, setProgDur] = useState(progSaved.dur);
-  useEffect(() => { setProgStart(progSaved.start); setProgDur(progSaved.dur); }, [progSaved.start, progSaved.dur]);
   const geoTriedRef = useRef(false);
   const todayKey = localDateKey(nowMs, tz);
   // Historique de l'air : celui du bassin (partagé entre appareils) prime sur la copie locale.
@@ -15153,6 +15183,30 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
     return c ? { icon: weatherIcon(c.cat, false), label: t("wx_" + c.cat) } : { icon: "", label: "" };
   };
 
+  const updatedLabel = weather && weather.updatedAt ? new Date(weather.updatedAt).toLocaleTimeString(lang || "fr", { ...HM, timeZone: tz }) : null;
+  const tzLabel = tz + ", " + formatUtcOffset(tzOffsetMinutes(nowMs, tz));
+  const nowHour = localHourOf(clockMs, tz);
+  const daylight = coords ? computeDaylight(coords.lat, coords.lon, new Date(nowMs), tz) : null;
+  const wd = waterDisplay(est);
+  const sourceLabel = !est ? "" : wd.projected ? t("filt_temp_projected") : est.source === "mesure" ? t("filt_temp_from_measure") : est.source === "saisie" ? t("filt_temp_entered") : est.source === "consigne" ? t("filt_temp_setpoint") : est.confidence === "low" ? t("filt_temp_estimated_low") : t("filt_temp_estimated");
+  return { t, poolType, tz, nowMs, coords, setCoords, geoFailed, setGeoFailed, weather, wState, todayStats, forecast, wxNow, wxLabel, wxIcon, est, wd, sourceLabel, spaSpec, hours, noon, slots, totalHours, risingNote, showWeek, dayIcon, updatedLabel, tzLabel, nowHour, daylight };
+}
+
+function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSettings, onOpenHistory, onEnsureAltitude }) {
+  const t = useT(lang);
+  const { poolType, tz, coords, setCoords, geoFailed, setGeoFailed, wState, todayStats, est, spaSpec, totalHours, noon, slots, risingNote, updatedLabel, tzLabel } = useFiltrationBase({ pool, measures, lang, canEdit, onUpdatePool });
+  // Dernière saisie enregistrée : valeur et heure restent affichées avec une coche (y compris en revenant sur l'onglet) ;
+  // { auto } = heure non choisie (datée de maintenant) : une nouvelle température repart de « maintenant ».
+  const [restored] = useState(() => restoredTempInput(pool, TEMP_UNIT, Date.now()));
+  const [tempDraft, setTempDraft] = useState(restored ? restored.draft : "");
+  const [tempWhen, setTempWhen] = useState(restored ? restored.when : ""); // date et heure de la saisie (heure locale) ; vide = maintenant
+  const [tempSaved, setTempSaved] = useState(restored ? { auto: true, older: null } : null);
+  // Programmation actuelle de la filtration (coffret) : saisie dans l'onglet, enregistrée dans le bassin.
+  const progSaved = { start: (pool && pool.filtrationStartCurrent) || "", dur: pool && pool.filtrationDurationCurrent != null ? String(pool.filtrationDurationCurrent) : "" };
+  const [progStart, setProgStart] = useState(progSaved.start);
+  const [progDur, setProgDur] = useState(progSaved.dur);
+  useEffect(() => { setProgStart(progSaved.start); setProgDur(progSaved.dur); }, [progSaved.start, progSaved.dur]);
+
   const curStart = parseClock(pool?.filtrationStartCurrent);
   const curDur = parseFloat(pool?.filtrationDurationCurrent);
   const hasCurrent = curStart != null || Number.isFinite(curDur);
@@ -15208,33 +15262,26 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
     fetchAltitude(lat, lon).then((alt) => { if (alt !== null) onUpdatePool({ altitudeM: alt }); });
   }
 
-  const updatedLabel = weather && weather.updatedAt ? new Date(weather.updatedAt).toLocaleTimeString(lang || "fr", { ...HM, timeZone: tz }) : null;
-  const tzLabel = tz + ", " + formatUtcOffset(tzOffsetMinutes(nowMs, tz));
-  const nowHour = localHourOf(clockMs, tz);
-  const daylight = coords ? computeDaylight(coords.lat, coords.lon, new Date(nowMs), tz) : null;
   const whenValid = tempWhen === "" || validTempEntryTime(parseLocalInput(tempWhen), Date.now());
   const tempValid = Number.isFinite(parseFloat(String(tempDraft).replace(",", "."))) && canEdit && whenValid && !tempSaved;
-  const sourceLabel = !est ? "" : est.source === "mesure" ? t("filt_temp_from_measure") : est.source === "saisie" ? t("filt_temp_entered") : est.source === "consigne" ? t("filt_temp_setpoint") : est.confidence === "low" ? t("filt_temp_estimated_low") : t("filt_temp_estimated");
-
   return (
     <div style={FILT_STYLES.card}>
       <div style={FILT_STYLES.head}>
         <span style={FILT_STYLES.title}><Clock size={15} /> {t("filt_title")}</span>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
-          {wxLabel && (
-            <span style={{ ...FILT_STYLES.badge, display: "inline-flex", alignItems: "center", gap: 6, padding: "2px 10px 2px 6px" }}>
-              {/* Pictogramme à 2,5 x la taille précédente (11 px -> 27,5 px) */}
-              <span style={{ fontSize: 27.5, lineHeight: 1 }}>{wxIcon}</span>
-              <span style={{ whiteSpace: "nowrap" }}>{wxLabel}{wxNow && Number.isFinite(wxNow.air) ? " · " + formatTemp(wxNow.air, TEMP_UNIT, 0) : ""}</span>
-            </span>
-          )}
-          {est && <span style={FILT_STYLES.badge}>{t("filt_water_temp")} {formatTemp(est.t0, TEMP_UNIT, 1)} · {sourceLabel}</span>}
-        </div>
       </div>
 
       {totalHours != null ? (
         <>
-          <div style={FILT_STYLES.big}>{formatDurationH(totalHours)}</div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+            <div style={FILT_STYLES.big}>{formatDurationH(totalHours)}</div>
+            {/* Température estimée du jour : celle qui sert au calcul de la durée (saisie évoluée jusqu'au midi solaire, réchauffement prévu compris) */}
+            {poolType !== "spa" && est && Number.isFinite(est.tCalc) && (
+              <div data-testid="day-temp" style={{ textAlign: "right", flexShrink: 0 }}>
+                <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", lineHeight: 1.2 }}>{t("filt_day_temp")}</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: "var(--brand-text-strong)", lineHeight: 1.15 }}>{formatTemp(est.tCalc, TEMP_UNIT, 1)}</div>
+              </div>
+            )}
+          </div>
           <div style={FILT_STYLES.sub}>
             {poolType === "spa" && spaSpec && (spaSpec.continuous ? t("filt_continuous") : t("filt_spa_cycles", { n: spaSpec.cycles, d: formatDurationH(spaSpec.hours / spaSpec.cycles) }))}
             {poolType !== "spa" && t("filt_recommended")}
@@ -15248,43 +15295,6 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
         <p style={{ ...FILT_STYLES.hint, marginTop: 0 }}>{t("filt_no_temp")}</p>
       )}
 
-      {slots && daylight && <SunArcLayer daylight={daylight} resizeKey={slots.length + "-" + (noon != null ? 1 : 0)} />}
-      {slots && (
-        <div style={{ marginTop: 12 }}>
-          <div style={{ fontSize: 12, color: "var(--brand-text-muted)", marginBottom: 4 }}>
-            {t("filt_range")} : {slots.map((s) => formatClock(s.start) + " – " + formatClock(s.end)).join(" · ")}
-          </div>
-          {/* Repère du midi solaire : libellé (décalé vers l'intérieur près des bords) + petit triangle pointe en bas, à la verticale du trait jaune */}
-          <div style={{ position: "relative", height: 24 }}>
-            {noon != null && (
-              <span style={{ position: "absolute", top: 0, left: "calc(" + Math.min(88, Math.max(12, noon / 24 * 100)) + "% + 1px)", transform: "translateX(-50%)", fontSize: 10.5, fontWeight: 700, color: "#b7791f", whiteSpace: "nowrap" }}>{t("filt_solar_noon")}</span>
-            )}
-            {noon != null && (
-              <span style={{ position: "absolute", top: 15, left: "calc(" + (noon / 24 * 100) + "% + 1px)", transform: "translateX(-50%)", width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: "7px solid #f5b700" }} />
-            )}
-            <span data-testid="now-marker" title={t("filt_now_marker", { time: formatClock(nowHour) })} style={{ position: "absolute", top: 15, left: "calc(" + (nowHour / 24 * 100) + "% + 1px)", transform: "translateX(-50%)", width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: "7px solid #7e57c2" }} />
-          </div>
-          <div data-sun-bar="1" style={{ position: "relative", height: 14, borderRadius: 7, background: "#e6eef3", overflow: "hidden" }}>
-            {slots.map((s, i) => (
-              <div key={i} style={{ position: "absolute", top: 0, bottom: 0, left: (s.start / 24 * 100) + "%", width: ((s.end - s.start) / 24 * 100) + "%", background: "var(--brand-primary)" }} />
-            ))}
-            {noon != null && <div style={{ position: "absolute", top: 0, bottom: 0, left: (noon / 24 * 100) + "%", width: 2, background: "#f5b700" }} />}
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#9aa9b6", marginTop: 2 }}>
-            <span>0 h</span><span>6 h</span><span>12 h</span><span>18 h</span><span>24 h</span>
-          </div>
-          {daylight && daylight.dayLengthH > 0 && daylight.dayLengthH < 24 && (() => {
-            const pos = sunLabelPositions(daylight.sunriseH, daylight.sunsetH);
-            const st = { position: "absolute", top: 0, transform: "translateX(-50%)", whiteSpace: "nowrap", fontSize: 10.5, fontWeight: 700, color: "#b7791f" };
-            return (
-              <div data-testid="sun-times" style={{ position: "relative", height: 16, marginTop: 1 }}>
-                <span data-testid="sunrise-label" style={{ ...st, left: pos.rise + "%" }}>{formatClock(daylight.sunriseH)}</span>
-                <span data-testid="sunset-label" style={{ ...st, left: pos.set + "%" }}>{formatClock(daylight.sunsetH)}</span>
-              </div>
-            );
-          })()}
-        </div>
-      )}
       {!coords && (
         <div style={{ marginTop: 10 }}>
           <p style={{ ...FILT_STYLES.hint, marginTop: 0, marginBottom: 6 }}>{pool?.location && !geoFailed ? t("filt_locating") : t("filt_ask_location")}</p>
@@ -15351,31 +15361,6 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
         </div>
       )}
 
-      {showWeek && (
-        <div style={{ marginTop: 14 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#2d4a6e", marginBottom: 6 }}>{t("filt_week_title")}</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
-            {est.dates.map((d, i) => (
-              <div key={d} style={{ textAlign: "center", background: i < 3 ? "#f5f9fc" : "transparent", border: i < 3 ? "1px solid transparent" : "1px dashed #d0e4f5", borderRadius: 8, padding: "6px 1px", opacity: i < 3 ? 1 : 0.6 }}>
-                <div style={{ fontSize: 10.5, color: "var(--brand-text-muted)", textTransform: "capitalize", fontWeight: i === 0 ? 800 : 500 }}>{new Date(d + "T12:00:00Z").toLocaleDateString(lang || "fr", { weekday: "short", timeZone: "UTC" })}</div>
-                <div title={dayIcon(d).label} style={{ fontSize: 17, lineHeight: "22px", height: 22 }}>{dayIcon(d).icon}</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--brand-text-strong)" }}>{formatTemp(est.temps[i], TEMP_UNIT, 0)}</div>
-                <div style={{ fontSize: 10.5, color: "var(--brand-text-muted)", whiteSpace: "nowrap" }}>{est.hours[i] == null ? "—" : formatDurationH(est.hours[i])}</div>
-              </div>
-            ))}
-          </div>
-          <div style={{ fontSize: 11, color: "#9aa9b6", marginTop: 4, lineHeight: 1.4 }}>{t("filt_week_indicative")}</div>
-        </div>
-      )}
-
-      {wState === "ok" && todayStats && (
-        <div style={FILT_STYLES.stats}>
-          <div style={FILT_STYLES.stat}>{t("filt_air_max")}<div style={FILT_STYLES.statVal}>{formatTemp(todayStats.airMax, TEMP_UNIT, 0)}</div></div>
-          <div style={FILT_STYLES.stat}>{t("filt_uv")}<div style={FILT_STYLES.statVal}>{todayStats.uvMax.toFixed(1)}</div></div>
-          <div style={FILT_STYLES.stat}>{t("filt_rain")}<div style={FILT_STYLES.statVal}>{todayStats.rainMm.toFixed(1)} mm</div></div>
-          <div style={FILT_STYLES.stat}>{t("filt_wind")}<div style={FILT_STYLES.statVal}>{Math.round(todayStats.windMax * 3.6)} km/h</div></div>
-        </div>
-      )}
       {wState === "loading" && <p style={FILT_STYLES.hint}><Loader2 size={13} className="spin" /> {t("filt_weather_loading")}</p>}
       {wState === "error" && <p style={FILT_STYLES.hint}>{t("filt_weather_unavailable")}</p>}
 
@@ -15414,6 +15399,104 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
           <button type="button" onClick={() => onOpenSettings("thermal")} style={{ ...styles.editLinkBtn, display: "inline-flex", padding: 0 }}>{t("filt_configure_thermal")}</button>
         </p>
       )}
+
+      <div style={FILT_STYLES.foot}>
+        {updatedLabel && <div>{t("filt_updated", { time: updatedLabel, tz: tzLabel })}</div>}
+        <div>{t("filt_attribution")}</div>
+      </div>
+    </div>
+  );
+}
+
+// v1.166.0 — Onglet Météo : ligne de temps du jour (plage de filtration, midi solaire, lever / coucher, arc du soleil), prévisions des 7 prochains
+// jours avec durée de filtration, et chiffres du jour (air max, UV, pluie, vent max). Mêmes données que la carte Filtration (useFiltrationBase).
+function WeatherCard({ pool, measures, lang, canEdit, onUpdatePool }) {
+  const { t, poolType, coords, geoFailed, wState, todayStats, est, wd, sourceLabel, wxNow, wxLabel, wxIcon, noon, slots, showWeek, dayIcon, updatedLabel, tzLabel, nowHour, daylight } = useFiltrationBase({ pool, measures, lang, canEdit, onUpdatePool });
+  return (
+    <div style={FILT_STYLES.card} data-testid="weather-card">
+      <div style={FILT_STYLES.head}>
+        <span style={FILT_STYLES.title}><CloudSunIcon size={15} /> {t("tab_weather")}</span>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
+          {wxLabel && (
+            <span style={{ ...FILT_STYLES.badge, display: "inline-flex", alignItems: "center", gap: 6, padding: "2px 10px 2px 6px" }}>
+              <span style={{ fontSize: 27.5, lineHeight: 1 }}>{wxIcon}</span>
+              <span style={{ whiteSpace: "nowrap" }}>{wxLabel}{wxNow && Number.isFinite(wxNow.air) ? " · " + formatTemp(wxNow.air, TEMP_UNIT, 0) : ""}</span>
+            </span>
+          )}
+          {est && <span style={FILT_STYLES.badge}>{t("filt_water_temp")} {formatTemp(wd.value, TEMP_UNIT, 1)} · {sourceLabel}</span>}
+        </div>
+      </div>
+
+      {slots && daylight && <SunArcLayer daylight={daylight} resizeKey={slots.length + "-" + (noon != null ? 1 : 0)} />}
+      {slots && (
+        <div style={{ marginTop: 4 }}>
+          <div style={{ fontSize: 12, color: "var(--brand-text-muted)", marginBottom: 4 }}>
+            {t("filt_range")} : {slots.map((s) => formatClock(s.start) + " – " + formatClock(s.end)).join(" · ")}
+          </div>
+          {/* Repère du midi solaire : libellé (décalé vers l'intérieur près des bords) + petit triangle pointe en bas, à la verticale du trait jaune */}
+          <div style={{ position: "relative", height: 24 }}>
+            {noon != null && (
+              <span style={{ position: "absolute", top: 0, left: "calc(" + Math.min(88, Math.max(12, noon / 24 * 100)) + "% + 1px)", transform: "translateX(-50%)", fontSize: 10.5, fontWeight: 700, color: "#b7791f", whiteSpace: "nowrap" }}>{t("filt_solar_noon")}</span>
+            )}
+            {noon != null && (
+              <span style={{ position: "absolute", top: 15, left: "calc(" + (noon / 24 * 100) + "% + 1px)", transform: "translateX(-50%)", width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: "7px solid #f5b700" }} />
+            )}
+            <span data-testid="now-marker" title={t("filt_now_marker", { time: formatClock(nowHour) })} style={{ position: "absolute", top: 15, left: "calc(" + (nowHour / 24 * 100) + "% + 1px)", transform: "translateX(-50%)", width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: "7px solid #7e57c2" }} />
+          </div>
+          <div data-sun-bar="1" style={{ position: "relative", height: 14, borderRadius: 7, background: "#e6eef3", overflow: "hidden" }}>
+            {slots.map((s, i) => (
+              <div key={i} style={{ position: "absolute", top: 0, bottom: 0, left: (s.start / 24 * 100) + "%", width: ((s.end - s.start) / 24 * 100) + "%", background: "var(--brand-primary)" }} />
+            ))}
+            {noon != null && <div style={{ position: "absolute", top: 0, bottom: 0, left: (noon / 24 * 100) + "%", width: 2, background: "#f5b700" }} />}
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#9aa9b6", marginTop: 2 }}>
+            <span>0 h</span><span>6 h</span><span>12 h</span><span>18 h</span><span>24 h</span>
+          </div>
+          {daylight && daylight.dayLengthH > 0 && daylight.dayLengthH < 24 && (() => {
+            const pos = sunLabelPositions(daylight.sunriseH, daylight.sunsetH, noon != null ? noon : daylight.noonH);
+            const st = { position: "absolute", top: 0, transform: "translateX(-50%)", whiteSpace: "nowrap", fontSize: 10.5, fontWeight: 700, color: "#b7791f" };
+            return (
+              <div data-testid="sun-times" style={{ position: "relative", height: 16, marginTop: 1 }}>
+                <span data-testid="sunrise-label" style={{ ...st, left: pos.rise + "%" }}>{formatClock(daylight.sunriseH)}</span>
+                <span data-testid="noon-label" style={{ ...st, left: pos.noon + "%" }}>{formatClock(noon != null ? noon : daylight.noonH)}</span>
+                <span data-testid="sunset-label" style={{ ...st, left: pos.set + "%" }}>{formatClock(daylight.sunsetH)}</span>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {!coords && (
+        <p style={{ ...FILT_STYLES.hint, marginTop: 0 }}>{pool?.location && !geoFailed ? t("filt_locating") : t("filt_ask_location")}</p>
+      )}
+
+      {showWeek && (
+        <div style={{ marginTop: 14 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#2d4a6e", marginBottom: 6 }}>{t("filt_week_title")}</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
+            {est.dates.map((d, i) => (
+              <div key={d} style={{ textAlign: "center", background: i < 3 ? "#f5f9fc" : "transparent", border: i < 3 ? "1px solid transparent" : "1px dashed #d0e4f5", borderRadius: 8, padding: "6px 1px", opacity: i < 3 ? 1 : 0.6 }}>
+                <div style={{ fontSize: 10.5, color: "var(--brand-text-muted)", textTransform: "capitalize", fontWeight: i === 0 ? 800 : 500 }}>{new Date(d + "T12:00:00Z").toLocaleDateString(lang || "fr", { weekday: "short", timeZone: "UTC" })}</div>
+                <div title={dayIcon(d).label} style={{ fontSize: 17, lineHeight: "22px", height: 22 }}>{dayIcon(d).icon}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--brand-text-strong)" }}>{formatTemp(est.temps[i], TEMP_UNIT, 0)}</div>
+                <div style={{ fontSize: 10.5, color: "var(--brand-text-muted)", whiteSpace: "nowrap" }}>{est.hours[i] == null ? "—" : formatDurationH(est.hours[i])}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ fontSize: 11, color: "#9aa9b6", marginTop: 4, lineHeight: 1.4 }}>{t("filt_week_indicative")}</div>
+        </div>
+      )}
+
+      {wState === "ok" && todayStats && (
+        <div style={FILT_STYLES.stats}>
+          <div style={FILT_STYLES.stat}>{t("filt_air_max")}<div style={FILT_STYLES.statVal}>{formatTemp(todayStats.airMax, TEMP_UNIT, 0)}</div></div>
+          <div style={FILT_STYLES.stat}>{t("filt_uv")}<div style={FILT_STYLES.statVal}>{todayStats.uvMax.toFixed(1)}</div></div>
+          <div style={FILT_STYLES.stat}>{t("filt_rain")}<div style={FILT_STYLES.statVal}>{todayStats.rainMm.toFixed(1)} mm</div></div>
+          <div style={FILT_STYLES.stat}>{t("filt_wind")}<div style={FILT_STYLES.statVal}>{Math.round(todayStats.windMax * 3.6)} km/h</div></div>
+        </div>
+      )}
+      {wState === "loading" && <p style={FILT_STYLES.hint}><Loader2 size={13} className="spin" /> {t("filt_weather_loading")}</p>}
+      {wState === "error" && <p style={FILT_STYLES.hint}>{t("filt_weather_unavailable")}</p>}
 
       <div style={FILT_STYLES.foot}>
         {updatedLabel && <div>{t("filt_updated", { time: updatedLabel, tz: tzLabel })}</div>}
