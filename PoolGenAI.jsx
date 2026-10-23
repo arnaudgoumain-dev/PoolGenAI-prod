@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.167.2";
+const APP_VERSION = "1.169.0";
 const CGU_VERSION = "1.5"; // v1.5 : section 6 complétée (altitude du bassin : IGN, Open Topo Data) ; v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -478,6 +478,7 @@ const TRANSLATIONS = {
     first_pool_title: "Bienvenue sur PoolGenAI",
     first_pool_intro: "Configure ton premier bassin pour commencer à suivre sa chimie de l'eau.",
     pool_name_required: "Saisis le nom du bassin.",
+    pool_name_taken: "Un bassin porte déjà ce nom. Choisis un autre nom.",
     pool_volume_required: "Saisis le volume du bassin (supérieur à 0).",
     edit_pool_title: "Modifier le bassin",
     pool_name_placeholder: "Ma piscine",
@@ -995,6 +996,7 @@ const TRANSLATIONS = {
     filt_hist_prog_start: "Démarrage à {time}",
     filt_hist_prog_dur: "{d} par jour",
     filt_hist_prog_cleared: "Programmation effacée",
+    filt_hist_prog_delete_confirm: "Supprimer cet enregistrement de la programmation de l'historique ? Si c'est le plus récent, la programmation actuelle revient à la précédente.",
     filt_hist_temp_delete_confirm: "Supprimer cette température de l'historique ?",
     filt_solar_noon: "Midi solaire",
     filt_temp_when_label: "Date et heure (facultatif)",
@@ -1460,6 +1462,7 @@ const TRANSLATIONS = {
     first_pool_title: "Welcome to PoolGenAI",
     first_pool_intro: "Set up your first pool to start tracking its water chemistry.",
     pool_name_required: "Enter a name for your pool.",
+    pool_name_taken: "You already have a pool with this name. Choose another name.",
     pool_volume_required: "Enter the pool volume (greater than 0).",
     edit_pool_title: "Edit pool",
     pool_name_placeholder: "My pool",
@@ -1973,6 +1976,7 @@ const TRANSLATIONS = {
     filt_hist_prog_start: "Starts at {time}",
     filt_hist_prog_dur: "{d} per day",
     filt_hist_prog_cleared: "Schedule cleared",
+    filt_hist_prog_delete_confirm: "Delete this schedule entry from the history? If it is the latest, the current schedule goes back to the previous one.",
     filt_hist_temp_delete_confirm: "Delete this temperature from the history?",
     filt_solar_noon: "Solar noon",
     filt_temp_when_label: "Date and time (optional)",
@@ -2437,6 +2441,7 @@ const TRANSLATIONS = {
     first_pool_title: "Willkommen bei PoolGenAI",
     first_pool_intro: "Richte dein erstes Becken ein, um mit der Wasserchemie-Überwachung zu beginnen.",
     pool_name_required: "Gib einen Namen für dein Becken ein.",
+    pool_name_taken: "Du hast bereits ein Becken mit diesem Namen. Wähle einen anderen Namen.",
     pool_volume_required: "Gib das Beckenvolumen ein (größer als 0).",
     edit_pool_title: "Becken bearbeiten",
     pool_name_placeholder: "Mein Pool",
@@ -2949,6 +2954,7 @@ const TRANSLATIONS = {
     filt_hist_prog_start: "Start um {time}",
     filt_hist_prog_dur: "{d} pro Tag",
     filt_hist_prog_cleared: "Programm gelöscht",
+    filt_hist_prog_delete_confirm: "Diesen Programmeintrag aus dem Verlauf löschen? Ist er der neueste, gilt wieder das vorherige Programm.",
     filt_hist_temp_delete_confirm: "Diese Temperatur aus dem Verlauf löschen?",
     filt_solar_noon: "Sonnenhöchststand",
     filt_temp_when_label: "Datum und Uhrzeit (optional)",
@@ -3416,6 +3422,7 @@ const TRANSLATIONS = {
     first_pool_title: "Benvenuto su PoolGenAI",
     first_pool_intro: "Configura la tua prima vasca per iniziare a monitorare la chimica dell'acqua.",
     pool_name_required: "Inserisci il nome della vasca.",
+    pool_name_taken: "Hai già una vasca con questo nome. Scegli un altro nome.",
     pool_volume_required: "Inserisci il volume della vasca (maggiore di 0).",
     edit_pool_title: "Modifica vasca",
     pool_name_placeholder: "La mia piscina",
@@ -3925,6 +3932,7 @@ const TRANSLATIONS = {
     filt_hist_prog_start: "Avvio alle {time}",
     filt_hist_prog_dur: "{d} al giorno",
     filt_hist_prog_cleared: "Programmazione cancellata",
+    filt_hist_prog_delete_confirm: "Eliminare questa registrazione della programmazione dallo storico? Se è la più recente, la programmazione attuale torna alla precedente.",
     filt_hist_temp_delete_confirm: "Eliminare questa temperatura dallo storico?",
     filt_solar_noon: "Mezzogiorno solare",
     filt_temp_when_label: "Data e ora (facoltative)",
@@ -4392,6 +4400,7 @@ const TRANSLATIONS = {
     first_pool_title: "Bienvenido a PoolGenAI",
     first_pool_intro: "Configura tu primera piscina para empezar a seguir su química del agua.",
     pool_name_required: "Introduce el nombre de la piscina.",
+    pool_name_taken: "Ya tienes una piscina con este nombre. Elige otro nombre.",
     pool_volume_required: "Introduce el volumen de la piscina (mayor que 0).",
     edit_pool_title: "Editar piscina",
     pool_name_placeholder: "Mi piscina",
@@ -4901,6 +4910,7 @@ const TRANSLATIONS = {
     filt_hist_prog_start: "Inicio a las {time}",
     filt_hist_prog_dur: "{d} al día",
     filt_hist_prog_cleared: "Programación borrada",
+    filt_hist_prog_delete_confirm: "¿Eliminar este registro de la programación del historial? Si es el más reciente, la programación actual vuelve a la anterior.",
     filt_hist_temp_delete_confirm: "¿Eliminar esta temperatura del historial?",
     filt_solar_noon: "Mediodía solar",
     filt_temp_when_label: "Fecha y hora (opcional)",
@@ -5368,6 +5378,7 @@ const TRANSLATIONS = {
     first_pool_title: "Bem-vindo ao PoolGenAI",
     first_pool_intro: "Configura a tua primeira piscina para começar a acompanhar a química da água.",
     pool_name_required: "Introduz o nome da piscina.",
+    pool_name_taken: "Já tens uma piscina com este nome. Escolhe outro nome.",
     pool_volume_required: "Introduz o volume da piscina (superior a 0).",
     edit_pool_title: "Editar piscina",
     pool_name_placeholder: "Minha piscina",
@@ -5877,6 +5888,7 @@ const TRANSLATIONS = {
     filt_hist_prog_start: "Início às {time}",
     filt_hist_prog_dur: "{d} por dia",
     filt_hist_prog_cleared: "Programação apagada",
+    filt_hist_prog_delete_confirm: "Eliminar este registo da programação do histórico? Se for o mais recente, a programação atual volta à anterior.",
     filt_hist_temp_delete_confirm: "Eliminar esta temperatura do histórico?",
     filt_solar_noon: "Meio-dia solar",
     filt_temp_when_label: "Data e hora (opcional)",
@@ -13065,7 +13077,7 @@ function PoolGenAIApp() {
       </div>
     )}
     {loaded && authUser && !suspended && !accountDeleted && !forceUpdate && !needsEmailVerification && !needsCguAcceptance && activePools.length === 0 && cloudConfigReceived && !viewContext && onboardingSeen && !firstPoolDismissed && (
-      <AddPoolModal forced onClose={() => setFirstPoolDismissed(true)} onSave={addPool} lang={lang} isPremium={isPremium} />
+      <AddPoolModal forced onClose={() => setFirstPoolDismissed(true)} onSave={addPool} lang={lang} isPremium={isPremium} existingNames={pools.map((p) => p.name)} />
     )}
     {/* v1.87.0 — L'onboarding doit venir AVANT la création du premier bassin, pas
         après (ordre inversé jusqu'ici : le formulaire de création s'affichait
@@ -13273,7 +13285,7 @@ function PoolGenAIApp() {
       )}
 
       {showAddPool && (
-        <AddPoolModal onClose={() => setShowAddPool(false)} onSave={addPool} lang={lang} isPremium={isPremium} />
+        <AddPoolModal onClose={() => setShowAddPool(false)} onSave={addPool} lang={lang} isPremium={isPremium} existingNames={pools.map((p) => p.name)} />
       )}
 
       {showDeleteReauth && (
@@ -14656,6 +14668,23 @@ function filtrationProgEntries(pool) {
   });
   return out.sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
 }
+// Suppression d'une entrée du journal de programmation (ligne du journal de l'historique). Si c'était la plus récente, la programmation actuelle
+// (onglet Filtration) revient à l'entrée précédente, ou se vide s'il n'y en a plus. Retourne les champs du bassin à mettre à jour.
+function removeFiltrationProgEntry(pool, at) {
+  const t = Date.parse(at);
+  const log = pool && Array.isArray(pool.filtrationProgLog) ? pool.filtrationProgLog : [];
+  const all = filtrationProgEntries(pool);
+  const remaining = log.filter((e) => Date.parse(e && e.at) !== t);
+  const out = { filtrationProgLog: remaining };
+  const latest = all.length ? all[all.length - 1] : null;
+  if (latest && Date.parse(latest.date) === t) {
+    const prev = filtrationProgEntries({ filtrationProgLog: remaining });
+    const last = prev.length ? prev[prev.length - 1] : null;
+    out.filtrationStartCurrent = last ? last.start : null;
+    out.filtrationDurationCurrent = last ? last.hours : null;
+  }
+  return out;
+}
 function filtrationHistoryForMeasure(pool, m) {
   if (!pool || !m) return null;
   let reco = null;
@@ -15071,7 +15100,7 @@ function FiltrationLockedCard({ lang, onWantPremium }) {
         <Lock size={15} color="#9aa9b6" />
       </div>
       <p style={{ ...FILT_STYLES.hint, marginTop: 0 }}>{t("filt_locked")}</p>
-      <button type="button" style={{ ...styles.primaryBtn, marginTop: 10 }} onClick={onWantPremium}>
+      <button type="button" style={{ ...styles.primaryBtn, marginTop: 10, background: PREMIUM_BLUE }} onClick={onWantPremium}>
         <Crown size={16} /> {t("filt_unlock")}
       </button>
     </div>
@@ -15885,7 +15914,7 @@ Réponds directement en français, sans titre ni introduction.`;
                     <button
                       style={{
                         ...styles.validateApplyBtn,
-                        ...(!manageStock ? { background: "#c3d6e6", color: "#f0f5fa", cursor: "pointer" } : {}),
+                        ...(!manageStock ? { ...PREMIUM_INVITE_STYLE, cursor: "pointer" } : {}),
                       }}
                       onClick={() => onValidateApplication(latest, recs)}
                     >
@@ -18569,7 +18598,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
           const latestMeasureId = (measures || []).reduce((best, m) => (!best || new Date(m.date) > new Date(best.date) ? m : best), null)?.id;
           return items.map((item) =>
             item.kind === "prog" ? (
-              <FiltrationProgRow key={item.e.id} entry={item.e} lang={lang} />
+              <FiltrationProgRow key={item.e.id} entry={item.e} lang={lang} onDelete={onUpdatePool && canEditPool ? () => onUpdatePool(removeFiltrationProgEntry(pool, item.e.date)) : undefined} />
             ) : item.kind === "temp" ? (
               <FiltrationTempRow
                 key={item.e.id}
@@ -18811,12 +18840,16 @@ function FiltrationHistoryLine({ filtration, lang }) {
 }
 
 // Programmation de la filtration enregistrée (onglet Filtration) : entrée du journal de l'historique (heure de démarrage et durée par jour).
-function FiltrationProgRow({ entry, lang }) {
-  const t = useT(lang || "fr");
+// Détail d'une programmation enregistrée : « Démarrage à 10:30 · 6 h par jour » (ou « Programmation effacée »).
+function filtProgDetail(entry, t) {
   const startH = entry.start ? parseClock(entry.start) : null;
   const parts = [];
   if (startH !== null) parts.push(t("filt_hist_prog_start", { time: formatClock(startH) }));
   if (entry.hours !== null) parts.push(t("filt_hist_prog_dur", { d: formatDurationH(entry.hours) }));
+  return parts.length ? parts.join(" · ") : t("filt_hist_prog_cleared");
+}
+function FiltrationProgRow({ entry, lang, onDelete }) {
+  const t = useT(lang || "fr");
   return (
     <div style={{ ...styles.productRow, cursor: "default" }} data-testid="prog-row">
       <div style={{ ...styles.productThumbPlaceholder, background: "#eef7fb" }}>
@@ -18829,8 +18862,19 @@ function FiltrationProgRow({ entry, lang }) {
           </span>
           <span style={{ fontSize: 11.5, color: "var(--brand-text-muted)" }}>{formatDate(entry.date)}</span>
         </div>
-        <div style={{ fontSize: 14, fontWeight: 700, color: "var(--brand-text-strong)", marginTop: 4 }}>{parts.length ? parts.join(" · ") : t("filt_hist_prog_cleared")}</div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: "var(--brand-text-strong)", marginTop: 4 }}>{filtProgDetail(entry, t)}</div>
       </div>
+      {onDelete && (
+        <button
+          type="button"
+          data-testid="prog-delete"
+          onClick={() => { if (window.confirm(t("filt_hist_prog_delete_confirm"))) onDelete(); }}
+          style={{ background: "none", border: "none", padding: 6, cursor: "pointer", flexShrink: 0, alignSelf: "flex-start" }}
+          aria-label={t("delete")}
+        >
+          <Trash2 size={14} color="#c0392b" />
+        </button>
+      )}
     </div>
   );
 }
@@ -19064,7 +19108,7 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, onResume
                   data-testid="hist-start-plan"
                   style={{
                     ...styles.validateApplyBtnSmall,
-                    ...(!manageStock ? { background: "#c3d6e6", color: "#f0f5fa" } : {}),
+                    ...(!manageStock ? PREMIUM_INVITE_STYLE : {}),
                   }}
                   onClick={onValidateApplication}
                 >
@@ -22785,7 +22829,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
                   style={{
                     flex: 1, padding: "6px 0", borderRadius: 8, cursor: "pointer",
                     border: freeUnitMode === m ? "2px solid var(--brand-primary)" : "1.5px solid #d0e4f5",
-                    background: freeUnitMode === m ? "#eaf4fb" : "#fff",
+                    background: freeUnitMode === m ? "var(--brand-bg-tint)" : "#fff",
                     color: "var(--brand-text-strong)", fontWeight: 700, fontSize: 13,
                   }}>
                   {t(m === "kg" ? "quantity_unit_mode_kg" : "quantity_unit_mode_units")}
@@ -23407,7 +23451,7 @@ function ProductsView({ products, onEdit, onAddNew, onDelete, onResetAll, isPrem
         <div style={{ fontSize: 17, fontWeight: 700, color: "#0d2b4e" }}>{t("my_products")}</div>
         <div style={{ fontSize: 14, color: "#4a6480", lineHeight: 1.5, maxWidth: 300 }}>{t("products_locked")}</div>
         <button
-          style={{ marginTop: 8, padding: "13px 28px", borderRadius: 12, border: "none", background: "#1ca7d1", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" }}
+          style={{ marginTop: 8, padding: "13px 28px", borderRadius: 12, border: "none", background: PREMIUM_BLUE, color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" }}
           onClick={onWantPremium}
         >
           <Crown size={15} style={{ marginRight: 7, verticalAlign: "middle" }} />
@@ -24475,7 +24519,7 @@ function ProductModal({ product, onClose, onSave, onLinkCommonProduct, isPremium
                 ))}
                 <button
                   type="button"
-                  style={{ padding: "5px 10px", borderRadius: 8, border: "1px solid #90c4e8", background: "transparent", color: "var(--brand-primary)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+                  style={{ padding: "5px 10px", borderRadius: 8, border: "1px solid var(--brand-icon-light)", background: "transparent", color: "var(--brand-primary)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
                   onClick={() => setCommonMatch({ matchType: "none" })}
                 >
                   {t("common_product_different")}
@@ -24984,7 +25028,7 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
             style={{
               flex: 1, padding: "11px 0", borderRadius: 11, fontSize: 14, cursor: "pointer",
               border: "1.5px solid " + (tempUnit === u ? "var(--brand-primary)" : "#d0e4f5"),
-              background: tempUnit === u ? "#e8f4fd" : "#fafcfb",
+              background: tempUnit === u ? "var(--brand-bg-tint)" : "#fafcfb",
               color: tempUnit === u ? "var(--brand-primary)" : "var(--brand-text-strong)",
               fontWeight: tempUnit === u ? 700 : 500,
             }}
@@ -25005,7 +25049,7 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
                   type="button"
                   style={{
                     ...styles.langPickerItem,
-                    background: pendingLang === opt.value ? "#e8f4fd" : "transparent",
+                    background: pendingLang === opt.value ? "var(--brand-bg-tint)" : "transparent",
                     color: pendingLang === opt.value ? "var(--brand-primary)" : "var(--brand-text-strong)",
                     fontWeight: pendingLang === opt.value ? 700 : 500,
                   }}
@@ -25273,7 +25317,7 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
           <button
             type="button"
             onClick={onWantPremium}
-            style={{ background: "none", border: "none", cursor: "pointer", color: "#8a9bb0", display: "flex", alignItems: "center", padding: 4 }}
+            style={{ background: "none", border: "none", cursor: "pointer", color: PREMIUM_BLUE, display: "flex", alignItems: "center", padding: 4 }}
             title={t("analyze_locked")}
           >
             <Lock size={18} />
@@ -25347,6 +25391,7 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
           existingPool={editingPool}
           focusSection={editFocusSection}
           isPremium={isPremium}
+          existingNames={(pools || []).filter((p) => p.id !== editingPool.id).map((p) => p.name)}
         />
       )}
     </div>
@@ -26074,7 +26119,17 @@ function MonthChips({ value, onChange, lang }) {
 }
 
 // ---------- Ajout d'un bassin ----------
-function AddPoolModal({ onClose, onSave, lang, existingPool, forced, focusSection, isPremium }) {
+// Clé de comparaison des noms de bassin : sans accents ni casse, espaces réduits (« Ma  Piscine » = « ma piscine »).
+function poolNameKey(name) {
+  return String(name || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim().toLowerCase();
+}
+function isPoolNameTaken(name, existingNames) {
+  const k = poolNameKey(name);
+  return (existingNames || []).some((n) => poolNameKey(n) === k);
+}
+
+// existingNames : noms des AUTRES bassins du compte (celui qu'on modifie est exclu par l'appelant).
+function AddPoolModal({ onClose, onSave, lang, existingPool, forced, focusSection, isPremium, existingNames }) {
   const t = useT(lang || "fr");
   const isEdit = !!existingPool;
   const [name, setName] = useState(existingPool?.name || "");
@@ -26143,7 +26198,10 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced, focusSectio
   const [showErrors, setShowErrors] = useState(false);
   const nameInputRef = useRef(null);
   const volumeInputRef = useRef(null);
-  const nameInvalid = !name.trim();
+  // v1.169.0 — Le nom est facultatif : sans saisie, le bassin prend le nom proposé dans le champ (« Ma piscine »). Deux bassins ne peuvent
+  // pas porter le même nom.
+  const effectiveName = name.trim() || t("pool_name_placeholder");
+  const nameInvalid = isPoolNameTaken(effectiveName, existingNames);
   const volumeInvalid = !(parseFloat(volume) > 0);
   // v1.152.0 — Localisation obligatoire (ville choisie dans la liste ou position GPS) à la création ; en édition, seulement si le bassin
   // en avait déjà (un ancien bassin sans coordonnées n'est pas bloqué : la carte Filtration les demande).
@@ -26181,7 +26239,7 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced, focusSectio
     const sp = tempFromDisplay(String(heatSetpoint).replace(",", "."), TEMP_UNIT);
     onSave({
       ...(existingPool || {}),
-      name: name.trim(),
+      name: effectiveName,
       location: location.trim(),
       lat: coords ? truncCoord4(coords.lat) : null,
       lon: coords ? truncCoord4(coords.lon) : null,
@@ -26252,10 +26310,10 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced, focusSectio
       </div>
 
       {/* Nom */}
-      <FieldLabel required>{t("pool_name")}</FieldLabel>
+      <FieldLabel>{t("pool_name")}</FieldLabel>
       <input
         ref={nameInputRef}
-        style={{ ...styles.input, ...(showErrors && nameInvalid ? { borderColor: "#c0392b", background: "#fdf0ef" } : {}) }}
+        style={{ ...styles.input, ...((showErrors || name.trim()) && nameInvalid ? { borderColor: "#c0392b", background: "#fdf0ef" } : {}) }}
         value={name}
         onChange={e => setName(e.target.value)}
         placeholder={t("pool_name_placeholder")}
@@ -26264,10 +26322,10 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced, focusSectio
         autoCorrect="off"
         autoCapitalize="off"
         spellCheck={false}
-        aria-invalid={showErrors && nameInvalid}
+        aria-invalid={(showErrors || !!name.trim()) && nameInvalid}
       />
-      {showErrors && nameInvalid && (
-        <div style={{ fontSize: 12, color: "#c0392b", marginTop: 4, marginBottom: 10 }}>{t("pool_name_required")}</div>
+      {(showErrors || name.trim()) && nameInvalid && (
+        <div data-testid="pool-name-taken" style={{ fontSize: 12, color: "#c0392b", marginTop: 4, marginBottom: 10 }}>{t("pool_name_taken")}</div>
       )}
 
       {/* Type de bassin (v1.151.0) */}
@@ -26432,9 +26490,12 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
   // v1.139.1 — Comme l'Historique : la fenêtre suit aussi les entretiens manuels.
   // v1.156.0 — Températures saisies dans l'onglet Filtration (Premium) : lignes du rapport, points de la courbe.
   const tempEntries = useMemo(() => (isPremium ? filtrationTempEntries(pool) : []), [pool, isPremium]);
+  // v1.168.0 — Modifications de la programmation de la filtration (Premium) : lignes du rapport et points de la courbe « appliquée ».
+  const progEntries = useMemo(() => (isPremium ? filtrationProgEntries(pool) : []), [pool, isPremium]);
   const reportTimestamps = [
     ...sortedMeasures.map((m) => new Date(m.date).getTime()),
     ...tempEntries.map((e) => new Date(e.date).getTime()),
+    ...progEntries.map((e) => new Date(e.date).getTime()),
     ...(applications || []).filter((a) => a.type === "manual").map((a) => new Date(a.appliedAt).getTime()),
   ].filter((ts) => !isNaN(ts));
   const minTs = reportTimestamps.length ? Math.min(...reportTimestamps) : null;
@@ -26467,6 +26528,10 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
     () => filterByWindow(tempEntries, (e) => e.date, zoomWindow, zoomEnd ?? maxTs),
     [tempEntries, zoomWindow, zoomEnd, maxTs]
   );
+  const visibleProgEntries = useMemo(
+    () => filterByWindow(progEntries, (e) => e.date, zoomWindow, zoomEnd ?? maxTs),
+    [progEntries, zoomWindow, zoomEnd, maxTs]
+  );
   // v1.117.3 — L'historique des diagnostics IA suit lui aussi la fenêtre de
   // zoom, comme les mesures/consommations — voir demande Arnaud.
   const visibleDiagHistory = useMemo(
@@ -26475,8 +26540,11 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
   );
 
   const chartData = useMemo(
-    () =>
-      [...visibleMeasures, ...visibleTempEntries].sort((a, b) => new Date(a.date) - new Date(b.date)).map((m) => ({
+    () => {
+      const progRows = visibleProgEntries
+        .filter((e) => e.hours !== null)
+        .map((e) => ({ date: formatDateShort(e.date), timestamp: new Date(e.date).getTime(), ...filtrationChartFields({ reco: null, applied: e.hours }) }));
+      const rows = [...visibleMeasures, ...visibleTempEntries].sort((a, b) => new Date(a.date) - new Date(b.date)).map((m) => ({
         date: formatDateShort(m.date),
         timestamp: new Date(m.date).getTime(),
         pH:     m.pH     !== undefined && m.pH     !== "" ? parseFloat(m.pH)     : null,
@@ -26491,8 +26559,10 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
         iron:   m.iron   !== undefined && m.iron   !== "" ? parseFloat(m.iron)   : null,
         temp:   m.temp   !== undefined && m.temp   !== "" ? parseFloat(m.temp)   : null,
         ...filtrationChartFields(isPremium ? filtrationHistoryForMeasure(pool, m) : null),
-      })),
-    [visibleMeasures, visibleTempEntries, pool, isPremium]
+      }));
+      return [...rows, ...progRows].sort((a, b) => a.timestamp - b.timestamp);
+    },
+    [visibleMeasures, visibleTempEntries, visibleProgEntries, pool, isPremium]
   );
 
   // v1.116.0 — Points projetés pH/fCl (pas mesurés) fusionnés dans le même
@@ -26560,7 +26630,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
 
   // v1.155.0 — Colonnes et courbes de durée de filtration : seulement si au moins une mesure du bassin en a une.
   const hasFiltData = !!isPremium && [...measures, ...tempEntries].some((m) => filtrationHistoryForMeasure(pool, m));
-  const showFiltCols = !!isPremium && [...visibleMeasures, ...visibleTempEntries].some((m) => filtrationHistoryForMeasure(pool, m));
+  const showFiltCols = !!isPremium && ([...visibleMeasures, ...visibleTempEntries].some((m) => filtrationHistoryForMeasure(pool, m)) || visibleProgEntries.length > 0);
   const chartParamsBase = [
     // v1.129.0 — Ordre des pastilles : chaque paramètre projeté précède son
     // paramètre mesuré (demande Arnaud).
@@ -26619,10 +26689,11 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
   const journalRows = useMemo(() => {
     const manualItems = visibleManualApps.map((a) => ({ manual: true, app: a }));
     const tempItems = visibleTempEntries.map((e) => ({ manual: false, tempEntry: true, e }));
+    const progItems = visibleProgEntries.map((e) => ({ manual: false, progEntry: true, e }));
     const measureItems = rows.map((r) => ({ manual: false, ...r }));
-    const dateOf = (x) => new Date(x.manual ? x.app.appliedAt : x.tempEntry ? x.e.date : x.measure.date);
-    return [...measureItems, ...manualItems, ...tempItems].sort((a, b) => dateOf(b) - dateOf(a));
-  }, [rows, visibleManualApps, visibleTempEntries]);
+    const dateOf = (x) => new Date(x.manual ? x.app.appliedAt : x.tempEntry || x.progEntry ? x.e.date : x.measure.date);
+    return [...measureItems, ...manualItems, ...tempItems, ...progItems].sort((a, b) => dateOf(b) - dateOf(a));
+  }, [rows, visibleManualApps, visibleTempEntries, visibleProgEntries]);
 
   // v1.40.0 — Fix : la section photos du rapport n'affichait plus rien pour les
   // mesures synchronisées cloud, car measure.photos/poolPhotos sont vides
@@ -26895,8 +26966,9 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
     const manualEntries = visibleManualApps.map((a) => ({ manual: true, app: a }));
     const measureEntries = visibleMeasures.map((m) => ({ manual: false, m }));
     const tempEntryItems = visibleTempEntries.map((e) => ({ manual: false, temp: true, e }));
-    const journalEntries = [...measureEntries, ...manualEntries, ...tempEntryItems].sort((a, b) => {
-      const dateOf = (x) => new Date(x.manual ? x.app.appliedAt : x.temp ? x.e.date : x.m.date);
+    const progEntryItems = visibleProgEntries.map((e) => ({ manual: false, prog: true, e }));
+    const journalEntries = [...measureEntries, ...manualEntries, ...tempEntryItems, ...progEntryItems].sort((a, b) => {
+      const dateOf = (x) => new Date(x.manual ? x.app.appliedAt : x.temp || x.prog ? x.e.date : x.m.date);
       return dateOf(b) - dateOf(a);
     });
 
@@ -26940,6 +27012,31 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           x += c.w;
         });
 
+        pdf.setDrawColor(200,212,228); pdf.setLineWidth(0.15);
+        pdf.line(mL, y+blockH, mL+cW, y+blockH);
+        y += blockH;
+        return;
+      }
+
+      if (entry.prog) {
+        // Programmation de la filtration enregistrée : date, durée appliquée, et en colonnes produit le libellé + « Démarrage à hh:mm · X h par jour »
+        // (deux lignes ; pas d'emoji : jsPDF/Helvetica ne sait pas les afficher).
+        const e = entry.e;
+        const blockH = rowH + 3;
+        checkPage(blockH);
+        if (i % 2 === 0) { pdf.setFillColor(247,250,254); pdf.rect(mL, y, cW, blockH, "F"); }
+        const d = new Date(e.date);
+        const dateStr = `${d.getDate().toString().padStart(2,"0")}/${(d.getMonth()+1).toString().padStart(2,"0")} ${fmtHM(d)}`;
+        const pVals = { date: dateStr, ...(showFiltCols ? { filtApplied: e.hours !== null ? compactHours(e.hours) : "—" } : {}) };
+        pdf.setTextColor(30,30,30);
+        x = paramStartX;
+        paramCols.forEach(c => {
+          pdf.text(String(pVals[c.key] ?? "—"), x+0.8, y + 3.8, { maxWidth: c.w - 1.5 });
+          x += c.w;
+        });
+        const prodW = prodCols.reduce((sum, c) => sum + c.w, 0) - 1.5;
+        pdf.text(t("filt_hist_prog_entry"), prodStartX + 0.8, y + 3.8, { maxWidth: prodW });
+        pdf.text(filtProgDetail(e, t), prodStartX + 0.8, y + 6.8, { maxWidth: prodW });
         pdf.setDrawColor(200,212,228); pdf.setLineWidth(0.15);
         pdf.line(mL, y+blockH, mL+cW, y+blockH);
         y += blockH;
@@ -27544,6 +27641,19 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                 // colonnes de mesure (Date + 11 paramètres) sont fusionnées
                 // en une seule cellule (même principe que la ligne "note"
                 // plus bas), le reste (produit/dose/heure) rempli normalement.
+                if (item.progEntry) {
+                  const e = item.e;
+                  return [(
+                    <tr key={`prog-${e.id}`} style={{ background: i % 2 === 0 ? "#f8fafd" : "#ffffff" }}>
+                      <td style={{ ...styles.reportTdCell, fontWeight: 600, color: "var(--brand-text-strong)" }}>{formatDate(e.date)}</td>
+                      <td colSpan={10} style={{ ...styles.reportTdCell, fontStyle: "italic", color: "var(--brand-text-secondary)" }}>⚙️ {t("filt_hist_prog_entry")}</td>
+                      <td style={styles.reportTdCell}>—</td>
+                      {showFiltCols && <td style={styles.reportTdCell}>—</td>}
+                      {showFiltCols && <td style={styles.reportTdCell}>{e.hours !== null ? compactHours(e.hours) : "—"}</td>}
+                      <td colSpan={manageStock ? 5 : 4} style={styles.reportTdCell}>{filtProgDetail(e, t)}</td>
+                    </tr>
+                  )];
+                }
                 if (item.tempEntry) {
                   const e = item.e;
                   const fh = filtrationHistoryForMeasure(pool, e);
@@ -27859,6 +27969,10 @@ function formatDateShort(iso) {
 }
 
 // ---------- Styles ----------
+// v1.169.0 — Bleu Premium : réservé aux boutons qui invitent à passer en Premium (gratuit : tout le reste de l'app est dans le vert du thème gratuit).
+const PREMIUM_BLUE = "#1ca7d1";
+const PREMIUM_INVITE_STYLE = { background: PREMIUM_BLUE, color: "#ffffff", border: "none" };
+
 const styles = {
   reportOverlay: {
     position: "fixed",
@@ -28238,9 +28352,9 @@ const styles = {
     // v1.71.0 — Suit désormais le thème gratuit/premium global (var CSS)
     // au lieu d'une palette fixe, pour rester cohérent avec le reste de
     // l'app quand la teinte change.
-    border: "1.5px solid var(--brand-bg-tint)",
-    background: "var(--brand-bg-tint)",
-    color: "var(--brand-text-secondary)",
+    border: "none",
+    background: PREMIUM_BLUE,
+    color: "#ffffff",
     fontWeight: 700,
     fontSize: 13.5,
     marginBottom: 22,
@@ -29045,7 +29159,7 @@ const styles = {
     flex: 1,
     padding: "13px 0",
     borderRadius: 12,
-    border: "1.5px dashed #90c4e8",
+    border: "1.5px dashed var(--brand-icon-light)",
     background: "var(--brand-bg-tint)",
     color: "var(--brand-primary)",
     fontWeight: 600,
@@ -29061,7 +29175,7 @@ const styles = {
     width: "100%",
     padding: "13px 0",
     borderRadius: 12,
-    border: "1.5px dashed #90c4e8",
+    border: "1.5px dashed var(--brand-icon-light)",
     background: "#f5f9f8",
     color: "var(--brand-primary)",
     fontWeight: 600,
@@ -29088,9 +29202,9 @@ const styles = {
     width: "100%",
     padding: "12px 0",
     borderRadius: 10,
-    border: "1.5px solid #90c4e8",
-    background: "#e8f4fd",
-    color: "var(--brand-primary)",
+    border: "none",
+    background: PREMIUM_BLUE,
+    color: "#ffffff",
     fontWeight: 600,
     fontSize: 13,
     cursor: "pointer",
@@ -29277,9 +29391,9 @@ const styles = {
     padding: "13px 0",
     borderRadius: 12,
     // v1.71.0 — Suit désormais le thème gratuit/premium global (var CSS).
-    border: "1.5px solid var(--brand-bg-tint)",
-    background: "var(--brand-bg-tint)",
-    color: "var(--brand-text-secondary)",
+    border: "none",
+    background: PREMIUM_BLUE,
+    color: "#ffffff",
     fontWeight: 600,
     fontSize: 13.5,
     cursor: "pointer",
@@ -29528,9 +29642,10 @@ window.addEventListener("unhandledrejection", (e) => {
 // (voir le useEffect correspondant dans PoolGenAIApp) passé ce délai, le
 // rendu React a probablement échoué silencieusement (pas d'exception
 // synchrone attrapable par AppErrorBoundary) — on affiche le filet.
+// v1.168.1 — 12 s -> 30 s (aligné sur le délai de index.html : connexions lentes, testeurs en data mobile).
 setTimeout(() => {
   if (!window.__appMountConfirmed) maybeShowFatalOverlay();
-}, 12000);
+}, 30000);
 
 // v1.99.1 — Attrape les erreurs de rendu React dans PoolGenAIApp (la cause
 // la plus probable d'un écran blanc, voir l'en-tête de section ci-dessus).

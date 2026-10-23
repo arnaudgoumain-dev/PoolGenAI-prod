@@ -119,7 +119,7 @@
   // plut&#244;t que de rester bloqu&#233; sur l'&#233;cran de chargement sans explication.
   window.__bootErrors = [];
   window.addEventListener("error", function (e) {
-    var msg = e.message || (e.target && e.target.src ? "&#201;chec de chargement : " + e.target.src : "Erreur inconnue");
+    var msg = e.message || (e.target && e.target.src ? "Failed to load: " + e.target.src : "Unknown error");
     window.__bootErrors.push(msg);
     window.__showBootError && window.__showBootError();
   }, true);
@@ -153,7 +153,7 @@
 </head>
 <body>
 <div id="boot-loader">
-  <div>Chargement&#8230;</div>
+  <div>Loading&#8230;</div>
   <div id="boot-error-detail" style="display:none;"></div>
 </div>
 <div id="root"></div>
@@ -179,26 +179,28 @@
     var detail = document.getElementById("boot-error-detail");
     if (!loader || !detail) return;
     loader.classList.add("error");
-    loader.firstElementChild.textContent = "Erreur au chargement \u2014 d\u00e9tail ci-dessous :";
+    loader.firstElementChild.textContent = "Loading error \u2014 details below:";
     detail.style.display = "block";
     detail.textContent = window.__bootErrors.join("\n\n");
   };
 
-  // Si rien ne s'est pass&#233; apr&#232;s 12 secondes (root toujours vide), c'est
-  // qu'un script a &#233;chou&#233; sans d&#233;clencher d'erreur JS classique (ex: CDN
-  // bloqu&#233;/lent). On le signale plut&#244;t que de laisser un &#233;cran fig&#233;.
+  // Si rien ne s'est passe apres 30 secondes (root toujours vide), c'est
+  // qu'un script a echoue sans declencher d'erreur JS classique (ex: CDN
+  // bloque/lent). On le signale plutot que de laisser un ecran fige.
+  // v1.168.1 \u2014 12 s -> 30 s (testeurs en data lente : telechargement des librairies
+  // unpkg + transformation Babel de PoolGenAI.jsx) ; message d'erreur en anglais.
   setTimeout(function () {
     var root = document.getElementById("root");
     if (root && root.children.length === 0) {
       window.__bootErrors.push(
-        "Timeout : l'application n'a pas d\u00e9marr\u00e9 apr\u00e8s 12 secondes.\n" +
-        "V\u00e9rifie ta connexion internet (les librairies React/Recharts se chargent depuis unpkg.com).\n" +
-        "Si le probl\u00e8me persiste, v\u00e9rifie que les fichiers PoolGenAI.jsx et lucide-shim.js sont bien" +
-        " pr\u00e9sents \u00e0 la racine du d\u00e9p\u00f4t GitHub."
+        "Timeout: the app did not start after 30 seconds.\n" +
+        "Check your internet connection (the React/Recharts libraries are loaded from unpkg.com).\n" +
+        "If the problem persists, check that PoolGenAI.jsx and lucide-shim.js are present at the" +
+        " root of the GitHub repository."
       );
       window.__showBootError();
     }
-  }, 12000);
+  }, 30000);
 </script>
 
 <script>
