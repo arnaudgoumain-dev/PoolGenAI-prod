@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.171.0";
+const APP_VERSION = "1.172.0";
 const CGU_VERSION = "1.5"; // v1.5 : section 6 complétée (altitude du bassin : IGN, Open Topo Data) ; v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -14269,7 +14269,7 @@ function Header({ poolName, location, poolPhoto, isPremium, entries, activeEntry
 }
 
 // ---------- Balayage entre onglets (v1.150.0) ----------
-const TAB_ORDER = ["dashboard", "filtration", "weather", "history", "summary", "products", "settings"];
+const TAB_ORDER = ["dashboard", "filtration", "weather", "history", "products", "summary", "settings"];
 // Vrai si le geste qui démarre sur `el` appartient à un autre élément : champ de saisie, curseur,
 // graphique (info-bulle / déplacement au doigt), zone à défilement horizontal, ou élément marqué
 // data-noswipe. On remonte jusqu'au conteneur `root` (<main>).
@@ -14456,8 +14456,8 @@ function TabBar({ tab, setTab, lang, viewContext }) {
     { id: "filtration", label: t("tab_filtration"), icon: WavesIcon },
     { id: "weather", label: t("tab_weather"), icon: CloudSunIcon },
     { id: "history", label: t("tab_history"), icon: History },
-    { id: "summary", label: t("tab_summary"), icon: SummaryIcon },
     { id: "products", label: t("tab_products"), icon: Beaker },
+    { id: "summary", label: t("tab_summary"), icon: SummaryIcon },
     { id: "settings", label: t("tab_settings"), icon: Settings2 },
   ];
   const tabs = all.filter((tb) => !(tb.id === "summary" && viewContext));
@@ -20113,6 +20113,15 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
         const leftBounds = leftRange ? niceAxisBounds(leftRange[0], leftRange[1], 10) : { domain: [0, 10], ticks: undefined };
         const rightBounds = rightRange ? niceAxisBounds(rightRange[0], rightRange[1], 110) : { domain: [0, 110], ticks: undefined };
         // v1.171.0 — Dès qu'une courbe affichée se prolonge dans le futur (température projetée, prévisions...), un trait vertical marque aujourd'hui.
+        // v1.172.0 — Température seule (mesurée et/ou projetée) : les seuils de bascule du calcul de durée de filtration, SANS toucher à l'échelle verticale
+        // (seuls ceux qui tombent dans le domaine déjà affiché sont tracés : axe jusqu'à 16 °C -> 12 °C seulement).
+        const tempOnly = activeParams.length > 0 && activeParams.every((k) => k === "temp" || k === "tempProjected");
+        // (la température seule se lit sur l'axe de gauche, voir withAdaptiveAxes ; on suit l'axe que le graphique lui attribue)
+        const tempAxis = (chartParams.find((cp) => cp.key === "temp" || cp.key === "tempProjected") || {}).axis === "right" ? "right" : "left";
+        const tempDomain = (tempAxis === "right" ? rightBounds : leftBounds).domain;
+        const tempThresholds = tempOnly && Array.isArray(tempDomain)
+          ? FILTRATION_TEMP_BREAKS.filter((c) => c > tempDomain[0] && c < tempDomain[1])
+          : [];
         const nowTs = Date.now();
         const futureShown = nowTs >= domainStart && nowTs <= domainEnd && chartRenderData.some((row) => row.timestamp > nowTs && activeParams.some((k) => row[k] !== undefined && row[k] !== null));
         return (
@@ -20155,6 +20164,9 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
             {targetZone && (
               <ReferenceArea yAxisId={targetZone.axis} y1={targetZone.min} y2={targetZone.max} fill={targetZone.color} fillOpacity={0.1} strokeOpacity={0} ifOverflow="visible" />
             )}
+            {tempThresholds.map((c) => (
+              <ReferenceLine key={"thr" + c} yAxisId={tempAxis} y={c} stroke="#b9a99a" strokeOpacity={0.55} strokeWidth={1} strokeDasharray="2 5" ifOverflow="hidden" label={{ value: c + " °C", position: "insideBottomRight", fontSize: 9, fill: "#a89686" }} />
+            ))}
             {futureShown && (
               <ReferenceLine x={nowTs} yAxisId="left" stroke="#7e57c2" strokeWidth={1.5} strokeDasharray="5 3" ifOverflow="visible" label={{ value: t("chart_today"), position: "insideTopLeft", fontSize: 10, fontWeight: 700, fill: "#7e57c2" }} />
             )}
