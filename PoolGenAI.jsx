@@ -1,6 +1,6 @@
 const { useState, useEffect, useLayoutEffect, useMemo, useRef } = React;
 const {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceArea, Legend
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceArea, ReferenceLine, Legend
 } = Recharts;
 const {
   Plus, Trash2, Droplets, X, ChevronRight, ChevronDown, Settings2, AlertTriangle, CheckCircle2,
@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.169.0";
+const APP_VERSION = "1.171.0";
 const CGU_VERSION = "1.5"; // v1.5 : section 6 complétée (altitude du bassin : IGN, Open Topo Data) ; v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -53,6 +53,7 @@ const TRANSLATIONS = {
     // History
     evolution: "Évolution",
     show_values: "Afficher les valeurs sur le graphique",
+    chart_today: "Aujourd'hui",
     show_all_params: "Afficher les paramètres",
     hide_all_params: "Masquer les paramètres",
     journal: "Journal",
@@ -982,6 +983,99 @@ const TRANSLATIONS = {
     filt_configure_thermal: "Chauffage et bâche du bassin",
     tab_filtration: "Filtration",
     tab_weather: "Météo",
+    tab_summary: "Bilan",
+    summary_locked_title: "Bilan de la saison",
+    summary_locked_text: "Le bilan estime, d'après tes propres hypothèses, l'électricité évitée, la variation de ta dépense en produits et la qualité de l'eau. Il est réservé à la version Premium.",
+    summary_title: "Bilan de la saison",
+    summary_estimate: "Estimation d'après tes hypothèses",
+    summary_activate_title: "Mesure ce que l'app change",
+    summary_activate_text: "Trois lignes séparées, jamais additionnées : l'électricité de la pompe évitée grâce à la durée de filtration appliquée, la variation de ta dépense en produits, et la part des jours où l'eau est dans la cible. Chaque chiffre est une estimation fondée sur des hypothèses que tu saisis et que tu peux modifier à tout moment.",
+    summary_activate_btn: "Activer pour {pool}",
+    summary_inactive_pool: "Bilan non activé pour ce bassin",
+    summary_since: "Depuis le {date}",
+    summary_expected_first: "Premiers résultats attendus à partir du {date}.",
+    summary_expected_note: "Dates estimées si tu renseignes tes données (programmation de filtration, applications de produits, mesures) une fois par semaine.",
+    summary_expected_line: "Premier résultat attendu à partir du {date}.",
+    summary_expected_prod: "Première variation attendue à partir du {date} ({n} jours d'utilisation).",
+    summary_expected_quality: "Pourcentage attendu à partir du {date}, avec une mesure de pH et de désinfectant par semaine.",
+    summary_elec: "Électricité",
+    summary_products: "Produits",
+    summary_quality: "Qualité",
+    summary_kwh_avoided: "{kwh} kWh évités",
+    summary_elec_saved: "{amount} économisés",
+    summary_elec_avg: "Durée moyenne appliquée : {app} par jour, contre {ref} habituellement",
+    summary_elec_negative: "Pas d'économie à ce stade : la filtration appliquée dépasse ta durée habituelle.",
+    summary_elec_days: "Calculé sur {n} jours",
+    summary_pump_check: "Puissance nominale utilisée : à vérifier",
+    summary_elec_default: "Ta durée habituelle est le profil proposé par l'app : ajuste-la dans les hypothèses pour une estimation plus juste.",
+    summary_elec_nodata: "Aucun jour calculé pour l'instant : enregistre ta programmation de filtration dans l'onglet Filtration.",
+    summary_missing_prixKwh: "Renseigne le prix du kWh pour voir cette ligne",
+    summary_missing_pompe: "Renseigne la puissance de la pompe pour voir cette ligne",
+    summary_missing_hRef: "Renseigne ta durée de filtration habituelle pour voir cette ligne",
+    summary_missing_spend: "Renseigne ta dépense annuelle en produits pour voir la variation",
+    summary_prod_variation: "Variation de ta dépense en produits",
+    summary_prod_sign_hint: "Positive : tu dépenses moins qu'avant l'app. Négative : tu dépenses plus.",
+    summary_prod_ref_note: "Référence : ta dépense annuelle répartie selon ta courbe de filtration, plus forte en été.",
+    summary_prod_capped: "Plafonnée à +50 % de la référence.",
+    summary_prod_spent: "Dépense réelle depuis l'activation : {amount}",
+    summary_prod_partial: "Dépense partielle : {amount}, sur {pct} % des applications. Pas de variation tant que tous les produits n'ont pas de prix.",
+    summary_prod_unpriced: "Produits sans prix : {names}",
+    summary_prod_open_products: "Renseigner les prix dans Produits",
+    summary_prod_noevents: "Aucune application enregistrée depuis l'activation.",
+    summary_prod_tooshort: "La variation est calculée à partir de {n} jours d'utilisation.",
+    summary_prod_by: "Dépense réelle par produit",
+    summary_quality_label: "Jours dans la cible sur les 4 dernières semaines (pH et désinfectant)",
+    summary_quality_days: "{ev} jours évalués sur {total}, avec {m} jours de mesure",
+    summary_quality_start: "Tes 4 premières semaines avec l'app : {pct} %",
+    summary_quality_wait: "La comparaison avec tes 4 premières semaines apparaît après 8 semaines d'utilisation.",
+    summary_quality_rhythm: "Rythme de mesure : {n} par semaine",
+    summary_quality_rhythm_hint: "Plus tu mesures régulièrement, plus ce chiffre est fiable.",
+    summary_quality_notenough: "Pas encore assez de mesures sur les 4 dernières semaines (7 jours évalués au minimum).",
+    summary_chart_title: "Cumul ({currency})",
+    summary_chart_recent: "6 derniers mois",
+    summary_chart_all: "Depuis le début",
+    summary_chart_empty: "La courbe apparaît dès qu'une ligne est calculable.",
+    summary_see_assumptions: "Saisir les hypothèses",
+    summary_pool_detail: "Détail par bassin",
+    summary_total_all: "Tous les bassins",
+    summary_assump_title: "Hypothèses — {pool}",
+    summary_assump_intro: "Ces valeurs sont tes estimations : modifie-les, tout le bilan est recalculé.",
+    summary_f_price: "Prix du kWh",
+    summary_f_currency: "Devise (code à 3 lettres)",
+    summary_f_p1: "Puissance absorbée de la pompe (kW)",
+    summary_f_p1_hint: "Pompe à vitesse variable : saisis la puissance moyenne réellement utilisée.",
+    summary_f_p2: "Puissance nominale (kW)",
+    summary_f_p2_hint: "Utilisée seulement si la puissance absorbée est vide ; à vérifier.",
+    summary_f_href: "Durée de filtration habituelle avant l'app",
+    summary_f_curve_hint: "Trace ta durée de filtration sur l'année : un point le 1er et le 15 de chaque mois, de 0 à 24 h par pas de 30 minutes. Touche ou glisse le doigt sur le graphique. Le profil proposé suit les règles de durée de filtration de l'app, d'après la température moyenne de l'eau : ajuste-le à tes habitudes.",
+    summary_f_hemi_north: "Hémisphère nord",
+    summary_f_hemi_south: "Hémisphère sud",
+    summary_f_hemi_hint: "Passer à l'hémisphère sud décale la courbe de 6 mois.",
+    summary_f_curve_avg: "Moyenne sur l'année : {h} par jour",
+    summary_f_curve_reset: "Rétablir le profil proposé",
+    summary_f_curve_temp: "Température théorique de l'eau du bassin (échelle de droite)",
+    summary_f_curve_thresholds: "Seuils où la règle de calcul de la durée de filtration change : {temps}",
+    summary_f_spend: "Dépense annuelle en produits avant l'app ({currency})",
+    summary_f_spend_hint: "Ce que tu dépensais sur une année complète en produits : chlore, pH moins, anti-algues… Le bilan la répartit selon ta courbe de filtration : plus en été, quand l'eau est chaude et les UV forts.",
+    summary_save: "Enregistrer les hypothèses",
+    summary_save_error: "Enregistrement impossible. Vérifie ta connexion et réessaie.",
+    summary_back: "Retour au bilan",
+    summary_loading: "Chargement du bilan…",
+    summary_load_error: "Impossible de lire les hypothèses pour le moment.",
+    savings_err_price_kwh: "Prix du kWh : une valeur supérieure à 0 et au plus 10.",
+    savings_err_pump: "Puissance de la pompe : entre 0,1 et 5 kW.",
+    savings_err_curve: "Durée de filtration : 24 valeurs entre 0 et 24 h.",
+    savings_err_spend: "Dépense annuelle : un montant entre 0 et 100 000.",
+    product_price_title: "Prix d'achat",
+    product_price_hint: "Facultatif. Sert au bilan : un produit sans prix est signalé. Ajoute une ligne à chaque achat à un autre prix, l'historique est conservé.",
+    product_price_paid: "Prix payé",
+    product_price_size: "Contenance achetée",
+    product_price_date: "Date d'achat",
+    product_price_store: "Magasin (facultatif)",
+    product_price_add: "Ajouter ce prix",
+    product_price_err: "Saisis un prix et une contenance supérieurs à zéro.",
+    product_price_remove: "Supprimer ce prix",
+    product_price_line: "{paid} pour {size} · {per}",
     filt_hist_reco: "Filt. conseillée (h)",
     filt_hist_applied: "Filt. appliquée (h)",
     filt_hist_title: "Filtration",
@@ -1046,6 +1140,7 @@ const TRANSLATIONS = {
     target: "target",
     evolution: "Evolution",
     show_values: "Show values on chart",
+    chart_today: "Today",
     show_all_params: "Show parameters",
     hide_all_params: "Hide parameters",
     journal: "Log",
@@ -1962,6 +2057,99 @@ const TRANSLATIONS = {
     filt_configure_thermal: "Pool heating and cover",
     tab_filtration: "Filtration",
     tab_weather: "Weather",
+    tab_summary: "Results",
+    summary_locked_title: "Season results",
+    summary_locked_text: "The results estimate, from your own assumptions, the electricity avoided, the change in your product spending and your water quality. Premium only.",
+    summary_title: "Season results",
+    summary_estimate: "Estimate based on your assumptions",
+    summary_activate_title: "See what the app changes",
+    summary_activate_text: "Three separate lines, never added together: the pump electricity avoided thanks to the filtration time you apply, the change in your product spending, and the share of days the water is on target. Every figure is an estimate based on assumptions you enter and can change at any time.",
+    summary_activate_btn: "Activate for {pool}",
+    summary_inactive_pool: "Results not activated for this pool",
+    summary_since: "Since {date}",
+    summary_expected_first: "First results expected from {date}.",
+    summary_expected_note: "Dates estimated if you enter your data (filtration schedule, product applications, measurements) once a week.",
+    summary_expected_line: "First result expected from {date}.",
+    summary_expected_prod: "First change expected from {date} ({n} days of use).",
+    summary_expected_quality: "Percentage expected from {date}, with one pH and sanitizer measurement per week.",
+    summary_elec: "Electricity",
+    summary_products: "Products",
+    summary_quality: "Quality",
+    summary_kwh_avoided: "{kwh} kWh avoided",
+    summary_elec_saved: "{amount} saved",
+    summary_elec_avg: "Average time applied: {app} per day, versus {ref} usually",
+    summary_elec_negative: "No savings so far: the filtration time applied is longer than your usual time.",
+    summary_elec_days: "Calculated over {n} days",
+    summary_pump_check: "Rated power used: please check",
+    summary_elec_default: "Your usual time is the profile suggested by the app: adjust it in the assumptions for a more accurate estimate.",
+    summary_elec_nodata: "No day calculated yet: save your filtration schedule in the Filtration tab.",
+    summary_missing_prixKwh: "Enter the price per kWh to see this line",
+    summary_missing_pompe: "Enter the pump power to see this line",
+    summary_missing_hRef: "Enter your usual filtration time to see this line",
+    summary_missing_spend: "Enter your yearly product spending to see the change",
+    summary_prod_variation: "Change in your product spending",
+    summary_prod_sign_hint: "Positive: you spend less than before the app. Negative: you spend more.",
+    summary_prod_ref_note: "Reference: your yearly spending spread along your filtration curve, higher in summer.",
+    summary_prod_capped: "Capped at +50% of the reference.",
+    summary_prod_spent: "Actual spending since activation: {amount}",
+    summary_prod_partial: "Partial spending: {amount}, covering {pct}% of the applications. No change is shown until every product has a price.",
+    summary_prod_unpriced: "Products without a price: {names}",
+    summary_prod_open_products: "Enter prices in Products",
+    summary_prod_noevents: "No application recorded since activation.",
+    summary_prod_tooshort: "The change is calculated after {n} days of use.",
+    summary_prod_by: "Actual spending per product",
+    summary_quality_label: "Days on target over the last 4 weeks (pH and sanitizer)",
+    summary_quality_days: "{ev} days assessed out of {total}, with {m} days of measurements",
+    summary_quality_start: "Your first 4 weeks with the app: {pct}%",
+    summary_quality_wait: "The comparison with your first 4 weeks appears after 8 weeks of use.",
+    summary_quality_rhythm: "Measurement pace: {n} per week",
+    summary_quality_rhythm_hint: "The more regularly you measure, the more reliable this figure is.",
+    summary_quality_notenough: "Not enough measurements yet over the last 4 weeks (at least 7 days assessed).",
+    summary_chart_title: "Cumulative amount ({currency})",
+    summary_chart_recent: "Last 6 months",
+    summary_chart_all: "Since the start",
+    summary_chart_empty: "The chart appears as soon as a line can be calculated.",
+    summary_see_assumptions: "Enter assumptions",
+    summary_pool_detail: "Detail per pool",
+    summary_total_all: "All pools",
+    summary_assump_title: "Assumptions — {pool}",
+    summary_assump_intro: "These values are your estimates: change them and the whole summary is recalculated.",
+    summary_f_price: "Price per kWh",
+    summary_f_currency: "Currency (3-letter code)",
+    summary_f_p1: "Pump power drawn (kW)",
+    summary_f_p1_hint: "Variable-speed pump: enter the average power actually used.",
+    summary_f_p2: "Rated power (kW)",
+    summary_f_p2_hint: "Used only if the power drawn is empty; please check it.",
+    summary_f_href: "Usual filtration time before the app",
+    summary_f_curve_hint: "Draw your filtration time over the year: one point on the 1st and 15th of each month, from 0 to 24 h in 30-minute steps. Tap or drag on the chart. The suggested profile follows the app's filtration rules, based on the average water temperature: adjust it to your habits.",
+    summary_f_hemi_north: "Northern hemisphere",
+    summary_f_hemi_south: "Southern hemisphere",
+    summary_f_hemi_hint: "Switching to the southern hemisphere shifts the curve by 6 months.",
+    summary_f_curve_avg: "Yearly average: {h} per day",
+    summary_f_curve_reset: "Restore the suggested profile",
+    summary_f_curve_temp: "Theoretical pool water temperature (right-hand scale)",
+    summary_f_curve_thresholds: "Thresholds where the filtration time calculation rule changes: {temps}",
+    summary_f_spend: "Yearly product spending before the app ({currency})",
+    summary_f_spend_hint: "What you spent over a full year on products: chlorine, pH minus, algaecide… The summary spreads it along your filtration curve: more in summer, when the water is warm and the UV strong.",
+    summary_save: "Save the assumptions",
+    summary_save_error: "Could not save. Check your connection and try again.",
+    summary_back: "Back to the results",
+    summary_loading: "Loading the results…",
+    summary_load_error: "Unable to read the assumptions right now.",
+    savings_err_price_kwh: "Price per kWh: a value above 0 and at most 10.",
+    savings_err_pump: "Pump power: between 0.1 and 5 kW.",
+    savings_err_curve: "Filtration time: 24 values between 0 and 24 h.",
+    savings_err_spend: "Yearly spending: an amount between 0 and 100,000.",
+    product_price_title: "Purchase price",
+    product_price_hint: "Optional. Used by the results: a product without a price is flagged. Add a line each time you buy at a different price; the history is kept.",
+    product_price_paid: "Price paid",
+    product_price_size: "Quantity bought",
+    product_price_date: "Purchase date",
+    product_price_store: "Store (optional)",
+    product_price_add: "Add this price",
+    product_price_err: "Enter a price and a quantity above zero.",
+    product_price_remove: "Remove this price",
+    product_price_line: "{paid} for {size} · {per}",
     filt_hist_reco: "Filt. recommended (h)",
     filt_hist_applied: "Filt. applied (h)",
     filt_hist_title: "Filtration",
@@ -2026,6 +2214,7 @@ const TRANSLATIONS = {
     target: "Ziel",
     evolution: "Verlauf",
     show_values: "Werte im Diagramm anzeigen",
+    chart_today: "Heute",
     show_all_params: "Parameter anzeigen",
     hide_all_params: "Parameter ausblenden",
     journal: "Protokoll",
@@ -2940,6 +3129,99 @@ const TRANSLATIONS = {
     filt_configure_thermal: "Heizung und Abdeckung des Beckens",
     tab_filtration: "Filterung",
     tab_weather: "Wetter",
+    tab_summary: "Bilanz",
+    summary_locked_title: "Saisonbilanz",
+    summary_locked_text: "Die Bilanz schätzt anhand deiner eigenen Annahmen die eingesparte Energie, die Veränderung deiner Produktausgaben und die Wasserqualität. Nur in der Premium-Version.",
+    summary_title: "Saisonbilanz",
+    summary_estimate: "Schätzung auf Basis deiner Annahmen",
+    summary_activate_title: "Sieh, was die App bewirkt",
+    summary_activate_text: "Drei getrennte Zeilen, nie addiert: der durch die angewendete Filterzeit eingesparte Pumpenstrom, die Veränderung deiner Produktausgaben und der Anteil der Tage, an denen das Wasser im Zielbereich liegt. Jede Zahl ist eine Schätzung auf Basis von Annahmen, die du eingibst und jederzeit ändern kannst.",
+    summary_activate_btn: "Für {pool} aktivieren",
+    summary_inactive_pool: "Bilanz für dieses Becken nicht aktiviert",
+    summary_since: "Seit {date}",
+    summary_expected_first: "Erste Ergebnisse ab dem {date} erwartet.",
+    summary_expected_note: "Geschätzte Daten, wenn du deine Angaben (Filterprogramm, Produktanwendungen, Messungen) einmal pro Woche einträgst.",
+    summary_expected_line: "Erstes Ergebnis ab dem {date} erwartet.",
+    summary_expected_prod: "Erste Veränderung ab dem {date} erwartet ({n} Tage Nutzung).",
+    summary_expected_quality: "Prozentwert ab dem {date}, bei einer Messung von pH und Desinfektion pro Woche.",
+    summary_elec: "Strom",
+    summary_products: "Produkte",
+    summary_quality: "Qualität",
+    summary_kwh_avoided: "{kwh} kWh eingespart",
+    summary_elec_saved: "{amount} gespart",
+    summary_elec_avg: "Durchschnittlich angewendete Dauer: {app} pro Tag, gegenüber üblicherweise {ref}",
+    summary_elec_negative: "Bisher keine Einsparung: die angewendete Filterzeit liegt über deiner üblichen Dauer.",
+    summary_elec_days: "Berechnet über {n} Tage",
+    summary_pump_check: "Nennleistung verwendet: bitte prüfen",
+    summary_elec_default: "Deine übliche Dauer ist das von der App vorgeschlagene Profil: Passe es in den Annahmen an, für eine genauere Schätzung.",
+    summary_elec_nodata: "Noch kein Tag berechnet: speichere dein Filterprogramm im Reiter Filterung.",
+    summary_missing_prixKwh: "Gib den Preis pro kWh ein, um diese Zeile zu sehen",
+    summary_missing_pompe: "Gib die Pumpenleistung ein, um diese Zeile zu sehen",
+    summary_missing_hRef: "Gib deine übliche Filterdauer ein, um diese Zeile zu sehen",
+    summary_missing_spend: "Gib deine jährlichen Produktausgaben ein, um die Veränderung zu sehen",
+    summary_prod_variation: "Veränderung deiner Produktausgaben",
+    summary_prod_sign_hint: "Positiv: du gibst weniger aus als vor der App. Negativ: du gibst mehr aus.",
+    summary_prod_ref_note: "Referenz: deine Jahresausgaben, verteilt nach deiner Filterkurve, im Sommer höher.",
+    summary_prod_capped: "Auf +50 % der Referenz begrenzt.",
+    summary_prod_spent: "Tatsächliche Ausgaben seit der Aktivierung: {amount}",
+    summary_prod_partial: "Teilweise Ausgaben: {amount}, bei {pct} % der Anwendungen. Keine Veränderung, solange nicht jedes Produkt einen Preis hat.",
+    summary_prod_unpriced: "Produkte ohne Preis: {names}",
+    summary_prod_open_products: "Preise unter Produkte eingeben",
+    summary_prod_noevents: "Seit der Aktivierung keine Anwendung erfasst.",
+    summary_prod_tooshort: "Die Veränderung wird nach {n} Tagen Nutzung berechnet.",
+    summary_prod_by: "Tatsächliche Ausgaben pro Produkt",
+    summary_quality_label: "Tage im Zielbereich in den letzten 4 Wochen (pH und Desinfektion)",
+    summary_quality_days: "{ev} von {total} Tagen bewertet, an {m} Tagen gemessen",
+    summary_quality_start: "Deine ersten 4 Wochen mit der App: {pct} %",
+    summary_quality_wait: "Der Vergleich mit deinen ersten 4 Wochen erscheint nach 8 Wochen Nutzung.",
+    summary_quality_rhythm: "Messhäufigkeit: {n} pro Woche",
+    summary_quality_rhythm_hint: "Je regelmäßiger du misst, desto zuverlässiger ist diese Zahl.",
+    summary_quality_notenough: "Noch nicht genug Messungen in den letzten 4 Wochen (mindestens 7 bewertete Tage).",
+    summary_chart_title: "Kumulierter Betrag ({currency})",
+    summary_chart_recent: "Letzte 6 Monate",
+    summary_chart_all: "Seit Beginn",
+    summary_chart_empty: "Die Kurve erscheint, sobald eine Zeile berechenbar ist.",
+    summary_see_assumptions: "Annahmen eingeben",
+    summary_pool_detail: "Details pro Becken",
+    summary_total_all: "Alle Becken",
+    summary_assump_title: "Annahmen — {pool}",
+    summary_assump_intro: "Diese Werte sind deine Schätzungen: ändere sie, und die gesamte Bilanz wird neu berechnet.",
+    summary_f_price: "Preis pro kWh",
+    summary_f_currency: "Währung (3-Buchstaben-Code)",
+    summary_f_p1: "Aufgenommene Pumpenleistung (kW)",
+    summary_f_p1_hint: "Drehzahlgeregelte Pumpe: gib die tatsächlich genutzte Durchschnittsleistung ein.",
+    summary_f_p2: "Nennleistung (kW)",
+    summary_f_p2_hint: "Wird nur verwendet, wenn die aufgenommene Leistung leer ist; bitte prüfen.",
+    summary_f_href: "Übliche Filterdauer vor der App",
+    summary_f_curve_hint: "Zeichne deine Filterdauer über das Jahr: ein Punkt am 1. und 15. jedes Monats, von 0 bis 24 Std. in 30-Minuten-Schritten. Tippe oder ziehe im Diagramm. Das vorgeschlagene Profil folgt den Filterregeln der App, basierend auf der mittleren Wassertemperatur: passe es an deine Gewohnheiten an.",
+    summary_f_hemi_north: "Nordhalbkugel",
+    summary_f_hemi_south: "Südhalbkugel",
+    summary_f_hemi_hint: "Der Wechsel zur Südhalbkugel verschiebt die Kurve um 6 Monate.",
+    summary_f_curve_avg: "Jahresdurchschnitt: {h} pro Tag",
+    summary_f_curve_reset: "Vorgeschlagenes Profil wiederherstellen",
+    summary_f_curve_temp: "Theoretische Wassertemperatur des Beckens (Skala rechts)",
+    summary_f_curve_thresholds: "Schwellen, an denen sich die Berechnungsregel der Filterdauer ändert: {temps}",
+    summary_f_spend: "Jährliche Produktausgaben vor der App ({currency})",
+    summary_f_spend_hint: "Was du in einem ganzen Jahr für Produkte ausgegeben hast: Chlor, pH-Minus, Algenschutz… Die Bilanz verteilt es nach deiner Filterkurve: mehr im Sommer, bei warmem Wasser und starker UV-Strahlung.",
+    summary_save: "Annahmen speichern",
+    summary_save_error: "Speichern nicht möglich. Prüfe deine Verbindung und versuche es erneut.",
+    summary_back: "Zurück zur Bilanz",
+    summary_loading: "Bilanz wird geladen…",
+    summary_load_error: "Die Annahmen können derzeit nicht gelesen werden.",
+    savings_err_price_kwh: "Preis pro kWh: ein Wert über 0 und höchstens 10.",
+    savings_err_pump: "Pumpenleistung: zwischen 0,1 und 5 kW.",
+    savings_err_curve: "Filterdauer: 24 Werte zwischen 0 und 24 Std.",
+    savings_err_spend: "Jahresausgaben: ein Betrag zwischen 0 und 100.000.",
+    product_price_title: "Kaufpreis",
+    product_price_hint: "Optional. Wird für die Bilanz verwendet: Produkte ohne Preis werden angezeigt. Füge bei jedem Kauf zu einem anderen Preis eine Zeile hinzu; der Verlauf bleibt erhalten.",
+    product_price_paid: "Bezahlter Preis",
+    product_price_size: "Gekaufte Menge",
+    product_price_date: "Kaufdatum",
+    product_price_store: "Geschäft (optional)",
+    product_price_add: "Diesen Preis hinzufügen",
+    product_price_err: "Gib einen Preis und eine Menge über null ein.",
+    product_price_remove: "Diesen Preis entfernen",
+    product_price_line: "{paid} für {size} · {per}",
     filt_hist_reco: "Filt. empfohlen (h)",
     filt_hist_applied: "Filt. eingestellt (h)",
     filt_hist_title: "Filterzeit",
@@ -3004,6 +3286,7 @@ const TRANSLATIONS = {
     target: "obiettivo",
     evolution: "Evoluzione",
     show_values: "Mostra valori sul grafico",
+    chart_today: "Oggi",
     show_all_params: "Mostra parametri",
     hide_all_params: "Nascondi parametri",
     journal: "Registro",
@@ -3918,6 +4201,99 @@ const TRANSLATIONS = {
     filt_configure_thermal: "Riscaldamento e copertura della vasca",
     tab_filtration: "Filtrazione",
     tab_weather: "Meteo",
+    tab_summary: "Bilancio",
+    summary_locked_title: "Bilancio della stagione",
+    summary_locked_text: "Il bilancio stima, in base alle tue ipotesi, l'elettricità evitata, la variazione della spesa in prodotti e la qualità dell'acqua. Riservato alla versione Premium.",
+    summary_title: "Bilancio della stagione",
+    summary_estimate: "Stima in base alle tue ipotesi",
+    summary_activate_title: "Misura cosa cambia l'app",
+    summary_activate_text: "Tre righe separate, mai sommate: l'elettricità della pompa evitata grazie alla durata di filtrazione applicata, la variazione della spesa in prodotti e la quota di giorni in cui l'acqua rientra nei valori obiettivo. Ogni cifra è una stima basata su ipotesi che inserisci e puoi modificare in qualsiasi momento.",
+    summary_activate_btn: "Attiva per {pool}",
+    summary_inactive_pool: "Bilancio non attivato per questa vasca",
+    summary_since: "Dal {date}",
+    summary_expected_first: "Primi risultati attesi dal {date}.",
+    summary_expected_note: "Date stimate se inserisci i tuoi dati (programmazione della filtrazione, applicazioni di prodotti, misure) una volta a settimana.",
+    summary_expected_line: "Primo risultato atteso dal {date}.",
+    summary_expected_prod: "Prima variazione attesa dal {date} ({n} giorni di utilizzo).",
+    summary_expected_quality: "Percentuale attesa dal {date}, con una misura di pH e disinfettante a settimana.",
+    summary_elec: "Elettricità",
+    summary_products: "Prodotti",
+    summary_quality: "Qualità",
+    summary_kwh_avoided: "{kwh} kWh evitati",
+    summary_elec_saved: "{amount} risparmiati",
+    summary_elec_avg: "Durata media applicata: {app} al giorno, contro {ref} abituali",
+    summary_elec_negative: "Nessun risparmio per ora: la filtrazione applicata supera la tua durata abituale.",
+    summary_elec_days: "Calcolato su {n} giorni",
+    summary_pump_check: "Potenza nominale usata: da verificare",
+    summary_elec_default: "La tua durata abituale è il profilo proposto dall'app: regolala nelle ipotesi per una stima più precisa.",
+    summary_elec_nodata: "Nessun giorno calcolato per ora: salva la programmazione della filtrazione nella scheda Filtrazione.",
+    summary_missing_prixKwh: "Inserisci il prezzo del kWh per vedere questa riga",
+    summary_missing_pompe: "Inserisci la potenza della pompa per vedere questa riga",
+    summary_missing_hRef: "Inserisci la tua durata di filtrazione abituale per vedere questa riga",
+    summary_missing_spend: "Inserisci la tua spesa annuale in prodotti per vedere la variazione",
+    summary_prod_variation: "Variazione della tua spesa in prodotti",
+    summary_prod_sign_hint: "Positiva: spendi meno di prima dell'app. Negativa: spendi di più.",
+    summary_prod_ref_note: "Riferimento: la tua spesa annuale ripartita secondo la curva di filtrazione, più alta in estate.",
+    summary_prod_capped: "Limitata a +50% del riferimento.",
+    summary_prod_spent: "Spesa reale dall'attivazione: {amount}",
+    summary_prod_partial: "Spesa parziale: {amount}, su {pct}% delle applicazioni. Nessuna variazione finché ogni prodotto non ha un prezzo.",
+    summary_prod_unpriced: "Prodotti senza prezzo: {names}",
+    summary_prod_open_products: "Inserisci i prezzi in Prodotti",
+    summary_prod_noevents: "Nessuna applicazione registrata dall'attivazione.",
+    summary_prod_tooshort: "La variazione viene calcolata dopo {n} giorni di utilizzo.",
+    summary_prod_by: "Spesa reale per prodotto",
+    summary_quality_label: "Giorni nei valori obiettivo nelle ultime 4 settimane (pH e disinfettante)",
+    summary_quality_days: "{ev} giorni valutati su {total}, con misure in {m} giorni",
+    summary_quality_start: "Le tue prime 4 settimane con l'app: {pct} %",
+    summary_quality_wait: "Il confronto con le tue prime 4 settimane compare dopo 8 settimane di utilizzo.",
+    summary_quality_rhythm: "Frequenza di misura: {n} a settimana",
+    summary_quality_rhythm_hint: "Più misuri con regolarità, più questa cifra è affidabile.",
+    summary_quality_notenough: "Non ci sono ancora abbastanza misure nelle ultime 4 settimane (almeno 7 giorni valutati).",
+    summary_chart_title: "Importo cumulato ({currency})",
+    summary_chart_recent: "Ultimi 6 mesi",
+    summary_chart_all: "Dall'inizio",
+    summary_chart_empty: "Il grafico appare appena una riga è calcolabile.",
+    summary_see_assumptions: "Inserisci le ipotesi",
+    summary_pool_detail: "Dettaglio per vasca",
+    summary_total_all: "Tutte le vasche",
+    summary_assump_title: "Ipotesi — {pool}",
+    summary_assump_intro: "Questi valori sono le tue stime: modificali e tutto il bilancio viene ricalcolato.",
+    summary_f_price: "Prezzo del kWh",
+    summary_f_currency: "Valuta (codice a 3 lettere)",
+    summary_f_p1: "Potenza assorbita della pompa (kW)",
+    summary_f_p1_hint: "Pompa a velocità variabile: inserisci la potenza media realmente usata.",
+    summary_f_p2: "Potenza nominale (kW)",
+    summary_f_p2_hint: "Usata solo se la potenza assorbita è vuota; da verificare.",
+    summary_f_href: "Durata di filtrazione abituale prima dell'app",
+    summary_f_curve_hint: "Traccia la tua durata di filtrazione nell'arco dell'anno: un punto il 1° e il 15 di ogni mese, da 0 a 24 h a passi di 30 minuti. Tocca o trascina sul grafico. Il profilo proposto segue le regole di filtrazione dell'app, in base alla temperatura media dell'acqua: adattalo alle tue abitudini.",
+    summary_f_hemi_north: "Emisfero nord",
+    summary_f_hemi_south: "Emisfero sud",
+    summary_f_hemi_hint: "Passare all'emisfero sud sposta la curva di 6 mesi.",
+    summary_f_curve_avg: "Media annuale: {h} al giorno",
+    summary_f_curve_reset: "Ripristina il profilo proposto",
+    summary_f_curve_temp: "Temperatura teorica dell'acqua della vasca (scala a destra)",
+    summary_f_curve_thresholds: "Soglie in cui cambia la regola di calcolo della durata di filtrazione: {temps}",
+    summary_f_spend: "Spesa annuale in prodotti prima dell'app ({currency})",
+    summary_f_spend_hint: "Quanto spendevi in un anno intero in prodotti: cloro, pH meno, antialghe… Il bilancio lo ripartisce secondo la tua curva di filtrazione: di più in estate, con acqua calda e UV forti.",
+    summary_save: "Salva le ipotesi",
+    summary_save_error: "Salvataggio non riuscito. Controlla la connessione e riprova.",
+    summary_back: "Torna al bilancio",
+    summary_loading: "Caricamento del bilancio…",
+    summary_load_error: "Impossibile leggere le ipotesi al momento.",
+    savings_err_price_kwh: "Prezzo del kWh: un valore maggiore di 0 e al massimo 10.",
+    savings_err_pump: "Potenza della pompa: tra 0,1 e 5 kW.",
+    savings_err_curve: "Durata di filtrazione: 24 valori tra 0 e 24 h.",
+    savings_err_spend: "Spesa annuale: un importo tra 0 e 100.000.",
+    product_price_title: "Prezzo di acquisto",
+    product_price_hint: "Facoltativo. Serve al bilancio: un prodotto senza prezzo viene segnalato. Aggiungi una riga a ogni acquisto a un prezzo diverso; la cronologia viene conservata.",
+    product_price_paid: "Prezzo pagato",
+    product_price_size: "Quantità acquistata",
+    product_price_date: "Data di acquisto",
+    product_price_store: "Negozio (facoltativo)",
+    product_price_add: "Aggiungi questo prezzo",
+    product_price_err: "Inserisci un prezzo e una quantità maggiori di zero.",
+    product_price_remove: "Rimuovi questo prezzo",
+    product_price_line: "{paid} per {size} · {per}",
     filt_hist_reco: "Filtr. consigliata (h)",
     filt_hist_applied: "Filtr. impostata (h)",
     filt_hist_title: "Filtrazione",
@@ -3982,6 +4358,7 @@ const TRANSLATIONS = {
     target: "objetivo",
     evolution: "Evolución",
     show_values: "Mostrar valores en el gráfico",
+    chart_today: "Hoy",
     show_all_params: "Mostrar parámetros",
     hide_all_params: "Ocultar parámetros",
     journal: "Registro",
@@ -4896,6 +5273,99 @@ const TRANSLATIONS = {
     filt_configure_thermal: "Calefacción y cubierta de la piscina",
     tab_filtration: "Filtración",
     tab_weather: "Tiempo",
+    tab_summary: "Balance",
+    summary_locked_title: "Balance de la temporada",
+    summary_locked_text: "El balance estima, según tus propias hipótesis, la electricidad evitada, la variación de tu gasto en productos y la calidad del agua. Reservado a la versión Premium.",
+    summary_title: "Balance de la temporada",
+    summary_estimate: "Estimación según tus hipótesis",
+    summary_activate_title: "Mide lo que cambia la app",
+    summary_activate_text: "Tres líneas separadas, nunca sumadas: la electricidad de la bomba evitada gracias a la duración de filtración aplicada, la variación de tu gasto en productos y la proporción de días con el agua dentro de los valores objetivo. Cada cifra es una estimación basada en hipótesis que tú introduces y puedes cambiar en cualquier momento.",
+    summary_activate_btn: "Activar para {pool}",
+    summary_inactive_pool: "Balance no activado para esta piscina",
+    summary_since: "Desde el {date}",
+    summary_expected_first: "Primeros resultados previstos a partir del {date}.",
+    summary_expected_note: "Fechas estimadas si introduces tus datos (programación de filtración, aplicaciones de productos, mediciones) una vez por semana.",
+    summary_expected_line: "Primer resultado previsto a partir del {date}.",
+    summary_expected_prod: "Primera variación prevista a partir del {date} ({n} días de uso).",
+    summary_expected_quality: "Porcentaje previsto a partir del {date}, con una medición de pH y desinfectante por semana.",
+    summary_elec: "Electricidad",
+    summary_products: "Productos",
+    summary_quality: "Calidad",
+    summary_kwh_avoided: "{kwh} kWh evitados",
+    summary_elec_saved: "{amount} ahorrados",
+    summary_elec_avg: "Duración media aplicada: {app} al día, frente a {ref} habituales",
+    summary_elec_negative: "Sin ahorro por ahora: la filtración aplicada supera tu duración habitual.",
+    summary_elec_days: "Calculado sobre {n} días",
+    summary_pump_check: "Potencia nominal utilizada: a verificar",
+    summary_elec_default: "Tu duración habitual es el perfil propuesto por la app: ajústala en las hipótesis para una estimación más precisa.",
+    summary_elec_nodata: "Ningún día calculado todavía: guarda tu programación de filtración en la pestaña Filtración.",
+    summary_missing_prixKwh: "Introduce el precio del kWh para ver esta línea",
+    summary_missing_pompe: "Introduce la potencia de la bomba para ver esta línea",
+    summary_missing_hRef: "Introduce tu duración de filtración habitual para ver esta línea",
+    summary_missing_spend: "Introduce tu gasto anual en productos para ver la variación",
+    summary_prod_variation: "Variación de tu gasto en productos",
+    summary_prod_sign_hint: "Positiva: gastas menos que antes de la app. Negativa: gastas más.",
+    summary_prod_ref_note: "Referencia: tu gasto anual repartido según tu curva de filtración, mayor en verano.",
+    summary_prod_capped: "Limitada a +50 % de la referencia.",
+    summary_prod_spent: "Gasto real desde la activación: {amount}",
+    summary_prod_partial: "Gasto parcial: {amount}, en el {pct} % de las aplicaciones. Sin variación hasta que todos los productos tengan precio.",
+    summary_prod_unpriced: "Productos sin precio: {names}",
+    summary_prod_open_products: "Introducir los precios en Productos",
+    summary_prod_noevents: "Ninguna aplicación registrada desde la activación.",
+    summary_prod_tooshort: "La variación se calcula a partir de {n} días de uso.",
+    summary_prod_by: "Gasto real por producto",
+    summary_quality_label: "Días dentro de los valores objetivo en las últimas 4 semanas (pH y desinfectante)",
+    summary_quality_days: "{ev} días evaluados de {total}, con mediciones en {m} días",
+    summary_quality_start: "Tus primeras 4 semanas con la app: {pct} %",
+    summary_quality_wait: "La comparación con tus primeras 4 semanas aparece tras 8 semanas de uso.",
+    summary_quality_rhythm: "Ritmo de medición: {n} por semana",
+    summary_quality_rhythm_hint: "Cuanto más regularmente midas, más fiable será esta cifra.",
+    summary_quality_notenough: "Aún no hay suficientes mediciones en las últimas 4 semanas (al menos 7 días evaluados).",
+    summary_chart_title: "Importe acumulado ({currency})",
+    summary_chart_recent: "Últimos 6 meses",
+    summary_chart_all: "Desde el inicio",
+    summary_chart_empty: "La curva aparece en cuanto una línea es calculable.",
+    summary_see_assumptions: "Introducir hipótesis",
+    summary_pool_detail: "Detalle por piscina",
+    summary_total_all: "Todas las piscinas",
+    summary_assump_title: "Hipótesis — {pool}",
+    summary_assump_intro: "Estos valores son tus estimaciones: modifícalos y todo el balance se recalcula.",
+    summary_f_price: "Precio del kWh",
+    summary_f_currency: "Moneda (código de 3 letras)",
+    summary_f_p1: "Potencia absorbida de la bomba (kW)",
+    summary_f_p1_hint: "Bomba de velocidad variable: introduce la potencia media realmente utilizada.",
+    summary_f_p2: "Potencia nominal (kW)",
+    summary_f_p2_hint: "Se usa solo si la potencia absorbida está vacía; a verificar.",
+    summary_f_href: "Duración de filtración habitual antes de la app",
+    summary_f_curve_hint: "Traza tu duración de filtración a lo largo del año: un punto el 1 y el 15 de cada mes, de 0 a 24 h en pasos de 30 minutos. Toca o arrastra sobre el gráfico. El perfil propuesto sigue las reglas de filtración de la app, según la temperatura media del agua: ajústalo a tus hábitos.",
+    summary_f_hemi_north: "Hemisferio norte",
+    summary_f_hemi_south: "Hemisferio sur",
+    summary_f_hemi_hint: "Cambiar al hemisferio sur desplaza la curva 6 meses.",
+    summary_f_curve_avg: "Media anual: {h} al día",
+    summary_f_curve_reset: "Restablecer el perfil propuesto",
+    summary_f_curve_temp: "Temperatura teórica del agua del vaso (escala de la derecha)",
+    summary_f_curve_thresholds: "Umbrales en los que cambia la regla de cálculo de la duración de filtración: {temps}",
+    summary_f_spend: "Gasto anual en productos antes de la app ({currency})",
+    summary_f_spend_hint: "Lo que gastabas en un año completo en productos: cloro, pH menos, antialgas… El balance lo reparte según tu curva de filtración: más en verano, con el agua caliente y los UV fuertes.",
+    summary_save: "Guardar las hipótesis",
+    summary_save_error: "No se pudo guardar. Comprueba tu conexión e inténtalo de nuevo.",
+    summary_back: "Volver al balance",
+    summary_loading: "Cargando el balance…",
+    summary_load_error: "No se pueden leer las hipótesis por ahora.",
+    savings_err_price_kwh: "Precio del kWh: un valor superior a 0 y como máximo 10.",
+    savings_err_pump: "Potencia de la bomba: entre 0,1 y 5 kW.",
+    savings_err_curve: "Duración de filtración: 24 valores entre 0 y 24 h.",
+    savings_err_spend: "Gasto anual: un importe entre 0 y 100.000.",
+    product_price_title: "Precio de compra",
+    product_price_hint: "Opcional. Lo usa el balance: un producto sin precio se señala. Añade una línea en cada compra a otro precio; el historial se conserva.",
+    product_price_paid: "Precio pagado",
+    product_price_size: "Cantidad comprada",
+    product_price_date: "Fecha de compra",
+    product_price_store: "Tienda (opcional)",
+    product_price_add: "Añadir este precio",
+    product_price_err: "Introduce un precio y una cantidad superiores a cero.",
+    product_price_remove: "Eliminar este precio",
+    product_price_line: "{paid} por {size} · {per}",
     filt_hist_reco: "Filt. recomendada (h)",
     filt_hist_applied: "Filt. aplicada (h)",
     filt_hist_title: "Filtración",
@@ -4960,6 +5430,7 @@ const TRANSLATIONS = {
     target: "alvo",
     evolution: "Evolução",
     show_values: "Mostrar valores no gráfico",
+    chart_today: "Hoje",
     show_all_params: "Mostrar parâmetros",
     hide_all_params: "Ocultar parâmetros",
     journal: "Registro",
@@ -5874,6 +6345,99 @@ const TRANSLATIONS = {
     filt_configure_thermal: "Aquecimento e cobertura da piscina",
     tab_filtration: "Filtração",
     tab_weather: "Clima",
+    tab_summary: "Balanço",
+    summary_locked_title: "Balanço da época",
+    summary_locked_text: "O balanço estima, com base nas tuas hipóteses, a eletricidade evitada, a variação da tua despesa em produtos e a qualidade da água. Reservado à versão Premium.",
+    summary_title: "Balanço da época",
+    summary_estimate: "Estimativa com base nas tuas hipóteses",
+    summary_activate_title: "Mede o que a app muda",
+    summary_activate_text: "Três linhas separadas, nunca somadas: a eletricidade da bomba evitada graças à duração de filtração aplicada, a variação da tua despesa em produtos e a proporção de dias com a água dentro dos valores-alvo. Cada valor é uma estimativa baseada em hipóteses que introduzes e podes alterar a qualquer momento.",
+    summary_activate_btn: "Ativar para {pool}",
+    summary_inactive_pool: "Balanço não ativado para esta piscina",
+    summary_since: "Desde {date}",
+    summary_expected_first: "Primeiros resultados previstos a partir de {date}.",
+    summary_expected_note: "Datas estimadas se introduzires os teus dados (programação da filtração, aplicações de produtos, medições) uma vez por semana.",
+    summary_expected_line: "Primeiro resultado previsto a partir de {date}.",
+    summary_expected_prod: "Primeira variação prevista a partir de {date} ({n} dias de utilização).",
+    summary_expected_quality: "Percentagem prevista a partir de {date}, com uma medição de pH e desinfetante por semana.",
+    summary_elec: "Eletricidade",
+    summary_products: "Produtos",
+    summary_quality: "Qualidade",
+    summary_kwh_avoided: "{kwh} kWh evitados",
+    summary_elec_saved: "{amount} poupados",
+    summary_elec_avg: "Duração média aplicada: {app} por dia, contra {ref} habituais",
+    summary_elec_negative: "Sem poupança por agora: a filtração aplicada excede a tua duração habitual.",
+    summary_elec_days: "Calculado sobre {n} dias",
+    summary_pump_check: "Potência nominal utilizada: a verificar",
+    summary_elec_default: "A tua duração habitual é o perfil proposto pela app: ajusta-a nas hipóteses para uma estimativa mais precisa.",
+    summary_elec_nodata: "Nenhum dia calculado por agora: guarda a tua programação de filtração no separador Filtração.",
+    summary_missing_prixKwh: "Introduz o preço do kWh para ver esta linha",
+    summary_missing_pompe: "Introduz a potência da bomba para ver esta linha",
+    summary_missing_hRef: "Introduz a tua duração de filtração habitual para ver esta linha",
+    summary_missing_spend: "Introduz a tua despesa anual em produtos para ver a variação",
+    summary_prod_variation: "Variação da tua despesa em produtos",
+    summary_prod_sign_hint: "Positiva: gastas menos do que antes da app. Negativa: gastas mais.",
+    summary_prod_ref_note: "Referência: a tua despesa anual repartida pela tua curva de filtração, maior no verão.",
+    summary_prod_capped: "Limitada a +50 % da referência.",
+    summary_prod_spent: "Despesa real desde a ativação: {amount}",
+    summary_prod_partial: "Despesa parcial: {amount}, em {pct} % das aplicações. Sem variação enquanto todos os produtos não tiverem preço.",
+    summary_prod_unpriced: "Produtos sem preço: {names}",
+    summary_prod_open_products: "Introduzir os preços em Produtos",
+    summary_prod_noevents: "Nenhuma aplicação registada desde a ativação.",
+    summary_prod_tooshort: "A variação é calculada a partir de {n} dias de utilização.",
+    summary_prod_by: "Despesa real por produto",
+    summary_quality_label: "Dias dentro dos valores-alvo nas últimas 4 semanas (pH e desinfetante)",
+    summary_quality_days: "{ev} dias avaliados em {total}, com medições em {m} dias",
+    summary_quality_start: "As tuas primeiras 4 semanas com a app: {pct} %",
+    summary_quality_wait: "A comparação com as tuas primeiras 4 semanas aparece após 8 semanas de utilização.",
+    summary_quality_rhythm: "Ritmo de medição: {n} por semana",
+    summary_quality_rhythm_hint: "Quanto mais regularmente medires, mais fiável é este valor.",
+    summary_quality_notenough: "Ainda não há medições suficientes nas últimas 4 semanas (pelo menos 7 dias avaliados).",
+    summary_chart_title: "Valor acumulado ({currency})",
+    summary_chart_recent: "Últimos 6 meses",
+    summary_chart_all: "Desde o início",
+    summary_chart_empty: "O gráfico aparece assim que uma linha for calculável.",
+    summary_see_assumptions: "Introduzir hipóteses",
+    summary_pool_detail: "Detalhe por piscina",
+    summary_total_all: "Todas as piscinas",
+    summary_assump_title: "Hipóteses — {pool}",
+    summary_assump_intro: "Estes valores são as tuas estimativas: altera-os e todo o balanço é recalculado.",
+    summary_f_price: "Preço do kWh",
+    summary_f_currency: "Moeda (código de 3 letras)",
+    summary_f_p1: "Potência absorvida da bomba (kW)",
+    summary_f_p1_hint: "Bomba de velocidade variável: introduz a potência média realmente utilizada.",
+    summary_f_p2: "Potência nominal (kW)",
+    summary_f_p2_hint: "Usada apenas se a potência absorvida estiver vazia; a verificar.",
+    summary_f_href: "Duração de filtração habitual antes da app",
+    summary_f_curve_hint: "Traça a tua duração de filtração ao longo do ano: um ponto no dia 1 e no dia 15 de cada mês, de 0 a 24 h em passos de 30 minutos. Toca ou arrasta no gráfico. O perfil proposto segue as regras de filtração da app, com base na temperatura média da água: ajusta-o aos teus hábitos.",
+    summary_f_hemi_north: "Hemisfério norte",
+    summary_f_hemi_south: "Hemisfério sul",
+    summary_f_hemi_hint: "Mudar para o hemisfério sul desloca a curva 6 meses.",
+    summary_f_curve_avg: "Média anual: {h} por dia",
+    summary_f_curve_reset: "Repor o perfil proposto",
+    summary_f_curve_temp: "Temperatura teórica da água do tanque (escala à direita)",
+    summary_f_curve_thresholds: "Limiares em que muda a regra de cálculo da duração de filtração: {temps}",
+    summary_f_spend: "Despesa anual em produtos antes da app ({currency})",
+    summary_f_spend_hint: "O que gastavas num ano completo em produtos: cloro, pH menos, antialgas… O balanço reparte-o pela tua curva de filtração: mais no verão, com a água quente e os UV fortes.",
+    summary_save: "Guardar as hipóteses",
+    summary_save_error: "Não foi possível guardar. Verifica a ligação e tenta novamente.",
+    summary_back: "Voltar ao balanço",
+    summary_loading: "A carregar o balanço…",
+    summary_load_error: "Não é possível ler as hipóteses neste momento.",
+    savings_err_price_kwh: "Preço do kWh: um valor superior a 0 e no máximo 10.",
+    savings_err_pump: "Potência da bomba: entre 0,1 e 5 kW.",
+    savings_err_curve: "Duração de filtração: 24 valores entre 0 e 24 h.",
+    savings_err_spend: "Despesa anual: um valor entre 0 e 100.000.",
+    product_price_title: "Preço de compra",
+    product_price_hint: "Opcional. Usado pelo balanço: um produto sem preço é assinalado. Adiciona uma linha em cada compra a outro preço; o histórico é conservado.",
+    product_price_paid: "Preço pago",
+    product_price_size: "Quantidade comprada",
+    product_price_date: "Data de compra",
+    product_price_store: "Loja (opcional)",
+    product_price_add: "Adicionar este preço",
+    product_price_err: "Introduz um preço e uma quantidade superiores a zero.",
+    product_price_remove: "Remover este preço",
+    product_price_line: "{paid} por {size} · {per}",
     filt_hist_reco: "Filt. recomendada (h)",
     filt_hist_applied: "Filt. aplicada (h)",
     filt_hist_title: "Filtração",
@@ -8646,6 +9210,31 @@ const FB = {
     const snap = await window._fbGetDocs(col);
     return snap.docs.map(d => d.data());
   },
+  // ── Bilan (onglet « Bilan », Premium) : hypothèses par bassin, users/{uid}/savingsAssumptions/{poolId} (propriétaire seul) ──
+  onSavingsAssumptions: (uid, cb, onError) => {
+    if (!window._fbDb || !window._fbOnSnapshot) return () => {};
+    const col = window._fbCollection(window._fbDb, "users", uid, "savingsAssumptions");
+    return window._fbOnSnapshot(col, (snap) => {
+      const out = {};
+      snap.docs.forEach((d) => { out[d.id] = d.data(); });
+      cb(out);
+    }, (err) => { if (onError) onError(err); });
+  },
+  saveSavingsAssumptions: async (uid, poolId, data) => {
+    if (!window._fbDb || !window._fbSetDoc) throw new Error("Firestore indisponible");
+    await window._fbSetDoc(window._fbDoc(window._fbDb, "users", uid, "savingsAssumptions", poolId), data);
+  },
+  getSavingsAssumptions: async (uid) => {
+    if (!window._fbDb || !window._fbGetDocs) return {};
+    const snap = await window._fbGetDocs(window._fbCollection(window._fbDb, "users", uid, "savingsAssumptions"));
+    const out = {};
+    snap.docs.forEach((d) => { out[d.id] = d.data(); });
+    return out;
+  },
+  deleteSavingsAssumptions: async (uid, poolId) => {
+    if (!window._fbDb || !window._fbDeleteDoc) return;
+    await window._fbDeleteDoc(window._fbDoc(window._fbDb, "users", uid, "savingsAssumptions", poolId));
+  },
   // ── Statut de suspension (géré uniquement par l'admin, jamais écrit par le client) ──
   onSuspended: (uid, cb) => {
     if (!window._fbDb || !window._fbOnSnapshot) return () => {};
@@ -9729,6 +10318,7 @@ function PoolGenAIApp() {
       if (el) {
         detach = attachTabSwipe(el, {
           getTab: () => tabStateRef.current,
+          getOrder: () => tabOrderRef.current,
           open: (id, side, top, offset, height) => ReactDOM.flushSync(() => setSwipeNeighbor({ id, side, top, offset, height })),
           commit: (id) => ReactDOM.flushSync(() => { setTab(id); setSwipeNeighbor(null); }),
           close: () => setSwipeNeighbor(null),
@@ -9738,6 +10328,10 @@ function PoolGenAIApp() {
   }
   const tabStateRef = useRef(tab);
   tabStateRef.current = tab;
+  // v1.170.0 — Un invité (bassin délégué) n'a pas l'onglet Bilan : hypothèses et prix du propriétaire restent privés.
+  const tabOrderRef = useRef(TAB_ORDER);
+  tabOrderRef.current = viewContext ? TAB_ORDER.filter((x) => x !== "summary") : TAB_ORDER;
+  useEffect(() => { if (viewContext && tab === "summary") setTab("dashboard"); }, [viewContext, tab]);
   const [showAddMeasure, setShowAddMeasure] = useState(false);
   const [showAddProduct, setShowAddProduct] = useState(false);
   // v1.62.0 — Sous-page "Mes produits à acheter", accessible depuis l'onglet Produits.
@@ -10295,17 +10889,19 @@ function PoolGenAIApp() {
   // de compte classique, qui ne supprimait jusqu'ici que le document racine.
   async function eraseAllUserData(uid) {
     if (!uid || !window._fbDb) return;
-    const [ms, apps, diags, photos] = await Promise.all([
+    const [ms, apps, diags, photos, savings] = await Promise.all([
       FB.getMeasures(uid).catch(() => []),
       FB.getApplications(uid).catch(() => []),
       FB.getDiagnostics(uid).catch(() => []),
       FB.getProductPhotos(uid).catch(() => ({})),
+      FB.getSavingsAssumptions(uid).catch(() => ({})),
     ]);
     await Promise.all([
       ...ms.map((m) => FB.deleteMeasure(uid, m.id).catch(() => {})),
       ...apps.map((a) => FB.deleteApplication(uid, a.measureId || a.id).catch(() => {})),
       ...diags.map((d) => FB.deleteDiagnostic(uid, d.id).catch(() => {})),
       ...Object.keys(photos).map((id) => FB.deleteProductPhoto(uid, id).catch(() => {})),
+      ...Object.keys(savings).map((id) => FB.deleteSavingsAssumptions(uid, id).catch(() => {})),
     ]);
     if (window._fbDoc && window._fbDeleteDoc) {
       await window._fbDeleteDoc(window._fbDoc(window._fbDb, "users", uid, "config", "main")).catch(() => {});
@@ -12509,6 +13105,21 @@ function PoolGenAIApp() {
             <FiltrationLockedCard lang={lang} onWantPremium={() => openPaywall()} />
           )
         )}
+        {tab === "summary" && !viewContext && (
+          effectiveIsPremium ? (
+            <SummaryView
+              uid={dataUid}
+              pools={activePools}
+              products={products}
+              applications={applications}
+              measures={measures}
+              lang={lang}
+              onOpenProducts={() => setTab("products")}
+            />
+          ) : (
+            <FiltrationLockedCard lang={lang} onWantPremium={() => openPaywall()} titleKey="summary_locked_title" textKey="summary_locked_text" Icon={SummaryIcon} />
+          )
+        )}
         {tab === "weather" && activePool && (
           effectiveIsPremium ? (
             <WeatherCard
@@ -13658,7 +14269,7 @@ function Header({ poolName, location, poolPhoto, isPremium, entries, activeEntry
 }
 
 // ---------- Balayage entre onglets (v1.150.0) ----------
-const TAB_ORDER = ["dashboard", "filtration", "weather", "history", "products", "settings"];
+const TAB_ORDER = ["dashboard", "filtration", "weather", "history", "summary", "products", "settings"];
 // Vrai si le geste qui démarre sur `el` appartient à un autre élément : champ de saisie, curseur,
 // graphique (info-bulle / déplacement au doigt), zone à défilement horizontal, ou élément marqué
 // data-noswipe. On remonte jusqu'au conteneur `root` (<main>).
@@ -13739,9 +14350,10 @@ function attachTabSwipe(el, api) {
       s.mode = "drag";
       const tr = track();
       if (tr) { tr.style.transition = "none"; tr.style.willChange = "transform"; }
-      const i = TAB_ORDER.indexOf(api.getTab());
+      const order = api.getOrder ? api.getOrder() : TAB_ORDER; // l'onglet Bilan n'existe pas pour un invité (bassin délégué)
+      const i = order.indexOf(api.getTab());
       const side = dx < 0 ? 1 : -1; // voisin à droite si on glisse vers la gauche
-      const neighbor = TAB_ORDER[i + side];
+      const neighbor = order[i + side];
       s.side = side;
       s.neighbor = neighbor || null;
       if (neighbor && !reduced() && tr) {
@@ -13821,16 +14433,63 @@ function CloudSunIcon({ size = 24, color = "currentColor", strokeWidth = 2, styl
   );
 }
 
+// Icône « balance » (tracé Lucide « scale ») de l'onglet Bilan, définie ici pour la même raison que WavesIcon.
+function SummaryIcon({ size = 24, color = "currentColor", strokeWidth = 2, style, className }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" style={style} className={className}>
+      <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
+      <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
+      <path d="M7 21h10" />
+      <path d="M12 3v18" />
+      <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" />
+    </svg>
+  );
+}
+
+// v1.170.0 — Barre d'onglets à défilement horizontal : chaque onglet garde sa taille d'origine (environ un cinquième de l'écran, 64 px au moins),
+// la barre défile quand ils ne tiennent plus, un dégradé signale la suite, et l'onglet actif est ramené dans la zone visible. L'onglet Bilan
+// n'existe pas pour un invité (bassin délégué).
 function TabBar({ tab, setTab, lang, viewContext }) {
   const t = useT(lang);
-  const tabs = [
+  const all = [
     { id: "dashboard", label: t("tab_pool"), icon: Droplets },
     { id: "filtration", label: t("tab_filtration"), icon: WavesIcon },
     { id: "weather", label: t("tab_weather"), icon: CloudSunIcon },
     { id: "history", label: t("tab_history"), icon: History },
+    { id: "summary", label: t("tab_summary"), icon: SummaryIcon },
     { id: "products", label: t("tab_products"), icon: Beaker },
     { id: "settings", label: t("tab_settings"), icon: Settings2 },
   ];
+  const tabs = all.filter((tb) => !(tb.id === "summary" && viewContext));
+  const scrollRef = useRef(null);
+  const btnRefs = useRef({});
+  const firstRef = useRef(true);
+  const [edges, setEdges] = useState({ left: false, right: false });
+  const updateEdges = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const next = { left: el.scrollLeft > 4, right: el.scrollLeft + el.clientWidth < el.scrollWidth - 4 };
+    setEdges((prev) => (prev.left === next.left && prev.right === next.right ? prev : next));
+  };
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    const b = btnRefs.current[tab];
+    if (el && b) {
+      const max = Math.max(0, el.scrollWidth - el.clientWidth);
+      const left = Math.max(0, Math.min(max, b.offsetLeft - (el.clientWidth - b.offsetWidth) / 2));
+      try { el.scrollTo({ left, behavior: firstRef.current ? "auto" : "smooth" }); } catch (e) { el.scrollLeft = left; }
+      firstRef.current = false;
+    }
+    updateEdges();
+  }, [tab, lang, viewContext]);
+  useEffect(() => {
+    const el = scrollRef.current;
+    window.addEventListener("resize", updateEdges);
+    let ro = null;
+    if (typeof ResizeObserver !== "undefined" && el) { ro = new ResizeObserver(updateEdges); ro.observe(el); }
+    return () => { window.removeEventListener("resize", updateEdges); if (ro) ro.disconnect(); };
+  }, []);
+  const fade = (side) => ({ position: "absolute", top: 0, bottom: 0, [side]: 0, width: 22, pointerEvents: "none", zIndex: 11, background: "linear-gradient(to " + (side === "left" ? "right" : "left") + ", #ffffff, rgba(255,255,255,0))" });
   return (
     <div style={{ width: "100%", flexShrink: 0 }}>
       {viewContext && (
@@ -13841,31 +14500,47 @@ function TabBar({ tab, setTab, lang, viewContext }) {
       <div style={{ textAlign: "center", fontSize: 9.5, color: "#b0bec8", padding: "2px 0", background: "#f5f8fc", letterSpacing: 0.3, borderTop: "1px solid #e8eef2" }}>
         PoolGenAI v{APP_VERSION}
       </div>
-      <nav style={styles.tabBar}>
-        {tabs.map((tb) => {
-          const Icon = tb.icon;
-          const active = tab === tb.id;
-          return (
-            <button
-              key={tb.id}
-              onClick={() => {
-                setTab(tb.id);
-                track("screen_view", { screen_name: tb.id });
-              }}
-              style={{
-                ...styles.tabBtn,
-                color: active ? "var(--brand-primary)" : "var(--brand-text-muted)",
-              }}
-            >
-              <Icon size={20} strokeWidth={active ? 2.4 : 1.8} />
-              <span style={{ fontSize: 11, marginTop: 3, fontWeight: active ? 700 : 500 }}>
-                {tb.label}
-              </span>
-            </button>
-          );
-        })}
-        <div style={{ position: "absolute", top: 2, right: 8, fontSize: 9, color: "transparent" }}></div>
-      </nav>
+      <div style={{ position: "relative" }}>
+        <style>{".pgai-tabscroll::-webkit-scrollbar{display:none}"}</style>
+        <nav
+          ref={scrollRef}
+          className="pgai-tabscroll"
+          data-testid="tabbar-scroll"
+          onScroll={updateEdges}
+          style={{ ...styles.tabBar, position: "relative", overflowX: "auto", overflowY: "hidden", scrollbarWidth: "none", WebkitOverflowScrolling: "touch", scrollSnapType: "x proximity" }}
+        >
+          {tabs.map((tb) => {
+            const Icon = tb.icon;
+            const active = tab === tb.id;
+            return (
+              <button
+                key={tb.id}
+                ref={(el) => { btnRefs.current[tb.id] = el; }}
+                data-tab={tb.id}
+                onClick={() => {
+                  setTab(tb.id);
+                  track("screen_view", { screen_name: tb.id });
+                }}
+                style={{
+                  ...styles.tabBtn,
+                  flex: "1 0 auto",
+                  minWidth: "max(64px, min(18%, 96px))",
+                  padding: "9px 4px 10px",
+                  scrollSnapAlign: "center",
+                  color: active ? "var(--brand-primary)" : "var(--brand-text-muted)",
+                }}
+              >
+                <Icon size={20} strokeWidth={active ? 2.4 : 1.8} />
+                <span style={{ fontSize: 11, marginTop: 3, fontWeight: active ? 700 : 500, whiteSpace: "nowrap" }}>
+                  {tb.label}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+        {edges.left && <div aria-hidden="true" data-testid="tabbar-fade-left" style={fade("left")} />}
+        {edges.right && <div aria-hidden="true" data-testid="tabbar-fade-right" style={fade("right")} />}
+      </div>
     </div>
   );
 }
@@ -14163,6 +14838,8 @@ function roundUpQuarter(h) { return Math.ceil(h * 4 - 1e-9) / 4; }
 function roundNearestQuarter(h) { return Math.round(h * 4) / 4; }
 function truncCoord4(x) { return Math.trunc(Number(x) * 1e4) / 1e4; } // 4 décimales max (MET Norway renvoie 403 au-delà)
 
+// Températures (°C) où la règle de calcul change de mode (≤ 12, ≤ 20, < 27) : affichées en pointillés sur le graphique du Bilan.
+const FILTRATION_TEMP_BREAKS = [12, 20, 27];
 // Durée de filtration d'une piscine (heures, arrondie au quart d'heure supérieur) selon la température de l'eau T.
 // Règle de garde : le résultat est le maximum du mode courant et des modes de plage inférieure évalués à T
 // (donc entre 20 et 24 °C, T/2 l'emporte sur T-12). T = 27 exactement relève du mode 24 h.
@@ -14986,6 +15663,383 @@ function buildTempProjection(o) {
   return out.sort((x, y) => x.t - y.t);
 }
 // ---- FILTRATION PURE END ----
+// ---- SAVINGS PURE BEGIN ----
+// Onglet « Bilan » : trois lignes JAMAIS additionnées (Électricité, Produits, Qualité), toutes des estimations fondées sur des hypothèses saisies par
+// l'utilisateur. Fonctions pures : données en entrée, résultat en sortie, sans Firestore ni DOM. Jamais de zéro ni de chiffre inventé quand une
+// donnée manque : le résultat porte alors un statut (« missing », « nodata », « partial »…) et la liste de ce qu'il manque.
+// v1.171.0 — la durée de filtration habituelle est une COURBE de 24 points (le 1er et le 15 de chaque mois, pas de 0,5 h) ; la dépense de référence
+// est annuelle, répartie comme le carré de cette courbe (plus de produits quand la pompe tourne beaucoup : été chaud, UV) ; la qualité se compare à
+// elle-même (4 dernières semaines contre 4 premières), sans déclaration de l'utilisateur.
+const SAVINGS_MEASURE_VALID_DAYS = 7; // une mesure vaut jusqu'à la suivante, dans la limite de 7 jours
+const SAVINGS_MIN_QUALITY_DAYS = 7; // en dessous, pas de pourcentage de qualité
+const SAVINGS_QUALITY_WINDOW_DAYS = 28; // « 4 dernières semaines » / « 4 premières semaines »
+const SAVINGS_QUALITY_TREND_AFTER_DAYS = 56; // la progression n'apparaît qu'après 8 semaines d'utilisation
+const SAVINGS_MIN_PRODUCT_DAYS = 14; // en dessous, pas de variation de dépense (une seule application dépasserait la référence au prorata)
+const SAVINGS_POSITIVE_CAP = 0.5; // une variation positive ne dépasse pas 50 % de la référence
+const SAVINGS_PRICE_HISTORY_MAX = 12;
+const SAVINGS_CURVE_POINTS = 24;
+const SAVINGS_CURVE_STEP = 0.5;
+// Température moyenne de l'eau d'une piscine extérieure non chauffée, climat tempéré de l'hémisphère NORD, au 1er et au 15 de chaque mois (°C).
+// Hémisphère sud : même courbe décalée de 6 mois (12 points). Hypothèse de modèle, jamais une mesure.
+const SAVINGS_WATER_TEMP_NORTH = [8, 7.5, 7.5, 8, 9, 10.5, 12, 14, 16.5, 19, 21.5, 24, 25.5, 26.5, 26.5, 26, 25, 23, 20.5, 18, 15, 12.5, 10, 8.5];
+
+function savingsNum(x) {
+  const n = typeof x === "string" ? parseFloat(x.replace(",", ".")) : x;
+  return typeof n === "number" && Number.isFinite(n) ? n : null;
+}
+function savingsBlank(x) { return x === undefined || x === null || (typeof x === "string" && x.trim() === ""); }
+
+// ---------- Courbe de durée de filtration (24 points) ----------
+function savingsCurveValid(c) {
+  return Array.isArray(c) && c.length === SAVINGS_CURVE_POINTS && c.every((v) => typeof v === "number" && Number.isFinite(v) && v >= 0 && v <= 24);
+}
+// Température moyenne de l'eau (24 points) selon l'hémisphère (« nord » par défaut, « sud » : décalage de 6 mois).
+function savingsTempProfile(hemisphere) {
+  return SAVINGS_WATER_TEMP_NORTH.map((_, i) => SAVINGS_WATER_TEMP_NORTH[hemisphere === "sud" ? (i + 12) % SAVINGS_CURVE_POINTS : i]);
+}
+// Profil par défaut : durée conseillée par l'app pour cette température (computePoolFiltrationHours), arrondie au demi-heure.
+function savingsDefaultProfile(hemisphere) {
+  return savingsTempProfile(hemisphere).map((T) => {
+    const h = computePoolFiltrationHours(T);
+    return Math.max(0, Math.min(24, Math.round(h / SAVINGS_CURVE_STEP) * SAVINGS_CURVE_STEP));
+  });
+}
+function savingsDaysInMonth(m) { return [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][m - 1]; }
+// Durée de référence d'un jour (AAAA-MM-JJ) : interpolation linéaire entre les deux points voisins (1er et 15 du mois ; après le 15 décembre, retour au 1er janvier).
+function savingsRefHoursAt(curve, dayKey) {
+  const m = parseInt(dayKey.slice(5, 7), 10);
+  const d = parseInt(dayKey.slice(8, 10), 10);
+  const dim = savingsDaysInMonth(m);
+  const i0 = 2 * (m - 1);
+  let a, b, t;
+  if (d < 15) { a = curve[i0]; b = curve[i0 + 1]; t = (d - 1) / 14; }
+  else { a = curve[i0 + 1]; b = curve[(i0 + 2) % SAVINGS_CURVE_POINTS]; t = (d - 15) / Math.max(1, dim - 14); }
+  return a + (b - a) * Math.min(1, Math.max(0, t));
+}
+
+// Validation des hypothèses (formulaire). Un champ vide n'est pas une erreur (la ligne dira ce qu'il manque) ; un champ rempli hors bornes l'est.
+// errors : { champ: clé de traduction du message }.
+function validateSavingsAssumptions(a) {
+  const x = a || {};
+  const p = x.pompe || {};
+  const errors = {};
+  const inRange = (v, lo, hi) => { const n = savingsNum(v); return n !== null && n >= lo && n <= hi; };
+  if (!savingsBlank(x.prixKwh) && !(savingsNum(x.prixKwh) > 0 && savingsNum(x.prixKwh) <= 10)) errors.prixKwh = "savings_err_price_kwh";
+  if (!savingsBlank(p.p1Kw) && !inRange(p.p1Kw, 0.1, 5)) errors["pompe.p1Kw"] = "savings_err_pump";
+  if (!savingsBlank(p.p2Kw) && !inRange(p.p2Kw, 0.1, 5)) errors["pompe.p2Kw"] = "savings_err_pump";
+  if (x.hRefCourbe !== undefined && x.hRefCourbe !== null && !savingsCurveValid(x.hRefCourbe)) errors.hRefCourbe = "savings_err_curve";
+  if (!savingsBlank(x.depenseRefAn) && !inRange(x.depenseRefAn, 0, 100000)) errors.depenseRefAn = "savings_err_spend";
+  return { ok: Object.keys(errors).length === 0, errors };
+}
+
+// Document enregistré : nombres typés, champs vides retirés, source et date de saisie de la pompe, courbe arrondie au demi-heure.
+function normalizeSavingsAssumptions(raw, nowIso) {
+  const x = raw || {};
+  const p = x.pompe || {};
+  const out = {};
+  const put = (k, v) => { if (v !== null && v !== undefined) out[k] = v; };
+  put("prixKwh", savingsNum(x.prixKwh));
+  out.devise = (typeof x.devise === "string" && /^[A-Za-z]{3}$/.test(x.devise.trim())) ? x.devise.trim().toUpperCase() : "EUR";
+  const pompe = {};
+  if (savingsNum(p.p1Kw) !== null) pompe.p1Kw = savingsNum(p.p1Kw);
+  if (savingsNum(p.p2Kw) !== null) pompe.p2Kw = savingsNum(p.p2Kw);
+  if (Object.keys(pompe).length) { pompe.source = "manuel"; pompe.confirmeLe = nowIso || new Date().toISOString(); out.pompe = pompe; }
+  if (savingsCurveValid(x.hRefCourbe)) {
+    out.hRefCourbe = x.hRefCourbe.map((v) => Math.round(v / SAVINGS_CURVE_STEP) * SAVINGS_CURVE_STEP);
+    out.hRefSource = x.hRefSource === "defaut" ? "defaut" : "saisi";
+  }
+  if (x.hemisphere === "sud" || x.hemisphere === "nord") out.hemisphere = x.hemisphere;
+  put("depenseRefAn", savingsNum(x.depenseRefAn));
+  if (typeof x.activeLe === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x.activeLe)) out.activeLe = x.activeLe;
+  return out;
+}
+
+// Puissance de la pompe : absorbée (p1) sinon nominale (p2, signalée « à vérifier »).
+function savingsPump(a) {
+  const p = (a && a.pompe) || {};
+  const p1 = savingsNum(p.p1Kw);
+  const p2 = savingsNum(p.p2Kw);
+  if (p1 !== null && p1 >= 0.1 && p1 <= 5) return { kw: p1, toCheck: false };
+  if (p2 !== null && p2 >= 0.1 && p2 <= 5) return { kw: p2, toCheck: true };
+  return null;
+}
+
+// ---------- Électricité ----------
+// Pour chaque jour local complet entre activeKey et hier : kWh évités = (durée de référence du jour − H_app) × P ; la référence est lue sur la courbe
+// de 24 points, H_app est la programmation enregistrée en vigueur à midi (journal filtrationProgLog). Jours sans programmation connue : non calculés.
+// Les jours où H_app dépasse la référence comptent en négatif.
+// o : { assumptions, progLog, tz, activeKey, todayKey } -> { status: "ok" | "nodata" | "missing", ... }
+function computeElectricity(o) {
+  const a = o.assumptions || {};
+  const missing = [];
+  const price = savingsNum(a.prixKwh);
+  if (!(price > 0)) missing.push("prixKwh");
+  const pump = savingsPump(a);
+  if (!pump) missing.push("pompe");
+  if (!savingsCurveValid(a.hRefCourbe)) missing.push("hRef");
+  if (missing.length) return { status: "missing", missing };
+  const lastKey = addDaysKey(o.todayKey, -1);
+  const perDay = [];
+  let kwh = 0;
+  let sumH = 0;
+  let sumRef = 0;
+  if (o.activeKey && daysBetweenKeys(o.activeKey, lastKey) >= 0) {
+    const n = daysBetweenKeys(o.activeKey, lastKey);
+    for (let i = 0; i <= n; i++) {
+      const key = addDaysKey(o.activeKey, i);
+      const prog = filtrationProgAt(o.progLog, noonOfKeyMs(key, o.tz));
+      if (!prog || prog.hours === null || prog.hours === undefined) continue;
+      const ref = savingsRefHoursAt(a.hRefCourbe, key);
+      const d = (ref - prog.hours) * pump.kw;
+      perDay.push({ key, hApp: prog.hours, hRef: ref, kwh: d, euros: d * price });
+      kwh += d;
+      sumH += prog.hours;
+      sumRef += ref;
+    }
+  }
+  if (!perDay.length) return { status: "nodata" };
+  return { status: "ok", days: perDay.length, kwh, euros: kwh * price, avgRef: sumRef / perDay.length, avgHApp: sumH / perDay.length, kw: pump.kw, toCheck: pump.toCheck, defaultRef: a.hRefSource === "defaut", negative: kwh < 0, perDay };
+}
+
+// ---------- Produits ----------
+// Prix unitaire en vigueur à un jour (AAAA-MM-JJ) : dernière entrée datée au plus tard ce jour-là, sinon la plus ancienne. -> { perUnit, unit } ou null.
+function savingsUnitPrice(product, dayKey) {
+  const list = (product && Array.isArray(product.prix) ? product.prix : [])
+    .filter((e) => e && typeof e.le === "string" && savingsNum(e.paye) > 0 && savingsNum(e.contenance) > 0 && (e.unite === "kg" || e.unite === "L"))
+    .sort((x, y) => (x.le < y.le ? -1 : x.le > y.le ? 1 : 0));
+  if (!list.length) return null;
+  let chosen = list[0];
+  list.forEach((e) => { if (e.le <= dayKey) chosen = e; });
+  return { perUnit: savingsNum(chosen.paye) / savingsNum(chosen.contenance), unit: chosen.unite };
+}
+// Quantité appliquée (g, mL, kg, L) exprimée dans l'unité du prix (kg ou L) ; null si les unités ne sont pas compatibles.
+function savingsQtyInUnit(amount, doseUnit, unit) {
+  const n = savingsNum(amount);
+  if (n === null) return null;
+  const du = String(doseUnit || "").trim().toLowerCase();
+  if (unit === "kg") return du === "g" ? n / 1000 : du === "kg" ? n : null;
+  if (unit === "L") return du === "ml" ? n / 1000 : du === "l" ? n : null;
+  return null;
+}
+// Applications réellement faites : étapes de plan non passées avec quantité appliquée, et entretiens manuels.
+function savingsApplicationEvents(applications, tz) {
+  const out = [];
+  (applications || []).forEach((a) => {
+    if (!a) return;
+    if (a.type === "manual") {
+      const ms = Date.parse(a.appliedAt);
+      const amount = savingsNum(a.appliedAmount);
+      if (Number.isFinite(ms) && amount > 0 && a.productName) out.push({ ms, dayKey: localDateKey(ms, tz), name: a.productName, amount, doseUnit: a.doseUnit });
+      return;
+    }
+    (a.steps || []).forEach((s) => {
+      if (!s || !s.appliedAt || s.skipped) return;
+      const ms = Date.parse(s.appliedAt);
+      const amount = savingsNum(s.appliedAmount);
+      const name = s.productRealName || s.appliedProductName || s.productName;
+      if (Number.isFinite(ms) && amount > 0 && name) out.push({ ms, dayKey: localDateKey(ms, tz), name, amount, doseUnit: s.doseUnit });
+    });
+  });
+  return out.sort((x, y) => x.ms - y.ms);
+}
+// Variation = référence − réel, positive quand l'app fait dépenser moins ; plafonnée à +50 % de la référence ; une variation négative reste entière.
+function savingsVariation(dRef, dReel) {
+  const v = dRef - dReel;
+  const cap = SAVINGS_POSITIVE_CAP * dRef;
+  return v > cap ? { variation: cap, capped: true } : { variation: v, capped: false };
+}
+// Poids d'un jour pour répartir la dépense annuelle de référence : le CARRÉ de la durée de filtration habituelle (saison chaude et ensoleillée
+// = pompe qui tourne beaucoup = beaucoup plus de produits). Le jour d'activation et les 364 suivants forment l'année de référence.
+function savingsDayWeight(curve, dayKey) { const h = savingsRefHoursAt(curve, dayKey); return h * h; }
+function savingsWeightShare(curve, activeKey, days) {
+  let part = 0;
+  let total = 0;
+  for (let i = 0; i < 365; i++) {
+    const w = savingsDayWeight(curve, addDaysKey(activeKey, i));
+    total += w;
+    if (i < days) part += w;
+  }
+  return total > 0 ? part / total : null;
+}
+// o : { assumptions, products (du bassin), applications (du bassin), tz, activeKey, todayKey }
+// status : "noevents" | "partial" (des applications sans prix) | "missingRef" | "tooShort" | "ok". cost : dépense des applications chiffrées.
+function computeProducts(o) {
+  const a = o.assumptions || {};
+  const events = savingsApplicationEvents(o.applications, o.tz).filter((e) => e.dayKey >= o.activeKey && e.dayKey <= o.todayKey);
+  const byName = {};
+  const unpriced = new Set();
+  let cost = 0;
+  let pricedCount = 0;
+  const costed = events.map((e) => {
+    const prod = (o.products || []).find((p) => p.name === e.name);
+    const price = prod ? savingsUnitPrice(prod, e.dayKey) : null;
+    const qty = price ? savingsQtyInUnit(e.amount, e.doseUnit, price.unit) : null;
+    if (!price || qty === null) { unpriced.add(e.name); return { ...e, cost: null }; }
+    const c = qty * price.perUnit;
+    cost += c;
+    pricedCount++;
+    if (!byName[e.name]) byName[e.name] = { name: e.name, cost: 0, count: 0 };
+    byName[e.name].cost += c;
+    byName[e.name].count++;
+    return { ...e, cost: c };
+  });
+  const base = { cost, totalCount: events.length, pricedCount, coverage: events.length ? pricedCount / events.length : null, byProduct: Object.values(byName).sort((x, y) => y.cost - x.cost), unpricedNames: Array.from(unpriced), events: costed };
+  if (!events.length) return { ...base, status: "noevents" };
+  if (pricedCount < events.length) return { ...base, status: "partial" };
+  const dep = savingsNum(a.depenseRefAn);
+  if (!(dep > 0) || !savingsCurveValid(a.hRefCourbe)) return { ...base, status: "missingRef" };
+  const elapsed = daysBetweenKeys(o.activeKey, o.todayKey);
+  const dRef = dep * savingsWeightShare(a.hRefCourbe, o.activeKey, elapsed);
+  if (elapsed < SAVINGS_MIN_PRODUCT_DAYS) return { ...base, status: "tooShort", dRef };
+  const v = savingsVariation(dRef, cost);
+  return { ...base, status: "ok", dRef, variation: v.variation, capped: v.capped };
+}
+
+// ---------- Qualité ----------
+// Jours « dans la cible » ÷ jours évalués. Paramètres : pH + désinfectant du type de traitement (paramKeys), cibles = targets[param] { min, max }.
+// Une mesure vaut jusqu'à la suivante, 7 jours au plus ; un jour n'est évalué que si TOUS les paramètres ont une valeur valide ce jour-là.
+// o : { measures, paramKeys, targets, tz, fromKey, toKey } -> { evaluated, inRange, pct, enough }
+function computeQuality(o) {
+  const keys = (o.paramKeys || []).filter((k) => o.targets && o.targets[k] && savingsNum(o.targets[k].min) !== null && savingsNum(o.targets[k].max) !== null);
+  const empty = { evaluated: 0, inRange: 0, pct: null, enough: false, paramKeys: keys, totalDays: 0 };
+  if (!keys.length || !o.fromKey || !o.toKey || daysBetweenKeys(o.fromKey, o.toKey) < 0) return empty;
+  const series = {};
+  keys.forEach((k) => {
+    const byDay = {};
+    (o.measures || []).forEach((m) => {
+      const ms = Date.parse(m && m.date);
+      const v = savingsNum(m && m[k]);
+      if (!Number.isFinite(ms) || v === null) return;
+      const day = localDateKey(ms, o.tz);
+      if (!byDay[day] || ms >= byDay[day].ms) byDay[day] = { ms, v };
+    });
+    series[k] = Object.keys(byDay).sort().map((day) => ({ day, v: byDay[day].v }));
+  });
+  const valueOn = (k, day) => {
+    let found = null;
+    for (const e of series[k]) { if (e.day <= day) found = e; else break; }
+    return found && daysBetweenKeys(found.day, day) < SAVINGS_MEASURE_VALID_DAYS ? found.v : null;
+  };
+  let evaluated = 0;
+  let inRange = 0;
+  const n = daysBetweenKeys(o.fromKey, o.toKey);
+  for (let i = 0; i <= n; i++) {
+    const day = addDaysKey(o.fromKey, i);
+    const vals = keys.map((k) => valueOn(k, day));
+    if (vals.some((v) => v === null)) continue;
+    evaluated++;
+    if (keys.every((k, j) => vals[j] >= savingsNum(o.targets[k].min) && vals[j] <= savingsNum(o.targets[k].max))) inRange++;
+  }
+  return { evaluated, inRange, pct: evaluated ? inRange / evaluated : null, enough: evaluated >= SAVINGS_MIN_QUALITY_DAYS, paramKeys: keys, totalDays: n + 1 };
+}
+// Jours (locaux) où au moins un des paramètres a été mesuré, entre deux jours inclus.
+function savingsMeasureDays(measures, paramKeys, tz, fromKey, toKey) {
+  const days = new Set();
+  (measures || []).forEach((m) => {
+    const ms = Date.parse(m && m.date);
+    if (!Number.isFinite(ms)) return;
+    const day = localDateKey(ms, tz);
+    if (day < fromKey || day > toKey) return;
+    if ((paramKeys || []).some((k) => savingsNum(m && m[k]) !== null)) days.add(day);
+  });
+  return days.size;
+}
+// Rapport de qualité sans aucune déclaration de l'utilisateur : les 4 dernières semaines (chiffre actuel), les 4 premières (progression, après 8 semaines
+// d'utilisation) et le rythme de mesure. o : { measures, paramKeys, targets, tz, activeKey, todayKey }
+function computeQualityReport(o) {
+  const used = daysBetweenKeys(o.activeKey, o.todayKey);
+  const recentFrom = (() => { const k = addDaysKey(o.todayKey, -(SAVINGS_QUALITY_WINDOW_DAYS - 1)); return k < o.activeKey ? o.activeKey : k; })();
+  const recent = computeQuality({ ...o, fromKey: recentFrom, toKey: o.todayKey });
+  const startRaw = used >= SAVINGS_QUALITY_TREND_AFTER_DAYS ? computeQuality({ ...o, fromKey: o.activeKey, toKey: addDaysKey(o.activeKey, SAVINGS_QUALITY_WINDOW_DAYS - 1) }) : null;
+  const keys = recent.paramKeys;
+  const recentMeasureDays = savingsMeasureDays(o.measures, keys, o.tz, recentFrom, o.todayKey);
+  const allMeasureDays = savingsMeasureDays(o.measures, keys, o.tz, o.activeKey, o.todayKey);
+  const weeks = Math.max(1, (used + 1) / 7);
+  return { recent, recentMeasureDays, start: startRaw && startRaw.enough ? startRaw : null, perWeek: allMeasureDays / weeks, measureDays: allMeasureDays, enough: recent.enough };
+}
+
+// ---------- Courbe de cumul ----------
+// Un point par jour entre activeKey et todayKey : elec = cumul des € d'électricité (jusqu'à hier), prod = variation cumulée de la dépense en produits
+// (null tant qu'elle n'est pas calculable : prix manquants, référence absente ou moins de 14 jours).
+function computeSavingsSeries(o) {
+  const a = o.assumptions || {};
+  const out = [];
+  if (!o.activeKey || daysBetweenKeys(o.activeKey, o.todayKey) < 0) return out;
+  const elecByDay = {};
+  const elec = o.electricity && o.electricity.status === "ok" ? o.electricity : null;
+  if (elec) elec.perDay.forEach((d) => { elecByDay[d.key] = d.euros; });
+  const dep = savingsNum(a.depenseRefAn);
+  const prodOk = o.products && (o.products.status === "ok" || o.products.status === "tooShort") && dep > 0 && savingsCurveValid(a.hRefCourbe);
+  let cumElec = 0;
+  let cumCost = 0;
+  const n = daysBetweenKeys(o.activeKey, o.todayKey);
+  for (let i = 0; i <= n; i++) {
+    const key = addDaysKey(o.activeKey, i);
+    if (elecByDay[key] !== undefined) cumElec += elecByDay[key];
+    if (prodOk) o.products.events.forEach((e) => { if (e.dayKey === key && e.cost !== null) cumCost += e.cost; });
+    let prod = null;
+    if (prodOk && i >= SAVINGS_MIN_PRODUCT_DAYS) prod = savingsVariation(dep * savingsWeightShare(a.hRefCourbe, o.activeKey, i), cumCost).variation;
+    out.push({ key, elec: elec ? cumElec : null, prod });
+  }
+  return out;
+}
+
+// ---------- Agrégation de plusieurs bassins (par ligne, jamais entre lignes) ----------
+// list : [{ poolId, devise, elec, prod, quality }] ; les montants ne sont additionnés que s'ils sont dans la même devise.
+function aggregateSavings(list) {
+  const items = list || [];
+  const sameCurrency = (rows) => new Set(rows.map((r) => r.devise || "EUR")).size <= 1;
+  const e = items.filter((i) => i.elec && i.elec.status === "ok");
+  const p = items.filter((i) => i.prod && i.prod.status === "ok");
+  const q = items.filter((i) => i.quality && i.quality.enough);
+  const qIn = q.reduce((s, i) => s + i.quality.inRange, 0);
+  const qEv = q.reduce((s, i) => s + i.quality.evaluated, 0);
+  return {
+    elec: e.length ? { count: e.length, kwh: e.reduce((s, i) => s + i.elec.kwh, 0), euros: sameCurrency(e) ? e.reduce((s, i) => s + i.elec.euros, 0) : null, currency: sameCurrency(e) ? (e[0].devise || "EUR") : null } : null,
+    prod: p.length ? { count: p.length, variation: sameCurrency(p) ? p.reduce((s, i) => s + i.prod.variation, 0) : null, currency: sameCurrency(p) ? (p[0].devise || "EUR") : null } : null,
+    quality: q.length ? { count: q.length, inRange: qIn, evaluated: qEv, pct: qEv ? qIn / qEv : null } : null,
+  };
+}
+// ---------- Date théorique des premiers résultats ----------
+// Pour chaque ligne qui n'affiche pas encore de résultat : jour (AAAA-MM-JJ) à partir duquel il apparaîtra en supposant que l'utilisateur
+// renseigne ce qui manque UNE FOIS PAR SEMAINE (programmation de filtration, applications de produits, mesures) : la prochaine saisie a lieu dans
+// 7 jours au plus tard. Les hypothèses saisies sur cet écran (prix du kWh, pompe, dépense annuelle) comptent comme faites aujourd'hui.
+// null quand la ligne a déjà un résultat ou que seule une saisie sur cet écran manque (la ligne dit déjà quoi renseigner). first : la plus proche.
+// o : { elec, prod, quality (rapport « recent »), progLog, tz, activeKey, todayKey }
+const SAVINGS_INPUT_EVERY_DAYS = 7;
+function computeSavingsExpected(o) {
+  const future = (key) => (key && key > o.todayKey ? key : null);
+  const nextInput = addDaysKey(o.todayKey, SAVINGS_INPUT_EVERY_DAYS);
+  let elec = null;
+  if (!(o.elec && o.elec.status === "ok")) {
+    let firstProg = null;
+    (o.progLog || []).forEach((e) => {
+      const ms = Date.parse(e && e.at);
+      if (Number.isFinite(ms)) { const k = localDateKey(ms, o.tz); if (firstProg === null || k < firstProg) firstProg = k; }
+    });
+    // premier jour calculable : le plus tardif de l'activation et de la première programmation (sans programmation : celle de la prochaine saisie
+    // hebdomadaire) ; le calcul porte sur les jours terminés, donc le résultat arrive le lendemain au plus tôt
+    const firstDay = firstProg !== null ? (firstProg > o.activeKey ? firstProg : o.activeKey) : (nextInput > o.activeKey ? nextInput : o.activeKey);
+    elec = future(addDaysKey(firstDay, 1));
+  }
+  let prod = null;
+  if (!(o.prod && o.prod.status === "ok")) {
+    const base = addDaysKey(o.activeKey, SAVINGS_MIN_PRODUCT_DAYS);
+    // aucune application chiffrée ou des produits sans prix : il faut une saisie, donc la prochaine
+    const needsInput = !o.prod || o.prod.status === "noevents" || o.prod.status === "partial";
+    prod = future(needsInput && nextInput > base ? nextInput : base);
+  }
+  let quality = null;
+  if (!(o.quality && o.quality.enough)) {
+    // une mesure vaut 7 jours : avec déjà e jours évalués il en reste 7 − e (les mesures hebdomadaires se relaient sans trou) ; sans mesure, la première
+    // a lieu à la prochaine saisie et donne 7 jours évalués 6 jours plus tard
+    const ev = o.quality ? o.quality.evaluated : 0;
+    quality = future(ev > 0 ? addDaysKey(o.todayKey, SAVINGS_MIN_QUALITY_DAYS - ev) : addDaysKey(nextInput, SAVINGS_MIN_QUALITY_DAYS - 1));
+  }
+  const all = [elec, prod, quality].filter(Boolean).sort();
+  return { elec, prod, quality, first: all.length ? all[0] : null };
+}
+// ---- SAVINGS PURE END ----
 
 let TEMP_UNIT = "C"; // unité d'affichage courante (« C » ou « F »), alignée sur le réglage utilisateur par l'App à chaque rendu
 
@@ -15091,15 +16145,15 @@ const FILT_STYLES = {
   foot: { fontSize: 11, color: "#9aa9b6", marginTop: 10, lineHeight: 1.5 },
 };
 
-function FiltrationLockedCard({ lang, onWantPremium }) {
+function FiltrationLockedCard({ lang, onWantPremium, titleKey = "filt_title", textKey = "filt_locked", Icon: LockedIcon = Clock }) {
   const t = useT(lang);
   return (
     <div style={FILT_STYLES.card}>
       <div style={FILT_STYLES.head}>
-        <span style={FILT_STYLES.title}><Clock size={15} /> {t("filt_title")}</span>
+        <span style={FILT_STYLES.title}><LockedIcon size={15} /> {t(titleKey)}</span>
         <Lock size={15} color="#9aa9b6" />
       </div>
-      <p style={{ ...FILT_STYLES.hint, marginTop: 0 }}>{t("filt_locked")}</p>
+      <p style={{ ...FILT_STYLES.hint, marginTop: 0 }}>{t(textKey)}</p>
       <button type="button" style={{ ...styles.primaryBtn, marginTop: 10, background: PREMIUM_BLUE }} onClick={onWantPremium}>
         <Crown size={16} /> {t("filt_unlock")}
       </button>
@@ -15609,6 +16663,606 @@ function WeatherCard({ pool, measures, lang, canEdit, onUpdatePool }) {
         {updatedLabel && <div>{t("filt_updated", { time: updatedLabel, tz: tzLabel })}</div>}
         <div>{t("filt_attribution")}</div>
       </div>
+    </div>
+  );
+}
+
+// ---------- Onglet Bilan (Premium) ----------
+// v1.170.0 — Trois lignes jamais additionnées (Électricité, Produits, Qualité), chacune une estimation fondée sur des hypothèses saisies par
+// l'utilisateur (users/{uid}/savingsAssumptions/{poolId}). Tous les calculs sont dans le bloc SAVINGS PURE ; ce composant ne fait que les afficher.
+const SAVINGS_RECENT_DAYS = 183; // « 6 derniers mois » du graphique
+const SUMMARY_MAIN_PARAM = { chlore: "fCl", sel: "fCl", autre: "fCl", brome: "brome", o2: "o2" };
+
+function summaryMoney(v, currency, lang, signed) {
+  try {
+    return new Intl.NumberFormat(lang || "fr", { style: "currency", currency: currency || "EUR", ...(signed ? { signDisplay: "exceptZero" } : {}) }).format(v);
+  } catch (e) {
+    return (signed && v > 0 ? "+" : "") + v.toFixed(2) + " " + (currency || "EUR");
+  }
+}
+function summaryNum(v, lang, digits) {
+  try { return new Intl.NumberFormat(lang || "fr", { maximumFractionDigits: digits === undefined ? 1 : digits }).format(v); } catch (e) { return String(v); }
+}
+function summaryDay(key, lang) {
+  try { return new Date(key + "T12:00:00Z").toLocaleDateString(lang || "fr", { day: "2-digit", month: "2-digit", timeZone: "UTC" }); } catch (e) { return key; }
+}
+
+// Résultat d'un bassin : les trois lignes + la courbe, ou { active: false } sans activation.
+function computePoolSummary(pool, a, data) {
+  const tz = pool.timeZone || getDeviceTimeZone();
+  const pid = pool.id || "default";
+  if (!a || !a.activeLe) return { pool, active: false };
+  const todayKey = localDateKey(Date.now(), tz);
+  const activeKey = a.activeLe;
+  const tt = pool.treatmentType || "chlore";
+  const elec = computeElectricity({ assumptions: a, progLog: pool.filtrationProgLog, tz, activeKey, todayKey });
+  const prod = computeProducts({
+    assumptions: a, tz, activeKey, todayKey,
+    products: (data.products || []).filter((p) => (p.poolId || "default") === pid),
+    applications: (data.applications || []).filter((x) => (x.poolId || "default") === pid),
+  });
+  const qr = computeQualityReport({
+    measures: (data.measures || []).filter((m) => (m.poolId || "default") === pid),
+    paramKeys: ["pH", SUMMARY_MAIN_PARAM[tt] || "fCl"], targets: getEffectiveTargets(tt), tz, activeKey, todayKey,
+  });
+  const series = computeSavingsSeries({ assumptions: a, electricity: elec, products: prod, activeKey, todayKey });
+  const expected = computeSavingsExpected({ elec, prod, quality: qr.recent, progLog: pool.filtrationProgLog, tz, activeKey, todayKey });
+  return { pool, active: true, a, activeKey, todayKey, devise: a.devise || "EUR", elec, prod, quality: qr.recent, qr, series, expected };
+}
+
+// Courbes de plusieurs bassins (même devise) : cumul par jour, la dernière valeur connue de chaque bassin est reportée.
+function mergeSummarySeries(list) {
+  const keys = new Set();
+  list.forEach((s) => s.forEach((p) => keys.add(p.key)));
+  const last = list.map(() => ({ elec: null, prod: null }));
+  return Array.from(keys).sort().map((key) => {
+    let elec = null;
+    let prod = null;
+    list.forEach((s, i) => {
+      const p = s.find((x) => x.key === key);
+      if (p && p.elec !== null) last[i].elec = p.elec;
+      if (p && p.prod !== null) last[i].prod = p.prod;
+      if (last[i].elec !== null) elec = (elec || 0) + last[i].elec;
+      if (last[i].prod !== null) prod = (prod || 0) + last[i].prod;
+    });
+    return { key, elec, prod };
+  });
+}
+
+function SummaryBlock({ title, children, testid }) {
+  return (
+    <div data-testid={testid} style={{ ...FILT_STYLES.card, marginBottom: 12 }}>
+      <div style={{ ...FILT_STYLES.title, marginBottom: 8 }}>{title}</div>
+      {children}
+    </div>
+  );
+}
+const SUMMARY_BIG = { fontSize: 26, fontWeight: 800, color: "var(--brand-text-strong)", lineHeight: 1.15 };
+const SUMMARY_SMALL = { fontSize: 12.5, color: "var(--brand-text-muted)", marginTop: 4, lineHeight: 1.45 };
+
+function SummaryElectricity({ r, lang }) {
+  const t = useT(lang);
+  const e = r.elec;
+  const when = r.expected.elec ? <div data-testid="expected-elec" style={{ ...SUMMARY_SMALL, color: "var(--brand-primary)", fontWeight: 600 }}>{t("summary_expected_line", { date: summaryDay(r.expected.elec, lang) })}</div> : null;
+  if (e.status === "missing") {
+    return <div data-testid="elec-missing">{e.missing.map((k) => <div key={k} style={{ ...SUMMARY_SMALL, marginTop: 0, marginBottom: 4 }}>{t("summary_missing_" + (k === "hRef" ? "hRef" : k))}</div>)}{when}</div>;
+  }
+  if (e.status === "nodata") return <div data-testid="elec-nodata"><div style={{ ...SUMMARY_SMALL, marginTop: 0 }}>{t("summary_elec_nodata")}</div>{when}</div>;
+  return (
+    <div data-testid="elec-ok">
+      <div style={SUMMARY_BIG}>{t("summary_kwh_avoided", { kwh: summaryNum(e.kwh, lang, 1) })}</div>
+      {e.negative ? (
+        <div style={{ ...SUMMARY_SMALL, color: "#a8721a", fontWeight: 600 }}>{t("summary_elec_negative")} ({summaryMoney(e.euros, r.devise, lang, true)})</div>
+      ) : (
+        <div style={{ fontSize: 17, fontWeight: 700, color: "var(--brand-primary)", marginTop: 2 }}>{t("summary_elec_saved", { amount: summaryMoney(e.euros, r.devise, lang) })}</div>
+      )}
+      <div style={SUMMARY_SMALL}>{t("summary_elec_avg", { app: formatDurationH(e.avgHApp), ref: formatDurationH(e.avgRef) })}</div>
+      <div style={SUMMARY_SMALL}>{t("summary_elec_days", { n: e.days })}</div>
+      {e.toCheck && <div style={{ ...SUMMARY_SMALL, color: "#a8721a" }}>{t("summary_pump_check")}</div>}
+      {e.defaultRef && <div data-testid="elec-default-ref" style={SUMMARY_SMALL}>{t("summary_elec_default")}</div>}
+    </div>
+  );
+}
+
+function SummaryProducts({ r, lang, onOpenProducts }) {
+  const t = useT(lang);
+  const p = r.prod;
+  const spent = <div style={SUMMARY_SMALL}>{t("summary_prod_spent", { amount: summaryMoney(p.cost, r.devise, lang) })}</div>;
+  const byProduct = p.byProduct && p.byProduct.length > 0 && (
+    <div style={{ marginTop: 8 }}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: "#2d4a6e", marginBottom: 4 }}>{t("summary_prod_by")}</div>
+      {p.byProduct.map((x) => (
+        <div key={x.name} style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, color: "var(--brand-text-strong)", padding: "2px 0" }}>
+          <span>{x.name}</span><span style={{ fontWeight: 700 }}>{summaryMoney(x.cost, r.devise, lang)}</span>
+        </div>
+      ))}
+    </div>
+  );
+  const when = r.expected.prod ? <div data-testid="expected-prod" style={{ ...SUMMARY_SMALL, color: "var(--brand-primary)", fontWeight: 600 }}>{t("summary_expected_prod", { date: summaryDay(r.expected.prod, lang), n: SAVINGS_MIN_PRODUCT_DAYS })}</div> : null;
+  if (p.status === "noevents") return <div data-testid="prod-noevents"><div style={{ ...SUMMARY_SMALL, marginTop: 0 }}>{t("summary_prod_noevents")}</div>{when}</div>;
+  if (p.status === "partial") {
+    return (
+      <div data-testid="prod-partial">
+        <div style={{ ...SUMMARY_SMALL, marginTop: 0 }}>{t("summary_prod_partial", { amount: summaryMoney(p.cost, r.devise, lang), pct: Math.round(p.coverage * 100) })}</div>
+        <div style={SUMMARY_SMALL}>{t("summary_prod_unpriced", { names: p.unpricedNames.join(", ") })}</div>
+        {onOpenProducts && <button type="button" onClick={onOpenProducts} style={{ ...styles.editLinkBtn, display: "inline-flex", padding: 0, marginTop: 6, fontSize: 12.5 }}>{t("summary_prod_open_products")}</button>}
+        {when}
+        {byProduct}
+      </div>
+    );
+  }
+  if (p.status === "missingRef") return <div data-testid="prod-missingref"><div style={{ ...SUMMARY_SMALL, marginTop: 0 }}>{t("summary_missing_spend")}</div>{when}{spent}{byProduct}</div>;
+  if (p.status === "tooShort") return <div data-testid="prod-tooshort"><div style={{ ...SUMMARY_SMALL, marginTop: 0 }}>{t("summary_prod_tooshort", { n: SAVINGS_MIN_PRODUCT_DAYS })}</div>{when}{spent}{byProduct}</div>;
+  return (
+    <div data-testid="prod-ok">
+      <div style={{ fontSize: 12, color: "var(--brand-text-muted)" }}>{t("summary_prod_variation")}</div>
+      <div style={{ ...SUMMARY_BIG, color: p.variation < 0 ? "#a8721a" : "var(--brand-text-strong)" }}>{summaryMoney(p.variation, r.devise, lang, true)}</div>
+      <div style={SUMMARY_SMALL}>{t("summary_prod_sign_hint")}</div>
+      <div style={SUMMARY_SMALL}>{t("summary_prod_ref_note")}{p.capped ? " " + t("summary_prod_capped") : ""}</div>
+      {spent}
+      {byProduct}
+    </div>
+  );
+}
+
+function SummaryQuality({ r, lang }) {
+  const t = useT(lang);
+  const qr = r.qr;
+  const q = qr.recent;
+  const rhythm = (
+    <div data-testid="quality-rhythm" style={SUMMARY_SMALL}>
+      {t("summary_quality_rhythm", { n: summaryNum(qr.perWeek, lang, 1) })}{qr.perWeek < 2 ? ". " + t("summary_quality_rhythm_hint") : ""}
+    </div>
+  );
+  if (!q.enough) {
+    return (
+      <div data-testid="quality-notenough">
+        <div style={{ ...SUMMARY_SMALL, marginTop: 0 }}>{t("summary_quality_notenough")}{q.evaluated ? " (" + q.evaluated + ")" : ""}</div>
+        {r.expected.quality && <div data-testid="expected-quality" style={{ ...SUMMARY_SMALL, color: "var(--brand-primary)", fontWeight: 600 }}>{t("summary_expected_quality", { date: summaryDay(r.expected.quality, lang) })}</div>}
+        {rhythm}
+      </div>
+    );
+  }
+  const young = daysBetweenKeys(r.activeKey, r.todayKey) < SAVINGS_QUALITY_TREND_AFTER_DAYS;
+  return (
+    <div data-testid="quality-ok">
+      <div style={SUMMARY_BIG}>{summaryNum(q.pct * 100, lang, 0)} %</div>
+      <div style={SUMMARY_SMALL}>{t("summary_quality_label")}</div>
+      <div style={SUMMARY_SMALL}>{t("summary_quality_days", { ev: q.evaluated, total: q.totalDays, m: qr.recentMeasureDays })}</div>
+      {qr.start && <div data-testid="quality-start" style={SUMMARY_SMALL}>{t("summary_quality_start", { pct: summaryNum(qr.start.pct * 100, lang, 0) })}</div>}
+      {!qr.start && young && <div data-testid="quality-wait" style={SUMMARY_SMALL}>{t("summary_quality_wait")}</div>}
+      {rhythm}
+    </div>
+  );
+}
+
+function SummaryLines({ r, lang, onOpenProducts }) {
+  const t = useT(lang);
+  return (
+    <>
+      <SummaryBlock title={t("summary_elec")} testid="block-elec"><SummaryElectricity r={r} lang={lang} /></SummaryBlock>
+      <SummaryBlock title={t("summary_products")} testid="block-prod"><SummaryProducts r={r} lang={lang} onOpenProducts={onOpenProducts} /></SummaryBlock>
+      <SummaryBlock title={t("summary_quality")} testid="block-quality"><SummaryQuality r={r} lang={lang} /></SummaryBlock>
+    </>
+  );
+}
+
+// Courbe de durée de filtration (24 points, pas de 0,5 h) : colonnes tactiles, on touche ou on glisse pour fixer la hauteur.
+// Les colonnes sautées par un geste rapide sont interpolées. Aucun champ numérique de secours (choix produit).
+function SavingsCurveEditor({ value, temps, onChange, lang }) {
+  const t = useT(lang);
+  const W = 480, H = 300, L = 38, R = 44, T = 10, B = 28; // graphique haut : 48 pas de 0,5 h doivent rester faciles à viser au doigt
+  const iw = W - L - R;
+  const ih = H - T - B;
+  const cw = iw / SAVINGS_CURVE_POINTS;
+  const svgRef = useRef(null);
+  const dragRef = useRef(null);
+  const curRef = useRef(value);
+  curRef.current = value;
+  const [sel, setSel] = useState(null);
+  const [hover, setHover] = useState(null);
+  const monthName = (m, style) => { try { return new Date(Date.UTC(2024, m, 1)).toLocaleDateString(lang || "fr", { month: style, timeZone: "UTC" }); } catch (e) { return String(m + 1); } };
+  const point = (ev) => {
+    const r = svgRef.current.getBoundingClientRect();
+    const x = (ev.clientX - r.left) * (W / r.width);
+    const y = (ev.clientY - r.top) * (H / r.height);
+    const col = Math.max(0, Math.min(SAVINGS_CURVE_POINTS - 1, Math.floor((x - L) / cw)));
+    const h = (1 - (y - T) / ih) * 24;
+    return { col, val: Math.max(0, Math.min(24, Math.round(h / SAVINGS_CURVE_STEP) * SAVINGS_CURVE_STEP)) };
+  };
+  const apply = (p) => {
+    const next = curRef.current.slice();
+    const prev = dragRef.current;
+    if (prev && prev.col !== p.col) {
+      const a = Math.min(prev.col, p.col);
+      const b = Math.max(prev.col, p.col);
+      for (let c = a; c <= b; c++) {
+        const f = (c - prev.col) / (p.col - prev.col);
+        next[c] = Math.round((prev.val + (p.val - prev.val) * f) / SAVINGS_CURVE_STEP) * SAVINGS_CURVE_STEP;
+      }
+    } else {
+      next[p.col] = p.val;
+    }
+    dragRef.current = p;
+    curRef.current = next;
+    setSel(p.col);
+    onChange(next);
+  };
+  // Le glisser se poursuit même quand le doigt ou la souris sort du graphique (écouteurs sur window le temps du geste).
+  const activeRef = useRef(null);
+  const detach = () => {
+    dragRef.current = null;
+    const h = activeRef.current;
+    if (!h) return;
+    window.removeEventListener("pointermove", h.move);
+    window.removeEventListener("pointerup", h.stop);
+    window.removeEventListener("pointercancel", h.stop);
+    activeRef.current = null;
+  };
+  const detachRef = useRef(detach);
+  detachRef.current = detach;
+  useEffect(() => () => detachRef.current(), []);
+  const down = (ev) => {
+    if (ev.button !== undefined && ev.button > 0) return;
+    detach();
+    const h = { move: (e2) => { if (dragRef.current) apply(point(e2)); }, stop: () => detachRef.current() };
+    activeRef.current = h;
+    apply(point(ev));
+    window.addEventListener("pointermove", h.move);
+    window.addEventListener("pointerup", h.stop);
+    window.addEventListener("pointercancel", h.stop);
+  };
+  const yOf = (h) => T + ih * (1 - h / 24);
+  // Température théorique de l'eau : échelle de droite de 0 à 30 °C, calée sur la hauteur 0 à 24 h (30 °C = 24 h).
+  const yOfTemp = (c) => yOf(Math.max(0, Math.min(30, c)) * 0.8);
+  const tempPts = (temps || []).map((c, i) => (L + (i + 0.5) * cw).toFixed(1) + "," + yOfTemp(c).toFixed(1)).join(" ");
+  const dateLabel = (i) => (i % 2 === 0 ? "1" : "15") + " " + monthName(Math.floor(i / 2), "short");
+  const colX = (i) => L + (i + 0.5) * cw;
+  // Infobulle au survol : une barre (durée) ou un point de la courbe de température.
+  let tip = null;
+  if (hover && hover.i >= 0 && hover.i < value.length) {
+    const isTemp = hover.kind === "temp" && temps;
+    const label = dateLabel(hover.i) + " : " + (isTemp ? formatTemp(temps[hover.i], TEMP_UNIT, 1) : formatDurationH(value[hover.i]));
+    const ay = isTemp ? yOfTemp(temps[hover.i]) : yOf(value[hover.i]);
+    const w = label.length * 7.4 + 16;
+    tip = { label, w, x: Math.max(L, Math.min(W - R - w, colX(hover.i) - w / 2)), y: ay - 32 >= T ? ay - 32 : ay + 12 };
+  }
+  const avg = value.reduce((s2, v) => s2 + v, 0) / value.length;
+  const selLabel = sel === null ? null : (sel % 2 === 0 ? "1" : "15") + " " + monthName(Math.floor(sel / 2), "short") + " : " + formatDurationH(value[sel]);
+  return (
+    <div data-testid="curve-editor">
+      <svg
+        ref={svgRef} data-testid="curve-svg" viewBox={"0 0 " + W + " " + H} role="img" aria-label={t("summary_f_href")}
+        style={{ width: "100%", height: "auto", display: "block", touchAction: "none", userSelect: "none", cursor: "pointer", background: "var(--brand-bg-tint)", borderRadius: 10 }}
+        onPointerDown={down}
+      >
+        {[0, 6, 12, 18, 24].map((h) => (
+          <g key={h}>
+            <line x1={L} x2={W - R} y1={yOf(h)} y2={yOf(h)} stroke="#d0e4f5" strokeWidth="1" strokeDasharray={h === 0 ? undefined : "3 3"} />
+            <text x={L - 5} y={yOf(h) + 4} fontSize="13" textAnchor="end" fill="#7a8ea0">{h} h</text>
+          </g>
+        ))}
+        {value.map((v, i) => (
+          <rect key={i} data-testid={"curve-bar-" + i} data-hours={v} x={L + i * cw + 1} width={cw - 2} y={yOf(v)} height={Math.max(0, ih * v / 24)} rx="2" fill="var(--brand-primary)" opacity={sel === i ? 1 : 0.78} />
+        ))}
+        {temps && FILTRATION_TEMP_BREAKS.map((c) => (
+          <g key={c} data-testid={"curve-threshold-" + c} style={{ pointerEvents: "none" }}>
+            <line x1={L} x2={W - R} y1={yOfTemp(c)} y2={yOfTemp(c)} stroke="#e07b39" strokeWidth="1.2" strokeDasharray="6 4" opacity="0.85" />
+            <text x={W - R - 4} y={yOfTemp(c) - 4} fontSize="12" textAnchor="end" fill="#c8651f" fontWeight="700">{formatTemp(c, TEMP_UNIT, 0)}</text>
+          </g>
+        ))}
+        {tempPts && (
+          <g data-testid="curve-temp" style={{ pointerEvents: "none" }}>
+            <polyline data-testid="curve-temp-line" points={tempPts} fill="none" stroke="#e07b39" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+            {(temps || []).map((c, i) => <circle key={i} cx={colX(i)} cy={yOfTemp(c)} r={hover && hover.kind === "temp" && hover.i === i ? 5 : 2.6} fill="#e07b39" />)}
+            {[0, 10, 20, 30].map((c) => <text key={c} x={W - R + 5} y={yOfTemp(c) + 4} fontSize="13" fill="#c8651f">{formatTemp(c, TEMP_UNIT, 0)}</text>)}
+          </g>
+        )}
+        {value.map((v, i) => (
+          <rect key={i} data-testid={"curve-hit-" + i} x={L + i * cw} width={cw} y={T} height={ih} fill="transparent" onMouseEnter={() => setHover({ kind: "bar", i })} onMouseLeave={() => setHover(null)} />
+        ))}
+        {temps && temps.map((c, i) => (
+          <circle key={i} data-testid={"curve-temp-hit-" + i} cx={colX(i)} cy={yOfTemp(c)} r="8" fill="transparent" onMouseEnter={() => setHover({ kind: "temp", i })} onMouseLeave={() => setHover(null)} />
+        ))}
+        {tip && (
+          <g data-testid="curve-tip" style={{ pointerEvents: "none" }}>
+            <rect x={tip.x} y={tip.y} width={tip.w} height={24} rx="6" fill="#0d2b4e" opacity="0.93" />
+            <text x={tip.x + tip.w / 2} y={tip.y + 16.5} fontSize="13" fontWeight="700" textAnchor="middle" fill="#fff">{tip.label}</text>
+          </g>
+        )}
+        {Array.from({ length: 12 }, (_, m) => (
+          <text key={m} x={L + (2 * m + 1) * cw} y={H - 8} fontSize="13" textAnchor="middle" fill="#7a8ea0" style={{ textTransform: "uppercase" }}>{monthName(m, "narrow")}</text>
+        ))}
+      </svg>
+      {temps && <div data-testid="curve-temp-legend" style={{ fontSize: 11.5, color: "#c8651f", marginTop: 4, display: "flex", alignItems: "center", gap: 6 }}><span style={{ width: 18, height: 0, borderTop: "2.5px solid #e07b39", display: "inline-block" }} />{t("summary_f_curve_temp")}</div>}
+      {temps && <div data-testid="curve-threshold-legend" style={{ fontSize: 11.5, color: "#c8651f", marginTop: 2, display: "flex", alignItems: "center", gap: 6 }}><span style={{ width: 18, height: 0, borderTop: "2px dashed #e07b39", display: "inline-block" }} />{t("summary_f_curve_thresholds", { temps: FILTRATION_TEMP_BREAKS.map((c) => formatTemp(c, TEMP_UNIT, 0)).join(" · ") })}</div>}
+      <div data-testid="curve-readout" style={{ fontSize: 12.5, color: "var(--brand-text-strong)", fontWeight: 600, minHeight: 18, marginTop: 4 }}>
+        {selLabel || t("summary_f_curve_avg", { h: formatDurationH(avg) })}
+      </div>
+    </div>
+  );
+}
+
+// Formulaire des hypothèses d'un bassin. Enregistrer recalcule tout (les calculs relisent le document à chaque affichage).
+function SummaryAssumptions({ pool, initial, lang, saving, saveError, onSave, onBack }) {
+  const t = useT(lang);
+  const a = initial || {};
+  const p = a.pompe || {};
+  const str = (v) => (v === undefined || v === null ? "" : String(v));
+  const hemi0 = a.hemisphere === "sud" || a.hemisphere === "nord" ? a.hemisphere : (isFiniteNum(pool.lat) && pool.lat < 0 ? "sud" : "nord");
+  const [f, setF] = useState({ prixKwh: str(a.prixKwh), devise: a.devise || "EUR", p1Kw: str(p.p1Kw), p2Kw: str(p.p2Kw), depenseRefAn: str(a.depenseRefAn) });
+  const [curve, setCurve] = useState(() => (savingsCurveValid(a.hRefCourbe) ? a.hRefCourbe.slice() : savingsDefaultProfile(hemi0)));
+  const [hemi, setHemi] = useState(hemi0);
+  const [edited, setEdited] = useState(a.hRefSource === "saisi");
+  const [errors, setErrors] = useState({});
+  const set = (k, v) => setF((prev) => ({ ...prev, [k]: v }));
+  const toDoc = () => ({ prixKwh: f.prixKwh, devise: f.devise, pompe: { p1Kw: f.p1Kw, p2Kw: f.p2Kw }, hRefCourbe: curve, hRefSource: edited ? "saisi" : "defaut", hemisphere: hemi, depenseRefAn: f.depenseRefAn, activeLe: a.activeLe });
+  function submit() {
+    const v = validateSavingsAssumptions(toDoc());
+    setErrors(v.errors);
+    if (!v.ok) return;
+    onSave(normalizeSavingsAssumptions(toDoc()));
+  }
+  // Hémisphère sud : la même courbe décalée de 6 mois (12 points), qu'elle soit proposée par l'app ou retouchée.
+  function pickHemi(h) {
+    if (h === hemi) return;
+    setHemi(h);
+    setCurve((c) => c.slice(12).concat(c.slice(0, 12)));
+  }
+  const errKey = (k) => (k === "p1Kw" ? "pompe.p1Kw" : k === "p2Kw" ? "pompe.p2Kw" : k);
+  const field = (k, labelKey, hintKey, extra, labelVars) => (
+    <div style={{ marginBottom: 10 }}>
+      <label style={styles.fieldLabel}>{t(labelKey, labelVars)}</label>
+      <input
+        data-testid={"f-" + k}
+        type="text" inputMode="decimal" value={f[k]} onChange={(e) => set(k, e.target.value)}
+        style={{ ...styles.input, marginBottom: 2, ...(errors[errKey(k)] ? { borderColor: "#c0392b", background: "#fdf0ef" } : {}) }}
+        {...(extra || {})}
+      />
+      {hintKey && <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", lineHeight: 1.4 }}>{t(hintKey, labelVars)}</div>}
+      {errors[errKey(k)] && <div data-testid={"err-" + k} style={{ fontSize: 12, color: "#c0392b", marginTop: 3 }}>{t(errors[errKey(k)])}</div>}
+    </div>
+  );
+  const segBtn = (h, labelKey) => (
+    <button key={h} type="button" data-testid={"hemi-" + h} aria-pressed={hemi === h} onClick={() => pickHemi(h)} style={{ flex: 1, padding: "6px 8px", borderRadius: 99, fontSize: 12.5, fontWeight: 700, cursor: "pointer", border: "1px solid " + (hemi === h ? "var(--brand-primary)" : "#d0e4f5"), background: hemi === h ? "var(--brand-primary)" : "var(--brand-bg-tint)", color: hemi === h ? "#fff" : "var(--brand-text-muted)" }}>{t(labelKey)}</button>
+  );
+  return (
+    <div data-testid="summary-assumptions">
+      <button type="button" onClick={onBack} style={{ ...styles.editLinkBtn, display: "inline-flex", padding: 0, marginBottom: 10, fontSize: 13 }}>← {t("summary_back")}</button>
+      <div style={{ ...FILT_STYLES.card }}>
+        <div style={{ ...FILT_STYLES.title, marginBottom: 6 }}>{t("summary_assump_title", { pool: pool.name })}</div>
+        <p style={{ ...FILT_STYLES.hint, marginTop: 0 }}>{t("summary_assump_intro")}</p>
+        {field("prixKwh", "summary_f_price")}
+        {field("devise", "summary_f_currency", null, { inputMode: "text", maxLength: 3 })}
+        {field("p1Kw", "summary_f_p1", "summary_f_p1_hint")}
+        {field("p2Kw", "summary_f_p2", "summary_f_p2_hint")}
+        <div style={{ marginBottom: 12 }}>
+          <label style={styles.fieldLabel}>{t("summary_f_href")}</label>
+          <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", lineHeight: 1.4, marginBottom: 6 }}>{t("summary_f_curve_hint")}</div>
+          <div style={{ display: "flex", gap: 6, marginBottom: 4 }}>{segBtn("nord", "summary_f_hemi_north")}{segBtn("sud", "summary_f_hemi_south")}</div>
+          <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginBottom: 6 }}>{t("summary_f_hemi_hint")}</div>
+          <SavingsCurveEditor value={curve} temps={savingsTempProfile(hemi)} lang={lang} onChange={(c) => { setCurve(c); setEdited(true); }} />
+          {errors.hRefCourbe && <div data-testid="err-hRefCourbe" style={{ fontSize: 12, color: "#c0392b", marginTop: 3 }}>{t(errors.hRefCourbe)}</div>}
+          <button type="button" data-testid="curve-reset" onClick={() => { setCurve(savingsDefaultProfile(hemi)); setEdited(false); }} style={{ ...styles.editLinkBtn, display: "inline-flex", padding: 0, marginTop: 6, fontSize: 12.5 }}>{t("summary_f_curve_reset")}</button>
+        </div>
+        {field("depenseRefAn", "summary_f_spend", "summary_f_spend_hint", null, { currency: f.devise.trim().toUpperCase() || "EUR" })}
+        {saveError && <div data-testid="save-error" style={{ fontSize: 12.5, color: "#c0392b", marginBottom: 8 }}>{t("summary_save_error")}</div>}
+        <button type="button" data-testid="assump-save" onClick={submit} disabled={saving} style={{ ...styles.primaryBtn, marginTop: 4, opacity: saving ? 0.6 : 1 }}>{t("summary_save")}</button>
+      </div>
+    </div>
+  );
+}
+
+function SummaryView({ uid, pools, products, applications, measures, lang, onOpenProducts }) {
+  const t = useT(lang);
+  const [docs, setDocs] = useState(null);
+  const [loadError, setLoadError] = useState(false);
+  const [screen, setScreen] = useState({ type: "dash" });
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(false);
+  const [range, setRange] = useState("recent");
+  useEffect(() => {
+    if (!uid) return undefined;
+    setDocs(null);
+    setLoadError(false);
+    return FB.onSavingsAssumptions(uid, (m) => setDocs(m), () => { setLoadError(true); setDocs({}); });
+  }, [uid]);
+  if (!uid || docs === null) {
+    return <p data-testid="summary-loading" style={FILT_STYLES.hint}><Loader2 size={13} className="spin" /> {t("summary_loading")}</p>;
+  }
+  async function saveDoc(poolId, data) {
+    setSaving(true);
+    setSaveError(false);
+    try { await FB.saveSavingsAssumptions(uid, poolId, data); return true; } catch (e) { setSaveError(true); return false; } finally { setSaving(false); }
+  }
+  async function activate(pool) {
+    const tz = pool.timeZone || getDeviceTimeZone();
+    const prev = docs[pool.id] || {};
+    // Profil de départ proposé par l'app (règles de durée de filtration + température moyenne de l'eau), modifiable dans les hypothèses.
+    const hemi = prev.hemisphere === "sud" || prev.hemisphere === "nord" ? prev.hemisphere : (isFiniteNum(pool.lat) && pool.lat < 0 ? "sud" : "nord");
+    const start = savingsCurveValid(prev.hRefCourbe) ? {} : { hRefCourbe: savingsDefaultProfile(hemi), hRefSource: "defaut", hemisphere: hemi };
+    const ok = await saveDoc(pool.id, normalizeSavingsAssumptions({ ...prev, ...start, activeLe: localDateKey(Date.now(), tz) }));
+    if (ok) setScreen({ type: "assump", poolId: pool.id });
+  }
+  const poolList = pools || [];
+  if (screen.type === "assump") {
+    const pool = poolList.find((p) => p.id === screen.poolId);
+    if (pool) {
+      return (
+        <SummaryAssumptions
+          key={pool.id} pool={pool} initial={docs[pool.id]} lang={lang} saving={saving} saveError={saveError}
+          onBack={() => { setSaveError(false); setScreen({ type: "dash" }); }}
+          onSave={async (data) => { if (await saveDoc(pool.id, data)) setScreen({ type: "dash" }); }}
+        />
+      );
+    }
+  }
+  const results = poolList.filter((p) => docs[p.id] && docs[p.id].activeLe).map((p) => computePoolSummary(p, docs[p.id], { products, applications, measures }));
+  const inactive = poolList.filter((p) => !(docs[p.id] && docs[p.id].activeLe));
+  const activateBtn = (pool) => (
+    <button key={pool.id} type="button" data-testid={"activate-" + pool.id} disabled={saving} onClick={() => activate(pool)} style={{ ...styles.primaryBtn, marginTop: 8, opacity: saving ? 0.6 : 1 }}>
+      {t("summary_activate_btn", { pool: pool.name })}
+    </button>
+  );
+  if (!results.length) {
+    return (
+      <div data-testid="summary-activation">
+        <div style={FILT_STYLES.card}>
+          <div style={{ ...FILT_STYLES.title, marginBottom: 8 }}><SummaryIcon size={15} /> {t("summary_activate_title")}</div>
+          <p style={{ ...FILT_STYLES.hint, marginTop: 0 }}>{t("summary_activate_text")}</p>
+          {loadError && <p style={{ ...FILT_STYLES.hint, color: "#c0392b" }}>{t("summary_load_error")}</p>}
+          {saveError && <p data-testid="save-error" style={{ ...FILT_STYLES.hint, color: "#c0392b" }}>{t("summary_save_error")}</p>}
+          {poolList.map(activateBtn)}
+        </div>
+      </div>
+    );
+  }
+  const single = results.length === 1;
+  const agg = aggregateSavings(results.map((r) => ({ poolId: r.pool.id, devise: r.devise, elec: r.elec, prod: r.prod, quality: r.quality })));
+  // courbe : bassins de même devise que le premier ; « 6 derniers mois » = les 183 derniers jours
+  const cur = results[0].devise;
+  const sameCur = results.filter((r) => r.devise === cur);
+  const merged = mergeSummarySeries(sameCur.map((r) => r.series));
+  const shown = range === "recent" ? merged.slice(-SAVINGS_RECENT_DAYS) : merged;
+  const hasCurve = shown.some((p) => p.elec !== null || p.prod !== null);
+  const since = results.map((r) => r.activeKey).sort()[0];
+  // tant qu'aucune ligne n'a de résultat : date théorique des tout premiers résultats (la plus proche de tous les bassins)
+  const anyResult = results.some((r) => (r.elec && r.elec.status === "ok") || (r.prod && r.prod.status === "ok") || (r.quality && r.quality.enough));
+  const firsts = results.map((r) => r.expected.first).filter(Boolean).sort();
+  const firstResult = !anyResult && firsts.length ? firsts[0] : null;
+  return (
+    <div data-testid="summary-dashboard">
+      <div style={{ marginBottom: 12, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 17, fontWeight: 800, color: "var(--brand-text-strong)" }}>{t("summary_title")}</div>
+          <div style={{ fontSize: 12.5, color: "var(--brand-text-muted)", marginTop: 2 }}>{t("summary_estimate")} · {t("summary_since", { date: summaryDay(since, lang) })}</div>
+          {loadError && <div style={{ fontSize: 12.5, color: "#c0392b", marginTop: 4 }}>{t("summary_load_error")}</div>}
+          {firstResult && <div data-testid="expected-first" style={{ fontSize: 13, fontWeight: 700, color: "var(--brand-primary)", marginTop: 6 }}>{t("summary_expected_first", { date: summaryDay(firstResult, lang) })}</div>}
+          {firstResult && <div data-testid="expected-note" style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginTop: 2, lineHeight: 1.4 }}>{t("summary_expected_note")}</div>}
+        </div>
+        {single && (
+          <button type="button" data-testid={"see-assumptions-" + results[0].pool.id} onClick={() => setScreen({ type: "assump", poolId: results[0].pool.id })} style={{ ...styles.primaryBtn, marginTop: 0, width: "auto", flexShrink: 0, whiteSpace: "nowrap", padding: "9px 18px", fontSize: 13.5 }}>
+            {t("summary_see_assumptions")}
+          </button>
+        )}
+      </div>
+      {!single && (
+        <SummaryBlock title={t("summary_total_all")} testid="block-total">
+          <div style={{ display: "grid", gap: 6 }}>
+            <div><strong>{t("summary_elec")} : </strong>{agg.elec ? t("summary_kwh_avoided", { kwh: summaryNum(agg.elec.kwh, lang, 1) }) + (agg.elec.euros !== null ? " · " + summaryMoney(agg.elec.euros, agg.elec.currency, lang) : "") : "—"}</div>
+            <div><strong>{t("summary_products")} : </strong>{agg.prod && agg.prod.variation !== null ? summaryMoney(agg.prod.variation, agg.prod.currency, lang, true) : "—"}</div>
+            <div><strong>{t("summary_quality")} : </strong>{agg.quality ? summaryNum(agg.quality.pct * 100, lang, 0) + " %" : "—"}</div>
+          </div>
+        </SummaryBlock>
+      )}
+      {results.map((r) => (
+        <div key={r.pool.id} data-testid={"pool-" + r.pool.id}>
+          {!single && <div style={{ fontSize: 14, fontWeight: 800, color: "#2d4a6e", margin: "6px 0 8px" }}>{t("summary_pool_detail")} — {r.pool.name}</div>}
+          <SummaryLines r={r} lang={lang} onOpenProducts={onOpenProducts} />
+          {!single && (
+            <button type="button" data-testid={"see-assumptions-" + r.pool.id} onClick={() => setScreen({ type: "assump", poolId: r.pool.id })} style={{ ...styles.editLinkBtn, display: "inline-flex", padding: 0, marginBottom: 12, fontSize: 13 }}>
+              {t("summary_see_assumptions")} — {r.pool.name}
+            </button>
+          )}
+        </div>
+      ))}
+      <SummaryBlock title={t("summary_chart_title", { currency: cur })} testid="block-chart">
+        <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+          {["recent", "all"].map((k) => (
+            <button key={k} type="button" data-testid={"range-" + k} onClick={() => setRange(k)} style={{ padding: "4px 12px", borderRadius: 99, fontSize: 12, fontWeight: 700, cursor: "pointer", border: "1px solid " + (range === k ? "var(--brand-primary)" : "#d0e4f5"), background: range === k ? "var(--brand-primary)" : "var(--brand-bg-tint)", color: range === k ? "#fff" : "var(--brand-text-muted)" }}>
+              {t(k === "recent" ? "summary_chart_recent" : "summary_chart_all")}
+            </button>
+          ))}
+        </div>
+        {hasCurve ? (
+          <div data-testid="summary-chart" style={{ width: "100%", height: 200 }}>
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={shown} margin={{ top: 6, right: 8, bottom: 0, left: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e6eef3" />
+                <XAxis dataKey="key" tickFormatter={(k) => summaryDay(k, lang)} tick={{ fontSize: 10 }} minTickGap={24} />
+                <YAxis tick={{ fontSize: 10 }} width={42} tickFormatter={(v) => summaryNum(v, lang, 0)} />
+                <Tooltip labelFormatter={(k) => summaryDay(k, lang)} formatter={(v, name) => [summaryMoney(v, cur, lang), name]} />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <Line type="monotone" dataKey="elec" name={t("summary_elec")} stroke="#e0a100" strokeWidth={2} dot={false} connectNulls />
+                <Line type="monotone" dataKey="prod" name={t("summary_products")} stroke="#1ca7d1" strokeWidth={2} dot={false} connectNulls />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        ) : <div data-testid="summary-chart-empty" style={{ ...SUMMARY_SMALL, marginTop: 0 }}>{t("summary_chart_empty")}</div>}
+      </SummaryBlock>
+      {inactive.map((p) => (
+        <div key={p.id} style={{ ...FILT_STYLES.card, marginBottom: 12 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--brand-text-strong)" }}>{p.name}</div>
+          <div style={SUMMARY_SMALL}>{t("summary_inactive_pool")}</div>
+          {activateBtn(p)}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Prix d'achat d'un produit (fiche produit, Premium) : historique de 12 entrées au plus ; une nouvelle ligne à chaque achat à un autre prix.
+function ProductPriceSection({ prix, onChange, defaultSize, defaultUnit, lang }) {
+  const t = useT(lang);
+  const todayStr = () => localDateKey(Date.now(), getDeviceTimeZone());
+  const [paid, setPaid] = useState("");
+  const [size, setSize] = useState(defaultSize ? String(defaultSize) : "");
+  const [unit, setUnit] = useState(defaultUnit === "L" ? "L" : "kg");
+  const [date, setDate] = useState(todayStr());
+  const [store, setStore] = useState("");
+  const [err, setErr] = useState(false);
+  const list = (prix || []).slice().sort((a, b) => (a.le < b.le ? 1 : a.le > b.le ? -1 : 0));
+  const fmt = (v) => summaryNum(v, lang, 2);
+  function add() {
+    const p = parseFloat(String(paid).replace(",", "."));
+    const s = parseFloat(String(size).replace(",", "."));
+    if (!(p > 0) || !(s > 0) || !/^\d{4}-\d{2}-\d{2}$/.test(date)) { setErr(true); return; }
+    const entry = { le: date, paye: Math.round(p * 100) / 100, contenance: s, unite: unit, unitaire: Math.round((p / s) * 10000) / 10000, ...(store.trim() ? { magasin: store.trim().slice(0, 60) } : {}) };
+    const next = [...(prix || []), entry].sort((a, b) => (a.le < b.le ? -1 : a.le > b.le ? 1 : 0)).slice(-SAVINGS_PRICE_HISTORY_MAX);
+    onChange(next);
+    setPaid("");
+    setStore("");
+    setErr(false);
+  }
+  return (
+    <div data-testid="product-price-section" style={{ marginBottom: 12 }}>
+      <label style={styles.fieldLabel}>{t("product_price_title")}</label>
+      <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", lineHeight: 1.4, marginBottom: 6 }}>{t("product_price_hint")}</div>
+      {list.map((e) => (
+        <div key={e.le + "-" + e.paye + "-" + e.contenance} data-testid="price-row" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, padding: "3px 0" }}>
+          <span style={{ color: "var(--brand-text-muted)", minWidth: 74 }}>{formatDateShort(e.le + "T12:00:00")}</span>
+          <span style={{ flex: 1, color: "var(--brand-text-strong)" }}>
+            {t("product_price_line", { paid: fmt(e.paye), size: fmt(e.contenance) + " " + e.unite, per: fmt(e.paye / e.contenance) + " / " + e.unite })}{e.magasin ? " · " + e.magasin : ""}
+          </span>
+          <button type="button" aria-label={t("product_price_remove")} title={t("product_price_remove")} onClick={() => onChange((prix || []).filter((x) => x !== e))} style={{ background: "none", border: "none", cursor: "pointer", color: "#c0392b", fontSize: 15, padding: 2 }}>✕</button>
+        </div>
+      ))}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 6 }}>
+        <div>
+          <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginBottom: 2 }}>{t("product_price_paid")}</div>
+          <input data-testid="price-paid" type="text" inputMode="decimal" style={{ ...styles.input, marginBottom: 0 }} value={paid} onChange={(e) => setPaid(e.target.value)} />
+        </div>
+        <div>
+          <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginBottom: 2 }}>{t("product_price_size")}</div>
+          <div style={{ display: "flex", gap: 4 }}>
+            <input data-testid="price-size" type="text" inputMode="decimal" style={{ ...styles.input, marginBottom: 0, minWidth: 0 }} value={size} onChange={(e) => setSize(e.target.value)} />
+            <select data-testid="price-unit" style={{ ...styles.input, marginBottom: 0, width: 64, padding: "0 6px" }} value={unit} onChange={(e) => setUnit(e.target.value)}>
+              <option value="kg">kg</option>
+              <option value="L">L</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginBottom: 2 }}>{t("product_price_date")}</div>
+          <input data-testid="price-date" type="date" style={{ ...styles.input, marginBottom: 0 }} value={date} max={todayStr()} onChange={(e) => setDate(e.target.value)} />
+        </div>
+        <div>
+          <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginBottom: 2 }}>{t("product_price_store")}</div>
+          <input data-testid="price-store" type="text" style={{ ...styles.input, marginBottom: 0 }} value={store} maxLength={60} onChange={(e) => setStore(e.target.value)} />
+        </div>
+      </div>
+      {err && <div data-testid="price-error" style={{ fontSize: 12, color: "#c0392b", marginTop: 4 }}>{t("product_price_err")}</div>}
+      <button type="button" data-testid="price-add" onClick={add} style={{ ...styles.editLinkBtn, display: "inline-flex", padding: "8px 0 0", fontSize: 13 }}>+ {t("product_price_add")}</button>
     </div>
   );
 }
@@ -18458,6 +20112,9 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
         if (targetZone && targetZone.axis === "right") rightRange = rightRange ? [Math.min(rightRange[0], targetZone.min), Math.max(rightRange[1], targetZone.max)] : [targetZone.min, targetZone.max];
         const leftBounds = leftRange ? niceAxisBounds(leftRange[0], leftRange[1], 10) : { domain: [0, 10], ticks: undefined };
         const rightBounds = rightRange ? niceAxisBounds(rightRange[0], rightRange[1], 110) : { domain: [0, 110], ticks: undefined };
+        // v1.171.0 — Dès qu'une courbe affichée se prolonge dans le futur (température projetée, prévisions...), un trait vertical marque aujourd'hui.
+        const nowTs = Date.now();
+        const futureShown = nowTs >= domainStart && nowTs <= domainEnd && chartRenderData.some((row) => row.timestamp > nowTs && activeParams.some((k) => row[k] !== undefined && row[k] !== null));
         return (
           <div style={styles.chartCard}>
             <ResponsiveContainer width="100%" height={220}>
@@ -18497,6 +20154,9 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
             />
             {targetZone && (
               <ReferenceArea yAxisId={targetZone.axis} y1={targetZone.min} y2={targetZone.max} fill={targetZone.color} fillOpacity={0.1} strokeOpacity={0} ifOverflow="visible" />
+            )}
+            {futureShown && (
+              <ReferenceLine x={nowTs} yAxisId="left" stroke="#7e57c2" strokeWidth={1.5} strokeDasharray="5 3" ifOverflow="visible" label={{ value: t("chart_today"), position: "insideTopLeft", fontSize: 10, fontWeight: 700, fill: "#7e57c2" }} />
             )}
             {/* v1.113.2 — Les courbes projetées (pas mesurées) partagent
                 chartDataWithProjections avec toutes les autres <Line> (pas de
@@ -23831,6 +25491,8 @@ function ProductModal({ product, onClose, onSave, onLinkCommonProduct, isPremium
   const [stockPercent, setStockPercent] = useState(product?.stockPercent ?? null);
   const [containerAmount, setContainerAmount] = useState(product?.containerAmount ?? 1);
   const [containerUnit, setContainerUnit] = useState(product?.containerUnit ?? "kg");
+  // v1.170.0 — Historique des prix d'achat (Premium) : sert à l'onglet Bilan.
+  const [prix, setPrix] = useState(Array.isArray(product?.prix) ? product.prix : []);
   // v1.61.0 — Conditionnement galets/sticks : poids unitaire (pour convertir
   // la dose calculée en nombre d'unités dans le Wizard) et ratio d'entretien
   // continu du fabricant (informatif, distinct de la dose de traitement).
@@ -24273,6 +25935,7 @@ function ProductModal({ product, onClose, onSave, onLinkCommonProduct, isPremium
       stockPercent: isTool ? null : newStock,
       containerAmount: isTool ? null : (parseFloat(containerAmount) || 1),
       containerUnit: isTool ? null : (containerUnit || "kg"),
+      prix: isTool ? [] : prix,
       // v1.61.0 — Conditionnement galets/sticks. maintenanceRatio reste null
       // tant que les 3 valeurs (nb unités / volume / jours) ne sont pas
       // toutes renseignées — un ratio partiel n'est pas exploitable pour
@@ -24758,6 +26421,10 @@ function ProductModal({ product, onClose, onSave, onLinkCommonProduct, isPremium
             </div>
           )}
         </>
+      )}
+
+      {isPremium && action !== "outil-mesure" && (
+        <ProductPriceSection prix={prix} onChange={setPrix} defaultSize={containerAmount} defaultUnit={containerUnit} lang={lang} />
       )}
 
       {isPremium && product && (() => {
