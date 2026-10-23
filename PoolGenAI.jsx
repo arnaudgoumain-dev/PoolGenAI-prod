@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.167.0";
+const APP_VERSION = "1.167.1";
 const CGU_VERSION = "1.5"; // v1.5 : section 6 complétée (altitude du bassin : IGN, Open Topo Data) ; v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -898,7 +898,7 @@ const TRANSLATIONS = {
     filt_spa_cycles: "{n} cycles de {d}",
     filt_recommended: "Durée recommandée aujourd'hui",
     filt_no_temp: "Aucune température d'eau disponible. Saisis-la ci-dessous pour obtenir une durée de filtration.",
-    filt_range: "Plage horaire",
+    filt_range: "Plage horaire de filtration",
     filt_locating: "Recherche de la position du bassin…",
     filt_no_location: "Renseigne la ville du bassin dans ses paramètres pour obtenir la plage horaire et la météo.",
     filt_temp_input_label: "Eau ({unit})",
@@ -1872,7 +1872,7 @@ const TRANSLATIONS = {
     filt_spa_cycles: "{n} cycles of {d}",
     filt_recommended: "Recommended time today",
     filt_no_temp: "No water temperature available. Enter it below to get a filtration time.",
-    filt_range: "Time range",
+    filt_range: "Filtration time range",
     filt_locating: "Locating the pool…",
     filt_no_location: "Set the pool's city in its settings to get the time range and the weather.",
     filt_temp_input_label: "Water ({unit})",
@@ -2844,7 +2844,7 @@ const TRANSLATIONS = {
     filt_spa_cycles: "{n} Zyklen à {d}",
     filt_recommended: "Empfohlene Dauer heute",
     filt_no_temp: "Keine Wassertemperatur verfügbar. Gib sie unten ein, um eine Filterzeit zu erhalten.",
-    filt_range: "Zeitfenster",
+    filt_range: "Filterzeitfenster",
     filt_locating: "Position des Beckens wird gesucht…",
     filt_no_location: "Gib die Stadt des Beckens in den Einstellungen an, um Zeitfenster und Wetter zu erhalten.",
     filt_temp_input_label: "Wasser ({unit})",
@@ -3816,7 +3816,7 @@ const TRANSLATIONS = {
     filt_spa_cycles: "{n} cicli da {d}",
     filt_recommended: "Durata consigliata oggi",
     filt_no_temp: "Nessuna temperatura dell'acqua disponibile. Inseriscila qui sotto per ottenere una durata di filtrazione.",
-    filt_range: "Fascia oraria",
+    filt_range: "Fascia oraria di filtrazione",
     filt_locating: "Ricerca della posizione della vasca…",
     filt_no_location: "Indica la città della vasca nelle impostazioni per ottenere la fascia oraria e il meteo.",
     filt_temp_input_label: "Acqua ({unit})",
@@ -4788,7 +4788,7 @@ const TRANSLATIONS = {
     filt_spa_cycles: "{n} ciclos de {d}",
     filt_recommended: "Duración recomendada hoy",
     filt_no_temp: "No hay temperatura del agua disponible. Introdúcela abajo para obtener una duración de filtración.",
-    filt_range: "Franja horaria",
+    filt_range: "Franja horaria de filtración",
     filt_locating: "Buscando la posición de la piscina…",
     filt_no_location: "Indica la ciudad de la piscina en sus ajustes para obtener la franja horaria y el tiempo.",
     filt_temp_input_label: "Agua ({unit})",
@@ -5760,7 +5760,7 @@ const TRANSLATIONS = {
     filt_spa_cycles: "{n} ciclos de {d}",
     filt_recommended: "Duração recomendada hoje",
     filt_no_temp: "Sem temperatura da água disponível. Introduza-a abaixo para obter uma duração de filtração.",
-    filt_range: "Intervalo horário",
+    filt_range: "Intervalo horário de filtração",
     filt_locating: "A procurar a posição da piscina…",
     filt_no_location: "Indique a cidade da piscina nas definições para obter o intervalo horário e o tempo.",
     filt_temp_input_label: "Água ({unit})",
@@ -15042,7 +15042,7 @@ function FiltrationLockedCard({ lang, onWantPremium }) {
 
 // Arc du soleil en arrière-plan de la carte Filtration : demi-ellipse posée sur la barre horaire (repérée par data-sun-bar), du lever au coucher
 // du soleil ; son rapport hauteur / demi-largeur suit la hauteur du soleil à midi (demi-cercle au solstice d'été, ellipse aplatie en hiver),
-// sans jamais toucher le haut de la carte.
+// sans jamais empiéter sur le texte de la plage horaire (data-sun-range) situé au-dessus.
 function SunArcLayer({ daylight, resizeKey }) {
   const ref = useRef(null);
   const [box, setBox] = useState(null);
@@ -15051,24 +15051,33 @@ function SunArcLayer({ daylight, resizeKey }) {
     const card = el && el.parentElement;
     const bar = card && card.querySelector("[data-sun-bar]");
     if (!bar) { setBox(null); return undefined; }
+    const rangeEl = card.querySelector("[data-sun-range]");
+    const spacerEl = card.querySelector("[data-sun-spacer]");
     const measure = () => {
       const c = card.getBoundingClientRect();
       const b = bar.getBoundingClientRect();
-      const next = { left: Math.round(b.left - c.left), w: Math.round(b.width), base: Math.round(b.top - c.top + b.height / 2) };
-      setBox((prev) => (prev && prev.left === next.left && prev.w === next.w && prev.base === next.base ? prev : next));
+      // limite haute de l'arc : sous le texte de la plage horaire (4 px de marge) ; à défaut, sous le bord haut de la carte
+      const top = rangeEl ? Math.round(rangeEl.getBoundingClientRect().bottom - c.top + 4) : 8;
+      const next = { left: Math.round(b.left - c.left), w: Math.round(b.width), base: Math.round(b.top - c.top + b.height / 2), top };
+      setBox((prev) => (prev && prev.left === next.left && prev.w === next.w && prev.base === next.base && prev.top === next.top ? prev : next));
     };
     measure();
     let ro = null;
-    if (typeof ResizeObserver !== "undefined") { ro = new ResizeObserver(measure); ro.observe(card); }
+    let mo = null;
+    // Les blocs de la carte se répartissent sur sa hauteur : l'arrivée d'un bloc (prévisions chargées) ou le changement de taille de l'un d'eux
+    // déplace la barre horaire sans changer la taille de la carte -> on observe aussi chaque bloc et l'ajout / le retrait de blocs.
+    const watchChildren = () => { if (ro) Array.from(card.children).forEach((ch) => ro.observe(ch)); };
+    if (typeof ResizeObserver !== "undefined") { ro = new ResizeObserver(measure); ro.observe(card); if (rangeEl) ro.observe(rangeEl); if (spacerEl) ro.observe(spacerEl); watchChildren(); }
+    if (typeof MutationObserver !== "undefined") { mo = new MutationObserver(() => { watchChildren(); measure(); }); mo.observe(card, { childList: true }); }
     window.addEventListener("resize", measure);
-    return () => { if (ro) ro.disconnect(); window.removeEventListener("resize", measure); };
+    return () => { if (ro) ro.disconnect(); if (mo) mo.disconnect(); window.removeEventListener("resize", measure); };
   }, [resizeKey]);
   let path = null;
   if (box && daylight && daylight.dayLengthH > 0 && box.w > 0) {
     const xs = (Math.max(0, daylight.sunriseH) / 24) * box.w;
     const xe = (Math.min(24, daylight.sunsetH) / 24) * box.w;
     const rx = (xe - xs) / 2;
-    const ry = Math.max(6, Math.min(daylight.aspect * rx, box.base - 8));
+    const ry = Math.max(6, Math.min(daylight.aspect * rx, box.base - box.top));
     if (rx > 1) path = { fill: "M " + xs + " " + box.base + " A " + rx + " " + ry + " 0 0 1 " + xe + " " + box.base + " Z", line: "M " + xs + " " + box.base + " A " + rx + " " + ry + " 0 0 1 " + xe + " " + box.base };
   }
   return (
@@ -15412,8 +15421,37 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
 // jours avec durée de filtration, et chiffres du jour (air max, UV, pluie, vent max). Mêmes données que la carte Filtration (useFiltrationBase).
 function WeatherCard({ pool, measures, lang, canEdit, onUpdatePool }) {
   const { t, poolType, coords, geoFailed, wState, todayStats, est, wd, sourceLabel, wxNow, wxLabel, wxIcon, noon, slots, showWeek, dayIcon, updatedLabel, tzLabel, nowHour, daylight } = useFiltrationBase({ pool, measures, lang, canEdit, onUpdatePool });
+  // Hauteur disponible de l'onglet (zone défilante moins ses marges) : la carte la remplit et répartit ses blocs (space-between), sans défilement
+  // vertical quand tout tient ; sur un écran trop court, la carte garde sa hauteur naturelle et la page défile.
+  const cardRef = useRef(null);
+  const [minH, setMinH] = useState(null);
+  useLayoutEffect(() => {
+    const el = cardRef.current;
+    if (!el) return undefined;
+    let sc = el.parentElement;
+    while (sc && sc !== document.body && !/(auto|scroll)/.test(getComputedStyle(sc).overflowY)) sc = sc.parentElement;
+    const scroller = sc && sc !== document.body ? sc : null;
+    const measure = () => {
+      const r = el.getBoundingClientRect();
+      let avail;
+      if (scroller) {
+        const cs = getComputedStyle(scroller);
+        const pt = parseFloat(cs.paddingTop) || 0;
+        const pb = parseFloat(cs.paddingBottom) || 0;
+        avail = scroller.clientHeight - pt - pb - (r.top - scroller.getBoundingClientRect().top - pt + scroller.scrollTop);
+      } else {
+        avail = window.innerHeight - r.top - 16;
+      }
+      setMinH(Math.max(0, Math.floor(avail)));
+    };
+    measure();
+    let ro = null;
+    if (typeof ResizeObserver !== "undefined" && scroller) { ro = new ResizeObserver(measure); ro.observe(scroller); }
+    window.addEventListener("resize", measure);
+    return () => { if (ro) ro.disconnect(); window.removeEventListener("resize", measure); };
+  }, []);
   return (
-    <div style={FILT_STYLES.card} data-testid="weather-card">
+    <div ref={cardRef} style={{ ...FILT_STYLES.card, boxSizing: "border-box", display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: minH || undefined }} data-testid="weather-card">
       <div style={FILT_STYLES.head}>
         <span style={FILT_STYLES.title}><CloudSunIcon size={15} /> {t("tab_weather")}</span>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
@@ -15429,10 +15467,12 @@ function WeatherCard({ pool, measures, lang, canEdit, onUpdatePool }) {
 
       {slots && daylight && <SunArcLayer daylight={daylight} resizeKey={slots.length + "-" + (noon != null ? 1 : 0)} />}
       {slots && (
-        <div style={{ marginTop: 4 }}>
-          <div style={{ fontSize: 12, color: "var(--brand-text-muted)", marginBottom: 4 }}>
+        <div style={{ marginTop: 4, display: "flex", flexDirection: "column" }}>
+          <div data-sun-range="1" style={{ fontSize: 12, color: "var(--brand-text-muted)", marginBottom: 4 }}>
             {t("filt_range")} : {slots.map((s) => formatClock(s.start) + " – " + formatClock(s.end)).join(" · ")}
           </div>
+          {/* Zone réservée à l'arc du soleil, sous le texte de la plage horaire (hauteur suffisante pour un demi-cercle d'été) */}
+          <div data-sun-spacer="1" style={{ height: 84 }} />
           {/* Repère du midi solaire : libellé (décalé vers l'intérieur près des bords) + petit triangle pointe en bas, à la verticale du trait jaune */}
           <div style={{ position: "relative", height: 24 }}>
             {noon != null && (
