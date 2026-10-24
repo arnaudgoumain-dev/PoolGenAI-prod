@@ -9,8 +9,8 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.172.0";
-const CGU_VERSION = "1.5"; // v1.5 : section 6 complétée (altitude du bassin : IGN, Open Topo Data) ; v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
+const APP_VERSION = "1.177.3";
+const CGU_VERSION = "1.6"; // v1.6 : sections « Données de filtration enregistrées » (températures saisies, programmations, historique de l'air, configuration thermique, coefficient d'inertie) et « Bilan et estimations d'économies » (hypothèses, prix d'achat, estimations indicatives) ; v1.5 : section 6 complétée (altitude du bassin : IGN, Open Topo Data) ; v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
 const MAX_POOLS_CLIENT = 3;
@@ -309,6 +309,52 @@ const TRANSLATIONS = {
     wizard_title: "Plan de traitement",
     wizard_step: "Étape",
     wizard_of: "sur",
+    wizard_state_applied: "Appliquée",
+    wizard_state_skipped: "Passée",
+    wizard_state_current: "En cours",
+    wizard_state_upcoming: "À venir",
+    wizard_view_applied_on: "Appliquée le {date} — {amount}",
+    wizard_view_proposed: "Quantité proposée : {amount}",
+    wizard_view_skipped_long: "Étape passée : aucun produit appliqué.",
+    wizard_view_readonly: "Consultation seule : seule l'étape en cours peut être appliquée.",
+    wizard_back_to_current: "Revenir à l'étape en cours ({n})",
+    wizard_nav_prev: "Étape précédente",
+    wizard_nav_next: "Étape suivante",
+    catchup_title: "Produits restant à appliquer",
+    catchup_intro: "Un plan récent proposait des produits qui n'ont pas été appliqués, ou en quantité inférieure, et le paramètre concerné n'a pas été mesuré cette fois.",
+    catchup_line: "{product} : {amount} restant à appliquer",
+    catchup_status_skipped: "étape passée",
+    catchup_status_partial: "appliqué en quantité inférieure",
+    catchup_status_pending: "plan non terminé",
+    catchup_detail: "{status}, plan du {date}",
+    catchup_param_missing: "{param} n'a pas été mesuré dans cette mesure.",
+    catchup_position: "Proposé à l'étape {n} sur {total} du nouveau plan.",
+    catchup_include: "Ajouter ces produits au nouveau plan",
+    catchup_excluded: "Ces produits ne seront pas repris dans ce plan.",
+    catchup_step_title: "Rattrapage — plan du {date}",
+    wizard_catchup_badge: "Rattrapage",
+    acct_get_data_btn: "Récupérer mes données",
+    acct_get_data_hint: "Vous recevez par e-mail un lien pour télécharger vos données dans un fichier .txt (valable {days} jours).",
+    acct_get_data_sent: "E-mail envoyé à {email}. Le lien est valable {days} jours.",
+    acct_download_btn: "Télécharger mes données (.txt)",
+    acct_action_error: "Opération impossible pour le moment. Réessayez plus tard.",
+    acct_erase_data_btn: "Effacer mes données",
+    acct_modal_title_account: "Supprimer mon compte",
+    acct_modal_title_data: "Effacer mes données",
+    acct_modal_body_account: "Votre demande de suppression du compte et de toutes vos données sera enregistrée. Vous disposez de {days} jours pour l'annuler ; au-delà, votre compte et vos données seront définitivement supprimés. Pendant ce délai, seule la page Réglages reste utilisable.",
+    acct_modal_body_data: "Votre demande d'effacement de vos données sera enregistrée. Vous disposez de {days} jours pour l'annuler ; au-delà, vos bassins, mesures, produits, photos et historiques seront définitivement effacés. Votre compte, votre abonnement et votre pseudo sont conservés. Pendant ce délai, seule la page Réglages reste utilisable.",
+    acct_modal_keep: "Avant de confirmer, vous pouvez récupérer vos données :",
+    acct_sub_warning: "Votre abonnement Premium n'est pas résilié automatiquement : résiliez-le séparément (Réglages > Gérer mon abonnement, ou Google Play) pour ne plus être facturé.",
+    acct_confirm_account: "Confirmer la suppression de mon compte",
+    acct_confirm_data: "Confirmer l'effacement de mes données",
+    acct_pending_title_account: "Suppression du compte demandée",
+    acct_pending_title_data: "Effacement des données demandé",
+    acct_pending_body: "Demande enregistrée le {requested}. Effacement définitif le {purge}. D'ici là, vous pouvez annuler. Seule la page Réglages est utilisable.",
+    acct_cancel_account: "Annuler ma demande de suppression de compte",
+    acct_cancel_data: "Annuler la demande d'effacement des données",
+    acct_cancel_done: "Demande annulée : votre compte fonctionne normalement.",
+    acct_locked_hint: "Indisponible pendant une demande de suppression",
+    acct_purged_data: "Vos données ont été effacées comme demandé.",
     wizard_now: "Maintenant",
     wizard_in: "Dans",
     wizard_at: "à",
@@ -936,7 +982,11 @@ const TRANSLATIONS = {
     filt_current_duration_label: "Durée par jour (heures)",
     filt_current_hint: "Facultatif : permet de signaler un écart avec l'heure et la durée recommandées.",
     lcen_weather_title: "Météo et durée de filtration",
-    lcen_weather_val: "La fonction « Filtration du jour » (version Premium) recommande une durée et une plage horaire de filtration à partir de la température de l'eau (saisie ou estimée) et de la météo de votre bassin. Pour obtenir la météo, les coordonnées géographiques approximatives de la ville de votre bassin (4 décimales au maximum) sont transmises, par l'infrastructure technique de l'éditeur, à l'Institut météorologique norvégien (MET Norway, Norvège). Aucun autre élément — ni nom, ni adresse email, ni identifiant de compte — n'est transmis à MET Norway. L'altitude de ce point est obtenue à partir de ces mêmes coordonnées auprès du service d'altimétrie de la Géoplateforme de l'IGN (France) ou, à défaut, du service Open Topo Data (données SRTM), puis enregistrée avec le bassin pour affiner la prévision ; ces services ne reçoivent que ces coordonnées. Données météo : MET Norway, sous licence ouverte (NLOD 2.0 / CC BY 4.0). Ces recommandations sont indicatives : elles ne remplacent ni la notice de votre équipement ni votre appréciation de l'état de l'eau, et vous restez responsable de la programmation de votre filtration.",
+    lcen_weather_val: "La fonction « Filtration du jour » (version Premium) recommande une durée et une plage horaire de filtration à partir de la température de l'eau (saisie ou estimée) et de la météo de votre bassin. Pour obtenir la météo, les coordonnées géographiques de la ville de votre bassin, ou de votre position si vous utilisez le GPS (4 décimales au maximum, soit une précision d'environ 10 m) sont transmises, par l'infrastructure technique de l'éditeur, à l'Institut météorologique norvégien (MET Norway, Norvège). Aucun autre élément — ni nom, ni adresse email, ni identifiant de compte — n'est transmis à MET Norway. L'altitude de ce point est obtenue à partir de ces mêmes coordonnées auprès du service d'altimétrie de la Géoplateforme de l'IGN (France) ou, à défaut, du service Open Topo Data (données SRTM), puis enregistrée avec le bassin pour affiner la prévision ; ces services ne reçoivent que ces coordonnées. Données météo : MET Norway, sous licence ouverte (NLOD 2.0 / CC BY 4.0). Ces recommandations sont indicatives : elles ne remplacent ni la notice de votre équipement ni votre appréciation de l'état de l'eau, et vous restez responsable de la programmation de votre filtration.",
+    lcen_filtdata_title: "Données de filtration enregistrées",
+    lcen_filtdata_val: "Pour recommander une durée de filtration et estimer la température de l'eau, l'application enregistre avec votre bassin les températures d'eau que vous saisissez (avec leur date), les programmations de filtration que vous enregistrez, la température moyenne de l'air des 60 derniers jours à l'emplacement du bassin et la configuration thermique que vous indiquez (chauffage, bâche, profondeur). Elle en déduit un coefficient d'inertie propre à chaque bassin. Ces données sont rattachées à votre bassin : elles sont visibles de vous et des invités que vous y associez, utilisées uniquement pour ces calculs et supprimées avec le bassin ou avec votre compte. Les températures affichées pour les jours sans saisie sont des estimations, qui peuvent différer de la température réelle.",
+    lcen_savings_title: "Bilan et estimations d'économies",
+    lcen_savings_val: "L'onglet Bilan (version Premium, réservé au propriétaire du bassin) estime l'électricité et les produits économisés ainsi que la part de jours où l'eau est dans la cible. Il s'appuie sur des hypothèses que vous saisissez (prix du kWh, devise, puissance de la pompe, durée de filtration habituelle, dépense annuelle en produits) et sur les prix d'achat que vous pouvez renseigner sur les fiches produits (prix payé, contenance, date, magasin facultatif). Les hypothèses sont accessibles à vous seul, utilisées uniquement pour ces calculs et supprimées avec votre compte. Les résultats sont des estimations indicatives fondées sur vos propres hypothèses : ils ne constituent ni une garantie d'économie ni un conseil financier et peuvent différer de vos consommations et dépenses réelles.",
     wx_clear: "Ensoleillé",
     wx_clear_night: "Ciel dégagé",
     wx_fair: "Plutôt dégagé",
@@ -1392,6 +1442,52 @@ const TRANSLATIONS = {
     wizard_title: "Treatment plan",
     wizard_step: "Step",
     wizard_of: "of",
+    wizard_state_applied: "Applied",
+    wizard_state_skipped: "Skipped",
+    wizard_state_current: "Current",
+    wizard_state_upcoming: "Upcoming",
+    wizard_view_applied_on: "Applied on {date} — {amount}",
+    wizard_view_proposed: "Suggested quantity: {amount}",
+    wizard_view_skipped_long: "Step skipped: no product applied.",
+    wizard_view_readonly: "View only: only the current step can be applied.",
+    wizard_back_to_current: "Back to the current step ({n})",
+    wizard_nav_prev: "Previous step",
+    wizard_nav_next: "Next step",
+    catchup_title: "Products still to apply",
+    catchup_intro: "A recent plan suggested products that were not applied, or applied in a smaller quantity, and the related parameter was not measured this time.",
+    catchup_line: "{product}: {amount} still to apply",
+    catchup_status_skipped: "skipped step",
+    catchup_status_partial: "applied in a smaller quantity",
+    catchup_status_pending: "plan not finished",
+    catchup_detail: "{status}, plan of {date}",
+    catchup_param_missing: "{param} was not measured in this measurement.",
+    catchup_position: "Suggested at step {n} of {total} in the new plan.",
+    catchup_include: "Add these products to the new plan",
+    catchup_excluded: "These products will not be included in this plan.",
+    catchup_step_title: "Catch-up — plan of {date}",
+    wizard_catchup_badge: "Catch-up",
+    acct_get_data_btn: "Get my data",
+    acct_get_data_hint: "You receive an e-mail with a link to download your data as a .txt file (valid {days} days).",
+    acct_get_data_sent: "E-mail sent to {email}. The link is valid for {days} days.",
+    acct_download_btn: "Download my data (.txt)",
+    acct_action_error: "Operation not possible right now. Please try again later.",
+    acct_erase_data_btn: "Erase my data",
+    acct_modal_title_account: "Delete my account",
+    acct_modal_title_data: "Erase my data",
+    acct_modal_body_account: "Your request to delete your account and all your data will be recorded. You have {days} days to cancel it; after that, your account and data will be permanently deleted. During this period only the Settings page remains usable.",
+    acct_modal_body_data: "Your request to erase your data will be recorded. You have {days} days to cancel it; after that, your pools, measurements, products, photos and histories will be permanently erased. Your account, subscription and nickname are kept. During this period only the Settings page remains usable.",
+    acct_modal_keep: "Before confirming, you can retrieve your data:",
+    acct_sub_warning: "Your Premium subscription is not cancelled automatically: cancel it separately (Settings > Manage my subscription, or Google Play) to stop being billed.",
+    acct_confirm_account: "Confirm deletion of my account",
+    acct_confirm_data: "Confirm erasure of my data",
+    acct_pending_title_account: "Account deletion requested",
+    acct_pending_title_data: "Data erasure requested",
+    acct_pending_body: "Request recorded on {requested}. Permanent erasure on {purge}. Until then you can cancel. Only the Settings page is usable.",
+    acct_cancel_account: "Cancel my account deletion request",
+    acct_cancel_data: "Cancel the data erasure request",
+    acct_cancel_done: "Request cancelled: your account works normally.",
+    acct_locked_hint: "Unavailable during a deletion request",
+    acct_purged_data: "Your data has been erased as requested.",
     wizard_now: "Now",
     wizard_in: "In",
     wizard_at: "at",
@@ -2010,7 +2106,11 @@ const TRANSLATIONS = {
     filt_current_duration_label: "Hours per day",
     filt_current_hint: "Optional: lets the app flag a gap with the recommended time and duration.",
     lcen_weather_title: "Weather and filtration time",
-    lcen_weather_val: "The \"Today's filtration\" feature (Premium) recommends a filtration time and time range based on the water temperature (entered or estimated) and your pool's weather. To obtain the weather, the approximate geographic coordinates of your pool's city (4 decimals at most) are sent, through the publisher's technical infrastructure, to the Norwegian Meteorological Institute (MET Norway, Norway). Nothing else — no name, email address or account identifier — is sent to MET Norway. The altitude of this point is obtained from the same coordinates from the altimetry service of the IGN Géoplateforme (France) or, failing that, the Open Topo Data service (SRTM data), then stored with the pool to refine the forecast; these services receive nothing but these coordinates. Weather data: MET Norway, under an open licence (NLOD 2.0 / CC BY 4.0). These recommendations are indicative: they replace neither your equipment's manual nor your own judgement of the water condition, and you remain responsible for programming your filtration.",
+    lcen_weather_val: "The \"Today's filtration\" feature (Premium) recommends a filtration time and time range based on the water temperature (entered or estimated) and your pool's weather. To obtain the weather, the geographic coordinates of your pool's city, or of your position if you use GPS (4 decimals at most, i.e. a precision of about 10 m) are sent, through the publisher's technical infrastructure, to the Norwegian Meteorological Institute (MET Norway, Norway). Nothing else — no name, email address or account identifier — is sent to MET Norway. The altitude of this point is obtained from the same coordinates from the altimetry service of the IGN Géoplateforme (France) or, failing that, the Open Topo Data service (SRTM data), then stored with the pool to refine the forecast; these services receive nothing but these coordinates. Weather data: MET Norway, under an open licence (NLOD 2.0 / CC BY 4.0). These recommendations are indicative: they replace neither your equipment's manual nor your own judgement of the water condition, and you remain responsible for programming your filtration.",
+    lcen_filtdata_title: "Stored filtration data",
+    lcen_filtdata_val: "To recommend a filtration time and estimate the water temperature, the app stores with your pool the water temperatures you enter (with their date), the filtration schedules you save, the average air temperature of the last 60 days at the location of the pool, and the thermal setup you provide (heating, cover, depth). From these it derives a water-inertia coefficient specific to each pool. This data is attached to your pool: it is visible to you and to the guests you associate with it, used only for these calculations, and deleted with the pool or with your account. Temperatures shown for days without an entry are estimates and may differ from the actual temperature.",
+    lcen_savings_title: "Results tab and savings estimates",
+    lcen_savings_val: "The Results tab (Premium, pool owner only) estimates the electricity and products saved, and the share of days when the water is within target. It relies on assumptions you enter (price per kWh, currency, pump power, usual filtration time, annual spending on products) and on purchase prices you may enter on product sheets (price paid, size, date, optional store). The assumptions are accessible to you alone, used only for these calculations, and deleted with your account. Results are indicative estimates based on your own assumptions: they are neither a guarantee of savings nor financial advice, and may differ from your actual consumption and spending.",
     wx_clear: "Sunny",
     wx_clear_night: "Clear sky",
     wx_fair: "Mostly clear",
@@ -2465,6 +2565,52 @@ const TRANSLATIONS = {
     wizard_title: "Behandlungsplan",
     wizard_step: "Schritt",
     wizard_of: "von",
+    wizard_state_applied: "Angewendet",
+    wizard_state_skipped: "Übersprungen",
+    wizard_state_current: "Aktuell",
+    wizard_state_upcoming: "Folgt",
+    wizard_view_applied_on: "Angewendet am {date} — {amount}",
+    wizard_view_proposed: "Vorgeschlagene Menge: {amount}",
+    wizard_view_skipped_long: "Schritt übersprungen: kein Produkt angewendet.",
+    wizard_view_readonly: "Nur Ansicht: nur der aktuelle Schritt kann angewendet werden.",
+    wizard_back_to_current: "Zurück zum aktuellen Schritt ({n})",
+    wizard_nav_prev: "Vorheriger Schritt",
+    wizard_nav_next: "Nächster Schritt",
+    catchup_title: "Noch anzuwendende Produkte",
+    catchup_intro: "Ein aktueller Plan schlug Produkte vor, die nicht oder in geringerer Menge angewendet wurden, und der betreffende Parameter wurde diesmal nicht gemessen.",
+    catchup_line: "{product}: {amount} noch anzuwenden",
+    catchup_status_skipped: "übersprungener Schritt",
+    catchup_status_partial: "in geringerer Menge angewendet",
+    catchup_status_pending: "Plan nicht abgeschlossen",
+    catchup_detail: "{status}, Plan vom {date}",
+    catchup_param_missing: "{param} wurde bei dieser Messung nicht gemessen.",
+    catchup_position: "Vorgeschlagen bei Schritt {n} von {total} des neuen Plans.",
+    catchup_include: "Diese Produkte zum neuen Plan hinzufügen",
+    catchup_excluded: "Diese Produkte werden in diesen Plan nicht übernommen.",
+    catchup_step_title: "Nachholen — Plan vom {date}",
+    wizard_catchup_badge: "Nachholen",
+    acct_get_data_btn: "Meine Daten abrufen",
+    acct_get_data_hint: "Sie erhalten per E-Mail einen Link zum Herunterladen Ihrer Daten als .txt-Datei (gültig {days} Tage).",
+    acct_get_data_sent: "E-Mail an {email} gesendet. Der Link ist {days} Tage gültig.",
+    acct_download_btn: "Meine Daten herunterladen (.txt)",
+    acct_action_error: "Vorgang derzeit nicht möglich. Bitte später erneut versuchen.",
+    acct_erase_data_btn: "Meine Daten löschen",
+    acct_modal_title_account: "Mein Konto löschen",
+    acct_modal_title_data: "Meine Daten löschen",
+    acct_modal_body_account: "Ihr Antrag auf Löschung Ihres Kontos und aller Ihrer Daten wird erfasst. Sie haben {days} Tage Zeit, ihn zu widerrufen; danach werden Ihr Konto und Ihre Daten endgültig gelöscht. In dieser Zeit ist nur die Seite Einstellungen nutzbar.",
+    acct_modal_body_data: "Ihr Antrag auf Löschung Ihrer Daten wird erfasst. Sie haben {days} Tage Zeit, ihn zu widerrufen; danach werden Ihre Pools, Messungen, Produkte, Fotos und Verläufe endgültig gelöscht. Ihr Konto, Ihr Abonnement und Ihr Spitzname bleiben erhalten. In dieser Zeit ist nur die Seite Einstellungen nutzbar.",
+    acct_modal_keep: "Vor der Bestätigung können Sie Ihre Daten abrufen:",
+    acct_sub_warning: "Ihr Premium-Abonnement wird nicht automatisch gekündigt: Kündigen Sie es separat (Einstellungen > Abonnement verwalten oder Google Play), um nicht weiter belastet zu werden.",
+    acct_confirm_account: "Löschung meines Kontos bestätigen",
+    acct_confirm_data: "Löschung meiner Daten bestätigen",
+    acct_pending_title_account: "Kontolöschung beantragt",
+    acct_pending_title_data: "Datenlöschung beantragt",
+    acct_pending_body: "Antrag erfasst am {requested}. Endgültige Löschung am {purge}. Bis dahin können Sie ihn widerrufen. Nur die Seite Einstellungen ist nutzbar.",
+    acct_cancel_account: "Meinen Antrag auf Kontolöschung widerrufen",
+    acct_cancel_data: "Antrag auf Datenlöschung widerrufen",
+    acct_cancel_done: "Antrag widerrufen: Ihr Konto funktioniert normal.",
+    acct_locked_hint: "Während eines Löschantrags nicht verfügbar",
+    acct_purged_data: "Ihre Daten wurden wie beantragt gelöscht.",
     wizard_now: "Jetzt",
     wizard_in: "In",
     wizard_at: "um",
@@ -3082,7 +3228,11 @@ const TRANSLATIONS = {
     filt_current_duration_label: "Stunden pro Tag",
     filt_current_hint: "Optional: ermöglicht einen Hinweis bei Abweichung von empfohlener Zeit und Dauer.",
     lcen_weather_title: "Wetter und Filterlaufzeit",
-    lcen_weather_val: "Die Funktion „Filterzeit heute“ (Premium) empfiehlt eine Filterlaufzeit und ein Zeitfenster anhand der Wassertemperatur (eingegeben oder geschätzt) und des Wetters an Ihrem Becken. Um das Wetter abzurufen, werden die ungefähren geografischen Koordinaten der Stadt Ihres Beckens (höchstens 4 Dezimalstellen) über die technische Infrastruktur des Herausgebers an das Norwegische Meteorologische Institut (MET Norway, Norwegen) übermittelt. Nichts anderes — weder Name noch E-Mail-Adresse noch Kontokennung — wird an MET Norway übermittelt. Die Höhe dieses Punktes wird anhand derselben Koordinaten beim Höhendienst der IGN-Géoplateforme (Frankreich) oder ersatzweise beim Dienst Open Topo Data (SRTM-Daten) abgerufen und zur Verfeinerung der Vorhersage mit dem Becken gespeichert; diese Dienste erhalten nur diese Koordinaten. Wetterdaten: MET Norway, unter offener Lizenz (NLOD 2.0 / CC BY 4.0). Diese Empfehlungen sind unverbindlich: Sie ersetzen weder die Anleitung Ihrer Anlage noch Ihre eigene Einschätzung des Wasserzustands, und Sie bleiben für die Programmierung Ihrer Filterung verantwortlich.",
+    lcen_weather_val: "Die Funktion „Filterzeit heute“ (Premium) empfiehlt eine Filterlaufzeit und ein Zeitfenster anhand der Wassertemperatur (eingegeben oder geschätzt) und des Wetters an Ihrem Becken. Um das Wetter abzurufen, werden die geografischen Koordinaten der Stadt Ihres Beckens oder Ihrer Position, wenn Sie GPS verwenden (höchstens 4 Dezimalstellen, d. h. eine Genauigkeit von etwa 10 m) über die technische Infrastruktur des Herausgebers an das Norwegische Meteorologische Institut (MET Norway, Norwegen) übermittelt. Nichts anderes — weder Name noch E-Mail-Adresse noch Kontokennung — wird an MET Norway übermittelt. Die Höhe dieses Punktes wird anhand derselben Koordinaten beim Höhendienst der IGN-Géoplateforme (Frankreich) oder ersatzweise beim Dienst Open Topo Data (SRTM-Daten) abgerufen und zur Verfeinerung der Vorhersage mit dem Becken gespeichert; diese Dienste erhalten nur diese Koordinaten. Wetterdaten: MET Norway, unter offener Lizenz (NLOD 2.0 / CC BY 4.0). Diese Empfehlungen sind unverbindlich: Sie ersetzen weder die Anleitung Ihrer Anlage noch Ihre eigene Einschätzung des Wasserzustands, und Sie bleiben für die Programmierung Ihrer Filterung verantwortlich.",
+    lcen_filtdata_title: "Gespeicherte Filterdaten",
+    lcen_filtdata_val: "Um eine Filterlaufzeit zu empfehlen und die Wassertemperatur zu schätzen, speichert die App zusammen mit Ihrem Pool die von Ihnen eingegebenen Wassertemperaturen (mit Datum), die gespeicherten Filterprogramme, die durchschnittliche Lufttemperatur der letzten 60 Tage am Standort des Pools und die von Ihnen angegebene thermische Konfiguration (Heizung, Abdeckung, Tiefe). Daraus leitet sie einen Trägheitskoeffizienten des Wassers für jeden Pool ab. Diese Daten gehören zu Ihrem Pool: Sie sind für Sie und die mit dem Pool verknüpften Gäste sichtbar, werden nur für diese Berechnungen verwendet und zusammen mit dem Pool oder Ihrem Konto gelöscht. Für Tage ohne Eingabe angezeigte Temperaturen sind Schätzungen und können von der tatsächlichen Temperatur abweichen.",
+    lcen_savings_title: "Bilanz und Einsparschätzungen",
+    lcen_savings_val: "Der Tab Bilanz (Premium, nur für den Eigentümer des Pools) schätzt die eingesparte Elektrizität und die eingesparten Produkte sowie den Anteil der Tage, an denen das Wasser im Zielbereich liegt. Er beruht auf Annahmen, die Sie eingeben (Preis pro kWh, Währung, Pumpenleistung, übliche Filterlaufzeit, jährliche Ausgaben für Produkte), und auf den Kaufpreisen, die Sie in den Produktblättern erfassen können (gezahlter Preis, Inhalt, Datum, optional das Geschäft). Die Annahmen sind nur für Sie zugänglich, werden nur für diese Berechnungen verwendet und zusammen mit Ihrem Konto gelöscht. Die Ergebnisse sind unverbindliche Schätzungen auf Grundlage Ihrer eigenen Annahmen: Sie sind weder eine Einsparungsgarantie noch eine Finanzberatung und können von Ihrem tatsächlichen Verbrauch und Ihren Ausgaben abweichen.",
     wx_clear: "Sonnig",
     wx_clear_night: "Klarer Himmel",
     wx_fair: "Überwiegend klar",
@@ -3537,6 +3687,52 @@ const TRANSLATIONS = {
     wizard_title: "Piano di trattamento",
     wizard_step: "Passo",
     wizard_of: "di",
+    wizard_state_applied: "Applicata",
+    wizard_state_skipped: "Saltata",
+    wizard_state_current: "In corso",
+    wizard_state_upcoming: "In arrivo",
+    wizard_view_applied_on: "Applicata il {date} — {amount}",
+    wizard_view_proposed: "Quantità proposta: {amount}",
+    wizard_view_skipped_long: "Passo saltato: nessun prodotto applicato.",
+    wizard_view_readonly: "Solo consultazione: si può applicare solo il passo in corso.",
+    wizard_back_to_current: "Torna al passo in corso ({n})",
+    wizard_nav_prev: "Passo precedente",
+    wizard_nav_next: "Passo successivo",
+    catchup_title: "Prodotti ancora da applicare",
+    catchup_intro: "Un piano recente proponeva prodotti non applicati, o applicati in quantità inferiore, e il parametro interessato questa volta non è stato misurato.",
+    catchup_line: "{product}: {amount} ancora da applicare",
+    catchup_status_skipped: "passo saltato",
+    catchup_status_partial: "applicato in quantità inferiore",
+    catchup_status_pending: "piano non terminato",
+    catchup_detail: "{status}, piano del {date}",
+    catchup_param_missing: "{param} non è stato misurato in questa misurazione.",
+    catchup_position: "Proposto al passo {n} di {total} del nuovo piano.",
+    catchup_include: "Aggiungi questi prodotti al nuovo piano",
+    catchup_excluded: "Questi prodotti non saranno inclusi in questo piano.",
+    catchup_step_title: "Recupero — piano del {date}",
+    wizard_catchup_badge: "Recupero",
+    acct_get_data_btn: "Recupera i miei dati",
+    acct_get_data_hint: "Ricevi per e-mail un link per scaricare i tuoi dati in un file .txt (valido {days} giorni).",
+    acct_get_data_sent: "E-mail inviata a {email}. Il link è valido {days} giorni.",
+    acct_download_btn: "Scarica i miei dati (.txt)",
+    acct_action_error: "Operazione al momento non possibile. Riprova più tardi.",
+    acct_erase_data_btn: "Cancella i miei dati",
+    acct_modal_title_account: "Elimina il mio account",
+    acct_modal_title_data: "Cancella i miei dati",
+    acct_modal_body_account: "La tua richiesta di eliminazione dell'account e di tutti i tuoi dati sarà registrata. Hai {days} giorni per annullarla; dopo questo termine, il tuo account e i tuoi dati saranno eliminati definitivamente. Durante questo periodo resta utilizzabile solo la pagina Impostazioni.",
+    acct_modal_body_data: "La tua richiesta di cancellazione dei dati sarà registrata. Hai {days} giorni per annullarla; dopo questo termine, le tue piscine, misurazioni, prodotti, foto e cronologie saranno cancellati definitivamente. Il tuo account, l'abbonamento e il soprannome sono conservati. Durante questo periodo resta utilizzabile solo la pagina Impostazioni.",
+    acct_modal_keep: "Prima di confermare, puoi recuperare i tuoi dati:",
+    acct_sub_warning: "Il tuo abbonamento Premium non viene annullato automaticamente: annullalo separatamente (Impostazioni > Gestisci abbonamento, oppure Google Play) per non essere più addebitato.",
+    acct_confirm_account: "Conferma l'eliminazione del mio account",
+    acct_confirm_data: "Conferma la cancellazione dei miei dati",
+    acct_pending_title_account: "Eliminazione dell'account richiesta",
+    acct_pending_title_data: "Cancellazione dei dati richiesta",
+    acct_pending_body: "Richiesta registrata il {requested}. Eliminazione definitiva il {purge}. Fino ad allora puoi annullare. È utilizzabile solo la pagina Impostazioni.",
+    acct_cancel_account: "Annulla la mia richiesta di eliminazione dell'account",
+    acct_cancel_data: "Annulla la richiesta di cancellazione dei dati",
+    acct_cancel_done: "Richiesta annullata: il tuo account funziona normalmente.",
+    acct_locked_hint: "Non disponibile durante una richiesta di eliminazione",
+    acct_purged_data: "I tuoi dati sono stati cancellati come richiesto.",
     wizard_now: "Adesso",
     wizard_in: "Tra",
     wizard_at: "alle",
@@ -4154,7 +4350,11 @@ const TRANSLATIONS = {
     filt_current_duration_label: "Ore al giorno",
     filt_current_hint: "Facoltativo: permette di segnalare uno scarto rispetto a ora e durata consigliate.",
     lcen_weather_title: "Meteo e durata di filtrazione",
-    lcen_weather_val: "La funzione «Filtrazione di oggi» (Premium) consiglia una durata e una fascia oraria di filtrazione in base alla temperatura dell'acqua (inserita o stimata) e al meteo della vostra vasca. Per ottenere il meteo, le coordinate geografiche approssimative della città della vostra vasca (al massimo 4 decimali) vengono trasmesse, tramite l'infrastruttura tecnica dell'editore, all'Istituto meteorologico norvegese (MET Norway, Norvegia). Nessun altro elemento — né nome, né indirizzo email, né identificativo dell'account — viene trasmesso a MET Norway. L'altitudine di questo punto viene ottenuta a partire dalle stesse coordinate presso il servizio altimetrico della Géoplateforme dell'IGN (Francia) oppure, in mancanza, presso il servizio Open Topo Data (dati SRTM), poi memorizzata con la vasca per affinare la previsione; questi servizi ricevono solo queste coordinate. Dati meteo: MET Norway, con licenza aperta (NLOD 2.0 / CC BY 4.0). Questi consigli sono indicativi: non sostituiscono né il manuale della vostra attrezzatura né la vostra valutazione dello stato dell'acqua, e restate responsabili della programmazione della filtrazione.",
+    lcen_weather_val: "La funzione «Filtrazione di oggi» (Premium) consiglia una durata e una fascia oraria di filtrazione in base alla temperatura dell'acqua (inserita o stimata) e al meteo della vostra vasca. Per ottenere il meteo, le coordinate geografiche della città della vostra vasca, o della vostra posizione se usate il GPS (al massimo 4 decimali, ossia una precisione di circa 10 m) vengono trasmesse, tramite l'infrastruttura tecnica dell'editore, all'Istituto meteorologico norvegese (MET Norway, Norvegia). Nessun altro elemento — né nome, né indirizzo email, né identificativo dell'account — viene trasmesso a MET Norway. L'altitudine di questo punto viene ottenuta a partire dalle stesse coordinate presso il servizio altimetrico della Géoplateforme dell'IGN (Francia) oppure, in mancanza, presso il servizio Open Topo Data (dati SRTM), poi memorizzata con la vasca per affinare la previsione; questi servizi ricevono solo queste coordinate. Dati meteo: MET Norway, con licenza aperta (NLOD 2.0 / CC BY 4.0). Questi consigli sono indicativi: non sostituiscono né il manuale della vostra attrezzatura né la vostra valutazione dello stato dell'acqua, e restate responsabili della programmazione della filtrazione.",
+    lcen_filtdata_title: "Dati di filtrazione registrati",
+    lcen_filtdata_val: "Per consigliare una durata di filtrazione e stimare la temperatura dell'acqua, l'app registra insieme alla tua piscina le temperature dell'acqua che inserisci (con la data), le programmazioni di filtrazione che salvi, la temperatura media dell'aria degli ultimi 60 giorni nella posizione della piscina e la configurazione termica che indichi (riscaldamento, copertura, profondità). Ne ricava un coefficiente di inerzia propria di ogni piscina. Questi dati sono associati alla tua piscina: sono visibili a te e agli ospiti che vi associ, usati solo per questi calcoli e cancellati insieme alla piscina o al tuo account. Le temperature mostrate per i giorni senza inserimento sono stime e possono differire dalla temperatura reale.",
+    lcen_savings_title: "Bilancio e stime dei risparmi",
+    lcen_savings_val: "La scheda Bilancio (Premium, riservata al proprietario della piscina) stima l'elettricità e i prodotti risparmiati e la quota di giorni in cui l'acqua è nel valore obiettivo. Si basa su ipotesi che inserisci (prezzo del kWh, valuta, potenza della pompa, durata di filtrazione abituale, spesa annua in prodotti) e sui prezzi di acquisto che puoi indicare nelle schede prodotto (prezzo pagato, contenuto, data, negozio facoltativo). Le ipotesi sono accessibili solo a te, usate solo per questi calcoli e cancellate insieme al tuo account. I risultati sono stime indicative basate sulle tue ipotesi: non sono né una garanzia di risparmio né una consulenza finanziaria e possono differire dai tuoi consumi e dalle tue spese reali.",
     wx_clear: "Soleggiato",
     wx_clear_night: "Cielo sereno",
     wx_fair: "Poco nuvoloso",
@@ -4609,6 +4809,52 @@ const TRANSLATIONS = {
     wizard_title: "Plan de tratamiento",
     wizard_step: "Paso",
     wizard_of: "de",
+    wizard_state_applied: "Aplicada",
+    wizard_state_skipped: "Omitida",
+    wizard_state_current: "En curso",
+    wizard_state_upcoming: "Próxima",
+    wizard_view_applied_on: "Aplicada el {date} — {amount}",
+    wizard_view_proposed: "Cantidad propuesta: {amount}",
+    wizard_view_skipped_long: "Paso omitido: no se aplicó ningún producto.",
+    wizard_view_readonly: "Solo consulta: solo se puede aplicar el paso en curso.",
+    wizard_back_to_current: "Volver al paso en curso ({n})",
+    wizard_nav_prev: "Paso anterior",
+    wizard_nav_next: "Paso siguiente",
+    catchup_title: "Productos pendientes de aplicar",
+    catchup_intro: "Un plan reciente proponía productos que no se aplicaron, o se aplicaron en menor cantidad, y el parámetro correspondiente no se midió esta vez.",
+    catchup_line: "{product}: {amount} pendientes de aplicar",
+    catchup_status_skipped: "paso omitido",
+    catchup_status_partial: "aplicado en menor cantidad",
+    catchup_status_pending: "plan sin terminar",
+    catchup_detail: "{status}, plan del {date}",
+    catchup_param_missing: "{param} no se midió en esta medición.",
+    catchup_position: "Propuesto en el paso {n} de {total} del nuevo plan.",
+    catchup_include: "Añadir estos productos al nuevo plan",
+    catchup_excluded: "Estos productos no se incluirán en este plan.",
+    catchup_step_title: "Recuperación — plan del {date}",
+    wizard_catchup_badge: "Recuperación",
+    acct_get_data_btn: "Recuperar mis datos",
+    acct_get_data_hint: "Recibes por correo un enlace para descargar tus datos en un archivo .txt (válido {days} días).",
+    acct_get_data_sent: "Correo enviado a {email}. El enlace es válido {days} días.",
+    acct_download_btn: "Descargar mis datos (.txt)",
+    acct_action_error: "Operación no posible en este momento. Inténtalo más tarde.",
+    acct_erase_data_btn: "Borrar mis datos",
+    acct_modal_title_account: "Eliminar mi cuenta",
+    acct_modal_title_data: "Borrar mis datos",
+    acct_modal_body_account: "Se registrará tu solicitud de eliminación de la cuenta y de todos tus datos. Dispones de {days} días para anularla; transcurrido ese plazo, tu cuenta y tus datos se eliminarán definitivamente. Durante este plazo solo se puede usar la página Ajustes.",
+    acct_modal_body_data: "Se registrará tu solicitud de borrado de datos. Dispones de {days} días para anularla; transcurrido ese plazo, tus piscinas, mediciones, productos, fotos e historiales se borrarán definitivamente. Tu cuenta, tu suscripción y tu apodo se conservan. Durante este plazo solo se puede usar la página Ajustes.",
+    acct_modal_keep: "Antes de confirmar, puedes recuperar tus datos:",
+    acct_sub_warning: "Tu suscripción Premium no se cancela automáticamente: cancélala por separado (Ajustes > Gestionar mi suscripción, o Google Play) para que no se te siga facturando.",
+    acct_confirm_account: "Confirmar la eliminación de mi cuenta",
+    acct_confirm_data: "Confirmar el borrado de mis datos",
+    acct_pending_title_account: "Eliminación de la cuenta solicitada",
+    acct_pending_title_data: "Borrado de datos solicitado",
+    acct_pending_body: "Solicitud registrada el {requested}. Eliminación definitiva el {purge}. Hasta entonces puedes anularla. Solo se puede usar la página Ajustes.",
+    acct_cancel_account: "Anular mi solicitud de eliminación de la cuenta",
+    acct_cancel_data: "Anular la solicitud de borrado de datos",
+    acct_cancel_done: "Solicitud anulada: tu cuenta funciona con normalidad.",
+    acct_locked_hint: "No disponible durante una solicitud de eliminación",
+    acct_purged_data: "Tus datos se han borrado según lo solicitado.",
     wizard_now: "Ahora",
     wizard_in: "En",
     wizard_at: "a las",
@@ -5226,7 +5472,11 @@ const TRANSLATIONS = {
     filt_current_duration_label: "Horas al día",
     filt_current_hint: "Opcional: permite avisar de una diferencia con la hora y la duración recomendadas.",
     lcen_weather_title: "Tiempo y duración de la filtración",
-    lcen_weather_val: "La función «Filtración de hoy» (Premium) recomienda una duración y una franja horaria de filtración a partir de la temperatura del agua (introducida o estimada) y del tiempo en su piscina. Para obtener el tiempo, las coordenadas geográficas aproximadas de la ciudad de su piscina (4 decimales como máximo) se transmiten, a través de la infraestructura técnica del editor, al Instituto Meteorológico de Noruega (MET Norway, Noruega). No se transmite a MET Norway ningún otro dato: ni nombre, ni dirección de correo, ni identificador de cuenta. La altitud de este punto se obtiene a partir de esas mismas coordenadas en el servicio de altimetría de la Géoplateforme del IGN (Francia) o, en su defecto, en el servicio Open Topo Data (datos SRTM), y se guarda con la piscina para afinar la previsión; estos servicios solo reciben esas coordenadas. Datos meteorológicos: MET Norway, con licencia abierta (NLOD 2.0 / CC BY 4.0). Estas recomendaciones son orientativas: no sustituyen el manual de su equipo ni su propia valoración del estado del agua, y usted sigue siendo responsable de la programación de su filtración.",
+    lcen_weather_val: "La función «Filtración de hoy» (Premium) recomienda una duración y una franja horaria de filtración a partir de la temperatura del agua (introducida o estimada) y del tiempo en su piscina. Para obtener el tiempo, las coordenadas geográficas de la ciudad de su piscina, o de su posición si utiliza el GPS (4 decimales como máximo, es decir, una precisión de unos 10 m) se transmiten, a través de la infraestructura técnica del editor, al Instituto Meteorológico de Noruega (MET Norway, Noruega). No se transmite a MET Norway ningún otro dato: ni nombre, ni dirección de correo, ni identificador de cuenta. La altitud de este punto se obtiene a partir de esas mismas coordenadas en el servicio de altimetría de la Géoplateforme del IGN (Francia) o, en su defecto, en el servicio Open Topo Data (datos SRTM), y se guarda con la piscina para afinar la previsión; estos servicios solo reciben esas coordenadas. Datos meteorológicos: MET Norway, con licencia abierta (NLOD 2.0 / CC BY 4.0). Estas recomendaciones son orientativas: no sustituyen el manual de su equipo ni su propia valoración del estado del agua, y usted sigue siendo responsable de la programación de su filtración.",
+    lcen_filtdata_title: "Datos de filtración registrados",
+    lcen_filtdata_val: "Para recomendar una duración de filtración y estimar la temperatura del agua, la aplicación registra junto con tu piscina las temperaturas del agua que introduces (con su fecha), las programaciones de filtración que guardas, la temperatura media del aire de los últimos 60 días en la ubicación de la piscina y la configuración térmica que indicas (calefacción, cubierta, profundidad). De ello deduce un coeficiente de inercia propio de cada piscina. Estos datos están asociados a tu piscina: son visibles para ti y para los invitados que asocies, se usan solo para estos cálculos y se eliminan con la piscina o con tu cuenta. Las temperaturas mostradas para los días sin registro son estimaciones y pueden diferir de la temperatura real.",
+    lcen_savings_title: "Balance y estimaciones de ahorro",
+    lcen_savings_val: "La pestaña Balance (Premium, reservada al propietario de la piscina) estima la electricidad y los productos ahorrados y la proporción de días en que el agua está dentro del objetivo. Se basa en hipótesis que introduces (precio del kWh, moneda, potencia de la bomba, duración de filtración habitual, gasto anual en productos) y en los precios de compra que puedes indicar en las fichas de producto (precio pagado, contenido, fecha, tienda opcional). Las hipótesis solo son accesibles para ti, se usan solo para estos cálculos y se eliminan con tu cuenta. Los resultados son estimaciones indicativas basadas en tus propias hipótesis: no constituyen una garantía de ahorro ni un asesoramiento financiero y pueden diferir de tu consumo y gasto reales.",
     wx_clear: "Soleado",
     wx_clear_night: "Cielo despejado",
     wx_fair: "Poco nublado",
@@ -5681,6 +5931,52 @@ const TRANSLATIONS = {
     wizard_title: "Plano de tratamento",
     wizard_step: "Passo",
     wizard_of: "de",
+    wizard_state_applied: "Aplicada",
+    wizard_state_skipped: "Ignorada",
+    wizard_state_current: "Em curso",
+    wizard_state_upcoming: "A seguir",
+    wizard_view_applied_on: "Aplicada em {date} — {amount}",
+    wizard_view_proposed: "Quantidade proposta: {amount}",
+    wizard_view_skipped_long: "Passo ignorado: nenhum produto aplicado.",
+    wizard_view_readonly: "Apenas consulta: só o passo em curso pode ser aplicado.",
+    wizard_back_to_current: "Voltar ao passo em curso ({n})",
+    wizard_nav_prev: "Passo anterior",
+    wizard_nav_next: "Passo seguinte",
+    catchup_title: "Produtos por aplicar",
+    catchup_intro: "Um plano recente propunha produtos que não foram aplicados, ou foram aplicados em menor quantidade, e o parâmetro correspondente não foi medido desta vez.",
+    catchup_line: "{product}: {amount} por aplicar",
+    catchup_status_skipped: "passo ignorado",
+    catchup_status_partial: "aplicado em menor quantidade",
+    catchup_status_pending: "plano não terminado",
+    catchup_detail: "{status}, plano de {date}",
+    catchup_param_missing: "{param} não foi medido nesta medição.",
+    catchup_position: "Proposto no passo {n} de {total} do novo plano.",
+    catchup_include: "Adicionar estes produtos ao novo plano",
+    catchup_excluded: "Estes produtos não serão incluídos neste plano.",
+    catchup_step_title: "Recuperação — plano de {date}",
+    wizard_catchup_badge: "Recuperação",
+    acct_get_data_btn: "Recuperar os meus dados",
+    acct_get_data_hint: "Recebe por e-mail uma ligação para descarregar os seus dados num ficheiro .txt (válida {days} dias).",
+    acct_get_data_sent: "E-mail enviado para {email}. A ligação é válida {days} dias.",
+    acct_download_btn: "Descarregar os meus dados (.txt)",
+    acct_action_error: "Operação impossível neste momento. Tente mais tarde.",
+    acct_erase_data_btn: "Apagar os meus dados",
+    acct_modal_title_account: "Eliminar a minha conta",
+    acct_modal_title_data: "Apagar os meus dados",
+    acct_modal_body_account: "O seu pedido de eliminação da conta e de todos os seus dados será registado. Dispõe de {days} dias para o anular; depois disso, a sua conta e os seus dados serão eliminados definitivamente. Durante este prazo só a página Definições permanece utilizável.",
+    acct_modal_body_data: "O seu pedido de apagamento dos dados será registado. Dispõe de {days} dias para o anular; depois disso, as suas piscinas, medições, produtos, fotos e históricos serão apagados definitivamente. A sua conta, a subscrição e o pseudónimo são conservados. Durante este prazo só a página Definições permanece utilizável.",
+    acct_modal_keep: "Antes de confirmar, pode recuperar os seus dados:",
+    acct_sub_warning: "A sua subscrição Premium não é cancelada automaticamente: cancele-a separadamente (Definições > Gerir a minha subscrição, ou Google Play) para deixar de ser cobrado.",
+    acct_confirm_account: "Confirmar a eliminação da minha conta",
+    acct_confirm_data: "Confirmar o apagamento dos meus dados",
+    acct_pending_title_account: "Eliminação da conta pedida",
+    acct_pending_title_data: "Apagamento dos dados pedido",
+    acct_pending_body: "Pedido registado em {requested}. Eliminação definitiva em {purge}. Até lá pode anulá-lo. Só a página Definições é utilizável.",
+    acct_cancel_account: "Anular o meu pedido de eliminação da conta",
+    acct_cancel_data: "Anular o pedido de apagamento dos dados",
+    acct_cancel_done: "Pedido anulado: a sua conta funciona normalmente.",
+    acct_locked_hint: "Indisponível durante um pedido de eliminação",
+    acct_purged_data: "Os seus dados foram apagados conforme pedido.",
     wizard_now: "Agora",
     wizard_in: "Em",
     wizard_at: "às",
@@ -6298,7 +6594,11 @@ const TRANSLATIONS = {
     filt_current_duration_label: "Horas por dia",
     filt_current_hint: "Opcional: permite assinalar uma diferença face à hora e à duração recomendadas.",
     lcen_weather_title: "Tempo e duração da filtração",
-    lcen_weather_val: "A função «Filtração de hoje» (Premium) recomenda uma duração e um intervalo horário de filtração com base na temperatura da água (introduzida ou estimada) e no tempo na sua piscina. Para obter o tempo, as coordenadas geográficas aproximadas da cidade da sua piscina (no máximo 4 casas decimais) são transmitidas, através da infraestrutura técnica do editor, ao Instituto Meteorológico da Noruega (MET Norway, Noruega). Nenhum outro dado — nem nome, nem endereço de email, nem identificador de conta — é transmitido ao MET Norway. A altitude deste ponto é obtida a partir dessas mesmas coordenadas junto do serviço de altimetria da Géoplateforme do IGN (França) ou, na sua falta, do serviço Open Topo Data (dados SRTM), e guardada com a piscina para afinar a previsão; estes serviços recebem apenas essas coordenadas. Dados meteorológicos: MET Norway, sob licença aberta (NLOD 2.0 / CC BY 4.0). Estas recomendações são indicativas: não substituem o manual do seu equipamento nem a sua própria avaliação do estado da água, e continua responsável pela programação da sua filtração.",
+    lcen_weather_val: "A função «Filtração de hoje» (Premium) recomenda uma duração e um intervalo horário de filtração com base na temperatura da água (introduzida ou estimada) e no tempo na sua piscina. Para obter o tempo, as coordenadas geográficas da cidade da sua piscina, ou da sua posição se utilizar o GPS (no máximo 4 casas decimais, ou seja, uma precisão de cerca de 10 m) são transmitidas, através da infraestrutura técnica do editor, ao Instituto Meteorológico da Noruega (MET Norway, Noruega). Nenhum outro dado — nem nome, nem endereço de email, nem identificador de conta — é transmitido ao MET Norway. A altitude deste ponto é obtida a partir dessas mesmas coordenadas junto do serviço de altimetria da Géoplateforme do IGN (França) ou, na sua falta, do serviço Open Topo Data (dados SRTM), e guardada com a piscina para afinar a previsão; estes serviços recebem apenas essas coordenadas. Dados meteorológicos: MET Norway, sob licença aberta (NLOD 2.0 / CC BY 4.0). Estas recomendações são indicativas: não substituem o manual do seu equipamento nem a sua própria avaliação do estado da água, e continua responsável pela programação da sua filtração.",
+    lcen_filtdata_title: "Dados de filtração registados",
+    lcen_filtdata_val: "Para recomendar uma duração de filtração e estimar a temperatura da água, a aplicação regista, juntamente com a sua piscina, as temperaturas da água que introduz (com a data), as programações de filtração que guarda, a temperatura média do ar dos últimos 60 dias na localização da piscina e a configuração térmica que indica (aquecimento, cobertura, profundidade). Daí deduz um coeficiente de inércia próprio de cada piscina. Estes dados estão associados à sua piscina: são visíveis para si e para os convidados que associar, são utilizados apenas para estes cálculos e são eliminados com a piscina ou com a sua conta. As temperaturas apresentadas para os dias sem registo são estimativas e podem diferir da temperatura real.",
+    lcen_savings_title: "Balanço e estimativas de poupança",
+    lcen_savings_val: "O separador Balanço (Premium, reservado ao proprietário da piscina) estima a eletricidade e os produtos poupados e a proporção de dias em que a água está dentro do objetivo. Baseia-se em hipóteses que introduz (preço do kWh, moeda, potência da bomba, duração de filtração habitual, despesa anual em produtos) e nos preços de compra que pode indicar nas fichas de produto (preço pago, conteúdo, data, loja facultativa). As hipóteses são acessíveis apenas a si, são utilizadas apenas para estes cálculos e são eliminadas com a sua conta. Os resultados são estimativas indicativas baseadas nas suas próprias hipóteses: não constituem garantia de poupança nem aconselhamento financeiro e podem diferir do seu consumo e despesa reais.",
     wx_clear: "Ensolarado",
     wx_clear_night: "Céu limpo",
     wx_fair: "Pouco nublado",
@@ -7202,6 +7502,91 @@ function computeStepPriority(step, ctx) {
   }
   return base;
 }
+
+// ── CATCHUP PURE (début) ── v1.175.0 : produits d'un plan récent restés à appliquer, et leur insertion dans un nouveau plan.
+const CATCHUP_WINDOW_DAYS = 14;
+// Paramètre(s) de mesure à l'origine d'une action de plan (clés en minuscules, comme dans computeRecommendations).
+const CATCHUP_ACTION_PARAMS = {
+  "ph-": ["ph"], "ph+": ["ph"], "tac+": ["tac"], "tac-": ["tac"],
+  "chlore": ["fcl"], "chlore-stabilise": ["fcl"], "brome": ["brome"],
+  "hard+": ["hard"], "phos-": ["phos"], "sequestrant": ["copper", "iron"], "sel": ["sel"],
+};
+function catchupMeasureHasParam(m, key) {
+  if (!m) return false;
+  const k = Object.keys(m).find((x) => x.toLowerCase() === key);
+  if (k == null) return false;
+  const v = m[k];
+  return v !== "" && v != null && !Number.isNaN(parseFloat(v));
+}
+// Pour chaque action (le plan le plus récent qui la contient, dans les 14 derniers jours), quantité restant à appliquer :
+// étape passée, étape jamais appliquée (plan non terminé) ou appliquée en quantité inférieure sans étape de complément derrière.
+// Ne garde que les actions dont le paramètre associé n'est PAS mesuré dans la nouvelle mesure.
+function computeCatchupItems(applications, newMeasureId, newMeasure, nowMs) {
+  const latestByAction = {};
+  (applications || []).forEach((app) => {
+    if (!app || app.measureId === newMeasureId || !Array.isArray(app.steps)) return;
+    const at = Date.parse(app.appliedAt);
+    if (!at || nowMs - at > CATCHUP_WINDOW_DAYS * 864e5 || at > nowMs + 864e5) return;
+    const seen = new Set();
+    app.steps.forEach((st) => {
+      if (st && CATCHUP_ACTION_PARAMS[st.action] && !seen.has(st.action)) {
+        seen.add(st.action);
+        if (!latestByAction[st.action] || latestByAction[st.action].at < at) latestByAction[st.action] = { app, at };
+      }
+    });
+  });
+  const items = [];
+  Object.keys(latestByAction).forEach((action) => {
+    const { app, at } = latestByAction[action];
+    const steps = app.steps;
+    let missing = 0, unit = null, status = null, label = null, realName = null;
+    const rank = { partial: 3, skipped: 2, pending: 1 };
+    steps.forEach((st, i) => {
+      if (!st || st.action !== action || st.mode === "entretien" || st.noAction || st.doseUnit === "%") return;
+      if (st.isSubstitute || st.substituteFor) return;
+      const computed = st.computedDoseAmount;
+      if (!(computed > 0)) return;
+      let gap = 0, kind = null;
+      if (st.skipped) { gap = computed; kind = "skipped"; }
+      else if (!st.appliedAt) { gap = computed; kind = "pending"; }
+      else {
+        const g = computed - (st.appliedAmount || 0);
+        const next = steps[i + 1];
+        const hasComplementBehind = !!(next && next.isComplement && next.action === action);
+        if (g > Math.max(1, computed * 0.02) && !hasComplementBehind) { gap = g; kind = "partial"; }
+      }
+      if (!kind) return;
+      missing += gap;
+      if (!unit) unit = st.doseUnit || "g";
+      if (!status || rank[kind] > rank[status]) status = kind;
+      label = st.appliedProductName || st.productName || label;
+      realName = st.appliedProductName || st.productRealName || st.productName || realName;
+    });
+    if (!status || !(missing > 0)) return;
+    const params = CATCHUP_ACTION_PARAMS[action];
+    if (params.some((k) => catchupMeasureHasParam(newMeasure, k))) return;
+    items.push({ action, params, productName: label, productRealName: realName, missing: Math.round(missing), unit, status, planAt: new Date(at).toISOString() });
+  });
+  items.sort((a, b) => (ACTION_PRIORITY[a.action] ?? 9) - (ACTION_PRIORITY[b.action] ?? 9));
+  return items;
+}
+// Insère les étapes de rattrapage dans les recommandations du nouveau plan, selon l'ordre de base des actions
+// (avant la première étape de priorité supérieure) ; un ajustement de pH reste suivi de 6 h avant un choc chlore.
+function insertCatchupSteps(recs, catchupSteps) {
+  const steps = [...recs];
+  catchupSteps.forEach((cs) => {
+    const pr = ACTION_PRIORITY[cs.action] ?? 9;
+    const at = steps.findIndex((r) => (ACTION_PRIORITY[r.action] ?? 9) > pr);
+    if (at < 0) steps.push(cs); else steps.splice(at, 0, cs);
+  });
+  catchupSteps.forEach((cs) => {
+    if ((cs.action === "ph-" || cs.action === "ph+") && steps.some((r, i) => r.action === "chlore" && i > steps.indexOf(cs))) {
+      cs.waitHours = Math.max(cs.waitHours || 0, 6);
+    }
+  });
+  return { steps, positions: catchupSteps.map((cs) => steps.indexOf(cs) + 1) };
+}
+// ── CATCHUP PURE (fin) ──
 
 const STORAGE_KEYS = {
   measures: "pool:measures",
@@ -9275,6 +9660,25 @@ const FB = {
   // Envoie une demande de récupération/effacement des données au support, via
   // le Worker (route à créer côté serveur : POST /account-data-request).
   // Authentifié par ID token Firebase, même pattern que /v1/messages.
+  // v1.177.0 — Cycle de vie du compte (Worker /account/*) : jamais d'écriture Firestore côté client.
+  accountApi: async (path, body) => {
+    const idToken = window._fbAuth?.currentUser ? await window._fbAuth.currentUser.getIdToken() : null;
+    if (!idToken) throw new Error("Non authentifié");
+    const res = await fetch(`${PROXY_BASE_URL}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+      body: JSON.stringify(body || {}),
+    });
+    let data = null;
+    try { data = await res.json(); } catch (e) {}
+    if (!res.ok) { const err = new Error(data?.error || `Erreur ${res.status}`); err.status = res.status; throw err; }
+    return data;
+  },
+  accountStatus: () => FB.accountApi("/account/status"),
+  accountRequest: (kind, lang) => FB.accountApi("/account/request", { kind, lang }),
+  accountCancel: () => FB.accountApi("/account/cancel"),
+  accountExport: (lang) => FB.accountApi("/account/export", { lang }),
+  accountExportEmail: (lang) => FB.accountApi("/account/export-email", { lang }),
   sendAccountDataRequest: async (action, uid, email) => {
     const idToken = window._fbAuth?.currentUser
       ? await window._fbAuth.currentUser.getIdToken()
@@ -10329,8 +10733,70 @@ function PoolGenAIApp() {
   const tabStateRef = useRef(tab);
   tabStateRef.current = tab;
   // v1.170.0 — Un invité (bassin délégué) n'a pas l'onglet Bilan : hypothèses et prix du propriétaire restent privés.
+  // v1.177.0 — Demande de suppression du compte / d'effacement des données en cours : seul l'onglet Réglages reste utilisable.
+  const [accountState, setAccountState] = useState(null); // { status: none|pending|cancelled|purged, kind, requestedAt, purgeAt, purgedAt }
+  const accountLocked = accountState?.status === "pending";
+  const deleteReauthThenRef = useRef(null);
+  const [reauthKind, setReauthKind] = useState("account");
   const tabOrderRef = useRef(TAB_ORDER);
-  tabOrderRef.current = viewContext ? TAB_ORDER.filter((x) => x !== "summary") : TAB_ORDER;
+  tabOrderRef.current = accountLocked ? ["settings"] : (viewContext ? TAB_ORDER.filter((x) => x !== "summary") : TAB_ORDER);
+  useEffect(() => { if (accountLocked && tab !== "settings") setTab("settings"); }, [accountLocked, tab]);
+  useEffect(() => {
+    if (!authUser?.uid) { setAccountState(null); return; }
+    let cancelled = false;
+    const load = () => FB.accountStatus().then((st) => { if (!cancelled) setAccountState(st); return st; }).catch(() => null);
+    // v1.177.2 — Les suppressions échues sont exécutées par le Worker à l'ouverture de l'app (au plus une fois par heure), sans Cron Trigger.
+    load().then((st) => {
+      FB.accountApi("/account/purge-due").catch(() => {});
+      if (st && st.status === "pending" && Date.parse(st.purgeAt) <= Date.now()) setTimeout(load, 20000);
+    });
+    const onVis = () => { if (document.visibilityState === "visible") load(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => { cancelled = true; document.removeEventListener("visibilitychange", onVis); };
+  }, [authUser?.uid]);
+  // Données effacées par le serveur : la copie locale de l'appareil est vidée une seule fois, puis l'app se recharge.
+  useEffect(() => {
+    if (!accountState || accountState.status !== "purged" || accountState.kind !== "data" || !accountState.purgedAt) return;
+    (async () => {
+      let ack = "";
+      try { const a = await window.storage.get("pool:purgeAck"); ack = a?.value || ""; } catch (e) {}
+      if (ack === accountState.purgedAt) return;
+      await window.storage.set("pool:purgeAck", accountState.purgedAt).catch(() => {});
+      await Promise.all([
+        [STORAGE_KEYS.measures, "[]"], [STORAGE_KEYS.products, "[]"], [STORAGE_KEYS.settings, "{}"], [STORAGE_KEYS.pools, "[]"],
+        [STORAGE_KEYS.activePool, JSON.stringify("default")], [STORAGE_KEYS.applications, "[]"], [STORAGE_KEYS.activePlan, ""],
+      ].map(([k, v]) => window.storage.set(k, v).catch(() => {})));
+      window.location.reload();
+    })();
+  }, [accountState]);
+  // Suppression du compte exécutée : plus de session possible sur cet appareil.
+  useEffect(() => {
+    if (accountState && accountState.status === "purged" && accountState.kind === "account") handleSignOut();
+  }, [accountState]);
+  async function requestAccountAction(kind) {
+    const run = async () => {
+      try { setAccountState(await FB.accountRequest(kind, lang)); }
+      catch (e) { alert(tFn("acct_action_error")); }
+    };
+    const isGoogle = authUser?.providerData?.some((p) => p.providerId === "google.com");
+    if (isGoogle) {
+      try {
+        try { await FB.reauthGoogle(); }
+        catch (reauthErr) { if (reauthErr.code !== "auth/cancelled-popup-request") throw reauthErr; return; }
+        await run();
+      } catch (e) { alert(e.message); }
+      return;
+    }
+    // Compte e-mail / mot de passe : le mot de passe est redemandé avant d'enregistrer la demande.
+    deleteReauthThenRef.current = run;
+    setReauthKind(kind);
+    setDeleteReauthError(null);
+    setShowDeleteReauth(true);
+  }
+  async function cancelAccountAction() {
+    try { setAccountState(await FB.accountCancel()); }
+    catch (e) { alert(tFn("acct_action_error")); }
+  }
   useEffect(() => { if (viewContext && tab === "summary") setTab("dashboard"); }, [viewContext, tab]);
   const [showAddMeasure, setShowAddMeasure] = useState(false);
   const [showAddProduct, setShowAddProduct] = useState(false);
@@ -10875,6 +11341,7 @@ function PoolGenAIApp() {
   // Distinct de "suspended" (géré par l'admin) : ici c'est l'utilisateur lui-même qui a
   // demandé la suppression. Le compte Auth reste actif, seul ce flag bloque l'app.
   const [accountDeleted, setAccountDeleted] = useState(false);
+  const [catchupPrompt, setCatchupPrompt] = useState(null); // v1.175.0 — { m, recs, items } avant le démarrage d'un plan
   const [showDataRequestScreen, setShowDataRequestScreen] = useState(false);
   useEffect(() => {
     if (!authUser?.uid) { setAccountDeleted(false); setShowDataRequestScreen(false); return; }
@@ -10957,39 +11424,7 @@ function PoolGenAIApp() {
     viewContextLoadedRef.current = false;
   }
 
-  // v1.28.0 — Soft delete : ne supprime plus les données Firestore ni le compte
-  // Auth. Marque juste le compte comme supprimé (accountDeletions/{uid}), ce qui
-  // bloque l'accès applicatif via l'écran "Compte supprimé". Les données restent
-  // en base jusqu'à purge manuelle (ex. réponse à une demande RGPD).
-  // v1.28.1 — Fix : un syncConfig en attente (debounce 800ms) capture l'uid au
-  // moment de l'appel. S'il se déclenche après signOut(), l'écriture Firestore
-  // échoue (permission refusée) et l'erreur apparaît sur l'écran de connexion,
-  // juste après la suppression — trompeur, alors que la suppression a réussi.
-  // On annule tout debounce en attente avant de se déconnecter.
-  // v1.29.2 — Fix : la règle Firestore n'autorisait la transition deleted que
-  // dans un sens (true→false, pour la réactivation). Une suppression après une
-  // réactivation était donc une transition false→true, rejetée par Firestore.
-  // L'erreur était avalée (.catch(() => {})) : l'app déconnectait quand même,
-  // donnant l'illusion d'une suppression alors que le flag n'était jamais posé.
-  // Maintenant : si l'écriture échoue, on arrête tout AVANT de déconnecter, et
-  // l'erreur remonte à l'appelant (alerte ou écran de réauthentification).
-  async function performDeleteAccount() {
-    const uid = authUser?.uid;
-    if (!uid) return;
-    try {
-      await FB.markAccountDeleted(uid);
-    } catch (e) {
-      throw new Error(t("account_delete_flag_error") + (e?.message ? " (" + e.message + ")" : ""));
-    }
-    teardownRef.current = true;
-    if (syncDebounceRef.current) { clearTimeout(syncDebounceRef.current); syncDebounceRef.current = null; }
-    syncPendingRef.current = {};
-    await resetLocalAppState();
-    try { await FB.signOut?.(); } catch (e) {}
-    window.storage.set("auth_skipped", "").catch(() => {});
-    setAuthUser(null);
-    setShowLogin(true);
-  }
+  // v1.177.0 — La suppression du compte et l'effacement des données passent par le Worker (/account/request), avec 30 jours pour annuler : voir requestAccountAction.
 
   // v1.29 — "Recommencer avec cette adresse" depuis l'écran "Compte supprimé".
   // Ne touche jamais aux anciennes données : désactive tous les bassins existants
@@ -12235,6 +12670,9 @@ function PoolGenAIApp() {
       // v1.143.0 — Étapes d'un produit de substitution (voir planSubstitutionContext).
       ...(s.isSubstitute ? { isSubstitute: true } : {}),
       ...(s.substituteFor ? { substituteFor: s.substituteFor } : {}),
+      // v1.175.0 — Étape de rattrapage d'un plan récent (voir computeCatchupItems) : pas de carte issue d'une recommandation, on garde
+      // ce qui sert à la reprise du plan.
+      ...(s.isCatchup ? { isCatchup: true, catchupFrom: s.catchupFrom, waitHours: s.waitHours, productAvailable: s.productAvailable } : {}),
     }));
   }
 
@@ -12814,7 +13252,44 @@ function PoolGenAIApp() {
     if (!confirmPlanSwitch(m.id)) return;
     // Sinon démarrer un nouveau plan
     const recs = recsOverride || computeRecommendations(m, activePool?.volume || 0, poolProducts, effectiveTargets, activeParamKeys, tFn, computeParamTrends(poolMeasures, m, poolApplications, poolProducts, activePool?.volume || 0));
+    // v1.175.0 — Produits d'un plan des 14 derniers jours restés à appliquer (paramètre non mesuré cette fois) : rappel avant de démarrer.
+    const catchupItems = computeCatchupItems(poolApplications, m.id, m, Date.now());
+    if (catchupItems.length > 0) {
+      setCatchupPrompt({ m, recs, items: catchupItems });
+      return;
+    }
     startPlan(m.id, recs);
+    setShowWizard(true);
+  }
+
+  // v1.175.0 — Étape de rattrapage d'un produit resté à appliquer (même produit que l'ancien plan, reste à appliquer).
+  function buildCatchupStep(item) {
+    const real = (poolProducts || []).find((p) => p.name === item.productRealName);
+    return {
+      action: item.action,
+      title: tFn("catchup_step_title", { date: formatDate(item.planAt) }),
+      productName: real ? productDisplayName(real, tFn) : item.productName,
+      productAvailable: !!real,
+      productRealName: real ? real.name : (item.productRealName || null),
+      productPhoto: real?.photo || null,
+      doseText: `${tFn("reco_dose_prefix")} ${formatDose(item.missing, item.unit || "g")}`,
+      missingTip: null,
+      computedDoseAmount: item.missing,
+      doseUnit: item.unit || "g",
+      note: null,
+      waitHours: real?.waitHours ?? DEFAULT_WAIT_HOURS[item.action] ?? 0,
+      isCatchup: true,
+      catchupFrom: item.planAt,
+    };
+  }
+  function mergeCatchupIntoRecs(recs, items) {
+    return insertCatchupSteps(recs, items.map(buildCatchupStep));
+  }
+  function confirmCatchupPrompt(include) {
+    const p = catchupPrompt;
+    if (!p) return;
+    setCatchupPrompt(null);
+    startPlan(p.m.id, include ? mergeCatchupIntoRecs(p.recs, p.items).steps : p.recs);
     setShowWizard(true);
   }
 
@@ -13225,26 +13700,6 @@ function PoolGenAIApp() {
             authUser={authUser}
             onSignOut={handleSignOut}
             onSignIn={() => setShowLogin(true)}
-            onDeleteAccount={async () => {
-              const isGoogle = authUser?.providerData?.some(p => p.providerId === "google.com");
-              if (isGoogle) {
-                try {
-                  try {
-                    await FB.reauthGoogle();
-                  } catch (reauthErr) {
-                    if (reauthErr.code !== "auth/cancelled-popup-request") throw reauthErr;
-                    return;
-                  }
-                  await performDeleteAccount();
-                } catch (e) {
-                  alert(e.message);
-                }
-                return;
-              }
-              // Compte email/mot de passe : demande le mot de passe avant de tenter la suppression
-              setDeleteReauthError(null);
-              setShowDeleteReauth(true);
-            }}
             poolMeasureCount={poolMeasures.length}
             onGenerateReport={() => setShowReport(true)}
             onWantPremiumForReport={() => openPaywall("report")}
@@ -13296,25 +13751,10 @@ function PoolGenAIApp() {
             onDeleteAllMeasures={deleteAllMeasuresForActivePool}
             authUser={authUser}
             cguAcceptedDate={cguAcceptedDate}
-            onDeleteAccount={async () => {
-              const isGoogle = authUser?.providerData?.some(p => p.providerId === "google.com");
-              if (isGoogle) {
-                try {
-                  try {
-                    await FB.reauthGoogle();
-                  } catch (reauthErr) {
-                    if (reauthErr.code !== "auth/cancelled-popup-request") throw reauthErr;
-                    return;
-                  }
-                  await performDeleteAccount();
-                } catch (e) {
-                  alert(e.message);
-                }
-                return;
-              }
-              setDeleteReauthError(null);
-              setShowDeleteReauth(true);
-            }}
+            accountState={accountState}
+            subscriptionActive={!!isPremium && !testerUntil}
+            onAccountRequest={requestAccountAction}
+            onAccountCancel={cancelAccountAction}
           />
           </>
         )}
@@ -13808,7 +14248,7 @@ function PoolGenAIApp() {
       </main>
 
 
-      <TabBar tab={tab} setTab={setTab} lang={lang} viewContext={viewContext} />
+      <TabBar tab={tab} setTab={setTab} lang={lang} viewContext={viewContext} locked={accountLocked} />
 
       {showAddMeasure && (
         <AddMeasureModal
@@ -13902,6 +14342,7 @@ function PoolGenAIApp() {
       {showDeleteReauth && (
         <DeleteReauthModal
           lang={lang}
+          title={reauthKind === "data" ? tFn("acct_modal_title_data") : undefined}
           busy={deleteReauthBusy}
           error={deleteReauthError}
           onClose={() => { setShowDeleteReauth(false); setDeleteReauthError(null); }}
@@ -13910,7 +14351,7 @@ function PoolGenAIApp() {
             setDeleteReauthError(null);
             try {
               await FB.reauthEmail(password);
-              await performDeleteAccount();
+              if (deleteReauthThenRef.current) await deleteReauthThenRef.current();
               setShowDeleteReauth(false);
             } catch (e) {
               if (e.code === "auth/wrong-password" || e.code === "auth/invalid-credential") {
@@ -13998,6 +14439,20 @@ function PoolGenAIApp() {
           </div>
         </div>
       )}
+
+      {catchupPrompt && (() => {
+        const merged = mergeCatchupIntoRecs(catchupPrompt.recs, catchupPrompt.items);
+        return (
+          <CatchupReminderModal
+            lang={lang}
+            items={catchupPrompt.items}
+            positions={merged.positions}
+            total={merged.steps.length}
+            onStart={confirmCatchupPrompt}
+            onCancel={() => setCatchupPrompt(null)}
+          />
+        );
+      })()}
 
       {showWizard && activePlan && effectiveIsPremium && (
         <TreatmentWizard
@@ -14449,7 +14904,7 @@ function SummaryIcon({ size = 24, color = "currentColor", strokeWidth = 2, style
 // v1.170.0 — Barre d'onglets à défilement horizontal : chaque onglet garde sa taille d'origine (environ un cinquième de l'écran, 64 px au moins),
 // la barre défile quand ils ne tiennent plus, un dégradé signale la suite, et l'onglet actif est ramené dans la zone visible. L'onglet Bilan
 // n'existe pas pour un invité (bassin délégué).
-function TabBar({ tab, setTab, lang, viewContext }) {
+function TabBar({ tab, setTab, lang, viewContext, locked }) {
   const t = useT(lang);
   const all = [
     { id: "dashboard", label: t("tab_pool"), icon: Droplets },
@@ -14512,17 +14967,23 @@ function TabBar({ tab, setTab, lang, viewContext }) {
           {tabs.map((tb) => {
             const Icon = tb.icon;
             const active = tab === tb.id;
+            const lockedTab = !!locked && tb.id !== "settings"; // v1.177.0 — demande de suppression en cours
             return (
               <button
                 key={tb.id}
                 ref={(el) => { btnRefs.current[tb.id] = el; }}
                 data-tab={tb.id}
+                data-locked={lockedTab ? "1" : "0"}
+                aria-disabled={lockedTab ? "true" : undefined}
+                title={lockedTab ? t("acct_locked_hint") : undefined}
                 onClick={() => {
+                  if (lockedTab) return;
                   setTab(tb.id);
                   track("screen_view", { screen_name: tb.id });
                 }}
                 style={{
                   ...styles.tabBtn,
+                  ...(lockedTab ? { opacity: 0.35, cursor: "not-allowed" } : {}),
                   flex: "1 0 auto",
                   minWidth: "max(64px, min(18%, 96px))",
                   padding: "9px 4px 10px",
@@ -15425,14 +15886,18 @@ function validTempEntryTime(ms, nowMs) {
 }
 // Dernière température saisie du bassin (la plus récente par date) telle qu'on la réaffiche dans les champs de la carte Filtration :
 // { draft (valeur dans l'unité d'affichage), when (valeur du champ date/heure) } ; null si aucune, ou si elle est trop ancienne pour être resaisie.
-function restoredTempInput(pool, unit, nowMs) {
+// v1.177.1 — Les mesures comptent aussi : une température saisie dans une mesure (valeur et date de la mesure, ou instant de saisie si plus
+// tardif) l'emporte tant qu'elle est plus récente que la dernière saisie de l'onglet. src : "mesure" ou "saisie".
+function restoredTempInput(pool, unit, nowMs, measures) {
   if (!pool) return null;
-  const last = latestTempEntry([...(Array.isArray(pool.filtrationTempLog) ? pool.filtrationTempLog : []), pool.filtrationWaterTemp].filter(Boolean));
+  const cardEntries = [...(Array.isArray(pool.filtrationTempLog) ? pool.filtrationTempLog : []), pool.filtrationWaterTemp].filter(Boolean);
+  const measureEntries = collectWaterEntries(measures, null).filter((e) => e.src === "mesure").map((e) => ({ value: e.value, at: new Date(e.t).toISOString(), src: "mesure" }));
+  const last = latestTempEntry([...cardEntries, ...measureEntries]);
   if (!last) return null;
   const v = tempToDisplay(parseFloat(last.value), unit);
   const ms = Date.parse(last.at);
   if (v === null || !Number.isFinite(ms) || !validTempEntryTime(ms, nowMs)) return null;
-  return { draft: String(Math.round(v * 10) / 10), when: localInputValue(ms) };
+  return { draft: String(Math.round(v * 10) / 10), when: localInputValue(ms), src: last.src === "mesure" ? "mesure" : "saisie" };
 }
 function filtrationTempEntries(pool) {
   if (!pool) return [];
@@ -16327,10 +16792,20 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
   const { poolType, tz, coords, setCoords, geoFailed, setGeoFailed, wState, todayStats, est, spaSpec, totalHours, noon, slots, risingNote, updatedLabel, tzLabel } = useFiltrationBase({ pool, measures, lang, canEdit, onUpdatePool });
   // Dernière saisie enregistrée : valeur et heure restent affichées avec une coche (y compris en revenant sur l'onglet) ;
   // { auto } = heure non choisie (datée de maintenant) : une nouvelle température repart de « maintenant ».
-  const [restored] = useState(() => restoredTempInput(pool, TEMP_UNIT, Date.now()));
+  const [restored] = useState(() => restoredTempInput(pool, TEMP_UNIT, Date.now(), measures));
   const [tempDraft, setTempDraft] = useState(restored ? restored.draft : "");
   const [tempWhen, setTempWhen] = useState(restored ? restored.when : ""); // date et heure de la saisie (heure locale) ; vide = maintenant
   const [tempSaved, setTempSaved] = useState(restored ? { auto: true, older: null } : null);
+  // v1.177.1 — Une mesure plus récente (température saisie dans la mesure) remplace les champs, sauf si on est en train de saisir.
+  const tempEditedRef = useRef(false);
+  const restoredNow = restoredTempInput(pool, TEMP_UNIT, Date.now(), measures);
+  const restoredKey = restoredNow ? restoredNow.src + "|" + restoredNow.draft + "|" + restoredNow.when : "";
+  useEffect(() => {
+    if (tempEditedRef.current || !restoredNow || restoredNow.src !== "mesure") return;
+    setTempDraft(restoredNow.draft);
+    setTempWhen(restoredNow.when);
+    setTempSaved({ auto: true, older: null });
+  }, [restoredKey]);
   // Programmation actuelle de la filtration (coffret) : saisie dans l'onglet, enregistrée dans le bassin.
   const progSaved = { start: (pool && pool.filtrationStartCurrent) || "", dur: pool && pool.filtrationDurationCurrent != null ? String(pool.filtrationDurationCurrent) : "" };
   const [progStart, setProgStart] = useState(progSaved.start);
@@ -16375,6 +16850,7 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
     // La température utilisée par le calcul est la saisie la plus RÉCENTE par date : une saisie antidatée ne la remplace pas.
     const latest = latestTempEntry(log);
     onUpdatePool({ filtrationWaterTemp: latest, filtrationTempLog: log });
+    tempEditedRef.current = false;
     // older : la saisie est antérieure à la plus récente, qui reste la température utilisée pour le calcul
     setTempSaved({ auto: tempWhen === "", older: latest && Date.parse(latest.at) > Date.parse(entry.at) ? { entry, latest } : null });
     if (tempWhen === "") setTempWhen(localInputValue(whenMs));
@@ -16443,6 +16919,7 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
               <input
                 type="number" step="0.5" inputMode="decimal" value={tempDraft}
                 onChange={(e) => {
+                  tempEditedRef.current = true;
                   setTempDraft(e.target.value);
                   // Nouvelle saisie : la coche disparaît ; une heure qui n'avait pas été choisie redevient « maintenant ».
                   if (tempSaved) { if (tempSaved.auto) setTempWhen(""); setTempSaved(null); }
@@ -16457,7 +16934,7 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
               <input
                 type="datetime-local" value={tempWhen}
                 min={localInputValue(Date.now() - TEMP_ENTRY_MAX_AGE_DAYS * 864e5)} max={localInputValue(Date.now())}
-                onChange={(e) => { setTempWhen(e.target.value); setTempSaved(null); }}
+                onChange={(e) => { tempEditedRef.current = true; setTempWhen(e.target.value); setTempSaved(null); }}
                 disabled={!canEdit}
                 style={{ ...styles.input, marginBottom: 0, padding: "11px 6px", fontSize: 12, height: 46, boxSizing: "border-box" }}
               />
@@ -23934,6 +24411,39 @@ function PlanStatusCard({ plan, onResume, lang }) {
 }
 
 // ---------- TreatmentWizard : wizard pas-à-pas ----------
+// v1.175.0 — Rappel affiché avant de démarrer un nouveau plan : produits d'un plan récent restés à appliquer.
+function CatchupReminderModal({ lang, items, positions, total, onStart, onCancel }) {
+  const t = useT(lang);
+  const [include, setInclude] = React.useState(true);
+  const paramName = (k) => { const key = "param_" + k; const v = t(key); return v !== key ? v.replace(/ \(mg\/L\)| \(°C\)| \(µg\/L\)/, "") : k; };
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 420, background: "rgba(10,30,60,0.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div data-testid="catchup-modal" style={{ background: "#fff", borderRadius: 16, width: "100%", maxWidth: 420, maxHeight: "88dvh", overflowY: "auto", padding: "20px 18px", boxSizing: "border-box" }}>
+        <div style={{ fontSize: 16, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 6 }}>{t("catchup_title")}</div>
+        <div style={{ fontSize: 12.5, color: "var(--brand-text-secondary)", lineHeight: 1.5, marginBottom: 12 }}>{t("catchup_intro")}</div>
+        {items.map((it, i) => (
+          <div key={it.action} data-testid={"catchup-item-" + i} style={{ background: "#fff8e8", border: "1.5px solid #e6a817", borderRadius: 10, padding: "10px 12px", marginBottom: 10 }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: "#7a5800" }}>{t("catchup_line", { product: it.productName || "", amount: formatDose(it.missing, it.unit || "g") })}</div>
+            <div style={{ fontSize: 12, color: "#7a5800", marginTop: 2 }}>{t("catchup_detail", { status: t("catchup_status_" + it.status), date: formatDate(it.planAt) })}</div>
+            <div style={{ fontSize: 12, color: "#7a5800", marginTop: 2 }}>{t("catchup_param_missing", { param: it.params.map(paramName).join(" / ") })}</div>
+            <div data-testid={"catchup-pos-" + i} style={{ fontSize: 12.5, fontWeight: 700, color: include ? "var(--brand-primary)" : "var(--brand-text-muted)", marginTop: 6 }}>
+              {include ? t("catchup_position", { n: positions[i], total }) : t("catchup_excluded")}
+            </div>
+          </div>
+        ))}
+        <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5, fontWeight: 700, color: "var(--brand-text-strong)", margin: "6px 0 14px", cursor: "pointer" }}>
+          <input type="checkbox" data-testid="catchup-include" checked={include} onChange={(e) => setInclude(e.target.checked)} style={{ width: 18, height: 18 }} />
+          {t("catchup_include")}
+        </label>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <button type="button" data-testid="catchup-start" onClick={() => onStart(include)} style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>{t("wizard_start")}</button>
+          <button type="button" data-testid="catchup-cancel" onClick={onCancel} style={{ width: "100%", padding: "11px 0", borderRadius: 12, border: "1px solid var(--brand-bg-tint)", background: "none", color: "var(--brand-text-secondary)", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>{t("cancel")}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSkipStep, onClose, onCancel, onWantAddProduct, onEditPrevStep }) {
   const t = useT(lang);
   const [now, setNow] = React.useState(Date.now());
@@ -23957,6 +24467,10 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
   // v1.61.0 — Quand aucun produit n'est en stock dans la catégorie : saisie
   // libre, avec un choix d'unité (kg ou unités) non lié à une fiche produit.
   const [freeUnitMode, setFreeUnitMode] = React.useState("kg");
+  // v1.174.0 — Étape consultée au balayage (null = étape en cours). Lecture seule dès qu'elle diffère de l'étape en cours.
+  const [viewIdx, setViewIdx] = React.useState(null);
+  const swipeRef = React.useRef(null);
+  React.useEffect(() => { setViewIdx(null); }, [plan?.currentStepIdx]);
 
   // v1.61.0 — Produits candidats pour l'action d'un step (ou action liée,
   // ex. "chlore"/"chlore-stabilise" servent tous deux à remonter le chlore
@@ -24112,6 +24626,76 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
 
   const totalSteps = plan.steps.length;
   const doneCount = plan.steps.filter(stepIsResolved).length;
+  // v1.174.0 — Navigation entre étapes (balayage, flèches, traits cliquables) et code couleur des traits :
+  // vert = appliquée, gris hachuré = passée, bleu plein = en cours, bleu clair = à venir. Trait de la carte affichée plus épais.
+  const shownIdx = viewIdx != null && viewIdx >= 0 && viewIdx < plan.steps.length ? viewIdx : currentIdx;
+  const viewing = shownIdx !== currentIdx;
+  function goToStep(i) {
+    const n = Math.max(0, Math.min(plan.steps.length - 1, i));
+    setViewIdx(n === currentIdx ? null : n);
+  }
+  const swipeHandlers = {
+    onTouchStart: (e) => {
+      const tg = e.target;
+      if (tg && tg.closest && tg.closest("input,select,textarea,[data-noswipe]")) { swipeRef.current = null; return; }
+      const p = e.touches && e.touches[0];
+      swipeRef.current = p ? { x: p.clientX, y: p.clientY, at: Date.now() } : null;
+    },
+    onTouchEnd: (e) => {
+      const s0 = swipeRef.current;
+      swipeRef.current = null;
+      const p = e.changedTouches && e.changedTouches[0];
+      if (!s0 || !p) return;
+      const dx = p.clientX - s0.x;
+      const dy = p.clientY - s0.y;
+      if (Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx) * 0.6 || Date.now() - s0.at > 800) return;
+      goToStep(shownIdx + (dx < 0 ? 1 : -1));
+    },
+  };
+  const stepState = (st, i) => (st.skipped ? "skipped" : st.appliedAt ? "applied" : i === currentIdx ? "current" : "upcoming");
+  const STATE_COLOR = { applied: "#2e9e5b", skipped: "#8a98a5", current: "#1a8fd1", upcoming: "#bcd4e8" };
+  const segBackground = (state) => (state === "skipped"
+    ? "repeating-linear-gradient(135deg, #8a98a5 0 3px, #d3dae0 3px 6px)"
+    : STATE_COLOR[state]);
+  function renderChrome() {
+    const shownState = stepState(plan.steps[shownIdx], shownIdx);
+    const arrowStyle = (disabled) => ({ background: "none", border: "none", cursor: disabled ? "default" : "pointer", color: "var(--brand-text-muted)", opacity: disabled ? 0.25 : 1, padding: "2px 6px", display: "flex", alignItems: "center" });
+    return (
+      <>
+        {/* En-tête */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "var(--brand-text-muted)", fontWeight: 600 }}>
+            <button type="button" data-testid="wiz-prev" aria-label={t("wizard_nav_prev")} disabled={shownIdx <= 0} onClick={() => goToStep(shownIdx - 1)} style={arrowStyle(shownIdx <= 0)}><span style={{ fontSize: 20, lineHeight: 1 }}>‹</span></button>
+            <span data-testid="wiz-title">{t("wizard_step")} {shownIdx + 1} {t("wizard_of")} {totalSteps}</span>
+            <button type="button" data-testid="wiz-next" aria-label={t("wizard_nav_next")} disabled={shownIdx >= totalSteps - 1} onClick={() => goToStep(shownIdx + 1)} style={arrowStyle(shownIdx >= totalSteps - 1)}><span style={{ fontSize: 20, lineHeight: 1 }}>›</span></button>
+            <span data-testid="wiz-state" data-state={shownState} style={{ marginLeft: 4, fontSize: 10.5, fontWeight: 800, color: shownState === "upcoming" ? "#3a5a78" : "#fff", background: shownState === "skipped" ? "#8a98a5" : STATE_COLOR[shownState], borderRadius: 99, padding: "2px 8px" }}>
+              {t("wizard_state_" + shownState)}
+            </span>
+          </span>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--brand-text-muted)", padding: 4 }}>
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Barre de progression : un trait cliquable par étape, numéroté */}
+        <div style={{ display: "flex", gap: 4, marginBottom: 18, alignItems: "flex-end" }}>
+          {plan.steps.map((st, i) => {
+            const state = stepState(st, i);
+            const on = i === shownIdx;
+            return (
+              <button key={i} type="button" data-testid={"wiz-seg-" + i} data-state={state} data-on={on ? "1" : "0"}
+                aria-label={t("wizard_step") + " " + (i + 1) + " : " + t("wizard_state_" + state)}
+                onClick={() => goToStep(i)}
+                style={{ flex: 1, background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+                <div style={{ width: "100%", height: on ? 9 : 5, borderRadius: 4, background: segBackground(state), boxShadow: on ? "0 0 0 2px #fff, 0 0 0 3.5px " + (state === "skipped" ? "#8a98a5" : STATE_COLOR[state]) : "none" }} />
+                <span style={{ fontSize: 10, lineHeight: 1, fontWeight: on ? 800 : 600, color: on ? "var(--brand-text-strong)" : "var(--brand-text-muted)" }}>{i + 1}</span>
+              </button>
+            );
+          })}
+        </div>
+      </>
+    );
+  }
   // v1.144.0 — Étapes déjà appliquées (avec une quantité) qu'on peut corriger.
   const editablePrev = plan.steps
     .map((st, i) => ({ s: st, i }))
@@ -24327,6 +24911,73 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
     onApplyStep(currentIdx, stockShortfall.applicable, appliedAt, selectedProduct, true);
   }
 
+  // v1.174.0 — Étape consultée (passée, passée sans application ou à venir) : carte en lecture seule.
+  if (viewing) {
+    const vs = plan.steps[shownIdx];
+    const vstate = stepState(vs, shownIdx);
+    const vName = vs.appliedProductName || vs.productRealName || vs.productName || vs.title;
+    const vUnit = vs.doseUnit || "g";
+    const vInfo = vs.mode === "entretien" || !!vs.noAction;
+    const vProposed = vInfo ? (vs.doseText || null) : (vs.computedDoseAmount != null ? formatDose(Math.round(vs.computedDoseAmount * 100) / 100, vUnit) : null);
+    const vApplied = vs.appliedAmount != null ? formatDose(vs.appliedAmount, vUnit) : "—";
+    const vWait = plan.steps[shownIdx - 1]?.waitHours || 0;
+    const boxStyle = { borderRadius: 10, padding: "10px 14px", marginBottom: 12, fontSize: 13.5, fontWeight: 700, lineHeight: 1.45 };
+    return (
+      <div style={{ position: "fixed", inset: 0, zIndex: 400, background: "rgba(10,30,60,0.55)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+        <div {...swipeHandlers} data-testid="wizard-preview" data-state={vstate} style={{
+          background: "#fff", borderTop: "5px solid " + (vstate === "skipped" ? "#8a98a5" : STATE_COLOR[vstate]),
+          borderRadius: "20px 20px 0 0", width: "100%", maxWidth: 480,
+          padding: "20px 18px 32px", boxSizing: "border-box", maxHeight: "92dvh", overflowY: "auto",
+        }}>
+          {renderChrome()}
+          <div style={{ fontSize: 18, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 4 }}>
+            {vs.isComplement && (
+              <div style={{ fontSize: 11.5, fontWeight: 700, color: "#a8721a", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 2 }}>{t("wizard_complement_badge")}</div>
+            )}
+            {vs.isCatchup && (
+              <div style={{ fontSize: 11.5, fontWeight: 700, color: "#a8721a", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 2 }}>{t("wizard_catchup_badge")}</div>
+            )}
+            {vName}
+          </div>
+          {vs.title && vs.productName && vs.title !== vs.productName && (
+            <div style={{ fontSize: 13, color: "var(--brand-text-secondary)", marginBottom: 8 }}>{vs.title}</div>
+          )}
+          {vstate === "applied" && (
+            <div data-testid="wiz-view-status" style={{ ...boxStyle, background: "#e8f6ee", color: "#1d6b3e" }}>
+              ✓ {vInfo ? t("wizard_state_applied") + (vs.appliedAt ? " — " + formatDate(vs.appliedAt) : "") : t("wizard_view_applied_on", { date: vs.appliedAt ? formatDate(vs.appliedAt) : "—", amount: vApplied })}
+            </div>
+          )}
+          {vstate === "skipped" && (
+            <div data-testid="wiz-view-status" style={{ ...boxStyle, background: "#eef1f4", color: "#52606d" }}>⊘ {t("wizard_view_skipped_long")}</div>
+          )}
+          {vstate === "upcoming" && (
+            <div data-testid="wiz-view-status" style={{ ...boxStyle, background: "#eaf4fb", color: "var(--brand-primary)" }}>
+              {t("wizard_state_upcoming")}{vs.scheduledAt ? " — " + new Date(vs.scheduledAt).toLocaleString(lang, { day: "2-digit", month: "2-digit", ...HM }) : ""}
+            </div>
+          )}
+          {vProposed && vstate !== "skipped" && !(vstate === "applied" && vInfo) && (
+            <div style={{ fontSize: 13, color: "var(--brand-text-secondary)", marginBottom: 10 }}>{t("wizard_view_proposed", { amount: vProposed })}</div>
+          )}
+          {vstate === "upcoming" && vs.scheduledAt && vWait > 0 && (
+            <div style={{ fontSize: 12, color: "var(--brand-text-muted)", marginBottom: 10 }}>
+              {t("wizard_next_step_from", { h: vWait, date: new Date(vs.scheduledAt).toLocaleString(lang, { day: "2-digit", month: "2-digit", ...HM }) })}
+            </div>
+          )}
+          {vs.note && (
+            <div style={{ background: "#fff8e8", border: "1.5px solid #e6a817", borderRadius: 8, padding: "10px 14px", marginBottom: 12 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: "#7a5800", lineHeight: 1.4 }}>{vs.note}</div>
+            </div>
+          )}
+          <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginBottom: 14 }}>{t("wizard_view_readonly")}</div>
+          <button type="button" data-testid="wiz-back-current" onClick={() => setViewIdx(null)}
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
+            {t("wizard_back_to_current", { n: currentIdx + 1 })}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
     <div style={{
@@ -24334,7 +24985,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
       background: "rgba(10,30,60,0.55)",
       display: "flex", alignItems: "flex-end", justifyContent: "center",
     }}>
-      <div style={{
+      <div {...swipeHandlers} data-testid="wizard-current" style={{
         background: isInfoStep ? "#fff" : "#fff7f2",
         borderTop: isInfoStep ? "5px solid var(--brand-primary)" : "5px solid #c4502f",
         borderRadius: "20px 20px 0 0",
@@ -24342,34 +24993,18 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
         padding: "20px 18px 32px", boxSizing: "border-box",
         maxHeight: "92dvh", overflowY: "auto",
       }}>
-        {/* En-tête */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-          <span style={{ fontSize: 11, color: "var(--brand-text-muted)", fontWeight: 600 }}>
-            {t("wizard_step")} {currentIdx + 1} {t("wizard_of")} {totalSteps}
-          </span>
-          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--brand-text-muted)", padding: 4 }}>
-            <X size={20} />
-          </button>
-        </div>
-
-        {/* Barre de progression */}
-        <div style={{ display: "flex", gap: 4, marginBottom: 18 }}>
-          {plan.steps.map((s, i) => (
-            <div key={i} style={{
-              flex: 1, height: 4, borderRadius: 4,
-              background: s.appliedAt && !s.skipped ? "#1a8fd1"
-                : s.skipped ? "#d0e4f5"
-                : i === currentIdx ? "var(--brand-primary)"
-                : "#e0ecf5",
-            }} />
-          ))}
-        </div>
+        {renderChrome()}
 
         {/* Titre étape */}
         <div style={{ fontSize: 18, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 4 }}>
           {step.isComplement && (
             <div style={{ fontSize: 11.5, fontWeight: 700, color: "#a8721a", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 2 }}>
               {t("wizard_complement_badge")}
+            </div>
+          )}
+          {step.isCatchup && (
+            <div data-testid="wiz-catchup-badge" style={{ fontSize: 11.5, fontWeight: 700, color: "#a8721a", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 2 }}>
+              {t("wizard_catchup_badge")}
             </div>
           )}
           {usingGenericProduct && (
@@ -27103,6 +27738,8 @@ function CguLegalContent({ lang }) {
           { title: t("lcen_calibration_title"), body: t("lcen_calibration_val") },
           { title: t("lcen_photocontrib_title"), body: t("lcen_photocontrib_val") },
           { title: t("lcen_weather_title"), body: t("lcen_weather_val") },
+          { title: t("lcen_filtdata_title"), body: t("lcen_filtdata_val") },
+          { title: t("lcen_savings_title"), body: t("lcen_savings_val") },
         ].map((s, i) => (
           <div key={i} style={{ marginBottom: 10 }}>
             <div style={{ fontWeight: 700, color: "var(--brand-text-strong)", marginBottom: 2 }}>{i+1}. {s.title}</div>
@@ -27114,7 +27751,96 @@ function CguLegalContent({ lang }) {
   );
 }
 
-function DangerZoneSection({ lang, activePoolName, poolMeasureCount, onDeleteAllMeasures, authUser, onDeleteAccount, cguAcceptedDate }) {
+// v1.177.0 — Récupération des données (e-mail ou téléchargement), demande d'effacement des données / de suppression du compte, annulation.
+function AccountDataBlock({ lang, accountState, subscriptionActive, onRequest, onCancel, api }) {
+  const t = useT(lang);
+  const A = api || FB; // api : substitut pour les tests
+  const [busy, setBusy] = useState(null);
+  const [msg, setMsg] = useState(null); // { ok, text }
+  const [modal, setModal] = useState(null); // "account" | "data"
+  const pending = accountState?.status === "pending";
+  const fmt = (iso) => (iso ? new Date(iso).toLocaleDateString(lang, { day: "2-digit", month: "long", year: "numeric" }) : "");
+  async function sendByEmail() {
+    setBusy("email"); setMsg(null);
+    try {
+      const r = await A.accountExportEmail(lang);
+      setMsg({ ok: true, text: t("acct_get_data_sent", { email: r.email || "", days: r.days || 7 }) });
+    } catch (e) { setMsg({ ok: false, text: t("acct_action_error") }); }
+    setBusy(null);
+  }
+  async function downloadNow() {
+    setBusy("download"); setMsg(null);
+    try {
+      const r = await A.accountExport(lang);
+      const blob = new Blob([r.text], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = r.filename || "PoolGenAI-data.txt";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+    } catch (e) { setMsg({ ok: false, text: t("acct_action_error") }); }
+    setBusy(null);
+  }
+  async function cancelRequest() {
+    setBusy("cancel"); setMsg(null);
+    try { await onCancel(); setMsg({ ok: true, text: t("acct_cancel_done") }); }
+    catch (e) { setMsg({ ok: false, text: t("acct_action_error") }); }
+    setBusy(null);
+  }
+  const linkBtn = { display: "flex", alignItems: "center", justifyContent: "center", gap: 6, width: "100%", padding: "10px 0", borderRadius: 10, border: "1.5px solid var(--brand-primary)", background: "#fff", color: "var(--brand-primary)", fontWeight: 700, fontSize: 13, cursor: "pointer", marginBottom: 8 };
+  return (
+    <div data-testid="account-data-block" style={{ marginTop: 6 }}>
+      {pending && (
+        <div data-testid="account-pending" style={{ background: "#fff4f0", border: "1.5px solid #e0a58f", borderRadius: 12, padding: "12px 14px", marginBottom: 12 }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: "#a23c1f", marginBottom: 4 }}>{t(accountState.kind === "data" ? "acct_pending_title_data" : "acct_pending_title_account")}</div>
+          <div style={{ fontSize: 12.5, color: "#7a3a28", lineHeight: 1.5, marginBottom: 10 }}>{t("acct_pending_body", { requested: fmt(accountState.requestedAt), purge: fmt(accountState.purgeAt) })}</div>
+          <button type="button" data-testid="acct-cancel" disabled={busy === "cancel"} onClick={cancelRequest} style={{ ...linkBtn, background: "var(--brand-primary)", color: "#fff", border: "none", marginBottom: 8 }}>
+            {t(accountState.kind === "data" ? "acct_cancel_data" : "acct_cancel_account")}
+          </button>
+        </div>
+      )}
+      {accountState?.status === "purged" && accountState.kind === "data" && (
+        <div style={{ fontSize: 12.5, color: "#1d6b3e", background: "#e8f6ee", borderRadius: 10, padding: "8px 12px", marginBottom: 10 }}>{t("acct_purged_data")}</div>
+      )}
+      <div style={{ fontSize: 12, color: "var(--brand-text-secondary)", lineHeight: 1.5, marginBottom: 8 }}>{t("acct_get_data_hint", { days: 7 })}</div>
+      <button type="button" data-testid="acct-get-data" disabled={busy === "email"} onClick={sendByEmail} style={linkBtn}>{t("acct_get_data_btn")}</button>
+      {pending && (
+        <button type="button" data-testid="acct-download" disabled={busy === "download"} onClick={downloadNow} style={linkBtn}>{t("acct_download_btn")}</button>
+      )}
+      {msg && <div data-testid="acct-msg" style={{ fontSize: 12.5, color: msg.ok ? "#1d6b3e" : "#c0392b", margin: "4px 0 8px", lineHeight: 1.5 }}>{msg.text}</div>}
+      {!pending && (
+        <>
+          <button type="button" data-testid="acct-erase" style={styles.dangerLinkBtn} onClick={() => setModal("data")}><Trash2 size={14} /> {t("acct_erase_data_btn")}</button>
+          <button type="button" data-testid="acct-delete" style={{ ...styles.dangerLinkBtn, marginTop: 8 }} onClick={() => setModal("account")}><Trash2 size={14} /> {t("delete_account")}</button>
+        </>
+      )}
+      {modal && (
+        <ModalShell onClose={() => setModal(null)} title={t(modal === "data" ? "acct_modal_title_data" : "acct_modal_title_account")}>
+          <div data-testid="acct-modal">
+            <p style={{ fontSize: 13, color: "var(--brand-text-secondary)", lineHeight: 1.55, marginTop: 0 }}>{t(modal === "data" ? "acct_modal_body_data" : "acct_modal_body_account", { days: 30 })}</p>
+            {subscriptionActive && (
+              <p data-testid="acct-sub-warning" style={{ fontSize: 12.5, color: "#7a5800", background: "#fff8e8", border: "1.5px solid #e6a817", borderRadius: 10, padding: "8px 12px", lineHeight: 1.5 }}>{t("acct_sub_warning")}</p>
+            )}
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--brand-text-strong)", margin: "10px 0 6px" }}>{t("acct_modal_keep")}</div>
+            <button type="button" data-testid="acct-modal-download" disabled={busy === "download"} onClick={downloadNow} style={linkBtn}>{t("acct_download_btn")}</button>
+            <button type="button" data-testid="acct-modal-email" disabled={busy === "email"} onClick={sendByEmail} style={linkBtn}>{t("acct_get_data_btn")}</button>
+            {msg && <div style={{ fontSize: 12.5, color: msg.ok ? "#1d6b3e" : "#c0392b", margin: "0 0 8px", lineHeight: 1.5 }}>{msg.text}</div>}
+            <button type="button" data-testid="acct-confirm" onClick={() => { const k = modal; setModal(null); onRequest(k); }}
+              style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "#c4502f", color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: "pointer", marginTop: 6 }}>
+              {t(modal === "data" ? "acct_confirm_data" : "acct_confirm_account")}
+            </button>
+            <button type="button" data-testid="acct-modal-cancel" onClick={() => setModal(null)}
+              style={{ width: "100%", padding: "11px 0", borderRadius: 12, border: "1px solid var(--brand-bg-tint)", background: "none", color: "var(--brand-text-secondary)", fontWeight: 600, fontSize: 14, cursor: "pointer", marginTop: 8 }}>
+              {t("cancel")}
+            </button>
+          </div>
+        </ModalShell>
+      )}
+    </div>
+  );
+}
+
+function DangerZoneSection({ lang, activePoolName, poolMeasureCount, onDeleteAllMeasures, authUser, accountState, subscriptionActive, onAccountRequest, onAccountCancel, cguAcceptedDate }) {
   const t = useT(lang);
   const [showLegalModal, setShowLegalModal] = useState(false);
 
@@ -27164,16 +27890,7 @@ function DangerZoneSection({ lang, activePoolName, poolMeasureCount, onDeleteAll
       </button>
 
       {authUser && (
-        <button
-          style={{ ...styles.dangerLinkBtn, marginTop: 8 }}
-          onClick={() => {
-            if (window.confirm(t("delete_account_confirm"))) {
-              onDeleteAccount();
-            }
-          }}
-        >
-          <Trash2 size={14} /> {t("delete_account")}
-        </button>
+        <AccountDataBlock lang={lang} accountState={accountState} subscriptionActive={subscriptionActive} onRequest={onAccountRequest} onCancel={onAccountCancel} />
       )}
     </div>
   );
@@ -27213,11 +27930,11 @@ function ToggleSwitch({ checked, onChange }) {
 }
 
 // ---------- Paywall ----------
-function DeleteReauthModal({ onClose, onConfirm, busy, error, lang }) {
+function DeleteReauthModal({ onClose, onConfirm, busy, error, lang, title }) {
   const t = useT(lang || "fr");
   const [password, setPassword] = useState("");
   return (
-    <ModalShell onClose={onClose} title={t("delete_account")}>
+    <ModalShell onClose={onClose} title={title || t("delete_account")}>
       <p style={{ fontSize: 13, color: "var(--brand-text-secondary)", lineHeight: 1.5, marginTop: 0 }}>
         {t("reauth_required")}
       </p>
@@ -27239,7 +27956,7 @@ function DeleteReauthModal({ onClose, onConfirm, busy, error, lang }) {
         disabled={!password || busy}
         onClick={() => onConfirm(password)}
       >
-        {busy ? "..." : t("delete_account")}
+        {busy ? "..." : (title || t("delete_account"))}
       </button>
       <button
         type="button"
