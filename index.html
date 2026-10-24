@@ -20,6 +20,10 @@
 <!-- PWA manifest & ic&#244;nes -->
 <link rel="manifest" href="manifest.json" />
 <meta name="theme-color" content="#0b3f3a" />
+<script>
+  // v1.178.0 — Mode nuit : reprend le dernier thème résolu avant le premier affichage (le réglage et le calcul du soleil sont dans l'app).
+  try { var __m = localStorage.getItem("pool:themeMode"), __r = localStorage.getItem("pool:themeResolved"); if (__m && __m !== "light" && __r === "dark") { document.documentElement.setAttribute("data-theme", "dark"); } } catch (e) {}
+</script>
 <link rel="apple-touch-icon" href="icon-192.png" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -33,6 +37,8 @@
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior-y: none;
   }
+  html[data-theme="dark"], html[data-theme="dark"] body { background: #0b141d; color-scheme: dark; }
+  html[data-theme="dark"] #boot-loader { background: #08161d; }
   #root {
     min-height: 100dvh;
   }

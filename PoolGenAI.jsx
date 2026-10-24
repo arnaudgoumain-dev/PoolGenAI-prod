@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.177.3";
+const APP_VERSION = "1.178.2";
 const CGU_VERSION = "1.6"; // v1.6 : sections « Données de filtration enregistrées » (températures saisies, programmations, historique de l'air, configuration thermique, coefficient d'inertie) et « Bilan et estimations d'économies » (hypothèses, prix d'achat, estimations indicatives) ; v1.5 : section 6 complétée (altitude du bassin : IGN, Open Topo Data) ; v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -478,6 +478,14 @@ const TRANSLATIONS = {
     add_pool: "Ajouter un bassin",
     delete_pool: "Supprimer ce bassin",
     language_label: "Langue",
+    theme_label: "Apparence",
+    theme_light: "Clair",
+    theme_dark: "Sombre",
+    theme_auto: "Automatique",
+    theme_auto_hint: "Automatique : sombre quand le soleil est couché, clair quand il est levé (selon l'emplacement du bassin).",
+    theme_propose: "Il fait nuit. Passer en mode sombre automatique ?",
+    theme_propose_yes: "Activer",
+    theme_propose_no: "Non merci",
     // Report
     report_title: "Rapport de suivi",
     generated_on: "généré le",
@@ -1610,6 +1618,14 @@ const TRANSLATIONS = {
     add_pool: "Add a pool",
     delete_pool: "Delete this pool",
     language_label: "Language",
+    theme_label: "Appearance",
+    theme_light: "Light",
+    theme_dark: "Dark",
+    theme_auto: "Automatic",
+    theme_auto_hint: "Automatic: dark after sunset, light after sunrise (based on the pool's location).",
+    theme_propose: "It's night. Switch to automatic dark mode?",
+    theme_propose_yes: "Turn on",
+    theme_propose_no: "No thanks",
     report_title: "Monitoring report",
     generated_on: "generated on",
     params_evolution: "PARAMETER EVOLUTION",
@@ -2733,6 +2749,14 @@ const TRANSLATIONS = {
     add_pool: "Becken hinzufügen",
     delete_pool: "Dieses Becken löschen",
     language_label: "Sprache",
+    theme_label: "Darstellung",
+    theme_light: "Hell",
+    theme_dark: "Dunkel",
+    theme_auto: "Automatisch",
+    theme_auto_hint: "Automatisch: dunkel nach Sonnenuntergang, hell nach Sonnenaufgang (je nach Standort des Pools).",
+    theme_propose: "Es ist Nacht. Automatischen Dunkelmodus aktivieren?",
+    theme_propose_yes: "Aktivieren",
+    theme_propose_no: "Nein danke",
     report_title: "Überwachungsbericht",
     generated_on: "erstellt am",
     params_evolution: "PARAMETERENTWICKLUNG",
@@ -3855,6 +3879,14 @@ const TRANSLATIONS = {
     add_pool: "Aggiungi vasca",
     delete_pool: "Elimina questa vasca",
     language_label: "Lingua",
+    theme_label: "Aspetto",
+    theme_light: "Chiaro",
+    theme_dark: "Scuro",
+    theme_auto: "Automatico",
+    theme_auto_hint: "Automatico: scuro dopo il tramonto, chiaro dopo l'alba (secondo la posizione della piscina).",
+    theme_propose: "È notte. Passare alla modalità scura automatica?",
+    theme_propose_yes: "Attiva",
+    theme_propose_no: "No, grazie",
     report_title: "Rapporto di monitoraggio",
     generated_on: "generato il",
     params_evolution: "EVOLUZIONE DEI PARAMETRI",
@@ -4977,6 +5009,14 @@ const TRANSLATIONS = {
     add_pool: "Añadir piscina",
     delete_pool: "Eliminar esta piscina",
     language_label: "Idioma",
+    theme_label: "Apariencia",
+    theme_light: "Claro",
+    theme_dark: "Oscuro",
+    theme_auto: "Automático",
+    theme_auto_hint: "Automático: oscuro tras la puesta de sol, claro tras la salida del sol (según la ubicación de la piscina).",
+    theme_propose: "Es de noche. ¿Pasar al modo oscuro automático?",
+    theme_propose_yes: "Activar",
+    theme_propose_no: "No, gracias",
     report_title: "Informe de seguimiento",
     generated_on: "generado el",
     params_evolution: "EVOLUCIÓN DE PARÁMETROS",
@@ -6099,6 +6139,14 @@ const TRANSLATIONS = {
     add_pool: "Adicionar piscina",
     delete_pool: "Excluir esta piscina",
     language_label: "Idioma",
+    theme_label: "Aparência",
+    theme_light: "Claro",
+    theme_dark: "Escuro",
+    theme_auto: "Automático",
+    theme_auto_hint: "Automático: escuro depois do pôr do sol, claro depois do nascer do sol (conforme a localização da piscina).",
+    theme_propose: "É noite. Passar para o modo escuro automático?",
+    theme_propose_yes: "Ativar",
+    theme_propose_no: "Não, obrigado",
     report_title: "Relatório de monitoramento",
     generated_on: "gerado em",
     params_evolution: "EVOLUÇÃO DOS PARÂMETROS",
@@ -7587,6 +7635,210 @@ function insertCatchupSteps(recs, catchupSteps) {
   return { steps, positions: catchupSteps.map((cs) => steps.indexOf(cs) + 1) };
 }
 // ── CATCHUP PURE (fin) ──
+
+// ── THEME VARS (début) ── mode nuit : valeurs sombres des couleurs remplacées par var(--bg|bd|tx-xxxxxx, couleur d'origine). Clair = repli = inchangé.
+const THEME_DARK_VARS = {
+  "--bd-90c4e8": "#375a72",
+  "--bd-a9cdf5": "#375372",
+  "--bd-b0b0b8": "#505059",
+  "--bd-b0c4d8": "#385471",
+  "--bd-b0d8f0": "#375c72",
+  "--bd-b8d8ef": "#375972",
+  "--bd-b9dcd0": "#38705d",
+  "--bd-c8e0f5": "#2d465d",
+  "--bd-c9defa": "#2d415d",
+  "--bd-c9e8dc": "#37725b",
+  "--bd-cccccc": "#545454",
+  "--bd-d0e4f5": "#2a3f55",
+  "--bd-d6dde3": "#384652",
+  "--bd-d6e6f5": "#2d465d",
+  "--bd-d8e2ec": "#2d455d",
+  "--bd-e0a0a0": "#723737",
+  "--bd-e0a58f": "#724737",
+  "--bd-e2d9f3": "#3d2d5d",
+  "--bd-e2e8ef": "#314359",
+  "--bd-e6ebe9": "#3d4c46",
+  "--bd-e6eef3": "#2d4a5d",
+  "--bd-e8eef2": "#324958",
+  "--bd-e8f0f8": "#2d455d",
+  "--bd-eaf4fb": "#2d495d",
+  "--bd-eef1f0": "#3e4c47",
+  "--bd-eef3f6": "#304a5a",
+  "--bd-f0c0b8": "#723f37",
+  "--bd-f0c675": "#725d37",
+  "--bd-f0d9a8": "#725f37",
+  "--bd-f0dca0": "#726337",
+  "--bd-f0eaf8": "#412d5d",
+  "--bd-f1d49a": "#725e37",
+  "--bd-f3c9c4": "#5d322d",
+  "--bd-f3d9c8": "#5d402d",
+  "--bd-f5c6c2": "#5d312d",
+  "--bd-ffe082": "#726337",
+  "--bd-ffffff": "#454545",
+  "--bg-d0e4f5": "#1e2a34",
+  "--bg-d8e2df": "#252928",
+  "--bg-dcedf9": "#202e39",
+  "--bg-e2e8ef": "#262b31",
+  "--bg-e6ebe9": "#2a2d2c",
+  "--bg-e6eef3": "#272f33",
+  "--bg-e8f0f8": "#252f38",
+  "--bg-e8f4fd": "#21323e",
+  "--bg-e8f6ee": "#26362d",
+  "--bg-e8f8ef": "#25382d",
+  "--bg-e8f8f0": "#25382f",
+  "--bg-e9f6f1": "#273630",
+  "--bg-eaf2fa": "#242f3b",
+  "--bg-eaf3fb": "#23303c",
+  "--bg-eaf4fb": "#23323c",
+  "--bg-eaf4fc": "#21313e",
+  "--bg-eaf5fd": "#22323e",
+  "--bg-eafaf1": "#243b2e",
+  "--bg-edf4fb": "#24303c",
+  "--bg-eef1f4": "#10161d",
+  "--bg-eef2f6": "#10161d",
+  "--bg-eef5f3": "#10161d",
+  "--bg-eef5fc": "#23313e",
+  "--bg-eef6f3": "#10161d",
+  "--bg-eef6fc": "#23323e",
+  "--bg-eef6ff": "#223040",
+  "--bg-eef7fb": "#24353c",
+  "--bg-f0f4f8": "#11171e",
+  "--bg-f0f6fb": "#12181f",
+  "--bg-f1f4f3": "#11171e",
+  "--bg-f3effa": "#11181f",
+  "--bg-f4f0fc": "#121820",
+  "--bg-f4f8fb": "#121921",
+  "--bg-f4f9fe": "#131a22",
+  "--bg-f5f5f7": "#121820",
+  "--bg-f5f7fa": "#121921",
+  "--bg-f5f8f7": "#121920",
+  "--bg-f5f8fc": "#131a21",
+  "--bg-f5f9f8": "#121920",
+  "--bg-f5f9fc": "#131a21",
+  "--bg-f8f4fc": "#131921",
+  "--bg-f8fafa": "#131a22",
+  "--bg-f8fafd": "#131b23",
+  "--bg-fafcfb": "#141b23",
+  "--bg-fde8e1": "#3c2720",
+  "--bg-fdf0ef": "#402422",
+  "--bg-fdf3e0": "#3c3220",
+  "--bg-fdf5f5": "#131a22",
+  "--bg-fdf6e6": "#3d3521",
+  "--bg-fff0e8": "#3e2c22",
+  "--bg-fff4e0": "#3c3220",
+  "--bg-fff4e5": "#3e3221",
+  "--bg-fff4f0": "#402b23",
+  "--bg-fff5f3": "#131a22",
+  "--bg-fff5f5": "#131a22",
+  "--bg-fff6e5": "#3e3421",
+  "--bg-fff7f2": "#412e23",
+  "--bg-fff8e1": "#3c3621",
+  "--bg-fff8e6": "#3e3621",
+  "--bg-fff8e8": "#3e3622",
+  "--bg-fff8ea": "#3f3522",
+  "--bg-ffffff": "#152230",
+  "--tx-00897b": "#a2f7ef",
+  "--tx-0d2b4e": "#e8f0f8",
+  "--tx-1a2b3c": "#d3deea",
+  "--tx-1a7a4a": "#a9e8c9",
+  "--tx-1a8fd1": "#6fbbe6",
+  "--tx-1ca7d1": "#6fc9e4",
+  "--tx-1d6b3e": "#b3e7c9",
+  "--tx-2980b9": "#7fb7dc",
+  "--tx-2b7fd9": "#679fdc",
+  "--tx-2b9c8a": "#92dcd0",
+  "--tx-2d1b69": "#c0b4e8",
+  "--tx-2d4a6e": "#c5d6e8",
+  "--tx-2d6a9a": "#93bbda",
+  "--tx-2e8b57": "#9ddab8",
+  "--tx-2f9e44": "#90d99e",
+  "--tx-34a853": "#8ad59e",
+  "--tx-3574c9": "#749cd4",
+  "--tx-3a5a78": "#aabfd2",
+  "--tx-3f5a73": "#adbfcf",
+  "--tx-4a6480": "#a9bdd1",
+  "--tx-52606d": "#b1bac2",
+  "--tx-5a6b7c": "#a6b2bd",
+  "--tx-5b3fa0": "#a18fce",
+  "--tx-5d6e6a": "#b0bbb8",
+  "--tx-666666": "#b5b5b5",
+  "--tx-6a7d90": "#8da1b5",
+  "--tx-7a3a28": "#dfb5a9",
+  "--tx-7a3fa0": "#b58fce",
+  "--tx-7a5800": "#f8e3ab",
+  "--tx-7a5a00": "#f8e4ab",
+  "--tx-8a2b9c": "#d092dc",
+  "--tx-8a3a1f": "#e4b09e",
+  "--tx-8a5a00": "#f7d9a1",
+  "--tx-8b4513": "#edbf9e",
+  "--tx-a23c1f": "#e4a18e",
+  "--tx-a8721a": "#e7c48a",
+  "--tx-b23b3b": "#d08383",
+  "--tx-b5651d": "#e4b081",
+  "--tx-b7791f": "#e3bb80",
+  "--tx-b8860b": "#f1d080",
+  "--tx-c0392b": "#db837a",
+  "--tx-c4502f": "#d88c77",
+  "--tx-c8651f": "#e3a275",
+  "--tx-cc0000": "#f47676",
+  "--tx-d98c2b": "#dca867",
+  "--tx-e0a100": "#f3cc69",
+  "--tx-f59e0b": "#efb656",
+  "--tx-fbbc05": "#f1c955",
+  "--tx-3a2a0a": "#3a2a0a",
+};
+// ── THEME VARS (fin) ──
+
+// ── THEME (début) ── v1.178.0 : mode nuit. Clair par défaut tant que l'utilisateur n'a pas choisi ; « auto » = sombre quand le soleil est
+// couché à l'emplacement du bassin (sinon de 20 h à 7 h, heure de l'appareil). Réglage mémorisé sur l'appareil seulement.
+const THEME_STORE = { mode: "pool:themeMode", resolved: "pool:themeResolved", proposed: "pool:themeProposed" };
+function themeStoreGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function themeStoreSet(k, v) { try { if (v === null || v === undefined) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
+const THEME_DARK_BG = "#0b141d";
+const THEME_DARK_BRAND = {
+  premium: { "--brand-primary": "#2bb5df", "--brand-primary-dark": "#6cc9ea", "--brand-text-strong": "#e8f0f8", "--brand-text-secondary": "#a9bdd1", "--brand-text-muted": "#8196aa", "--brand-icon-light": "#7ab8e8", "--brand-header-sub": "#a8d4f0", "--brand-bg-tint": "#0e1925", "--hdr-from": "#0f5a78", "--hdr-to": "#0a3f57" },
+  free: { "--brand-primary": "#55ad93", "--brand-primary-dark": "#86c9b0", "--brand-text-strong": "#e6f2ec", "--brand-text-secondary": "#a7c4b5", "--brand-text-muted": "#86a595", "--brand-icon-light": "#7fc7a4", "--brand-header-sub": "#bfe0cf", "--brand-bg-tint": "#0d1814", "--hdr-from": "#2a6a56", "--hdr-to": "#1b4638" },
+};
+function themeCss() {
+  const vars = Object.keys(THEME_DARK_VARS).map((k) => k + ":" + THEME_DARK_VARS[k]).join(";");
+  return "@media screen{html[data-theme=\"dark\"]{color-scheme:dark;" + vars + "}html[data-theme=\"dark\"],html[data-theme=\"dark\"] body{background:" + THEME_DARK_BG + "}"
+    + "html[data-theme=\"dark\"] input:not([type=checkbox]):not([type=radio]):not([type=range]),html[data-theme=\"dark\"] select,html[data-theme=\"dark\"] textarea{background-color:#101c28;color:#e8f0f8;border-color:#2a3f55}"
+    + "html[data-theme=\"dark\"] ::placeholder{color:#6f8396}}";
+}
+// Nuit ? lat/lon du bassin si connus (lever et coucher du soleil), sinon 20 h - 7 h.
+function isNightAt(lat, lon, nowMs) {
+  const tz = getDeviceTimeZone();
+  const la = Number(lat), lo = Number(lon);
+  if (Number.isFinite(la) && Number.isFinite(lo) && lat !== null && lon !== null && lat !== "" && lon !== "") {
+    try {
+      const d = computeDaylight(la, lo, new Date(nowMs), tz);
+      const h = localHourOf(nowMs, tz);
+      if (Number.isFinite(d.sunriseH) && Number.isFinite(d.sunsetH) && Number.isFinite(h)) {
+        if (d.dayLengthH <= 0) return true;
+        if (d.dayLengthH >= 24) return false;
+        return h < d.sunriseH || h >= d.sunsetH;
+      }
+    } catch (e) {}
+  }
+  const h = new Date(nowMs).getHours();
+  return h < 7 || h >= 20;
+}
+function resolveTheme(mode, lat, lon, nowMs) {
+  if (mode === "dark") return "dark";
+  if (mode === "auto") return isNightAt(lat, lon, nowMs) ? "dark" : "light";
+  return "light";
+}
+function applyTheme(resolved) {
+  try {
+    let el = document.getElementById("pgai-theme");
+    if (!el) { el = document.createElement("style"); el.id = "pgai-theme"; el.textContent = themeCss(); document.head.appendChild(el); }
+    document.documentElement.setAttribute("data-theme", resolved);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) { if (!meta.getAttribute("data-light")) meta.setAttribute("data-light", meta.getAttribute("content") || ""); meta.setAttribute("content", resolved === "dark" ? THEME_DARK_BG : meta.getAttribute("data-light")); }
+    themeStoreSet(THEME_STORE.resolved, resolved);
+  } catch (e) {}
+}
+// ── THEME (fin) ──
 
 const STORAGE_KEYS = {
   measures: "pool:measures",
@@ -9355,7 +9607,7 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.error) {
       return React.createElement("div", {
-        style: { padding: 24, fontFamily: "monospace", fontSize: 11, color: "#c00", whiteSpace: "pre-wrap", overflowY: "auto", maxHeight: "100vh", background: "#fff5f5" }
+        style: { padding: 24, fontFamily: "monospace", fontSize: 11, color: "var(--tx-cc0000,#c00)", whiteSpace: "pre-wrap", overflowY: "auto", maxHeight: "100vh", background: "var(--bg-fff5f5,#fff5f5)" }
       }, "CRASH DÉTECTÉ:\n\n" + this.state.error);
     }
     return this.props.children;
@@ -10113,13 +10365,13 @@ By creating an account, the user acknowledges having read this document in full 
     };
     const text = disclaimerText[lang || detectedLang] || disclaimerText.en;
     return (
-      <div style={{ minHeight: "100vh", background: "#eaf4fb", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 16 }}>
-        <div style={{ width: "100%", maxWidth: 480, background: "#fff", borderRadius: 20, padding: 24, boxShadow: "0 4px 24px var(--brand-primary)18", maxHeight: "90dvh", display: "flex", flexDirection: "column" }}>
+      <div style={{ minHeight: "100vh", background: "var(--bg-eaf4fb,#eaf4fb)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 16 }}>
+        <div style={{ width: "100%", maxWidth: 480, background: "var(--bg-ffffff,#fff)", borderRadius: 20, padding: 24, boxShadow: "0 4px 24px var(--brand-primary)18", maxHeight: "90dvh", display: "flex", flexDirection: "column" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
             <div style={{ fontSize: 15, fontWeight: 800, color: "var(--brand-text-strong)" }}>{tDisc("disclaimer_title")}</div>
             <button onClick={() => setMode("signup")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--brand-text-muted)" }}><X size={20} /></button>
           </div>
-          <div style={{ flex: 1, overflowY: "auto", fontSize: 12, color: "#2d4a6e", lineHeight: 1.7, whiteSpace: "pre-wrap", background: "#f5f8fc", borderRadius: 10, padding: "12px 14px", marginBottom: 16 }}>
+          <div style={{ flex: 1, overflowY: "auto", fontSize: 12, color: "var(--tx-2d4a6e,#2d4a6e)", lineHeight: 1.7, whiteSpace: "pre-wrap", background: "var(--bg-f5f8fc,#f5f8fc)", borderRadius: 10, padding: "12px 14px", marginBottom: 16 }}>
             {text}
           </div>
           <button
@@ -10142,25 +10394,25 @@ By creating an account, the user acknowledges having read this document in full 
   // Écran de succès après inscription
   if (mode === "done") {
     return (
-      <div style={{ minHeight: "100vh", background: "#eaf4fb", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 }}>
-        <div style={{ width: "100%", maxWidth: 380, background: "#fff", borderRadius: 20, padding: 32, boxShadow: "0 4px 24px var(--brand-primary)18", textAlign: "center" }}>
-          <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#e8f8ef", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+      <div style={{ minHeight: "100vh", background: "var(--bg-eaf4fb,#eaf4fb)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 }}>
+        <div style={{ width: "100%", maxWidth: 380, background: "var(--bg-ffffff,#fff)", borderRadius: 20, padding: 32, boxShadow: "0 4px 24px var(--brand-primary)18", textAlign: "center" }}>
+          <div style={{ width: 56, height: 56, borderRadius: "50%", background: "var(--bg-e8f8ef,#e8f8ef)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
             <CheckCircle2 size={28} color="#1a8fd1" />
           </div>
           <div style={{ fontSize: 18, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 8 }}>{t("account_created")}</div>
           <div style={{ fontSize: 13, color: "var(--brand-text-muted)", marginBottom: 12 }}>{t("account_created_sub")}</div>
           {verifyEmailFailed ? (
-            <div style={{ fontSize: 12, color: "#c0392b", background: "#fdf0ef", border: "1px solid #f3c9c4", borderRadius: 10, padding: "10px 14px", marginBottom: 14, textAlign: "left" }}>
+            <div style={{ fontSize: 12, color: "var(--tx-c0392b,#c0392b)", background: "var(--bg-fdf0ef,#fdf0ef)", border: "1px solid var(--bd-f3c9c4,#f3c9c4)", borderRadius: 10, padding: "10px 14px", marginBottom: 14, textAlign: "left" }}>
               ⚠️ {t("verify_email_send_failed")}
             </div>
           ) : (
-            <div style={{ fontSize: 12, color: "#a8721a", background: "#fff8e1", border: "1px solid #ffe082", borderRadius: 10, padding: "10px 14px", marginBottom: 14, textAlign: "left" }}>
+            <div style={{ fontSize: 12, color: "var(--tx-a8721a,#a8721a)", background: "var(--bg-fff8e1,#fff8e1)", border: "1px solid var(--bd-ffe082,#ffe082)", borderRadius: 10, padding: "10px 14px", marginBottom: 14, textAlign: "left" }}>
               📧 {t("verify_email_notice")}
             </div>
           )}
           {verifyEmailFailed && (
             <button
-              style={{ width: "100%", padding: "11px 0", borderRadius: 12, border: "1.5px solid var(--brand-primary)", background: "#fff", color: "var(--brand-primary)", fontWeight: 600, fontSize: 13.5, cursor: resendBusy ? "default" : "pointer", marginBottom: 14 }}
+              style={{ width: "100%", padding: "11px 0", borderRadius: 12, border: "1.5px solid var(--brand-primary)", background: "var(--bg-ffffff,#fff)", color: "var(--brand-primary)", fontWeight: 600, fontSize: 13.5, cursor: resendBusy ? "default" : "pointer", marginBottom: 14 }}
               disabled={resendBusy}
               onClick={async () => {
                 setResendBusy(true);
@@ -10189,8 +10441,8 @@ By creating an account, the user acknowledges having read this document in full 
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#eaf4fb", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 }}>
-      <div style={{ width: "100%", maxWidth: 380, background: "#fff", borderRadius: 20, padding: 28, boxShadow: "0 4px 24px var(--brand-primary)18" }}>
+    <div style={{ minHeight: "100vh", background: "var(--bg-eaf4fb,#eaf4fb)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 }}>
+      <div style={{ width: "100%", maxWidth: 380, background: "var(--bg-ffffff,#fff)", borderRadius: 20, padding: 28, boxShadow: "0 4px 24px var(--brand-primary)18" }}>
         {/* Logo */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 24 }}>
           <div style={{ width: 56, height: 56, borderRadius: 16, background: "var(--brand-primary)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
@@ -10215,7 +10467,7 @@ By creating an account, the user acknowledges having read this document in full 
                     aria-label={opt.label}
                     aria-pressed={active}
                     title={opt.label}
-                    style={{ minWidth: 38, padding: "5px 8px", borderRadius: 8, border: active ? "1.5px solid var(--brand-primary)" : "1.5px solid #d0e4f5", background: active ? "var(--brand-primary)" : "#f8fafd", color: active ? "#fff" : "var(--brand-text-secondary)", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+                    style={{ minWidth: 38, padding: "5px 8px", borderRadius: 8, border: active ? "1.5px solid var(--brand-primary)" : "1.5px solid var(--bd-d0e4f5,#d0e4f5)", background: active ? "var(--brand-primary)" : "var(--bg-f8fafd,#f8fafd)", color: active ? "#fff" : "var(--brand-text-secondary)", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
                   >
                     {opt.value.toUpperCase()}
                   </button>
@@ -10226,7 +10478,7 @@ By creating an account, the user acknowledges having read this document in full 
         </div>
 
         {!firebaseReady && (
-          <div style={{ background: "#fff8e1", border: "1px solid #ffe082", borderRadius: 10, padding: "10px 14px", fontSize: 12, color: "#7a5a00", marginBottom: 16 }}>
+          <div style={{ background: "var(--bg-fff8e1,#fff8e1)", border: "1px solid var(--bd-ffe082,#ffe082)", borderRadius: 10, padding: "10px 14px", fontSize: 12, color: "var(--tx-7a5a00,#7a5a00)", marginBottom: 16 }}>
             {t("firebase_not_configured")}
           </div>
         )}
@@ -10235,17 +10487,17 @@ By creating an account, the user acknowledges having read this document in full 
         {firebaseReady && mode !== "reset" && (
           <>
             <button
-              style={{ width: "100%", padding: "12px 0", borderRadius: 12, border: "1.5px solid #d0e4f5", background: "#f8fafd", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, fontSize: 14, fontWeight: 600, color: "var(--brand-text-strong)", cursor: busy ? "not-allowed" : "pointer", marginBottom: 16, opacity: busy ? 0.6 : 1 }}
+              style={{ width: "100%", padding: "12px 0", borderRadius: 12, border: "1.5px solid var(--bd-d0e4f5,#d0e4f5)", background: "var(--bg-f8fafd,#f8fafd)", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, fontSize: 14, fontWeight: 600, color: "var(--brand-text-strong)", cursor: busy ? "not-allowed" : "pointer", marginBottom: 16, opacity: busy ? 0.6 : 1 }}
               onClick={handleGoogle}
               disabled={busy}
             >
-              <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+              <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="var(--tx-fbbc05,#FBBC05)" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="var(--tx-34a853,#34A853)" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
               {busy ? "..." : t("continue_google")}
             </button>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-              <div style={{ flex: 1, height: 1, background: "#e6ebe9" }} />
+              <div style={{ flex: 1, height: 1, background: "var(--bg-e6ebe9,#e6ebe9)" }} />
               <span style={{ fontSize: 12, color: "#9aa9a5" }}>{t("or")}</span>
-              <div style={{ flex: 1, height: 1, background: "#e6ebe9" }} />
+              <div style={{ flex: 1, height: 1, background: "var(--bg-e6ebe9,#e6ebe9)" }} />
             </div>
           </>
         )}
@@ -10256,7 +10508,7 @@ By creating an account, the user acknowledges having read this document in full 
             <FieldLabel required style={{ fontSize: 12, fontWeight: 600, color: "var(--brand-text-secondary)", display: "block", marginBottom: 4 }}>Email</FieldLabel>
             <input
               type="email" value={email} onChange={e => setEmail(e.target.value)}
-              style={{ width: "100%", padding: "11px 14px", borderRadius: 10, border: "1.5px solid #d0e4f5", fontSize: 14, marginBottom: 10, boxSizing: "border-box" }}
+              style={{ width: "100%", padding: "11px 14px", borderRadius: 10, border: "1.5px solid var(--bd-d0e4f5,#d0e4f5)", fontSize: 14, marginBottom: 10, boxSizing: "border-box" }}
               placeholder={t("login_email_placeholder")}
               onKeyDown={e => e.key === "Enter" && mode !== "signup" && handleSubmit()}
             />
@@ -10267,7 +10519,7 @@ By creating an account, the user acknowledges having read this document in full 
                 <div style={{ position: "relative", marginBottom: 10 }}>
                   <input
                     type={showPwd ? "text" : "password"} value={pwd} onChange={e => setPwd(e.target.value)}
-                    style={{ width: "100%", padding: "11px 44px 11px 14px", borderRadius: 10, border: "1.5px solid #d0e4f5", fontSize: 14, boxSizing: "border-box" }}
+                    style={{ width: "100%", padding: "11px 44px 11px 14px", borderRadius: 10, border: "1.5px solid var(--bd-d0e4f5,#d0e4f5)", fontSize: 14, boxSizing: "border-box" }}
                     placeholder={mode === "signup" ? t("pwd_min6") : "••••••••"}
                     onKeyDown={e => e.key === "Enter" && mode === "login" && handleSubmit()}
                   />
@@ -10289,19 +10541,19 @@ By creating an account, the user acknowledges having read this document in full 
                 <FieldLabel required style={{ fontSize: 12, fontWeight: 600, color: "var(--brand-text-secondary)", display: "block", marginBottom: 4 }}>{t("confirm_password")}</FieldLabel>
                 <input
                   type="password" value={pwd2} onChange={e => setPwd2(e.target.value)}
-                  style={{ width: "100%", padding: "11px 14px", borderRadius: 10, border: pwd2 && pwd !== pwd2 ? "1.5px solid #c0392b" : "1.5px solid #d0e4f5", fontSize: 14, marginBottom: 10, boxSizing: "border-box" }}
+                  style={{ width: "100%", padding: "11px 14px", borderRadius: 10, border: pwd2 && pwd !== pwd2 ? "1.5px solid #c0392b" : "1.5px solid var(--bd-d0e4f5,#d0e4f5)", fontSize: 14, marginBottom: 10, boxSizing: "border-box" }}
                   placeholder="••••••••"
                   onKeyDown={e => e.key === "Enter" && handleSubmit()}
                 />
                 {pwd2 && pwd !== pwd2 && (
-                  <div style={{ fontSize: 11, color: "#c0392b", marginTop: -6, marginBottom: 8 }}>{t("error_pwd_mismatch")}</div>
+                  <div style={{ fontSize: 11, color: "var(--tx-c0392b,#c0392b)", marginTop: -6, marginBottom: 8 }}>{t("error_pwd_mismatch")}</div>
                 )}
               </>
             )}
 
             {/* Cases consentement — uniquement en mode signup */}
             {mode === "signup" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 14, padding: "12px 14px", background: "#f5f8fc", borderRadius: 10, border: "1px solid #d0e4f5" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 14, padding: "12px 14px", background: "var(--bg-f5f8fc,#f5f8fc)", borderRadius: 10, border: "1px solid var(--bd-d0e4f5,#d0e4f5)" }}>
                 {/* CGU — obligatoire */}
                 <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer" }}>
                   <input
@@ -10338,7 +10590,7 @@ By creating an account, the user acknowledges having read this document in full 
 
             {error && (
               <div style={{ marginBottom: 8 }}>
-                <div style={{ fontSize: 12, color: "#c0392b", padding: "8px 10px", background: "#fdf0ef", borderRadius: 8 }}>{error}</div>
+                <div style={{ fontSize: 12, color: "var(--tx-c0392b,#c0392b)", padding: "8px 10px", background: "var(--bg-fdf0ef,#fdf0ef)", borderRadius: 8 }}>{error}</div>
                 {showCreateAccountHint && (
                   <button
                     type="button"
@@ -10359,7 +10611,7 @@ By creating an account, the user acknowledges having read this document in full 
                 )}
               </div>
             )}
-            {info && <div style={{ fontSize: 12, color: "#1a8fd1", marginBottom: 8, padding: "8px 10px", background: "#e8f4fd", borderRadius: 8 }}>{info}</div>}
+            {info && <div style={{ fontSize: 12, color: "var(--tx-1a8fd1,#1a8fd1)", marginBottom: 8, padding: "8px 10px", background: "var(--bg-e8f4fd,#e8f4fd)", borderRadius: 8 }}>{info}</div>}
 
             <button
               style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: busy ? "var(--brand-icon-light)" : "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 15, cursor: busy ? "not-allowed" : "pointer", marginBottom: 14 }}
@@ -10375,7 +10627,7 @@ By creating an account, the user acknowledges having read this document in full 
                   {/* v1.146.3 — "S'inscrire" en vrai bouton, de même gabarit que "Connexion" (variante contour) */}
                   <button
                     onClick={() => { setMode("signup"); setError(""); setPwd(""); setPwd2(""); }}
-                    style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "1.5px solid var(--brand-primary)", background: "#fff", color: "var(--brand-primary)", fontWeight: 700, fontSize: 15, cursor: "pointer" }}
+                    style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "1.5px solid var(--brand-primary)", background: "var(--bg-ffffff,#fff)", color: "var(--brand-primary)", fontWeight: 700, fontSize: 15, cursor: "pointer" }}
                   >
                     {t("no_account")}
                   </button>
@@ -13518,7 +13770,29 @@ function PoolGenAIApp() {
   // Fragment <> qui ne peut porter aucun style. Ces écrans utilisaient donc
   // var(--brand-primary) non définie → fond/texte transparents, boutons invisibles
   // ("blanc sur blanc"). Calculées une fois ici et appliquées au vrai conteneur racine.
-  const themeVars = {
+  // v1.178.0 — Mode nuit : thème choisi (Réglages > Apparence), mémorisé sur l'appareil ; clair tant que rien n'est choisi.
+  const [themeMode, setThemeMode] = useState(() => themeStoreGet(THEME_STORE.mode) || "light");
+  const [themeTick, setThemeTick] = useState(0);
+  useEffect(() => { const iv = setInterval(() => setThemeTick((x) => x + 1), 60000); return () => clearInterval(iv); }, []);
+  const resolvedTheme = resolveTheme(themeMode, activePool?.lat, activePool?.lon, Date.now());
+  useEffect(() => { applyTheme(resolvedTheme); }, [resolvedTheme]);
+  function changeThemeMode(m) {
+    themeStoreSet(THEME_STORE.mode, m);
+    themeStoreSet(THEME_STORE.proposed, "1");
+    setThemeMode(m);
+    setThemeProposal(false);
+  }
+  // Proposition unique, la nuit, tant que l'utilisateur n'a rien choisi : passer en mode sombre automatique.
+  const [themeProposal, setThemeProposal] = useState(false);
+  useEffect(() => {
+    if (!loaded || !authUser || themeStoreGet(THEME_STORE.mode) || themeStoreGet(THEME_STORE.proposed)) return;
+    if (!isNightAt(activePool?.lat, activePool?.lon, Date.now())) return;
+    const tm = setTimeout(() => setThemeProposal(true), 4000);
+    return () => clearTimeout(tm);
+  }, [loaded, authUser && authUser.uid, themeTick]);
+  const darkTheme = resolvedTheme === "dark";
+  const brandDark = THEME_DARK_BRAND[effectiveIsPremium ? "premium" : "free"];
+  const themeVars = darkTheme ? { ...brandDark } : {
     "--brand-primary": effectiveIsPremium ? "#1ca7d1" : "#4a9b82",
     "--brand-primary-dark": effectiveIsPremium ? "#0c7a9e" : "#2a6553",
     "--brand-text-strong": effectiveIsPremium ? "#0d2b4e" : "#173a2b",
@@ -13726,6 +14000,8 @@ function PoolGenAIApp() {
             myPseudo={myPseudo}
             tempUnit={tempUnit}
             onChangeTempUnit={changeTempUnit}
+            themeMode={themeMode}
+            onChangeThemeMode={changeThemeMode}
             openPoolEdit={poolEditRequest}
             onPoolEditHandled={() => setPoolEditRequest(null)}
             onRevokeDataConsent={() => {
@@ -13766,7 +14042,7 @@ function PoolGenAIApp() {
     <div style={themeVars}>
     {verifyLinkStatus && (
       <div style={{ position: "fixed", inset: 0, zIndex: 3200, background: "rgba(10,30,60,0.94)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-        <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px var(--brand-primary)33" }}>
+        <div style={{ background: "var(--bg-ffffff,#fff)", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px var(--brand-primary)33" }}>
           {verifyLinkStatus === "verifying" ? (
             <>
               <Loader2 size={34} className="spin" style={{ marginBottom: 10, color: "var(--brand-primary)" }} />
@@ -13796,7 +14072,7 @@ function PoolGenAIApp() {
     )}
     {mergeLinkStatus && (
       <div style={{ position: "fixed", inset: 0, zIndex: 3200, background: "rgba(10,30,60,0.94)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-        <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px var(--brand-primary)33" }}>
+        <div style={{ background: "var(--bg-ffffff,#fff)", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px var(--brand-primary)33" }}>
           {mergeLinkStatus === "pending_confirmation" ? (
             <>
               <div style={{ fontSize: 34, marginBottom: 10 }}>🔗</div>
@@ -13814,7 +14090,7 @@ function PoolGenAIApp() {
               </button>
               <button
                 onClick={() => { setMergeLinkStatus(null); setMergeLinkParams(null); }}
-                style={{ width: "100%", padding: "11px 0", borderRadius: 12, border: "1px solid #d8e2ec", background: "transparent", color: "var(--brand-text-secondary)", fontWeight: 600, fontSize: 13.5, cursor: "pointer" }}
+                style={{ width: "100%", padding: "11px 0", borderRadius: 12, border: "1px solid var(--bd-d8e2ec,#d8e2ec)", background: "transparent", color: "var(--brand-text-secondary)", fontWeight: 600, fontSize: 13.5, cursor: "pointer" }}
               >
                 {t("merge_link_cancel_btn")}
               </button>
@@ -13848,7 +14124,7 @@ function PoolGenAIApp() {
     )}
     {awaitingStripeActivation && (
       <div style={{ position: "fixed", inset: 0, zIndex: 3200, background: "rgba(10,30,60,0.94)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-        <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px var(--brand-primary)33" }}>
+        <div style={{ background: "var(--bg-ffffff,#fff)", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px var(--brand-primary)33" }}>
           {!stripeActivationTimedOut ? (
             <>
               <Loader2 size={34} className="spin" style={{ marginBottom: 10, color: "var(--brand-primary)" }} />
@@ -13876,7 +14152,7 @@ function PoolGenAIApp() {
     )}
     {authUser && inviteLinkStatus && (
       <div style={{ position: "fixed", inset: 0, zIndex: 3200, background: "rgba(10,30,60,0.94)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-        <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px var(--brand-primary)33" }}>
+        <div style={{ background: "var(--bg-ffffff,#fff)", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px var(--brand-primary)33" }}>
           {inviteLinkStatus === "loading_info" || inviteLinkStatus === "responding" ? (
             <>
               <Loader2 size={34} className="spin" style={{ marginBottom: 10, color: "var(--brand-primary)" }} />
@@ -13902,7 +14178,7 @@ function PoolGenAIApp() {
               </button>
               <button
                 onClick={() => handleInviteResponse("decline")}
-                style={{ width: "100%", padding: "11px 0", borderRadius: 12, border: "1px solid #d8e2ec", background: "transparent", color: "var(--brand-text-secondary)", fontWeight: 600, fontSize: 13.5, cursor: "pointer" }}
+                style={{ width: "100%", padding: "11px 0", borderRadius: 12, border: "1px solid var(--bd-d8e2ec,#d8e2ec)", background: "transparent", color: "var(--brand-text-secondary)", fontWeight: 600, fontSize: 13.5, cursor: "pointer" }}
               >
                 {t("invite_response_decline")}
               </button>
@@ -13931,7 +14207,7 @@ function PoolGenAIApp() {
     )}
     {authUser && revocationLinkStatus && (
       <div style={{ position: "fixed", inset: 0, zIndex: 3200, background: "rgba(10,30,60,0.94)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-        <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px var(--brand-primary)33" }}>
+        <div style={{ background: "var(--bg-ffffff,#fff)", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px var(--brand-primary)33" }}>
           {revocationLinkStatus === "loading_info" || revocationLinkStatus === "responding" ? (
             <>
               <Loader2 size={34} className="spin" style={{ marginBottom: 10, color: "var(--brand-primary)" }} />
@@ -13980,7 +14256,7 @@ function PoolGenAIApp() {
     )}
     {forceUpdate && (
       <div style={{ position: "fixed", inset: 0, zIndex: 3000, background: "rgba(10,30,60,0.94)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-        <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px var(--brand-primary)33" }}>
+        <div style={{ background: "var(--bg-ffffff,#fff)", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px var(--brand-primary)33" }}>
           {updating ? (
             <>
               <Loader2 size={34} className="spin" style={{ color: "var(--brand-primary)", marginBottom: 14 }} />
@@ -14005,24 +14281,24 @@ function PoolGenAIApp() {
     )}
     {needsEmailVerification && !forceUpdate && !needsCguAcceptance && (
       <div style={{ position: "fixed", inset: 0, zIndex: 3050, background: "rgba(10,60,50,0.94)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-        <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px #00000033" }}>
+        <div style={{ background: "var(--bg-ffffff,#fff)", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px #00000033" }}>
           <div style={{ fontSize: 34, marginBottom: 10 }}>📧</div>
           <div style={{ fontSize: 17, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 8 }}>{t("verify_gate_title")}</div>
           <div style={{ fontSize: 13.5, color: "var(--brand-text-secondary)", marginBottom: 18, lineHeight: 1.5 }}>
             {t("verify_gate_desc")}{authUser?.email ? ` (${authUser.email})` : ""}
           </div>
           {verifyCheckFailed && (
-            <div style={{ fontSize: 12.5, color: "#c0392b", marginBottom: 12, background: "#fdf0ef", borderRadius: 8, padding: "8px 10px" }}>
+            <div style={{ fontSize: 12.5, color: "var(--tx-c0392b,#c0392b)", marginBottom: 12, background: "var(--bg-fdf0ef,#fdf0ef)", borderRadius: 8, padding: "8px 10px" }}>
               {t("verify_gate_still_unverified")}
             </div>
           )}
           {verifyResendStatus === "sent" && (
-            <div style={{ fontSize: 12.5, color: "#1a7a4a", marginBottom: 12, background: "#eafaf1", borderRadius: 8, padding: "8px 10px" }}>
+            <div style={{ fontSize: 12.5, color: "var(--tx-1a7a4a,#1a7a4a)", marginBottom: 12, background: "var(--bg-eafaf1,#eafaf1)", borderRadius: 8, padding: "8px 10px" }}>
               {t("verify_gate_resend_sent")}
             </div>
           )}
           {verifyResendStatus === "error" && (
-            <div style={{ fontSize: 12.5, color: "#c0392b", marginBottom: 12, background: "#fdf0ef", borderRadius: 8, padding: "8px 10px" }}>
+            <div style={{ fontSize: 12.5, color: "var(--tx-c0392b,#c0392b)", marginBottom: 12, background: "var(--bg-fdf0ef,#fdf0ef)", borderRadius: 8, padding: "8px 10px" }}>
               {t("verify_gate_resend_error")}
             </div>
           )}
@@ -14037,7 +14313,7 @@ function PoolGenAIApp() {
           <button
             onClick={handleResendVerification}
             disabled={verifySending}
-            style={{ width: "100%", padding: "11px 0", borderRadius: 12, border: "1.5px solid #d0e4f5", background: "#fff", color: "var(--brand-primary)", fontWeight: 600, fontSize: 13.5, cursor: verifySending ? "default" : "pointer", marginBottom: 14 }}
+            style={{ width: "100%", padding: "11px 0", borderRadius: 12, border: "1.5px solid var(--bd-d0e4f5,#d0e4f5)", background: "var(--bg-ffffff,#fff)", color: "var(--brand-primary)", fontWeight: 600, fontSize: 13.5, cursor: verifySending ? "default" : "pointer", marginBottom: 14 }}
           >
             {verifySending ? "..." : t("verify_gate_resend_btn")}
           </button>
@@ -14052,19 +14328,19 @@ function PoolGenAIApp() {
     )}
     {suspended && (
       <div style={{ position: "fixed", inset: 0, zIndex: 3100, background: "rgba(60,20,20,0.94)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-        <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px #00000033" }}>
+        <div style={{ background: "var(--bg-ffffff,#fff)", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px #00000033" }}>
           <div style={{ fontSize: 34, marginBottom: 10 }}>⛔</div>
           <div style={{ fontSize: 17, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 8 }}>{t("suspended_title")}</div>
           <div style={{ fontSize: 13.5, color: "var(--brand-text-secondary)", marginBottom: suspendReason ? 8 : 20, lineHeight: 1.5 }}>{t("suspended_desc")}</div>
           {suspendReason && (
-            <div style={{ fontSize: 12.5, color: "var(--brand-text-muted)", marginBottom: 20, fontStyle: "italic", background: "#f5f7fa", borderRadius: 8, padding: "8px 10px" }}>
+            <div style={{ fontSize: 12.5, color: "var(--brand-text-muted)", marginBottom: 20, fontStyle: "italic", background: "var(--bg-f5f7fa,#f5f7fa)", borderRadius: 8, padding: "8px 10px" }}>
               {suspendReason}
             </div>
           )}
           <button
             onClick={handleEraseSuspendedData}
             disabled={erasingData}
-            style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "1.5px solid #c0392b", background: "#fff", color: "#c0392b", fontWeight: 700, fontSize: 14.5, cursor: erasingData ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+            style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "1.5px solid #c0392b", background: "var(--bg-ffffff,#fff)", color: "var(--tx-c0392b,#c0392b)", fontWeight: 700, fontSize: 14.5, cursor: erasingData ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
           >
             {erasingData ? <Loader2 size={16} className="spin" /> : null}
             {erasingData ? t("suspended_erasing") : t("suspended_erase_btn")}
@@ -14074,7 +14350,7 @@ function PoolGenAIApp() {
     )}
     {accountDeleted && !showDataRequestScreen && (
       <div style={{ position: "fixed", inset: 0, zIndex: 3100, background: "rgba(60,20,20,0.94)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-        <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px #00000033" }}>
+        <div style={{ background: "var(--bg-ffffff,#fff)", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", textAlign: "center", boxShadow: "0 8px 32px #00000033" }}>
           <div style={{ fontSize: 34, marginBottom: 10 }}>⛔</div>
           <div style={{ fontSize: 17, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 8 }}>{t("account_deleted_title")}</div>
           <div style={{ fontSize: 13.5, color: "var(--brand-text-secondary)", marginBottom: 20, lineHeight: 1.5 }}>{t("account_deleted_desc")}</div>
@@ -14090,7 +14366,7 @@ function PoolGenAIApp() {
           </button>
           <button
             onClick={() => setShowDataRequestScreen(true)}
-            style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "1.5px solid var(--brand-primary)", background: "#fff", color: "var(--brand-primary)", fontWeight: 700, fontSize: 14.5, cursor: "pointer", marginBottom: 14 }}
+            style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "1.5px solid var(--brand-primary)", background: "var(--bg-ffffff,#fff)", color: "var(--brand-primary)", fontWeight: 700, fontSize: 14.5, cursor: "pointer", marginBottom: 14 }}
           >
             {t("account_deleted_request_btn")}
           </button>
@@ -14122,7 +14398,7 @@ function PoolGenAIApp() {
         (secondaryLoadTimeout) : l'écran "Bassin introuvable" prend le relais
         dans ces deux cas au lieu de laisser croire à un simple chargement. */}
     {loaded && authUser && !suspended && !accountDeleted && !forceUpdate && !needsEmailVerification && !needsCguAcceptance && !cloudConfigReceived && !(viewContext && (poolAccessError || secondaryLoadTimeout)) && (
-      <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "#f5f8f7", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "var(--bg-f5f8f7,#f5f8f7)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
         <Loader2 size={34} className="spin" style={{ marginBottom: 10, color: "var(--brand-primary)" }} />
         <div style={{ fontSize: 13.5, color: "var(--brand-text-secondary)" }}>{t("context_loading")}</div>
       </div>
@@ -14149,7 +14425,7 @@ function PoolGenAIApp() {
         cloudConfigReceived est déjà arrivé avec un tableau de bassins vide. */}
     {loaded && authUser && !suspended && !accountDeleted && !forceUpdate && !needsEmailVerification && !needsCguAcceptance && viewContext &&
       ((activePools.length === 0 && cloudConfigReceived) || poolAccessError || secondaryLoadTimeout) && (
-      <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "#f5f8f7", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24, textAlign: "center" }}>
+      <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "var(--bg-f5f8f7,#f5f8f7)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24, textAlign: "center" }}>
         <Droplets size={40} color="var(--brand-icon-light)" style={{ marginBottom: 16 }} />
         <div style={{ fontSize: 16, fontWeight: 700, color: "var(--brand-text-strong)", marginBottom: 8 }}>
           {t("secondary_pool_unavailable_title")}
@@ -14369,12 +14645,12 @@ function PoolGenAIApp() {
 
       {showPhotoWarning && (
         <div style={{ position: "fixed", inset: 0, zIndex: 600, background: "rgba(10,30,60,0.65)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-          <div style={{ background: "#fff", borderRadius: 20, padding: 24, maxWidth: 420, width: "100%", boxShadow: "0 8px 32px var(--brand-primary)22" }}>
+          <div style={{ background: "var(--bg-ffffff,#fff)", borderRadius: 20, padding: 24, maxWidth: 420, width: "100%", boxShadow: "0 8px 32px var(--brand-primary)22" }}>
             <div style={{ fontSize: 28, textAlign: "center", marginBottom: 8 }}>📸</div>
             <div style={{ fontSize: 16, fontWeight: 800, color: "var(--brand-text-strong)", textAlign: "center", marginBottom: 12 }}>
               {tFn("photo_warning_title")}
             </div>
-            <div style={{ fontSize: 13, color: "var(--brand-text-secondary)", lineHeight: 1.7, background: "#f5f8fc", borderRadius: 10, padding: "12px 14px", marginBottom: 16, whiteSpace: "pre-line" }}>
+            <div style={{ fontSize: 13, color: "var(--brand-text-secondary)", lineHeight: 1.7, background: "var(--bg-f5f8fc,#f5f8fc)", borderRadius: 10, padding: "12px 14px", marginBottom: 16, whiteSpace: "pre-line" }}>
               {tFn("photo_warning_body")}
             </div>
             <button
@@ -14401,7 +14677,7 @@ function PoolGenAIApp() {
           zIndex 3060 > 3050 (vérification email) : la CGU prime toujours. */}
       {needsCguAcceptance && !showLogin && (
         <div style={{ position: "fixed", inset: 0, zIndex: 3060, background: "rgba(10,30,60,0.92)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-          <div style={{ background: "#fff", borderRadius: 20, padding: 24, maxWidth: 440, width: "100%", maxHeight: "90dvh", overflowY: "auto", boxSizing: "border-box", boxShadow: "0 8px 32px var(--brand-primary)22" }}>
+          <div style={{ background: "var(--bg-ffffff,#fff)", borderRadius: 20, padding: 24, maxWidth: 440, width: "100%", maxHeight: "90dvh", overflowY: "auto", boxSizing: "border-box", boxShadow: "0 8px 32px var(--brand-primary)22" }}>
             <div style={{ fontSize: 24, textAlign: "center", marginBottom: 8 }}>📋</div>
             <div style={{ fontSize: 16, fontWeight: 800, color: "var(--brand-text-strong)", textAlign: "center", marginBottom: 8 }}>
               {tFn(cguNeverAccepted ? "cgu_required_title" : "cgu_updated_title")}
@@ -14419,7 +14695,7 @@ function PoolGenAIApp() {
               {tFn(showFullCguInGate ? "cgu_hide_full_text" : "cgu_read_full_text")}
             </button>
             {showFullCguInGate && (
-              <div style={{ maxHeight: 260, overflowY: "auto", fontSize: 11.5, color: "#2d4a6e", lineHeight: 1.6, background: "#f5f8fc", borderRadius: 10, padding: "12px 14px", marginBottom: 16 }}>
+              <div style={{ maxHeight: 260, overflowY: "auto", fontSize: 11.5, color: "var(--tx-2d4a6e,#2d4a6e)", lineHeight: 1.6, background: "var(--bg-f5f8fc,#f5f8fc)", borderRadius: 10, padding: "12px 14px", marginBottom: 16 }}>
                 <CguLegalContent lang={lang} />
               </div>
             )}
@@ -14438,6 +14714,10 @@ function PoolGenAIApp() {
             </button>
           </div>
         </div>
+      )}
+
+      {themeProposal && (
+        <ThemeProposalBanner lang={lang} onAccept={() => changeThemeMode("auto")} onDismiss={() => { themeStoreSet(THEME_STORE.proposed, "1"); setThemeProposal(false); }} />
       )}
 
       {catchupPrompt && (() => {
@@ -14682,7 +14962,7 @@ function Header({ poolName, location, poolPhoto, isPremium, entries, activeEntry
                   key={entry.key}
                   style={{
                     ...styles.poolSwitcherItem,
-                    background: active ? "#e9f6f1" : "transparent",
+                    background: active ? "var(--bg-e9f6f1,#e9f6f1)" : "transparent",
                   }}
                   onClick={() => {
                     onSelectEntry(entry);
@@ -14944,15 +15224,15 @@ function TabBar({ tab, setTab, lang, viewContext, locked }) {
     if (typeof ResizeObserver !== "undefined" && el) { ro = new ResizeObserver(updateEdges); ro.observe(el); }
     return () => { window.removeEventListener("resize", updateEdges); if (ro) ro.disconnect(); };
   }, []);
-  const fade = (side) => ({ position: "absolute", top: 0, bottom: 0, [side]: 0, width: 22, pointerEvents: "none", zIndex: 11, background: "linear-gradient(to " + (side === "left" ? "right" : "left") + ", #ffffff, rgba(255,255,255,0))" });
+  const fade = (side) => ({ position: "absolute", top: 0, bottom: 0, [side]: 0, width: 22, pointerEvents: "none", zIndex: 11, background: "linear-gradient(to " + (side === "left" ? "right" : "left") + ", var(--bg-ffffff,#ffffff), rgba(255,255,255,0))" });
   return (
     <div style={{ width: "100%", flexShrink: 0 }}>
       {viewContext && (
-        <div style={{ textAlign: "center", fontSize: 9.5, color: "#b0bec8", padding: "2px 0", background: "#f5f8fc", letterSpacing: 0.3 }}>
+        <div style={{ textAlign: "center", fontSize: 9.5, color: "#b0bec8", padding: "2px 0", background: "var(--bg-f5f8fc,#f5f8fc)", letterSpacing: 0.3 }}>
           {t("banner_secondary", { pool: viewContext.poolName, pseudo: viewContext.pseudo })}
         </div>
       )}
-      <div style={{ textAlign: "center", fontSize: 9.5, color: "#b0bec8", padding: "2px 0", background: "#f5f8fc", letterSpacing: 0.3, borderTop: "1px solid #e8eef2" }}>
+      <div style={{ textAlign: "center", fontSize: 9.5, color: "#b0bec8", padding: "2px 0", background: "var(--bg-f5f8fc,#f5f8fc)", letterSpacing: 0.3, borderTop: "1px solid var(--bd-e8eef2,#e8eef2)" }}>
         PoolGenAI v{APP_VERSION}
       </div>
       <div style={{ position: "relative" }}>
@@ -15141,7 +15421,7 @@ function DelegationSection({ authUser, lang, linkedPoolsInfo, onRequestRevocatio
   const sectionTitleStyle = { fontSize: 13, fontWeight: 700, color: "var(--brand-text-strong)", marginBottom: 8 };
   const subTitleStyle = { fontSize: 12.5, fontWeight: 600, color: "var(--brand-text-secondary)", marginBottom: 6 };
   const emptyStyle = { fontSize: 12.5, color: "#8a9aa8", marginBottom: 14 };
-  const cardStyle = { padding: "10px 12px", border: "1px solid #d8e2ec", borderRadius: 10 };
+  const cardStyle = { padding: "10px 12px", border: "1px solid var(--bd-d8e2ec,#d8e2ec)", borderRadius: 10 };
 
   return (
     <div style={{ marginTop: 24, padding: "0 16px 24px" }}>
@@ -15166,13 +15446,13 @@ function DelegationSection({ authUser, lang, linkedPoolsInfo, onRequestRevocatio
                 <button
                   onClick={() => handleRequestRevocation(l)}
                   disabled={revokeReqBusy === l.primaryUid}
-                  style={{ padding: "7px 12px", borderRadius: 8, border: "1px solid #e0a0a0", background: "#fff5f5", color: "#c0392b", fontSize: 12, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}
+                  style={{ padding: "7px 12px", borderRadius: 8, border: "1px solid var(--bd-e0a0a0,#e0a0a0)", background: "var(--bg-fff5f5,#fff5f5)", color: "var(--tx-c0392b,#c0392b)", fontSize: 12, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}
                 >
                   {revokeReqBusy === l.primaryUid ? "..." : t("request_revocation_button")}
                 </button>
               </div>
               {revokeReqMsg?.primaryUid === l.primaryUid && (
-                <div style={{ fontSize: 11.5, color: revokeReqMsg.error ? "#c0392b" : "#1a7a4a", marginTop: 6 }}>
+                <div style={{ fontSize: 11.5, color: revokeReqMsg.error ? "var(--tx-c0392b,#c0392b)" : "var(--tx-1a7a4a,#1a7a4a)", marginTop: 6 }}>
                   {revokeReqMsg.text}
                 </div>
               )}
@@ -15199,7 +15479,7 @@ function DelegationSection({ authUser, lang, linkedPoolsInfo, onRequestRevocatio
               </div>
               <button
                 onClick={() => handleRevoke(s.secondaryUid, s.email)}
-                style={{ padding: "7px 12px", borderRadius: 8, border: "1px solid #e0a0a0", background: "#fff5f5", color: "#c0392b", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+                style={{ padding: "7px 12px", borderRadius: 8, border: "1px solid var(--bd-e0a0a0,#e0a0a0)", background: "var(--bg-fff5f5,#fff5f5)", color: "var(--tx-c0392b,#c0392b)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
               >
                 {t("secondary_revoke_button")}
               </button>
@@ -15227,7 +15507,7 @@ function DelegationSection({ authUser, lang, linkedPoolsInfo, onRequestRevocatio
               {inv.token && (
                 <button
                   onClick={() => handleCancelInvitation(inv.token, inv.invitedEmail)}
-                  style={{ padding: "7px 12px", borderRadius: 8, border: "1px solid #e0a0a0", background: "#fff5f5", color: "#c0392b", fontSize: 12, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}
+                  style={{ padding: "7px 12px", borderRadius: 8, border: "1px solid var(--bd-e0a0a0,#e0a0a0)", background: "var(--bg-fff5f5,#fff5f5)", color: "var(--tx-c0392b,#c0392b)", fontSize: 12, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}
                 >
                   {t("secondary_cancel_button")}
                 </button>
@@ -15247,12 +15527,12 @@ function DelegationSection({ authUser, lang, linkedPoolsInfo, onRequestRevocatio
             value={inviteEmail}
             onChange={(e) => setInviteEmail(e.target.value)}
             placeholder={t("secondary_invite_email_label")}
-            style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid #d8e2ec", fontSize: 13.5, marginBottom: 8, boxSizing: "border-box" }}
+            style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--bd-d8e2ec,#d8e2ec)", fontSize: 13.5, marginBottom: 8, boxSizing: "border-box" }}
           />
           <select
             value={invitePoolId}
             onChange={(e) => setInvitePoolId(e.target.value)}
-            style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid #d8e2ec", fontSize: 13.5, marginBottom: 8 }}
+            style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--bd-d8e2ec,#d8e2ec)", fontSize: 13.5, marginBottom: 8 }}
           >
             <option value="">{t("secondary_invite_pool_label")}</option>
             {myPools.map((p) => (
@@ -15260,7 +15540,7 @@ function DelegationSection({ authUser, lang, linkedPoolsInfo, onRequestRevocatio
             ))}
           </select>
           {selectedPoolFull && (
-            <div style={{ fontSize: 12, color: "#c0392b", marginBottom: 8 }}>{t("secondary_invite_pool_full")}</div>
+            <div style={{ fontSize: 12, color: "var(--tx-c0392b,#c0392b)", marginBottom: 8 }}>{t("secondary_invite_pool_full")}</div>
           )}
           <button
             onClick={handleInviteSend}
@@ -15270,7 +15550,7 @@ function DelegationSection({ authUser, lang, linkedPoolsInfo, onRequestRevocatio
             {t("secondary_invite_send")}
           </button>
           {inviteMsg && (
-            <div style={{ fontSize: 12, color: inviteMsg.type === "error" ? "#c0392b" : "#1a8fd1", marginTop: 8 }}>{inviteMsg.text}</div>
+            <div style={{ fontSize: 12, color: inviteMsg.type === "error" ? "var(--tx-c0392b,#c0392b)" : "var(--tx-1a8fd1,#1a8fd1)", marginTop: 8 }}>{inviteMsg.text}</div>
           )}
         </>
       )}
@@ -16596,16 +16876,16 @@ async function fetchAltitude(lat, lon) {
 }
 
 const FILT_STYLES = {
-  card: { background: "#fff", border: "1.5px solid #d0e4f5", borderRadius: 14, padding: "14px 14px 12px", position: "relative", isolation: "isolate" },
+  card: { background: "var(--bg-ffffff,#fff)", border: "1.5px solid var(--bd-d0e4f5,#d0e4f5)", borderRadius: 14, padding: "14px 14px 12px", position: "relative", isolation: "isolate" },
   head: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8 },
-  title: { display: "flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 700, color: "#2d4a6e", textTransform: "uppercase", letterSpacing: 0.4 },
-  badge: { fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 8, background: "#eaf3fb", color: "var(--brand-primary)" },
+  title: { display: "flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 700, color: "var(--tx-2d4a6e,#2d4a6e)", textTransform: "uppercase", letterSpacing: 0.4 },
+  badge: { fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 8, background: "var(--bg-eaf3fb,#eaf3fb)", color: "var(--brand-primary)" },
   big: { fontSize: 36, fontWeight: 800, color: "var(--brand-text-strong)", lineHeight: 1.1 },
   sub: { fontSize: 13, color: "var(--brand-text-muted)", marginTop: 2 },
   stats: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 12 },
-  stat: { background: "#f5f9fc", borderRadius: 10, padding: "8px 10px", fontSize: 12.5, color: "var(--brand-text-muted)" },
+  stat: { background: "var(--bg-f5f9fc,#f5f9fc)", borderRadius: 10, padding: "8px 10px", fontSize: 12.5, color: "var(--brand-text-muted)" },
   statVal: { fontSize: 15, fontWeight: 700, color: "var(--brand-text-strong)" },
-  alert: { display: "flex", alignItems: "flex-start", gap: 8, background: "#fff6e5", border: "1px solid #f1d49a", color: "#8a5a00", borderRadius: 10, padding: "8px 10px", fontSize: 12.5, marginTop: 8, lineHeight: 1.45 },
+  alert: { display: "flex", alignItems: "flex-start", gap: 8, background: "var(--bg-fff6e5,#fff6e5)", border: "1px solid var(--bd-f1d49a,#f1d49a)", color: "var(--tx-8a5a00,#8a5a00)", borderRadius: 10, padding: "8px 10px", fontSize: 12.5, marginTop: 8, lineHeight: 1.45 },
   hint: { fontSize: 12.5, color: "var(--brand-text-muted)", marginTop: 8, lineHeight: 1.45 },
   foot: { fontSize: 11, color: "#9aa9b6", marginTop: 10, lineHeight: 1.5 },
 };
@@ -16948,9 +17228,9 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
               </button>
             </div>
           </div>
-          {tempWhen !== "" && !whenValid && <div style={{ fontSize: 11.5, color: "#c0392b", marginTop: 4, lineHeight: 1.4 }}>{t("filt_temp_when_invalid")}</div>}
+          {tempWhen !== "" && !whenValid && <div style={{ fontSize: 11.5, color: "var(--tx-c0392b,#c0392b)", marginTop: 4, lineHeight: 1.4 }}>{t("filt_temp_when_invalid")}</div>}
           {tempSaved && tempSaved.older && (
-            <div data-testid="temp-older-note" style={{ fontSize: 11.5, color: "var(--brand-text)", background: "#eef7fb", border: "1px solid #d0e4f5", borderRadius: 8, padding: "6px 8px", marginTop: 6, lineHeight: 1.4 }}>
+            <div data-testid="temp-older-note" style={{ fontSize: 11.5, color: "var(--brand-text)", background: "var(--bg-eef7fb,#eef7fb)", border: "1px solid var(--bd-d0e4f5,#d0e4f5)", borderRadius: 8, padding: "6px 8px", marginTop: 6, lineHeight: 1.4 }}>
               {t("filt_temp_older_note", {
                 temp: formatTemp(tempSaved.older.entry.value, TEMP_UNIT, 1),
                 when: new Date(tempSaved.older.entry.at).toLocaleString(lang || "fr", { day: "2-digit", month: "2-digit", ...HM, timeZone: tz }),
@@ -16982,7 +17262,7 @@ function FiltrationCard({ pool, measures, lang, onUpdatePool, canEdit, onOpenSet
       )}
       {(canEdit || hasCurrent) && (
         <div style={{ marginTop: 14 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#2d4a6e", marginBottom: 6 }}>{t("filt_current_section")}</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--tx-2d4a6e,#2d4a6e)", marginBottom: 6 }}>{t("filt_current_section")}</div>
           <div style={{ display: "flex", gap: 10 }}>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginBottom: 3 }}>{t("filt_current_start_label")}</div>
@@ -17074,14 +17354,14 @@ function WeatherCard({ pool, measures, lang, canEdit, onUpdatePool }) {
           {/* Repère du midi solaire : libellé (décalé vers l'intérieur près des bords) + petit triangle pointe en bas, à la verticale du trait jaune */}
           <div style={{ position: "relative", height: 24 }}>
             {noon != null && (
-              <span style={{ position: "absolute", top: 0, left: "calc(" + Math.min(88, Math.max(12, noon / 24 * 100)) + "% + 1px)", transform: "translateX(-50%)", fontSize: 10.5, fontWeight: 700, color: "#b7791f", whiteSpace: "nowrap" }}>{t("filt_solar_noon")}</span>
+              <span style={{ position: "absolute", top: 0, left: "calc(" + Math.min(88, Math.max(12, noon / 24 * 100)) + "% + 1px)", transform: "translateX(-50%)", fontSize: 10.5, fontWeight: 700, color: "var(--tx-b7791f,#b7791f)", whiteSpace: "nowrap" }}>{t("filt_solar_noon")}</span>
             )}
             {noon != null && (
               <span style={{ position: "absolute", top: 15, left: "calc(" + (noon / 24 * 100) + "% + 1px)", transform: "translateX(-50%)", width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: "7px solid #f5b700" }} />
             )}
             <span data-testid="now-marker" title={t("filt_now_marker", { time: formatClock(nowHour) })} style={{ position: "absolute", top: 15, left: "calc(" + (nowHour / 24 * 100) + "% + 1px)", transform: "translateX(-50%)", width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: "7px solid #7e57c2" }} />
           </div>
-          <div data-sun-bar="1" style={{ position: "relative", height: 14, borderRadius: 7, background: "#e6eef3", overflow: "hidden" }}>
+          <div data-sun-bar="1" style={{ position: "relative", height: 14, borderRadius: 7, background: "var(--bg-e6eef3,#e6eef3)", overflow: "hidden" }}>
             {slots.map((s, i) => (
               <div key={i} style={{ position: "absolute", top: 0, bottom: 0, left: (s.start / 24 * 100) + "%", width: ((s.end - s.start) / 24 * 100) + "%", background: "var(--brand-primary)" }} />
             ))}
@@ -17092,7 +17372,7 @@ function WeatherCard({ pool, measures, lang, canEdit, onUpdatePool }) {
           </div>
           {daylight && daylight.dayLengthH > 0 && daylight.dayLengthH < 24 && (() => {
             const pos = sunLabelPositions(daylight.sunriseH, daylight.sunsetH, noon != null ? noon : daylight.noonH);
-            const st = { position: "absolute", top: 0, transform: "translateX(-50%)", whiteSpace: "nowrap", fontSize: 10.5, fontWeight: 700, color: "#b7791f" };
+            const st = { position: "absolute", top: 0, transform: "translateX(-50%)", whiteSpace: "nowrap", fontSize: 10.5, fontWeight: 700, color: "var(--tx-b7791f,#b7791f)" };
             return (
               <div data-testid="sun-times" style={{ position: "relative", height: 16, marginTop: 1 }}>
                 <span data-testid="sunrise-label" style={{ ...st, left: pos.rise + "%" }}>{formatClock(daylight.sunriseH)}</span>
@@ -17110,10 +17390,10 @@ function WeatherCard({ pool, measures, lang, canEdit, onUpdatePool }) {
 
       {showWeek && (
         <div style={{ marginTop: 14 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#2d4a6e", marginBottom: 6 }}>{t("filt_week_title")}</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--tx-2d4a6e,#2d4a6e)", marginBottom: 6 }}>{t("filt_week_title")}</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
             {est.dates.map((d, i) => (
-              <div key={d} style={{ textAlign: "center", background: i < 3 ? "#f5f9fc" : "transparent", border: i < 3 ? "1px solid transparent" : "1px dashed #d0e4f5", borderRadius: 8, padding: "6px 1px", opacity: i < 3 ? 1 : 0.6 }}>
+              <div key={d} style={{ textAlign: "center", background: i < 3 ? "var(--bg-f5f9fc,#f5f9fc)" : "transparent", border: i < 3 ? "1px solid transparent" : "1px dashed var(--bd-d0e4f5,#d0e4f5)", borderRadius: 8, padding: "6px 1px", opacity: i < 3 ? 1 : 0.6 }}>
                 <div style={{ fontSize: 10.5, color: "var(--brand-text-muted)", textTransform: "capitalize", fontWeight: i === 0 ? 800 : 500 }}>{new Date(d + "T12:00:00Z").toLocaleDateString(lang || "fr", { weekday: "short", timeZone: "UTC" })}</div>
                 <div title={dayIcon(d).label} style={{ fontSize: 17, lineHeight: "22px", height: 22 }}>{dayIcon(d).icon}</div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "var(--brand-text-strong)" }}>{formatTemp(est.temps[i], TEMP_UNIT, 0)}</div>
@@ -17229,13 +17509,13 @@ function SummaryElectricity({ r, lang }) {
     <div data-testid="elec-ok">
       <div style={SUMMARY_BIG}>{t("summary_kwh_avoided", { kwh: summaryNum(e.kwh, lang, 1) })}</div>
       {e.negative ? (
-        <div style={{ ...SUMMARY_SMALL, color: "#a8721a", fontWeight: 600 }}>{t("summary_elec_negative")} ({summaryMoney(e.euros, r.devise, lang, true)})</div>
+        <div style={{ ...SUMMARY_SMALL, color: "var(--tx-a8721a,#a8721a)", fontWeight: 600 }}>{t("summary_elec_negative")} ({summaryMoney(e.euros, r.devise, lang, true)})</div>
       ) : (
         <div style={{ fontSize: 17, fontWeight: 700, color: "var(--brand-primary)", marginTop: 2 }}>{t("summary_elec_saved", { amount: summaryMoney(e.euros, r.devise, lang) })}</div>
       )}
       <div style={SUMMARY_SMALL}>{t("summary_elec_avg", { app: formatDurationH(e.avgHApp), ref: formatDurationH(e.avgRef) })}</div>
       <div style={SUMMARY_SMALL}>{t("summary_elec_days", { n: e.days })}</div>
-      {e.toCheck && <div style={{ ...SUMMARY_SMALL, color: "#a8721a" }}>{t("summary_pump_check")}</div>}
+      {e.toCheck && <div style={{ ...SUMMARY_SMALL, color: "var(--tx-a8721a,#a8721a)" }}>{t("summary_pump_check")}</div>}
       {e.defaultRef && <div data-testid="elec-default-ref" style={SUMMARY_SMALL}>{t("summary_elec_default")}</div>}
     </div>
   );
@@ -17247,7 +17527,7 @@ function SummaryProducts({ r, lang, onOpenProducts }) {
   const spent = <div style={SUMMARY_SMALL}>{t("summary_prod_spent", { amount: summaryMoney(p.cost, r.devise, lang) })}</div>;
   const byProduct = p.byProduct && p.byProduct.length > 0 && (
     <div style={{ marginTop: 8 }}>
-      <div style={{ fontSize: 12, fontWeight: 700, color: "#2d4a6e", marginBottom: 4 }}>{t("summary_prod_by")}</div>
+      <div style={{ fontSize: 12, fontWeight: 700, color: "var(--tx-2d4a6e,#2d4a6e)", marginBottom: 4 }}>{t("summary_prod_by")}</div>
       {p.byProduct.map((x) => (
         <div key={x.name} style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, color: "var(--brand-text-strong)", padding: "2px 0" }}>
           <span>{x.name}</span><span style={{ fontWeight: 700 }}>{summaryMoney(x.cost, r.devise, lang)}</span>
@@ -17273,7 +17553,7 @@ function SummaryProducts({ r, lang, onOpenProducts }) {
   return (
     <div data-testid="prod-ok">
       <div style={{ fontSize: 12, color: "var(--brand-text-muted)" }}>{t("summary_prod_variation")}</div>
-      <div style={{ ...SUMMARY_BIG, color: p.variation < 0 ? "#a8721a" : "var(--brand-text-strong)" }}>{summaryMoney(p.variation, r.devise, lang, true)}</div>
+      <div style={{ ...SUMMARY_BIG, color: p.variation < 0 ? "var(--tx-a8721a,#a8721a)" : "var(--brand-text-strong)" }}>{summaryMoney(p.variation, r.devise, lang, true)}</div>
       <div style={SUMMARY_SMALL}>{t("summary_prod_sign_hint")}</div>
       <div style={SUMMARY_SMALL}>{t("summary_prod_ref_note")}{p.capped ? " " + t("summary_prod_capped") : ""}</div>
       {spent}
@@ -17415,7 +17695,7 @@ function SavingsCurveEditor({ value, temps, onChange, lang }) {
       >
         {[0, 6, 12, 18, 24].map((h) => (
           <g key={h}>
-            <line x1={L} x2={W - R} y1={yOf(h)} y2={yOf(h)} stroke="#d0e4f5" strokeWidth="1" strokeDasharray={h === 0 ? undefined : "3 3"} />
+            <line x1={L} x2={W - R} y1={yOf(h)} y2={yOf(h)} stroke="var(--bd-d0e4f5,#d0e4f5)" strokeWidth="1" strokeDasharray={h === 0 ? undefined : "3 3"} />
             <text x={L - 5} y={yOf(h) + 4} fontSize="13" textAnchor="end" fill="#7a8ea0">{h} h</text>
           </g>
         ))}
@@ -17425,14 +17705,14 @@ function SavingsCurveEditor({ value, temps, onChange, lang }) {
         {temps && FILTRATION_TEMP_BREAKS.map((c) => (
           <g key={c} data-testid={"curve-threshold-" + c} style={{ pointerEvents: "none" }}>
             <line x1={L} x2={W - R} y1={yOfTemp(c)} y2={yOfTemp(c)} stroke="#e07b39" strokeWidth="1.2" strokeDasharray="6 4" opacity="0.85" />
-            <text x={W - R - 4} y={yOfTemp(c) - 4} fontSize="12" textAnchor="end" fill="#c8651f" fontWeight="700">{formatTemp(c, TEMP_UNIT, 0)}</text>
+            <text x={W - R - 4} y={yOfTemp(c) - 4} fontSize="12" textAnchor="end" fill="var(--tx-c8651f,#c8651f)" fontWeight="700">{formatTemp(c, TEMP_UNIT, 0)}</text>
           </g>
         ))}
         {tempPts && (
           <g data-testid="curve-temp" style={{ pointerEvents: "none" }}>
             <polyline data-testid="curve-temp-line" points={tempPts} fill="none" stroke="#e07b39" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
             {(temps || []).map((c, i) => <circle key={i} cx={colX(i)} cy={yOfTemp(c)} r={hover && hover.kind === "temp" && hover.i === i ? 5 : 2.6} fill="#e07b39" />)}
-            {[0, 10, 20, 30].map((c) => <text key={c} x={W - R + 5} y={yOfTemp(c) + 4} fontSize="13" fill="#c8651f">{formatTemp(c, TEMP_UNIT, 0)}</text>)}
+            {[0, 10, 20, 30].map((c) => <text key={c} x={W - R + 5} y={yOfTemp(c) + 4} fontSize="13" fill="var(--tx-c8651f,#c8651f)">{formatTemp(c, TEMP_UNIT, 0)}</text>)}
           </g>
         )}
         {value.map((v, i) => (
@@ -17443,16 +17723,16 @@ function SavingsCurveEditor({ value, temps, onChange, lang }) {
         ))}
         {tip && (
           <g data-testid="curve-tip" style={{ pointerEvents: "none" }}>
-            <rect x={tip.x} y={tip.y} width={tip.w} height={24} rx="6" fill="#0d2b4e" opacity="0.93" />
-            <text x={tip.x + tip.w / 2} y={tip.y + 16.5} fontSize="13" fontWeight="700" textAnchor="middle" fill="#fff">{tip.label}</text>
+            <rect x={tip.x} y={tip.y} width={tip.w} height={24} rx="6" fill="var(--tx-0d2b4e,#0d2b4e)" opacity="0.93" />
+            <text x={tip.x + tip.w / 2} y={tip.y + 16.5} fontSize="13" fontWeight="700" textAnchor="middle" fill="var(--bd-ffffff,#fff)">{tip.label}</text>
           </g>
         )}
         {Array.from({ length: 12 }, (_, m) => (
           <text key={m} x={L + (2 * m + 1) * cw} y={H - 8} fontSize="13" textAnchor="middle" fill="#7a8ea0" style={{ textTransform: "uppercase" }}>{monthName(m, "narrow")}</text>
         ))}
       </svg>
-      {temps && <div data-testid="curve-temp-legend" style={{ fontSize: 11.5, color: "#c8651f", marginTop: 4, display: "flex", alignItems: "center", gap: 6 }}><span style={{ width: 18, height: 0, borderTop: "2.5px solid #e07b39", display: "inline-block" }} />{t("summary_f_curve_temp")}</div>}
-      {temps && <div data-testid="curve-threshold-legend" style={{ fontSize: 11.5, color: "#c8651f", marginTop: 2, display: "flex", alignItems: "center", gap: 6 }}><span style={{ width: 18, height: 0, borderTop: "2px dashed #e07b39", display: "inline-block" }} />{t("summary_f_curve_thresholds", { temps: FILTRATION_TEMP_BREAKS.map((c) => formatTemp(c, TEMP_UNIT, 0)).join(" · ") })}</div>}
+      {temps && <div data-testid="curve-temp-legend" style={{ fontSize: 11.5, color: "var(--tx-c8651f,#c8651f)", marginTop: 4, display: "flex", alignItems: "center", gap: 6 }}><span style={{ width: 18, height: 0, borderTop: "2.5px solid #e07b39", display: "inline-block" }} />{t("summary_f_curve_temp")}</div>}
+      {temps && <div data-testid="curve-threshold-legend" style={{ fontSize: 11.5, color: "var(--tx-c8651f,#c8651f)", marginTop: 2, display: "flex", alignItems: "center", gap: 6 }}><span style={{ width: 18, height: 0, borderTop: "2px dashed #e07b39", display: "inline-block" }} />{t("summary_f_curve_thresholds", { temps: FILTRATION_TEMP_BREAKS.map((c) => formatTemp(c, TEMP_UNIT, 0)).join(" · ") })}</div>}
       <div data-testid="curve-readout" style={{ fontSize: 12.5, color: "var(--brand-text-strong)", fontWeight: 600, minHeight: 18, marginTop: 4 }}>
         {selLabel || t("summary_f_curve_avg", { h: formatDurationH(avg) })}
       </div>
@@ -17493,15 +17773,15 @@ function SummaryAssumptions({ pool, initial, lang, saving, saveError, onSave, on
       <input
         data-testid={"f-" + k}
         type="text" inputMode="decimal" value={f[k]} onChange={(e) => set(k, e.target.value)}
-        style={{ ...styles.input, marginBottom: 2, ...(errors[errKey(k)] ? { borderColor: "#c0392b", background: "#fdf0ef" } : {}) }}
+        style={{ ...styles.input, marginBottom: 2, ...(errors[errKey(k)] ? { borderColor: "#c0392b", background: "var(--bg-fdf0ef,#fdf0ef)" } : {}) }}
         {...(extra || {})}
       />
       {hintKey && <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", lineHeight: 1.4 }}>{t(hintKey, labelVars)}</div>}
-      {errors[errKey(k)] && <div data-testid={"err-" + k} style={{ fontSize: 12, color: "#c0392b", marginTop: 3 }}>{t(errors[errKey(k)])}</div>}
+      {errors[errKey(k)] && <div data-testid={"err-" + k} style={{ fontSize: 12, color: "var(--tx-c0392b,#c0392b)", marginTop: 3 }}>{t(errors[errKey(k)])}</div>}
     </div>
   );
   const segBtn = (h, labelKey) => (
-    <button key={h} type="button" data-testid={"hemi-" + h} aria-pressed={hemi === h} onClick={() => pickHemi(h)} style={{ flex: 1, padding: "6px 8px", borderRadius: 99, fontSize: 12.5, fontWeight: 700, cursor: "pointer", border: "1px solid " + (hemi === h ? "var(--brand-primary)" : "#d0e4f5"), background: hemi === h ? "var(--brand-primary)" : "var(--brand-bg-tint)", color: hemi === h ? "#fff" : "var(--brand-text-muted)" }}>{t(labelKey)}</button>
+    <button key={h} type="button" data-testid={"hemi-" + h} aria-pressed={hemi === h} onClick={() => pickHemi(h)} style={{ flex: 1, padding: "6px 8px", borderRadius: 99, fontSize: 12.5, fontWeight: 700, cursor: "pointer", border: "1px solid " + (hemi === h ? "var(--brand-primary)" : "var(--bd-d0e4f5,#d0e4f5)"), background: hemi === h ? "var(--brand-primary)" : "var(--brand-bg-tint)", color: hemi === h ? "#fff" : "var(--brand-text-muted)" }}>{t(labelKey)}</button>
   );
   return (
     <div data-testid="summary-assumptions">
@@ -17519,11 +17799,11 @@ function SummaryAssumptions({ pool, initial, lang, saving, saveError, onSave, on
           <div style={{ display: "flex", gap: 6, marginBottom: 4 }}>{segBtn("nord", "summary_f_hemi_north")}{segBtn("sud", "summary_f_hemi_south")}</div>
           <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginBottom: 6 }}>{t("summary_f_hemi_hint")}</div>
           <SavingsCurveEditor value={curve} temps={savingsTempProfile(hemi)} lang={lang} onChange={(c) => { setCurve(c); setEdited(true); }} />
-          {errors.hRefCourbe && <div data-testid="err-hRefCourbe" style={{ fontSize: 12, color: "#c0392b", marginTop: 3 }}>{t(errors.hRefCourbe)}</div>}
+          {errors.hRefCourbe && <div data-testid="err-hRefCourbe" style={{ fontSize: 12, color: "var(--tx-c0392b,#c0392b)", marginTop: 3 }}>{t(errors.hRefCourbe)}</div>}
           <button type="button" data-testid="curve-reset" onClick={() => { setCurve(savingsDefaultProfile(hemi)); setEdited(false); }} style={{ ...styles.editLinkBtn, display: "inline-flex", padding: 0, marginTop: 6, fontSize: 12.5 }}>{t("summary_f_curve_reset")}</button>
         </div>
         {field("depenseRefAn", "summary_f_spend", "summary_f_spend_hint", null, { currency: f.devise.trim().toUpperCase() || "EUR" })}
-        {saveError && <div data-testid="save-error" style={{ fontSize: 12.5, color: "#c0392b", marginBottom: 8 }}>{t("summary_save_error")}</div>}
+        {saveError && <div data-testid="save-error" style={{ fontSize: 12.5, color: "var(--tx-c0392b,#c0392b)", marginBottom: 8 }}>{t("summary_save_error")}</div>}
         <button type="button" data-testid="assump-save" onClick={submit} disabled={saving} style={{ ...styles.primaryBtn, marginTop: 4, opacity: saving ? 0.6 : 1 }}>{t("summary_save")}</button>
       </div>
     </div>
@@ -17587,8 +17867,8 @@ function SummaryView({ uid, pools, products, applications, measures, lang, onOpe
         <div style={FILT_STYLES.card}>
           <div style={{ ...FILT_STYLES.title, marginBottom: 8 }}><SummaryIcon size={15} /> {t("summary_activate_title")}</div>
           <p style={{ ...FILT_STYLES.hint, marginTop: 0 }}>{t("summary_activate_text")}</p>
-          {loadError && <p style={{ ...FILT_STYLES.hint, color: "#c0392b" }}>{t("summary_load_error")}</p>}
-          {saveError && <p data-testid="save-error" style={{ ...FILT_STYLES.hint, color: "#c0392b" }}>{t("summary_save_error")}</p>}
+          {loadError && <p style={{ ...FILT_STYLES.hint, color: "var(--tx-c0392b,#c0392b)" }}>{t("summary_load_error")}</p>}
+          {saveError && <p data-testid="save-error" style={{ ...FILT_STYLES.hint, color: "var(--tx-c0392b,#c0392b)" }}>{t("summary_save_error")}</p>}
           {poolList.map(activateBtn)}
         </div>
       </div>
@@ -17613,7 +17893,7 @@ function SummaryView({ uid, pools, products, applications, measures, lang, onOpe
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 17, fontWeight: 800, color: "var(--brand-text-strong)" }}>{t("summary_title")}</div>
           <div style={{ fontSize: 12.5, color: "var(--brand-text-muted)", marginTop: 2 }}>{t("summary_estimate")} · {t("summary_since", { date: summaryDay(since, lang) })}</div>
-          {loadError && <div style={{ fontSize: 12.5, color: "#c0392b", marginTop: 4 }}>{t("summary_load_error")}</div>}
+          {loadError && <div style={{ fontSize: 12.5, color: "var(--tx-c0392b,#c0392b)", marginTop: 4 }}>{t("summary_load_error")}</div>}
           {firstResult && <div data-testid="expected-first" style={{ fontSize: 13, fontWeight: 700, color: "var(--brand-primary)", marginTop: 6 }}>{t("summary_expected_first", { date: summaryDay(firstResult, lang) })}</div>}
           {firstResult && <div data-testid="expected-note" style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginTop: 2, lineHeight: 1.4 }}>{t("summary_expected_note")}</div>}
         </div>
@@ -17634,7 +17914,7 @@ function SummaryView({ uid, pools, products, applications, measures, lang, onOpe
       )}
       {results.map((r) => (
         <div key={r.pool.id} data-testid={"pool-" + r.pool.id}>
-          {!single && <div style={{ fontSize: 14, fontWeight: 800, color: "#2d4a6e", margin: "6px 0 8px" }}>{t("summary_pool_detail")} — {r.pool.name}</div>}
+          {!single && <div style={{ fontSize: 14, fontWeight: 800, color: "var(--tx-2d4a6e,#2d4a6e)", margin: "6px 0 8px" }}>{t("summary_pool_detail")} — {r.pool.name}</div>}
           <SummaryLines r={r} lang={lang} onOpenProducts={onOpenProducts} />
           {!single && (
             <button type="button" data-testid={"see-assumptions-" + r.pool.id} onClick={() => setScreen({ type: "assump", poolId: r.pool.id })} style={{ ...styles.editLinkBtn, display: "inline-flex", padding: 0, marginBottom: 12, fontSize: 13 }}>
@@ -17646,7 +17926,7 @@ function SummaryView({ uid, pools, products, applications, measures, lang, onOpe
       <SummaryBlock title={t("summary_chart_title", { currency: cur })} testid="block-chart">
         <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
           {["recent", "all"].map((k) => (
-            <button key={k} type="button" data-testid={"range-" + k} onClick={() => setRange(k)} style={{ padding: "4px 12px", borderRadius: 99, fontSize: 12, fontWeight: 700, cursor: "pointer", border: "1px solid " + (range === k ? "var(--brand-primary)" : "#d0e4f5"), background: range === k ? "var(--brand-primary)" : "var(--brand-bg-tint)", color: range === k ? "#fff" : "var(--brand-text-muted)" }}>
+            <button key={k} type="button" data-testid={"range-" + k} onClick={() => setRange(k)} style={{ padding: "4px 12px", borderRadius: 99, fontSize: 12, fontWeight: 700, cursor: "pointer", border: "1px solid " + (range === k ? "var(--brand-primary)" : "var(--bd-d0e4f5,#d0e4f5)"), background: range === k ? "var(--brand-primary)" : "var(--brand-bg-tint)", color: range === k ? "#fff" : "var(--brand-text-muted)" }}>
               {t(k === "recent" ? "summary_chart_recent" : "summary_chart_all")}
             </button>
           ))}
@@ -17655,13 +17935,13 @@ function SummaryView({ uid, pools, products, applications, measures, lang, onOpe
           <div data-testid="summary-chart" style={{ width: "100%", height: 200 }}>
             <ResponsiveContainer width="100%" height={200}>
               <LineChart data={shown} margin={{ top: 6, right: 8, bottom: 0, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e6eef3" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--bd-e6eef3,#e6eef3)" />
                 <XAxis dataKey="key" tickFormatter={(k) => summaryDay(k, lang)} tick={{ fontSize: 10 }} minTickGap={24} />
                 <YAxis tick={{ fontSize: 10 }} width={42} tickFormatter={(v) => summaryNum(v, lang, 0)} />
                 <Tooltip labelFormatter={(k) => summaryDay(k, lang)} formatter={(v, name) => [summaryMoney(v, cur, lang), name]} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Line type="monotone" dataKey="elec" name={t("summary_elec")} stroke="#e0a100" strokeWidth={2} dot={false} connectNulls />
-                <Line type="monotone" dataKey="prod" name={t("summary_products")} stroke="#1ca7d1" strokeWidth={2} dot={false} connectNulls />
+                <Line type="monotone" dataKey="elec" name={t("summary_elec")} stroke="var(--tx-e0a100,#e0a100)" strokeWidth={2} dot={false} connectNulls />
+                <Line type="monotone" dataKey="prod" name={t("summary_products")} stroke="var(--tx-1ca7d1,#1ca7d1)" strokeWidth={2} dot={false} connectNulls />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -17711,7 +17991,7 @@ function ProductPriceSection({ prix, onChange, defaultSize, defaultUnit, lang })
           <span style={{ flex: 1, color: "var(--brand-text-strong)" }}>
             {t("product_price_line", { paid: fmt(e.paye), size: fmt(e.contenance) + " " + e.unite, per: fmt(e.paye / e.contenance) + " / " + e.unite })}{e.magasin ? " · " + e.magasin : ""}
           </span>
-          <button type="button" aria-label={t("product_price_remove")} title={t("product_price_remove")} onClick={() => onChange((prix || []).filter((x) => x !== e))} style={{ background: "none", border: "none", cursor: "pointer", color: "#c0392b", fontSize: 15, padding: 2 }}>✕</button>
+          <button type="button" aria-label={t("product_price_remove")} title={t("product_price_remove")} onClick={() => onChange((prix || []).filter((x) => x !== e))} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--tx-c0392b,#c0392b)", fontSize: 15, padding: 2 }}>✕</button>
         </div>
       ))}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 6 }}>
@@ -17738,7 +18018,7 @@ function ProductPriceSection({ prix, onChange, defaultSize, defaultUnit, lang })
           <input data-testid="price-store" type="text" style={{ ...styles.input, marginBottom: 0 }} value={store} maxLength={60} onChange={(e) => setStore(e.target.value)} />
         </div>
       </div>
-      {err && <div data-testid="price-error" style={{ fontSize: 12, color: "#c0392b", marginTop: 4 }}>{t("product_price_err")}</div>}
+      {err && <div data-testid="price-error" style={{ fontSize: 12, color: "var(--tx-c0392b,#c0392b)", marginTop: 4 }}>{t("product_price_err")}</div>}
       <button type="button" data-testid="price-add" onClick={add} style={{ ...styles.editLinkBtn, display: "inline-flex", padding: "8px 0 0", fontSize: 13 }}>+ {t("product_price_add")}</button>
     </div>
   );
@@ -17877,7 +18157,7 @@ Réponds directement en français, sans titre ni introduction.`;
               key={idx}
               src={src}
               alt=""
-              style={{ height: 90, borderRadius: 8, objectFit: "cover", flexShrink: 0, border: "1px solid #d0e4f5", cursor: "zoom-in" }}
+              style={{ height: 90, borderRadius: 8, objectFit: "cover", flexShrink: 0, border: "1px solid var(--bd-d0e4f5,#d0e4f5)", cursor: "zoom-in" }}
               onClick={() => window._openLightbox?.(src)}
             />
           ))}
@@ -18072,8 +18352,8 @@ Réponds directement en français, sans titre ni introduction.`;
           style={{
             display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
             width: "100%", boxSizing: "border-box", marginTop: 10,
-            padding: "11px 0", borderRadius: 12, border: "1.5px solid #d0e4f5",
-            background: "#fff", color: "var(--brand-primary)", fontWeight: 700, fontSize: 14, cursor: "pointer",
+            padding: "11px 0", borderRadius: 12, border: "1.5px solid var(--bd-d0e4f5,#d0e4f5)",
+            background: "var(--bg-ffffff,#fff)", color: "var(--brand-primary)", fontWeight: 700, fontSize: 14, cursor: "pointer",
           }}
         >
           <Plus size={16} /> {t("apply_product_manual")}
@@ -18540,12 +18820,12 @@ function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep, part
             <div style={styles.recoProduct}>
               {cardProductName}
               {appliedIsGeneric && (
-                <span style={{ ...styles.recoMissingTag, background: "#fdf0ef", color: "#c0392b", borderColor: "#f5c6c2" }}>
+                <span style={{ ...styles.recoMissingTag, background: "var(--bg-fdf0ef,#fdf0ef)", color: "var(--tx-c0392b,#c0392b)", borderColor: "var(--bd-f5c6c2,#f5c6c2)" }}>
                   {t("generic_product_badge")}
                 </span>
               )}
               {reco.isSubstitute && (
-                <span style={{ ...styles.recoMissingTag, background: "#eef5fc", color: "#3a5a78", borderColor: "#c9defa" }}>
+                <span style={{ ...styles.recoMissingTag, background: "var(--bg-eef5fc,#eef5fc)", color: "var(--tx-3a5a78,#3a5a78)", borderColor: "var(--bd-c9defa,#c9defa)" }}>
                   {t("substitute_for", { product: (() => { const o = findProductOrGeneric(products, reco.substituteFor); return o ? productDisplayName(o, t) : reco.substituteFor; })() })}
                 </span>
               )}
@@ -18555,7 +18835,7 @@ function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep, part
                 </span>
               )}
               {missingFromStock && (
-                <span style={{ ...styles.recoMissingTag, background: "#fdf0ef", color: "#c0392b", borderColor: "#f5c6c2" }}>
+                <span style={{ ...styles.recoMissingTag, background: "var(--bg-fdf0ef,#fdf0ef)", color: "var(--tx-c0392b,#c0392b)", borderColor: "var(--bd-f5c6c2,#f5c6c2)" }}>
                   <AlertTriangle size={11} /> {t("stock_empty_badge")}
                 </span>
               )}
@@ -18574,7 +18854,7 @@ function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep, part
           {parts.map((p, i) => (
             <div key={i} style={{ ...styles.recoPartLine, opacity: p.skipped ? 0.55 : 1 }}>
               <span style={{ fontWeight: 700, minWidth: 16 }}>{i + 1}.</span>
-              <span style={{ fontWeight: 700, color: p.applied ? "#1a8fd1" : "var(--brand-text-strong)" }}>{formatDose(p.amount, p.unit)}</span>
+              <span style={{ fontWeight: 700, color: p.applied ? "var(--tx-1a8fd1,#1a8fd1)" : "var(--brand-text-strong)" }}>{formatDose(p.amount, p.unit)}</span>
               <span style={{ color: "var(--brand-text-secondary)" }}>
                 {p.skipped ? `— ⊘ ${t("treatment_skipped")}`
                   : p.applied ? `— ✓ ${formatDate(p.appliedAt)}`
@@ -18589,7 +18869,7 @@ function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep, part
           différer de la dose suggérée ci-dessus si l'utilisateur l'a ajustée
           dans le wizard). */}
       {!hasParts && appliedStep && appliedStep.appliedAt && !appliedStep.skipped && appliedStep.appliedAmount != null && (
-        <div style={{ fontSize: 13, fontWeight: 600, color: "#1a8fd1", marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: "var(--tx-1a8fd1,#1a8fd1)", marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
           <CheckCircle2 size={13} />
           {t("applied_amount", { amount: formatDose(appliedStep.appliedAmount, appliedStep.doseUnit || reco.doseUnit || "g") })}
         </div>
@@ -18617,7 +18897,7 @@ function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep, part
         </div>
       )}
       {!swapped && reco.missingTip && <div style={styles.recoNote}>{reco.missingTip}</div>}
-      {reco.timingTip && <div style={{ fontSize: 12.5, color: "#3a5a78", marginTop: 4 }}>🌙 {reco.timingTip}</div>}
+      {reco.timingTip && <div style={{ fontSize: 12.5, color: "var(--tx-3a5a78,#3a5a78)", marginTop: 4 }}>🌙 {reco.timingTip}</div>}
 
       {isInfo && (
         <div style={styles.recoInfoTiming}>
@@ -19694,8 +19974,8 @@ function ParamChips({ params, activeKeys, onToggle }) {
         onClick={() => onToggle(cp.key)}
         style={{
           ...styles.chip,
-          background: on ? cp.color + "22" : "#f1f4f3",
-          borderColor: on ? cp.color : "#d0e4f5",
+          background: on ? cp.color + "22" : "var(--bg-f1f4f3,#f1f4f3)",
+          borderColor: on ? cp.color : "var(--bd-d0e4f5,#d0e4f5)",
           color: on ? cp.color : "var(--brand-text-muted)",
         }}
       >
@@ -19729,8 +20009,8 @@ function PeriodZoomControl({ windowKey, onWindowKeyChange, t }) {
           onClick={() => onWindowKeyChange(opt.key)}
           style={{
             ...styles.chip,
-            background: windowKey === opt.key ? "var(--brand-primary)" : "#f1f4f3",
-            borderColor: windowKey === opt.key ? "var(--brand-primary)" : "#d0e4f5",
+            background: windowKey === opt.key ? "var(--brand-primary)" : "var(--bg-f1f4f3,#f1f4f3)",
+            borderColor: windowKey === opt.key ? "var(--brand-primary)" : "var(--bd-d0e4f5,#d0e4f5)",
             color: windowKey === opt.key ? "#ffffff" : "var(--brand-text-muted)",
           }}
         >
@@ -20396,25 +20676,25 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
   const chartParamsBase = [
     // v1.129.0 — Ordre des pastilles : chaque paramètre projeté précède son
     // paramètre mesuré (demande Arnaud).
-    { key: "phProjected",  color: "#2f9e44", label: t("ph_projected_chart_label"),  axis: "left", projected: true },
-    { key: "pH",    color: "#2f9e44", label: "pH",                                  axis: "left", dashed: true },
-    { key: "fclProjected", color: "#2b7fd9", label: t("fcl_projected_chart_label"), axis: "left", projected: true },
-    { key: "fCl",   color: "#2b7fd9", label: t("param_fcl").replace(" (mg/L)", ""), axis: "left", dashed: true },
-    { key: "tacProjected", color: "#d98c2b", label: t("tac_projected_chart_label"), axis: "right", projected: true },
-    { key: "tac",   color: "#d98c2b", label: t("tac_col"),                          axis: "right", dashed: true },
-    { key: "cya",   color: "#c4502f", label: t("cya_col"),                          axis: "right" },
+    { key: "phProjected",  color: "var(--tx-2f9e44,#2f9e44)", label: t("ph_projected_chart_label"),  axis: "left", projected: true },
+    { key: "pH",    color: "var(--tx-2f9e44,#2f9e44)", label: "pH",                                  axis: "left", dashed: true },
+    { key: "fclProjected", color: "var(--tx-2b7fd9,#2b7fd9)", label: t("fcl_projected_chart_label"), axis: "left", projected: true },
+    { key: "fCl",   color: "var(--tx-2b7fd9,#2b7fd9)", label: t("param_fcl").replace(" (mg/L)", ""), axis: "left", dashed: true },
+    { key: "tacProjected", color: "var(--tx-d98c2b,#d98c2b)", label: t("tac_projected_chart_label"), axis: "right", projected: true },
+    { key: "tac",   color: "var(--tx-d98c2b,#d98c2b)", label: t("tac_col"),                          axis: "right", dashed: true },
+    { key: "cya",   color: "var(--tx-c4502f,#c4502f)", label: t("cya_col"),                          axis: "right" },
     { key: "tCl",   color: "#8a6fd1", label: t("param_tcl").replace(" (mg/L)", ""), axis: "left" },
     { key: "ccl",   color: "#6a4fd1", label: t("ccl_col"),                          axis: "left" },
-    { key: "hardProjected", color: "#2b9c8a", label: t("hard_projected_chart_label"), axis: "right", projected: true },
-    { key: "hard",  color: "#2b9c8a", label: t("hard_col"),                         axis: "right", dashed: true },
-    { key: "phosProjected", color: "#8a2b9c", label: t("phos_projected_chart_label"), axis: "right", projected: true },
-    { key: "phos",  color: "#8a2b9c", label: t("phos_col"),                         axis: "right", dashed: true },
-    { key: "copper",color: "#b8860b", label: t("copper_col"),                       axis: "left" },
-    { key: "iron",  color: "#8b4513", label: t("iron_col"),                         axis: "left" },
+    { key: "hardProjected", color: "var(--tx-2b9c8a,#2b9c8a)", label: t("hard_projected_chart_label"), axis: "right", projected: true },
+    { key: "hard",  color: "var(--tx-2b9c8a,#2b9c8a)", label: t("hard_col"),                         axis: "right", dashed: true },
+    { key: "phosProjected", color: "var(--tx-8a2b9c,#8a2b9c)", label: t("phos_projected_chart_label"), axis: "right", projected: true },
+    { key: "phos",  color: "var(--tx-8a2b9c,#8a2b9c)", label: t("phos_col"),                         axis: "right", dashed: true },
+    { key: "copper",color: "var(--tx-b8860b,#b8860b)", label: t("copper_col"),                       axis: "left" },
+    { key: "iron",  color: "var(--tx-8b4513,#8b4513)", label: t("iron_col"),                         axis: "left" },
     { key: "tempProjected", color: "#e0578a", label: t("temp_projected_chart_label"), axis: "right", projected: true, dashed: true, noDot: true },
     { key: "temp",  color: "#e0578a", label: t("temp_col"),                         axis: "right" },
-    { key: "filtReco",    color: "#00897b", label: t("filt_hist_reco"),    axis: "right", dashed: true, noSuffix: true },
-    { key: "filtApplied", color: "#00897b", label: t("filt_hist_applied"), axis: "right", noSuffix: true },
+    { key: "filtReco",    color: "var(--tx-00897b,#00897b)", label: t("filt_hist_reco"),    axis: "right", dashed: true, noSuffix: true },
+    { key: "filtApplied", color: "var(--tx-00897b,#00897b)", label: t("filt_hist_applied"), axis: "right", noSuffix: true },
   ].filter((cp) => !FILT_CHART_KEYS.includes(cp.key) || hasFiltData)
    .filter((cp) => cp.key !== "tempProjected" || hasTempProj)
    .map((cp) => (cp.projected || cp.noSuffix ? cp : { ...cp, label: `${cp.label} (${t("measured_suffix")})` }));
@@ -20460,18 +20740,18 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
               {importLoading ? t("import_pdf_analyzing") : t("import_pdf_btn")}
             </button>
             {importError && (
-              <div style={{ marginTop: 6, fontSize: 12, color: "#c0392b", padding: "6px 10px", background: "#fdf0ef", borderRadius: 8 }}>
+              <div style={{ marginTop: 6, fontSize: 12, color: "var(--tx-c0392b,#c0392b)", padding: "6px 10px", background: "var(--bg-fdf0ef,#fdf0ef)", borderRadius: 8 }}>
                 <AlertTriangle size={12} style={{ marginRight: 4, verticalAlign: "middle" }} />{importError}
               </div>
             )}
             {importInfo && (
-              <div style={{ marginTop: 6, fontSize: 12, color: "#5b3fa0", padding: "6px 10px", background: "#f3effa", borderRadius: 8 }}>
+              <div style={{ marginTop: 6, fontSize: 12, color: "var(--tx-5b3fa0,#5b3fa0)", padding: "6px 10px", background: "var(--bg-f3effa,#f3effa)", borderRadius: 8 }}>
                 {importInfo}
               </div>
             )}
           </>
         ) : (
-          <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--brand-text-muted)", padding: "8px 12px", background: "var(--brand-bg-tint)", borderRadius: 10, border: "1px solid #d0e4f5" }}>
+          <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--brand-text-muted)", padding: "8px 12px", background: "var(--brand-bg-tint)", borderRadius: 10, border: "1px solid var(--bd-d0e4f5,#d0e4f5)" }}>
             <Lock size={13} color="var(--brand-text-muted)" />
             <span>{t("import_pdf_needs_ai")}</span>
           </div>
@@ -20493,9 +20773,9 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
           style={{
             ...styles.chip,
             ...styles.chipAll,
-            background: allActive ? "var(--brand-primary)" : "#f1f4f3",
-            borderColor: allActive ? "var(--brand-primary)" : "#d0e4f5",
-            color: allActive ? "#ffffff" : "#2d4a6e",
+            background: allActive ? "var(--brand-primary)" : "var(--bg-f1f4f3,#f1f4f3)",
+            borderColor: allActive ? "var(--brand-primary)" : "var(--bd-d0e4f5,#d0e4f5)",
+            color: allActive ? "#ffffff" : "var(--tx-2d4a6e,#2d4a6e)",
           }}
         >
           {allActive ? t("hide_all_params") : t("show_all_params")}
@@ -20605,7 +20885,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
           <div style={styles.chartCard}>
             <ResponsiveContainer width="100%" height={220}>
               <LineChart key={`${zoomWindow}-${domainStart}-${domainEnd}`} data={chartRenderData} margin={{ top: showValues ? 18 : 8, right: 12, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e6ebe9" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--bd-e6ebe9,#e6ebe9)" />
                 <XAxis
                   dataKey="timestamp"
                   type="number"
@@ -20636,7 +20916,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
             )}
             <Tooltip
               labelFormatter={(ts) => formatDate(new Date(ts).toISOString())}
-              contentStyle={{ fontSize: 12, borderRadius: 10, border: "1px solid #d0e4f5" }}
+              contentStyle={{ fontSize: 12, borderRadius: 10, border: "1px solid var(--bd-d0e4f5,#d0e4f5)" }}
             />
             {targetZone && (
               <ReferenceArea yAxisId={targetZone.axis} y1={targetZone.min} y2={targetZone.max} fill={targetZone.color} fillOpacity={0.1} strokeOpacity={0} ifOverflow="visible" />
@@ -20808,18 +21088,18 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
               {importLoading ? t("import_pdf_analyzing") : t("import_pdf_btn")}
             </button>
             {importError && (
-              <div style={{ marginTop: 6, fontSize: 12, color: "#c0392b", padding: "6px 10px", background: "#fdf0ef", borderRadius: 8 }}>
+              <div style={{ marginTop: 6, fontSize: 12, color: "var(--tx-c0392b,#c0392b)", padding: "6px 10px", background: "var(--bg-fdf0ef,#fdf0ef)", borderRadius: 8 }}>
                 <AlertTriangle size={12} style={{ marginRight: 4, verticalAlign: "middle" }} />{importError}
               </div>
             )}
             {importInfo && (
-              <div style={{ marginTop: 6, fontSize: 12, color: "#5b3fa0", padding: "6px 10px", background: "#f3effa", borderRadius: 8 }}>
+              <div style={{ marginTop: 6, fontSize: 12, color: "var(--tx-5b3fa0,#5b3fa0)", padding: "6px 10px", background: "var(--bg-f3effa,#f3effa)", borderRadius: 8 }}>
                 {importInfo}
               </div>
             )}
           </>
         ) : (
-          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--brand-text-muted)", padding: "8px 12px", background: "var(--brand-bg-tint)", borderRadius: 10, border: "1px solid #d0e4f5" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--brand-text-muted)", padding: "8px 12px", background: "var(--brand-bg-tint)", borderRadius: 10, border: "1px solid var(--bd-d0e4f5,#d0e4f5)" }}>
             <Lock size={13} color="var(--brand-text-muted)" />
             <span>{t("import_pdf_needs_ai")}</span>
           </div>
@@ -20847,20 +21127,20 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
             {diagLoading ? t("ai_analyzing") : t("ai_analyze_btn")}
           </button>
           {diagError && (
-            <div style={{ marginTop: 10, padding: "10px 14px", background: "#fdf0ef", borderRadius: 10, border: "1px solid #f5c6c2", fontSize: 13, color: "#c0392b" }}>
+            <div style={{ marginTop: 10, padding: "10px 14px", background: "var(--bg-fdf0ef,#fdf0ef)", borderRadius: 10, border: "1px solid var(--bd-f5c6c2,#f5c6c2)", fontSize: 13, color: "var(--tx-c0392b,#c0392b)" }}>
               {diagError}
             </div>
           )}
           {diagResult && (
-            <div style={{ marginTop: 12, padding: "14px 16px", background: "#f4f0fc", borderRadius: 12, border: "1px solid #e2d9f3" }}>
-              <div style={{ fontSize: 13, color: "#2d1b69", lineHeight: 1.6, marginBottom: 10 }}>
+            <div style={{ marginTop: 12, padding: "14px 16px", background: "var(--bg-f4f0fc,#f4f0fc)", borderRadius: 12, border: "1px solid var(--bd-e2d9f3,#e2d9f3)" }}>
+              <div style={{ fontSize: 13, color: "var(--tx-2d1b69,#2d1b69)", lineHeight: 1.6, marginBottom: 10 }}>
                 {diagResult.suggestion}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <span style={{ fontSize: 11, color: "var(--brand-text-muted)", fontWeight: 600 }}>{t("diag_confidence")} :</span>
                 <span style={{ fontSize: 16, letterSpacing: 2 }}>
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <span key={i} style={{ color: i < diagResult.confidence ? "#f59e0b" : "#d1d5db" }}>★</span>
+                    <span key={i} style={{ color: i < diagResult.confidence ? "var(--tx-f59e0b,#f59e0b)" : "#d1d5db" }}>★</span>
                   ))}
                 </span>
                 <span style={{ fontSize: 11, color: "var(--brand-text-muted)" }}>({diagResult.confidence}/5)</span>
@@ -20877,7 +21157,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
             <span style={styles.sectionLabel}>{t("diag_history_title")}</span>
           </div>
           {!isPremium ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--brand-text-muted)", padding: "8px 12px", background: "var(--brand-bg-tint)", borderRadius: 10, border: "1px solid #d0e4f5" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--brand-text-muted)", padding: "8px 12px", background: "var(--brand-bg-tint)", borderRadius: 10, border: "1px solid var(--bd-d0e4f5,#d0e4f5)" }}>
               <Lock size={13} color="var(--brand-text-muted)" />
               <span>{t("diag_history_locked")}</span>
             </div>
@@ -20913,7 +21193,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.`;
                       <td style={styles.diagHistTd}>
                         <span style={{ fontSize: 13, letterSpacing: 1, whiteSpace: "nowrap" }}>
                           {Array.from({ length: 5 }).map((_, i) => (
-                            <span key={i} style={{ color: i < d.confidence ? "#f59e0b" : "#d1d5db" }}>★</span>
+                            <span key={i} style={{ color: i < d.confidence ? "var(--tx-f59e0b,#f59e0b)" : "#d1d5db" }}>★</span>
                           ))}
                         </span>
                       </td>
@@ -20944,12 +21224,12 @@ function ManualApplicationRow({ app, lang, onDelete }) {
   const t = useT(lang || "fr");
   return (
     <div style={{ ...styles.productRow, cursor: "default" }}>
-      <div style={{ ...styles.productThumbPlaceholder, background: "#fff7f2" }}>
+      <div style={{ ...styles.productThumbPlaceholder, background: "var(--bg-fff7f2,#fff7f2)" }}>
         <Beaker size={16} color="#c4502f" />
       </div>
       <div style={{ flex: 1, textAlign: "left" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 10.5, fontWeight: 700, color: "#c4502f", background: "#fff0e8", border: "1px solid #f3d9c8", borderRadius: 99, padding: "2px 8px" }}>
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--tx-c4502f,#c4502f)", background: "var(--bg-fff0e8,#fff0e8)", border: "1px solid var(--bd-f3d9c8,#f3d9c8)", borderRadius: 99, padding: "2px 8px" }}>
             🔧 {t("reason_manual_maintenance")}
           </span>
           <span style={{ fontSize: 11.5, color: "var(--brand-text-muted)" }}>
@@ -20981,7 +21261,7 @@ function FiltrationHistoryLine({ filtration, lang }) {
   const gap = filtration.reco !== null && filtration.applied !== null ? filtration.applied - filtration.reco : null;
   const warn = gap !== null && Math.abs(gap) > FILTRATION_ADJUST_TOLERANCE_H;
   return (
-    <div style={{ fontSize: 12.5, marginTop: 8, color: warn ? "#a8721a" : "var(--brand-text-secondary)", lineHeight: 1.5 }}>
+    <div style={{ fontSize: 12.5, marginTop: 8, color: warn ? "var(--tx-a8721a,#a8721a)" : "var(--brand-text-secondary)", lineHeight: 1.5 }}>
       <strong>{t("filt_hist_title")}</strong> · {t("filt_hist_reco_short")} {filtration.reco !== null ? formatDurationH(filtration.reco) : "—"} · {t("filt_hist_applied_short")} {filtration.applied !== null ? formatDurationH(filtration.applied) : "—"}
       {gap !== null && Math.abs(gap) >= 0.25 ? " (" + (gap > 0 ? "+" : "−") + formatDurationH(Math.abs(gap)) + ")" : ""}
     </div>
@@ -21001,12 +21281,12 @@ function FiltrationProgRow({ entry, lang, onDelete }) {
   const t = useT(lang || "fr");
   return (
     <div style={{ ...styles.productRow, cursor: "default" }} data-testid="prog-row">
-      <div style={{ ...styles.productThumbPlaceholder, background: "#eef7fb" }}>
+      <div style={{ ...styles.productThumbPlaceholder, background: "var(--bg-eef7fb,#eef7fb)" }}>
         <Clock size={16} color="var(--brand-primary)" />
       </div>
       <div style={{ flex: 1, textAlign: "left" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--brand-primary)", background: "#eaf3fb", border: "1px solid #d0e4f5", borderRadius: 99, padding: "2px 8px" }}>
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--brand-primary)", background: "var(--bg-eaf3fb,#eaf3fb)", border: "1px solid var(--bd-d0e4f5,#d0e4f5)", borderRadius: 99, padding: "2px 8px" }}>
             ⚙️ {t("filt_hist_prog_entry")}
           </span>
           <span style={{ fontSize: 11.5, color: "var(--brand-text-muted)" }}>{formatDate(entry.date)}</span>
@@ -21033,12 +21313,12 @@ function FiltrationTempRow({ entry, filtration, lang, onDelete }) {
   const t = useT(lang || "fr");
   return (
     <div style={{ ...styles.productRow, cursor: "default" }}>
-      <div style={{ ...styles.productThumbPlaceholder, background: "#eef7fb" }}>
+      <div style={{ ...styles.productThumbPlaceholder, background: "var(--bg-eef7fb,#eef7fb)" }}>
         <Clock size={16} color="var(--brand-primary)" />
       </div>
       <div style={{ flex: 1, textAlign: "left" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--brand-primary)", background: "#eaf3fb", border: "1px solid #d0e4f5", borderRadius: 99, padding: "2px 8px" }}>
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--brand-primary)", background: "var(--bg-eaf3fb,#eaf3fb)", border: "1px solid var(--bd-d0e4f5,#d0e4f5)", borderRadius: 99, padding: "2px 8px" }}>
             🌡️ {t("filt_hist_temp_entry")}
           </span>
           <span style={{ fontSize: 11.5, color: "var(--brand-text-muted)" }}>{formatDate(entry.date)}</span>
@@ -21142,7 +21422,7 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, onResume
                   key={idx}
                   src={src}
                   alt=""
-                  style={{ height: 110, borderRadius: 8, objectFit: "cover", flexShrink: 0, border: "1px solid #d0e4f5", cursor: "zoom-in" }}
+                  style={{ height: 110, borderRadius: 8, objectFit: "cover", flexShrink: 0, border: "1px solid var(--bd-d0e4f5,#d0e4f5)", cursor: "zoom-in" }}
                   onClick={() => window._openLightbox?.(src)}
                 />
               ))}
@@ -21156,7 +21436,7 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, onResume
                   key={idx}
                   src={src}
                   alt=""
-                  style={{ height: 110, borderRadius: 8, objectFit: "cover", flexShrink: 0, border: "1px solid #d0e4f5", cursor: "zoom-in" }}
+                  style={{ height: 110, borderRadius: 8, objectFit: "cover", flexShrink: 0, border: "1px solid var(--bd-d0e4f5,#d0e4f5)", cursor: "zoom-in" }}
                   onClick={() => window._openLightbox?.(src)}
                 />
               ))}
@@ -21188,7 +21468,7 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, onResume
               {(application.steps || []).map((s, i) => (
                 <div key={i} style={{
                   display: "flex", alignItems: "flex-start", gap: 8, padding: "6px 0",
-                  borderBottom: i < application.steps.length - 1 ? "1px solid #eaf4fb" : "none",
+                  borderBottom: i < application.steps.length - 1 ? "1px solid var(--bd-eaf4fb,#eaf4fb)" : "none",
                 }}>
                   <div style={{ marginTop: 2 }}>
                     {s.skipped
@@ -21212,7 +21492,7 @@ function MeasureRow({ measure, onDelete, onEdit, onValidateApplication, onResume
                     {/* v1.112.0 — Valeur pH/fCl projetée compte tenu de la quantité
                         réellement appliquée (pas une mesure — voir buildProjectedPoints). */}
                     {projectedByIndex[i] && (
-                      <div style={{ fontSize: 11, color: "#a8721a", marginTop: 1 }}>
+                      <div style={{ fontSize: 11, color: "var(--tx-a8721a,#a8721a)", marginTop: 1 }}>
                         {t({ pH: "ph_projected_label", fCl: "fcl_projected_label", tac: "tac_projected_label", hard: "hard_projected_label", phos: "phos_projected_label" }[projectedByIndex[i].param], {
                           value: projectedByIndex[i].value.toFixed(["pH", "fCl"].includes(projectedByIndex[i].param) ? 1 : 0),
                         })}
@@ -21602,7 +21882,7 @@ function StripMarker({ photoDataUrl, onConfirm, onCancel, lang }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <div style={{ fontSize: 13, color: "var(--brand-text-strong)", background: "#eef6f3", border: "1px solid #b9dcd0", borderRadius: 8, padding: "8px 12px" }}>
+      <div style={{ fontSize: 13, color: "var(--brand-text-strong)", background: "var(--bg-eef6f3,#eef6f3)", border: "1px solid var(--bd-b9dcd0,#b9dcd0)", borderRadius: 8, padding: "8px 12px" }}>
         {t("strip_marker_instruction")}
       </div>
       <div style={{ position: "relative", width: "100%", borderRadius: 10, overflow: "hidden", background: "#111", touchAction: "none" }}>
@@ -21617,11 +21897,11 @@ function StripMarker({ photoDataUrl, onConfirm, onCancel, lang }) {
       </div>
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
         {onCancel && (
-          <button type="button" onClick={onCancel} style={{ border: "1px solid #ccc", background: "#fff", borderRadius: 8, padding: "8px 14px", cursor: "pointer" }}>
+          <button type="button" onClick={onCancel} style={{ border: "1px solid var(--bd-cccccc,#ccc)", background: "var(--bg-ffffff,#fff)", borderRadius: 8, padding: "8px 14px", cursor: "pointer" }}>
             {t("cancel")}
           </button>
         )}
-        <button type="button" onClick={handleReset} style={{ border: "1px solid #ccc", background: "#fff", borderRadius: 8, padding: "8px 14px", cursor: "pointer" }}>
+        <button type="button" onClick={handleReset} style={{ border: "1px solid var(--bd-cccccc,#ccc)", background: "var(--bg-ffffff,#fff)", borderRadius: 8, padding: "8px 14px", cursor: "pointer" }}>
           {t("strip_marker_restart")}
         </button>
         <button
@@ -21890,7 +22170,7 @@ function StripPadPreview({ photoDataUrl, padPositions, paramOrder, onConfirm, on
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <div style={{ fontSize: 13, color: "var(--brand-text-strong)", background: "#eef6f3", border: "1px solid #b9dcd0", borderRadius: 8, padding: "8px 12px" }}>
+      <div style={{ fontSize: 13, color: "var(--brand-text-strong)", background: "var(--bg-eef6f3,#eef6f3)", border: "1px solid var(--bd-b9dcd0,#b9dcd0)", borderRadius: 8, padding: "8px 12px" }}>
         {t("strip_pad_preview_instruction")}
       </div>
       <div style={{ position: "relative", width: "100%", borderRadius: 10, overflow: "hidden", background: "#111", touchAction: "none" }}>
@@ -21904,7 +22184,7 @@ function StripPadPreview({ photoDataUrl, padPositions, paramOrder, onConfirm, on
         />
       </div>
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-        <button type="button" onClick={onBack} style={{ border: "1px solid #ccc", background: "#fff", borderRadius: 8, padding: "8px 14px", cursor: "pointer" }}>
+        <button type="button" onClick={onBack} style={{ border: "1px solid var(--bd-cccccc,#ccc)", background: "var(--bg-ffffff,#fff)", borderRadius: 8, padding: "8px 14px", cursor: "pointer" }}>
           {t("strip_pad_preview_back")}
         </button>
         <button type="button" onClick={handleConfirmClick} style={{ border: "none", borderRadius: 8, padding: "8px 16px", cursor: "pointer", background: "var(--brand-primary)", color: "#fff", fontWeight: 600 }}>
@@ -22117,7 +22397,7 @@ function StripManualPadPlacement({ photoDataUrl, paramOrder, initialPositions, o
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <div style={{ fontSize: 13, color: "#8a5a00", background: "#fff4e0", border: "1px solid #f0c675", borderRadius: 8, padding: "8px 12px" }}>
+      <div style={{ fontSize: 13, color: "var(--tx-8a5a00,#8a5a00)", background: "var(--bg-fff4e0,#fff4e0)", border: "1px solid var(--bd-f0c675,#f0c675)", borderRadius: 8, padding: "8px 12px" }}>
         ⚠ {t("strip_manual_placement_instruction")}
       </div>
       <div style={{ position: "relative", width: "100%", borderRadius: 10, overflow: "hidden", background: "#111", touchAction: "none" }}>
@@ -22131,7 +22411,7 @@ function StripManualPadPlacement({ photoDataUrl, paramOrder, initialPositions, o
         />
       </div>
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-        <button type="button" onClick={onCancel} style={{ border: "1px solid #ccc", background: "#fff", borderRadius: 8, padding: "8px 14px", cursor: "pointer" }}>
+        <button type="button" onClick={onCancel} style={{ border: "1px solid var(--bd-cccccc,#ccc)", background: "var(--bg-ffffff,#fff)", borderRadius: 8, padding: "8px 14px", cursor: "pointer" }}>
           {t("strip_marker_restart")}
         </button>
         <button type="button" onClick={handleConfirmClick} style={{ border: "none", borderRadius: 8, padding: "8px 16px", cursor: "pointer", background: "var(--brand-primary)", color: "#fff", fontWeight: 600 }}>
@@ -22226,7 +22506,7 @@ function StripArrowReader({ photoDataUrl, padPositions, paramOrder, echelles, on
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      <div style={{ fontSize: 13, color: "var(--brand-text-strong)", background: "#eef6f3", border: "1px solid #b9dcd0", borderRadius: 8, padding: "8px 12px" }}>
+      <div style={{ fontSize: 13, color: "var(--brand-text-strong)", background: "var(--bg-eef6f3,#eef6f3)", border: "1px solid var(--bd-b9dcd0,#b9dcd0)", borderRadius: 8, padding: "8px 12px" }}>
         {t("strip_arrow_instruction")}
       </div>
       {paramOrder.map((key, i) => {
@@ -22235,14 +22515,14 @@ function StripArrowReader({ photoDataUrl, padPositions, paramOrder, echelles, on
         const idx = positions[i];
         const value = valeurs[idx];
         return (
-          <div key={key} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", background: "#f8fafa", borderRadius: 8, flexWrap: "wrap" }}>
+          <div key={key} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", background: "var(--bg-f8fafa,#f8fafa)", borderRadius: 8, flexWrap: "wrap" }}>
             <canvas
               ref={(el) => { cropCanvasRefs.current[key] = el; if (el) drawCrop(key, i); }}
-              style={{ width: 36, height: 36, borderRadius: 6, border: "1px solid #ccc", flex: "none" }}
+              style={{ width: 36, height: 36, borderRadius: 6, border: "1px solid var(--bd-cccccc,#ccc)", flex: "none" }}
             />
             <div style={{ minWidth: 40, fontWeight: 700, fontSize: 13 }}>{key}</div>
             {autoEstimates && autoEstimates[key] && (
-              <div style={{ fontSize: 9.5, fontWeight: 700, color: "var(--brand-primary)", background: "#eef6f3", borderRadius: 5, padding: "2px 5px", flex: "none" }}>
+              <div style={{ fontSize: 9.5, fontWeight: 700, color: "var(--brand-primary)", background: "var(--bg-eef6f3,#eef6f3)", borderRadius: 5, padding: "2px 5px", flex: "none" }}>
                 {t("strip_arrow_estimated_badge")}
               </div>
             )}
@@ -22250,7 +22530,7 @@ function StripArrowReader({ photoDataUrl, padPositions, paramOrder, echelles, on
               type="button"
               onClick={() => move(i, -1)}
               disabled={idx <= 0}
-              style={{ border: "1px solid #b9dcd0", background: "#fff", borderRadius: 6, width: 28, height: 28, cursor: idx > 0 ? "pointer" : "default", opacity: idx > 0 ? 1 : 0.4 }}
+              style={{ border: "1px solid var(--bd-b9dcd0,#b9dcd0)", background: "var(--bg-ffffff,#fff)", borderRadius: 6, width: 28, height: 28, cursor: idx > 0 ? "pointer" : "default", opacity: idx > 0 ? 1 : 0.4 }}
             >
               ◀
             </button>
@@ -22261,7 +22541,7 @@ function StripArrowReader({ photoDataUrl, padPositions, paramOrder, echelles, on
               type="button"
               onClick={() => move(i, 1)}
               disabled={idx >= valeurs.length - 1}
-              style={{ border: "1px solid #b9dcd0", background: "#fff", borderRadius: 6, width: 28, height: 28, cursor: idx < valeurs.length - 1 ? "pointer" : "default", opacity: idx < valeurs.length - 1 ? 1 : 0.4 }}
+              style={{ border: "1px solid var(--bd-b9dcd0,#b9dcd0)", background: "var(--bg-ffffff,#fff)", borderRadius: 6, width: 28, height: 28, cursor: idx < valeurs.length - 1 ? "pointer" : "default", opacity: idx < valeurs.length - 1 ? 1 : 0.4 }}
             >
               ▶
             </button>
@@ -22275,7 +22555,7 @@ function StripArrowReader({ photoDataUrl, padPositions, paramOrder, echelles, on
       })}
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
         {onCancel && (
-          <button type="button" onClick={onCancel} style={{ border: "1px solid #ccc", background: "#fff", borderRadius: 8, padding: "8px 14px", cursor: "pointer" }}>
+          <button type="button" onClick={onCancel} style={{ border: "1px solid var(--bd-cccccc,#ccc)", background: "var(--bg-ffffff,#fff)", borderRadius: 8, padding: "8px 14px", cursor: "pointer" }}>
             {t("strip_arrow_cancel")}
           </button>
         )}
@@ -22397,7 +22677,7 @@ function AddStripModelModal({ onClose, onSubmitted, lang, initialBarcodePhoto })
     return (
       <div>
         <div style={{ fontSize: 13.5, marginBottom: 14 }}>✅ {t("strip_guided_add_model_success")}</div>
-        <button type="button" onClick={onSubmitted} style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer" }}>
+        <button type="button" onClick={onSubmitted} style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid var(--bd-cccccc,#ccc)", background: "var(--bg-ffffff,#fff)", cursor: "pointer" }}>
           {t("close")}
         </button>
       </div>
@@ -22412,20 +22692,20 @@ function AddStripModelModal({ onClose, onSubmitted, lang, initialBarcodePhoto })
 
       <div style={{ marginBottom: 14 }}>
         <div style={{ fontSize: 12.5, fontWeight: 600, marginBottom: 4 }}>{t("strip_guided_add_model_barcode_label")}</div>
-        <div style={{ fontSize: 11.5, color: "#666", marginBottom: 6 }}>{t("strip_guided_add_model_barcode_hint")}</div>
+        <div style={{ fontSize: 11.5, color: "var(--tx-666666,#666)", marginBottom: 6 }}>{t("strip_guided_add_model_barcode_hint")}</div>
         {barcodePhoto ? (
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <img src={barcodePhoto} alt="" style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 6 }} />
-            <button type="button" onClick={() => setBarcodePhoto(null)} style={{ fontSize: 12, color: "#c0392b", background: "none", border: "none", cursor: "pointer" }}>
+            <button type="button" onClick={() => setBarcodePhoto(null)} style={{ fontSize: 12, color: "var(--tx-c0392b,#c0392b)", background: "none", border: "none", cursor: "pointer" }}>
               {t("strip_guided_add_model_remove_photo")}
             </button>
           </div>
         ) : (
           <div style={{ display: "flex", gap: 8 }}>
-            <button type="button" onClick={() => barcodeCameraRef.current && barcodeCameraRef.current.click()} style={{ flex: 1, padding: 8, borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer", fontSize: 12.5 }}>
+            <button type="button" onClick={() => barcodeCameraRef.current && barcodeCameraRef.current.click()} style={{ flex: 1, padding: 8, borderRadius: 8, border: "1px solid var(--bd-cccccc,#ccc)", background: "var(--bg-ffffff,#fff)", cursor: "pointer", fontSize: 12.5 }}>
               📷 {t("camera_btn")}
             </button>
-            <button type="button" onClick={() => barcodeGalleryRef.current && barcodeGalleryRef.current.click()} style={{ flex: 1, padding: 8, borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer", fontSize: 12.5 }}>
+            <button type="button" onClick={() => barcodeGalleryRef.current && barcodeGalleryRef.current.click()} style={{ flex: 1, padding: 8, borderRadius: 8, border: "1px solid var(--bd-cccccc,#ccc)", background: "var(--bg-ffffff,#fff)", cursor: "pointer", fontSize: 12.5 }}>
               🖼️ {t("gallery_btn")}
             </button>
           </div>
@@ -22436,20 +22716,20 @@ function AddStripModelModal({ onClose, onSubmitted, lang, initialBarcodePhoto })
 
       <div style={{ marginBottom: 14 }}>
         <div style={{ fontSize: 12.5, fontWeight: 600, marginBottom: 4 }}>{t("strip_guided_add_model_tube_label")}</div>
-        <div style={{ fontSize: 11.5, color: "#666", marginBottom: 6 }}>{t("strip_guided_add_model_tube_hint")}</div>
+        <div style={{ fontSize: 11.5, color: "var(--tx-666666,#666)", marginBottom: 6 }}>{t("strip_guided_add_model_tube_hint")}</div>
         {tubePhoto ? (
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <img src={tubePhoto} alt="" style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 6 }} />
-            <button type="button" onClick={() => setTubePhoto(null)} style={{ fontSize: 12, color: "#c0392b", background: "none", border: "none", cursor: "pointer" }}>
+            <button type="button" onClick={() => setTubePhoto(null)} style={{ fontSize: 12, color: "var(--tx-c0392b,#c0392b)", background: "none", border: "none", cursor: "pointer" }}>
               {t("strip_guided_add_model_remove_photo")}
             </button>
           </div>
         ) : (
           <div style={{ display: "flex", gap: 8 }}>
-            <button type="button" onClick={() => tubeCameraRef.current && tubeCameraRef.current.click()} style={{ flex: 1, padding: 8, borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer", fontSize: 12.5 }}>
+            <button type="button" onClick={() => tubeCameraRef.current && tubeCameraRef.current.click()} style={{ flex: 1, padding: 8, borderRadius: 8, border: "1px solid var(--bd-cccccc,#ccc)", background: "var(--bg-ffffff,#fff)", cursor: "pointer", fontSize: 12.5 }}>
               📷 {t("camera_btn")}
             </button>
-            <button type="button" onClick={() => tubeGalleryRef.current && tubeGalleryRef.current.click()} style={{ flex: 1, padding: 8, borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer", fontSize: 12.5 }}>
+            <button type="button" onClick={() => tubeGalleryRef.current && tubeGalleryRef.current.click()} style={{ flex: 1, padding: 8, borderRadius: 8, border: "1px solid var(--bd-cccccc,#ccc)", background: "var(--bg-ffffff,#fff)", cursor: "pointer", fontSize: 12.5 }}>
               🖼️ {t("gallery_btn")}
             </button>
           </div>
@@ -22460,7 +22740,7 @@ function AddStripModelModal({ onClose, onSubmitted, lang, initialBarcodePhoto })
 
       <div style={{ marginBottom: 14 }}>
         <div style={{ fontSize: 12.5, fontWeight: 600, marginBottom: 4 }}>{t("strip_guided_add_model_scales_label")}</div>
-        <div style={{ fontSize: 11.5, color: "#666", marginBottom: 6 }}>{t("strip_guided_add_model_scales_hint")}</div>
+        <div style={{ fontSize: 11.5, color: "var(--tx-666666,#666)", marginBottom: 6 }}>{t("strip_guided_add_model_scales_hint")}</div>
         {scalePhotos.length > 0 && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
             {scalePhotos.map((p, i) => (
@@ -22478,10 +22758,10 @@ function AddStripModelModal({ onClose, onSubmitted, lang, initialBarcodePhoto })
           </div>
         )}
         <div style={{ display: "flex", gap: 8 }}>
-          <button type="button" onClick={() => scaleCameraRef.current && scaleCameraRef.current.click()} style={{ flex: 1, padding: 8, borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer", fontSize: 12.5 }}>
+          <button type="button" onClick={() => scaleCameraRef.current && scaleCameraRef.current.click()} style={{ flex: 1, padding: 8, borderRadius: 8, border: "1px solid var(--bd-cccccc,#ccc)", background: "var(--bg-ffffff,#fff)", cursor: "pointer", fontSize: 12.5 }}>
             📷 {t("strip_guided_add_model_add_scale_photo_btn")}
           </button>
-          <button type="button" onClick={() => scaleGalleryRef.current && scaleGalleryRef.current.click()} style={{ flex: 1, padding: 8, borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer", fontSize: 12.5 }}>
+          <button type="button" onClick={() => scaleGalleryRef.current && scaleGalleryRef.current.click()} style={{ flex: 1, padding: 8, borderRadius: 8, border: "1px solid var(--bd-cccccc,#ccc)", background: "var(--bg-ffffff,#fff)", cursor: "pointer", fontSize: 12.5 }}>
             🖼️ {t("gallery_btn")}
           </button>
         </div>
@@ -22489,10 +22769,10 @@ function AddStripModelModal({ onClose, onSubmitted, lang, initialBarcodePhoto })
         <input ref={scaleGalleryRef} type="file" accept="image/*" onChange={handleScaleFile} style={{ display: "none" }} />
       </div>
 
-      {error && <div style={{ fontSize: 12.5, color: "#c0392b", marginBottom: 10 }}>{error}</div>}
+      {error && <div style={{ fontSize: 12.5, color: "var(--tx-c0392b,#c0392b)", marginBottom: 10 }}>{error}</div>}
 
       <div style={{ display: "flex", gap: 8 }}>
-        <button type="button" onClick={onClose} disabled={sending} style={{ flex: 1, padding: 10, borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer" }}>
+        <button type="button" onClick={onClose} disabled={sending} style={{ flex: 1, padding: 10, borderRadius: 8, border: "1px solid var(--bd-cccccc,#ccc)", background: "var(--bg-ffffff,#fff)", cursor: "pointer" }}>
           {t("cancel")}
         </button>
         <button type="button" onClick={handleSubmit} disabled={sending} style={{ flex: 1, padding: 10, borderRadius: 8, border: "none", background: "var(--brand-primary, #2980b9)", color: "#fff", cursor: "pointer" }}>
@@ -22773,7 +23053,7 @@ function GuidedStripFlow({ onClose, onComplete, lang }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-      <div style={{ background: "#fff", borderRadius: 14, padding: 18, maxWidth: 460, width: "100%", maxHeight: "90vh", overflowY: "auto" }}>
+      <div style={{ background: "var(--bg-ffffff,#fff)", borderRadius: 14, padding: 18, maxWidth: 460, width: "100%", maxHeight: "90vh", overflowY: "auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
           <strong style={{ fontSize: 14 }}>🎯 {t("strip_guided_title")}</strong>
           <button type="button" onClick={onClose} style={{ border: "none", background: "none", cursor: "pointer", padding: 4 }}>
@@ -22781,8 +23061,8 @@ function GuidedStripFlow({ onClose, onComplete, lang }) {
           </button>
         </div>
 
-        {knownModels === null && <div style={{ fontSize: 13, color: "#666" }}>{t("strip_guided_loading")}</div>}
-        {loadError && <div style={{ fontSize: 13, color: "#c0392b", marginBottom: 8 }}>{t("strip_guided_error_prefix")}{loadError}</div>}
+        {knownModels === null && <div style={{ fontSize: 13, color: "var(--tx-666666,#666)" }}>{t("strip_guided_loading")}</div>}
+        {loadError && <div style={{ fontSize: 13, color: "var(--tx-c0392b,#c0392b)", marginBottom: 8 }}>{t("strip_guided_error_prefix")}{loadError}</div>}
 
         {showAddModel && (
           <AddStripModelModal
@@ -22802,13 +23082,13 @@ function GuidedStripFlow({ onClose, onComplete, lang }) {
               type="button"
               onClick={() => barcodeScanInputRef.current && barcodeScanInputRef.current.click()}
               disabled={scanningBarcode}
-              style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: scanningBarcode ? "default" : "pointer", fontSize: 13, marginBottom: 8 }}
+              style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid var(--bd-cccccc,#ccc)", background: "var(--bg-ffffff,#fff)", cursor: scanningBarcode ? "default" : "pointer", fontSize: 13, marginBottom: 8 }}
             >
               📷 {scanningBarcode ? t("strip_guided_barcode_scanning") : t("strip_guided_scan_barcode_btn")}
             </button>
             <input ref={barcodeScanInputRef} type="file" accept="image/*" capture="environment" onChange={handleBarcodeScan} style={{ display: "none" }} />
             {barcodeScanError && (
-              <div style={{ fontSize: 12.5, color: "#c0392b", marginBottom: 8 }}>{barcodeScanError}</div>
+              <div style={{ fontSize: 12.5, color: "var(--tx-c0392b,#c0392b)", marginBottom: 8 }}>{barcodeScanError}</div>
             )}
             <div style={{ fontSize: 11.5, color: "#999", textAlign: "center", margin: "4px 0 10px" }}>
               {t("strip_guided_or_separator")}
@@ -22819,7 +23099,7 @@ function GuidedStripFlow({ onClose, onComplete, lang }) {
             <input
               type="text"
               list="strip-guided-model-list"
-              style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid #ccc", fontSize: 13.5, boxSizing: "border-box" }}
+              style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid var(--bd-cccccc,#ccc)", fontSize: 13.5, boxSizing: "border-box" }}
               value={modelSearchText}
               placeholder={t("strip_guided_choose_placeholder")}
               onChange={(e) => {
@@ -22838,14 +23118,14 @@ function GuidedStripFlow({ onClose, onComplete, lang }) {
                 reste vide (voir onChange ci-dessus), l'utilisateur restait
                 bloqué sans comprendre pourquoi. */}
             {modelSearchText.trim() && !selectedModel && (
-              <div style={{ fontSize: 12.5, color: "#c0392b", marginTop: 6 }}>
+              <div style={{ fontSize: 12.5, color: "var(--tx-c0392b,#c0392b)", marginTop: 6 }}>
                 {t("strip_guided_unmatched_model_warning")}
               </div>
             )}
             <button
               type="button"
               onClick={() => setShowAddModel(true)}
-              style={{ width: "100%", marginTop: 10, padding: 10, borderRadius: 8, border: "1px dashed #999", background: "#fff", cursor: "pointer", fontSize: 13 }}
+              style={{ width: "100%", marginTop: 10, padding: 10, borderRadius: 8, border: "1px dashed #999", background: "var(--bg-ffffff,#fff)", cursor: "pointer", fontSize: 13 }}
             >
               ➕ {t("strip_guided_add_model_btn")}
             </button>
@@ -22853,24 +23133,24 @@ function GuidedStripFlow({ onClose, onComplete, lang }) {
         )}
 
         {!showAddModel && knownModels && knownModels.length === 0 && !loadError && (
-          <div style={{ fontSize: 13, color: "#666" }}>
+          <div style={{ fontSize: 13, color: "var(--tx-666666,#666)" }}>
             {t("strip_guided_no_models")}
             <button
               type="button"
               onClick={() => barcodeScanInputRef.current && barcodeScanInputRef.current.click()}
               disabled={scanningBarcode}
-              style={{ width: "100%", marginTop: 10, padding: 10, borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: scanningBarcode ? "default" : "pointer", fontSize: 13 }}
+              style={{ width: "100%", marginTop: 10, padding: 10, borderRadius: 8, border: "1px solid var(--bd-cccccc,#ccc)", background: "var(--bg-ffffff,#fff)", cursor: scanningBarcode ? "default" : "pointer", fontSize: 13 }}
             >
               📷 {scanningBarcode ? t("strip_guided_barcode_scanning") : t("strip_guided_scan_barcode_btn")}
             </button>
             <input ref={barcodeScanInputRef} type="file" accept="image/*" capture="environment" onChange={handleBarcodeScan} style={{ display: "none" }} />
             {barcodeScanError && (
-              <div style={{ fontSize: 12.5, color: "#c0392b", marginTop: 8 }}>{barcodeScanError}</div>
+              <div style={{ fontSize: 12.5, color: "var(--tx-c0392b,#c0392b)", marginTop: 8 }}>{barcodeScanError}</div>
             )}
             <button
               type="button"
               onClick={() => setShowAddModel(true)}
-              style={{ width: "100%", marginTop: 8, padding: 10, borderRadius: 8, border: "1px dashed #999", background: "#fff", cursor: "pointer", fontSize: 13 }}
+              style={{ width: "100%", marginTop: 8, padding: 10, borderRadius: 8, border: "1px dashed #999", background: "var(--bg-ffffff,#fff)", cursor: "pointer", fontSize: 13 }}
             >
               ➕ {t("strip_guided_add_model_btn")}
             </button>
@@ -22884,16 +23164,16 @@ function GuidedStripFlow({ onClose, onComplete, lang }) {
               <button
                 type="button"
                 onClick={() => { setSelectedModelId(""); setModelSearchText(""); }}
-                style={{ border: "none", background: "none", color: "var(--brand-primary, #2980b9)", cursor: "pointer", fontSize: 12.5, textDecoration: "underline", padding: 0 }}
+                style={{ border: "none", background: "none", color: "var(--brand-primary, var(--tx-2980b9,#2980b9))", cursor: "pointer", fontSize: 12.5, textDecoration: "underline", padding: 0 }}
               >
                 {t("strip_guided_change_model_btn")}
               </button>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              <button type="button" onClick={() => cameraInputRef.current && cameraInputRef.current.click()} style={{ flex: 1, padding: 10, borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer" }}>
+              <button type="button" onClick={() => cameraInputRef.current && cameraInputRef.current.click()} style={{ flex: 1, padding: 10, borderRadius: 8, border: "1px solid var(--bd-cccccc,#ccc)", background: "var(--bg-ffffff,#fff)", cursor: "pointer" }}>
                 📷 {t("camera_btn")}
               </button>
-              <button type="button" onClick={() => galleryInputRef.current && galleryInputRef.current.click()} style={{ flex: 1, padding: 10, borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer" }}>
+              <button type="button" onClick={() => galleryInputRef.current && galleryInputRef.current.click()} style={{ flex: 1, padding: 10, borderRadius: 8, border: "1px solid var(--bd-cccccc,#ccc)", background: "var(--bg-ffffff,#fff)", cursor: "pointer" }}>
                 🖼️ {t("gallery_btn")}
               </button>
               <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFile} style={{ display: "none" }} />
@@ -22910,7 +23190,7 @@ function GuidedStripFlow({ onClose, onComplete, lang }) {
               onConfirm={handleMarkConfirm}
               lang={lang}
             />
-            {checkingOrientation && <div style={{ marginTop: 8, fontSize: 12.5, color: "#666" }}>⏳ {t("strip_guided_checking_orientation")}</div>}
+            {checkingOrientation && <div style={{ marginTop: 8, fontSize: 12.5, color: "var(--tx-666666,#666)" }}>⏳ {t("strip_guided_checking_orientation")}</div>}
           </>
         )}
 
@@ -22929,7 +23209,7 @@ function GuidedStripFlow({ onClose, onComplete, lang }) {
         )}
 
         {selectedModel && photoDataUrl && markResult && computingPositions && (
-          <div style={{ fontSize: 13, color: "#666" }}>⏳ {t("strip_guided_positioning")}</div>
+          <div style={{ fontSize: 13, color: "var(--tx-666666,#666)" }}>⏳ {t("strip_guided_positioning")}</div>
         )}
 
         {selectedModel && photoDataUrl && markResult && padPositions && !padPreviewConfirmed && !manualPlacement && (
@@ -22944,13 +23224,13 @@ function GuidedStripFlow({ onClose, onComplete, lang }) {
         )}
 
         {selectedModel && photoDataUrl && padPositions && padPreviewConfirmed && computingEstimates && !manualPlacement && (
-          <div style={{ fontSize: 13, color: "#666" }}>⏳ {t("strip_guided_estimating")}</div>
+          <div style={{ fontSize: 13, color: "var(--tx-666666,#666)" }}>⏳ {t("strip_guided_estimating")}</div>
         )}
 
         {selectedModel && photoDataUrl && padPositions && padPreviewConfirmed && !computingEstimates && !manualPlacement && (
           <>
             {saveError && (
-              <div style={{ marginBottom: 8, fontSize: 12.5, color: "#c0392b" }}>{t("strip_guided_save_error_prefix")}{saveError}</div>
+              <div style={{ marginBottom: 8, fontSize: 12.5, color: "var(--tx-c0392b,#c0392b)" }}>{t("strip_guided_save_error_prefix")}{saveError}</div>
             )}
             <StripArrowReader
               photoDataUrl={photoDataUrl}
@@ -22969,7 +23249,7 @@ function GuidedStripFlow({ onClose, onComplete, lang }) {
               lang={lang}
               autoEstimates={autoEstimates}
             />
-            {saving && <div style={{ marginTop: 8, fontSize: 12.5, color: "#666" }}>⏳ {t("strip_guided_saving")}</div>}
+            {saving && <div style={{ marginTop: 8, fontSize: 12.5, color: "var(--tx-666666,#666)" }}>⏳ {t("strip_guided_saving")}</div>}
           </>
         )}
       </div>
@@ -24028,7 +24308,7 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
             style={{
               display: "flex", alignItems: "center", gap: 8, width: "100%", justifyContent: "center",
               padding: "12px 14px", borderRadius: 12, border: "1px solid var(--brand-primary)",
-              background: "#fff", color: "var(--brand-primary)", fontWeight: 600, fontSize: 13.5,
+              background: "var(--bg-ffffff,#fff)", color: "var(--brand-primary)", fontWeight: 600, fontSize: 13.5,
               cursor: "pointer", marginBottom: 8,
             }}
           >
@@ -24050,7 +24330,7 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
 
       {/* Note de fiabilité étoiles — affichée même si les photos ont été retirées */}
       {analyzeReliability && (
-        <div style={{ marginTop: 10, padding: "10px 12px", background: "#f5f8fc", borderRadius: 10, border: "1px solid #d0e4f5" }}>
+        <div style={{ marginTop: 10, padding: "10px 12px", background: "var(--bg-f5f8fc,#f5f8fc)", borderRadius: 10, border: "1px solid var(--bd-d0e4f5,#d0e4f5)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
             <span style={{ fontSize: 12, fontWeight: 700, color: "var(--brand-text-strong)" }}>{t("ai_reliability")} :</span>
             <span style={{ fontSize: 16, letterSpacing: 2 }}>
@@ -24070,7 +24350,7 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
           (par paramètre) ou non déterminés — aucune valeur numérique n'a été
           renseignée pour eux (voir gating dans la boucle de fusion). */}
       {analyzeUncertainParams.length > 0 && (
-        <div style={{ marginTop: 10, padding: "10px 12px", background: "#fff8e6", borderRadius: 10, border: "1px solid #f0dca0" }}>
+        <div style={{ marginTop: 10, padding: "10px 12px", background: "var(--bg-fff8e6,#fff8e6)", borderRadius: 10, border: "1px solid var(--bd-f0dca0,#f0dca0)" }}>
           <div style={{ fontSize: 12, color: "var(--brand-text-strong)", lineHeight: 1.5 }}>
             {t("strip_uncertain_params", { params: analyzeUncertainParams.join(", ") })}
           </div>
@@ -24081,7 +24361,7 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
           visuellement la qualité de l'interpolation couleur→valeur. À retirer
           une fois l'algorithme stabilisé — jamais dans le rapport PDF. */}
       {Object.keys(analyzeColorDebug).length > 0 && (
-        <div style={{ marginTop: 10, padding: "10px 12px", background: "#f5f5f7", borderRadius: 10, border: "1px dashed #b0b0b8" }}>
+        <div style={{ marginTop: 10, padding: "10px 12px", background: "var(--bg-f5f5f7,#f5f5f7)", borderRadius: 10, border: "1px dashed var(--bd-b0b0b8,#b0b0b8)" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "var(--brand-text-muted)", marginBottom: 6 }}>
             🔧 Debug couleur (temporaire)
           </div>
@@ -24090,7 +24370,7 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
               <span style={{ fontWeight: 700, minWidth: 40 }}>{param}</span>
               {cr.tampon_hex && (
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                  <span style={{ width: 12, height: 12, borderRadius: 3, background: cr.tampon_hex, border: "1px solid #ccc", display: "inline-block" }} />
+                  <span style={{ width: 12, height: 12, borderRadius: 3, background: cr.tampon_hex, border: "1px solid var(--bd-cccccc,#ccc)", display: "inline-block" }} />
                   {cr.tampon_hex}
                 </span>
               )}
@@ -24126,7 +24406,7 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
           écrase la valeur du champ ET nourrit stripConfidenceSamples comme
           signal humain (plus fiable qu'une auto-évaluation IA). */}
       {stripTester && Object.entries(analyzeColorDebug).some(([, cr]) => Array.isArray(cr.echelle) && cr.echelle.length >= 2) && (
-        <div style={{ marginTop: 10, padding: "10px 12px", background: "#eef6f3", borderRadius: 10, border: "1px solid #b9dcd0" }}>
+        <div style={{ marginTop: 10, padding: "10px 12px", background: "var(--bg-eef6f3,#eef6f3)", borderRadius: 10, border: "1px solid var(--bd-b9dcd0,#b9dcd0)" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "var(--brand-text-strong)", marginBottom: 6 }}>
             🧪 Correction testeur — ajuste la couleur de référence considérée
           </div>
@@ -24173,10 +24453,10 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
               return (
                 <div key={param} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12, marginBottom: 6 }}>
                   <span style={{ fontWeight: 700, minWidth: 40 }}>{param}</span>
-                  <button type="button" onClick={() => move(-0.1)} style={{ border: "1px solid #b9dcd0", background: "#fff", borderRadius: 6, width: 26, height: 26, cursor: "pointer" }}>◀</button>
-                  <span style={{ width: 16, height: 16, borderRadius: 4, background: currentHex, border: "1px solid #ccc", display: "inline-block" }} />
+                  <button type="button" onClick={() => move(-0.1)} style={{ border: "1px solid var(--bd-b9dcd0,#b9dcd0)", background: "var(--bg-ffffff,#fff)", borderRadius: 6, width: 26, height: 26, cursor: "pointer" }}>◀</button>
+                  <span style={{ width: 16, height: 16, borderRadius: 4, background: currentHex, border: "1px solid var(--bd-cccccc,#ccc)", display: "inline-block" }} />
                   <span style={{ minWidth: 48, textAlign: "center" }}>{currentValeur}</span>
-                  <button type="button" onClick={() => move(0.1)} style={{ border: "1px solid #b9dcd0", background: "#fff", borderRadius: 6, width: 26, height: 26, cursor: "pointer" }}>▶</button>
+                  <button type="button" onClick={() => move(0.1)} style={{ border: "1px solid var(--bd-b9dcd0,#b9dcd0)", background: "var(--bg-ffffff,#fff)", borderRadius: 6, width: 26, height: 26, cursor: "pointer" }}>▶</button>
                   <button
                     type="button"
                     onClick={confirm}
@@ -24202,7 +24482,7 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
           const isErrorField = cclError && ["fCl","ccl","tCl"].includes(f.key);
           return (
             <div key={f.key}>
-              <label style={isErrorField ? { ...styles.fieldLabel, color: "#c0392b" } : styles.fieldLabel}>{f.label}</label>
+              <label style={isErrorField ? { ...styles.fieldLabel, color: "var(--tx-c0392b,#c0392b)" } : styles.fieldLabel}>{f.label}</label>
               <input
                 type="number"
                 step={f.step}
@@ -24211,7 +24491,7 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
                 className="measureFieldInput"
                 value={f.value}
                 onChange={(e) => { f.set(e.target.value); setCclError(null); setTclForcedInfo(null); }}
-                style={isErrorField ? { ...styles.input, border: "1.5px solid #e74c3c", background: "#fdf5f5" } : styles.input}
+                style={isErrorField ? { ...styles.input, border: "1.5px solid #e74c3c", background: "var(--bg-fdf5f5,#fdf5f5)" } : styles.input}
               />
             </div>
           );
@@ -24219,13 +24499,13 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
       </div>
 
       {tclForcedInfo && (
-        <div style={{ marginTop: 8, padding: "8px 12px", background: "#eaf4fb", border: "1px solid #b0d8f0", borderRadius: 8, fontSize: 12, color: "var(--brand-primary)", display: "flex", alignItems: "center", gap: 6 }}>
+        <div style={{ marginTop: 8, padding: "8px 12px", background: "var(--bg-eaf4fb,#eaf4fb)", border: "1px solid var(--bd-b0d8f0,#b0d8f0)", borderRadius: 8, fontSize: 12, color: "var(--brand-primary)", display: "flex", alignItems: "center", gap: 6 }}>
           <AlertTriangle size={14} /> {tclForcedInfo}
         </div>
       )}
 
       {cclError && (
-        <div style={{ marginTop: 8, padding: "8px 12px", background: "#fdf0ef", border: "1px solid #f5c6c2", borderRadius: 8, fontSize: 12, color: "#c0392b", display: "flex", alignItems: "center", gap: 6 }}>
+        <div style={{ marginTop: 8, padding: "8px 12px", background: "var(--bg-fdf0ef,#fdf0ef)", border: "1px solid var(--bd-f5c6c2,#f5c6c2)", borderRadius: 8, fontSize: 12, color: "var(--tx-c0392b,#c0392b)", display: "flex", alignItems: "center", gap: 6 }}>
           <AlertTriangle size={14} /> {cclError}
         </div>
       )}
@@ -24295,7 +24575,7 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
               }
               const candidates = candidatesForEditAction(s.action, ev.productName);
               return (
-                <div key={i} style={{ border: "1.5px solid #d0e4f5", borderRadius: 10, padding: 10 }}>
+                <div key={i} style={{ border: "1.5px solid var(--bd-d0e4f5,#d0e4f5)", borderRadius: 10, padding: 10 }}>
                   <select
                     value={ev.productName}
                     onChange={(e) => {
@@ -24310,7 +24590,7 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
                         [i]: { ...prev[i], productName: newName, dispValue: value === "" || value == null ? "" : String(value), dispUnit: unit },
                       }));
                     }}
-                    style={{ width: "100%", boxSizing: "border-box", fontSize: 14, fontWeight: 600, color: "var(--brand-text-strong)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 12px", outline: "none", background: "#fff", marginBottom: 8 }}
+                    style={{ width: "100%", boxSizing: "border-box", fontSize: 14, fontWeight: 600, color: "var(--brand-text-strong)", border: "2px solid var(--bd-d0e4f5,#d0e4f5)", borderRadius: 10, padding: "10px 12px", outline: "none", background: "var(--bg-ffffff,#fff)", marginBottom: 8 }}
                   >
                     {candidates.map((p) => (
                       <option key={p.id || p.name} value={p.name}>{p.name}</option>
@@ -24321,7 +24601,7 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
                       type="number"
                       value={ev.dispValue}
                       onChange={(e) => setTreatmentEdits((prev) => ({ ...prev, [i]: { ...prev[i], dispValue: e.target.value } }))}
-                      style={{ flex: 1, fontSize: 18, fontWeight: 700, color: "var(--brand-text-strong)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "8px 10px", textAlign: "center", outline: "none" }}
+                      style={{ flex: 1, fontSize: 18, fontWeight: 700, color: "var(--brand-text-strong)", border: "2px solid var(--bd-d0e4f5,#d0e4f5)", borderRadius: 10, padding: "8px 10px", textAlign: "center", outline: "none" }}
                       step={ev.dispUnit === t("unit_galets") ? "1" : "0.01"}
                     />
                     <div style={{ fontSize: 14, fontWeight: 700, color: "var(--brand-text-secondary)", minWidth: 32 }}>{ev.dispUnit}</div>
@@ -24329,7 +24609,7 @@ function AddMeasureModal({ measure, application, products, manageStock, onSaveAp
                       type="time"
                       value={ev.time}
                       onChange={(e) => setTreatmentEdits((prev) => ({ ...prev, [i]: { ...prev[i], time: e.target.value } }))}
-                      style={{ fontSize: 14, fontWeight: 700, color: "var(--brand-primary)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "8px 10px", outline: "none" }}
+                      style={{ fontSize: 14, fontWeight: 700, color: "var(--brand-primary)", border: "2px solid var(--bd-d0e4f5,#d0e4f5)", borderRadius: 10, padding: "8px 10px", outline: "none" }}
                     />
                   </div>
                 </div>
@@ -24379,8 +24659,8 @@ function PlanStatusCard({ plan, onResume, lang }) {
 
   return (
     <div style={{
-      background: isReady ? "#e8f8f0" : "#eaf4fb",
-      border: `1.5px solid ${isReady ? "#1a8fd1" : "#b0d8f0"}`,
+      background: isReady ? "var(--bg-e8f8f0,#e8f8f0)" : "var(--bg-eaf4fb,#eaf4fb)",
+      border: `1.5px solid ${isReady ? "#1a8fd1" : "var(--bd-b0d8f0,#b0d8f0)"}`,
       borderRadius: 12, padding: "12px 14px", marginTop: 8,
     }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
@@ -24397,7 +24677,7 @@ function PlanStatusCard({ plan, onResume, lang }) {
       {currentStep && (
         <div style={{ fontSize: 13, color: "var(--brand-text-strong)" }}>
           <span style={{ fontWeight: 600 }}>{t("wizard_next_step")} : {currentStep.productName || currentStep.title}</span>
-          <div style={{ fontSize: 12, color: isReady ? "#1a8fd1" : "var(--brand-text-secondary)", marginTop: 2, fontWeight: isReady ? 700 : 400 }}>
+          <div style={{ fontSize: 12, color: isReady ? "var(--tx-1a8fd1,#1a8fd1)" : "var(--brand-text-secondary)", marginTop: 2, fontWeight: isReady ? 700 : 400 }}>
             {remaining !== null
               ? isReady
                 ? t("countdown_done")
@@ -24411,6 +24691,20 @@ function PlanStatusCard({ plan, onResume, lang }) {
 }
 
 // ---------- TreatmentWizard : wizard pas-à-pas ----------
+// v1.178.0 — Proposition (une seule fois) de passer en mode sombre automatique quand la nuit tombe.
+function ThemeProposalBanner({ lang, onAccept, onDismiss }) {
+  const t = useT(lang);
+  return (
+    <div data-testid="theme-proposal" style={{ position: "fixed", left: 12, right: 12, bottom: 78, zIndex: 350, maxWidth: 456, margin: "0 auto", background: "var(--bg-ffffff,#fff)", border: "1.5px solid var(--brand-primary)", borderRadius: 14, padding: "12px 14px", boxShadow: "0 6px 24px rgba(0,0,0,0.25)" }}>
+      <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--brand-text-strong)", marginBottom: 10, lineHeight: 1.4 }}>🌙 {t("theme_propose")}</div>
+      <div style={{ display: "flex", gap: 8 }}>
+        <button type="button" data-testid="theme-proposal-yes" onClick={onAccept} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 13.5, cursor: "pointer" }}>{t("theme_propose_yes")}</button>
+        <button type="button" data-testid="theme-proposal-no" onClick={onDismiss} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "1px solid var(--bd-d0e4f5,#d0e4f5)", background: "transparent", color: "var(--brand-text-secondary)", fontWeight: 600, fontSize: 13.5, cursor: "pointer" }}>{t("theme_propose_no")}</button>
+      </div>
+    </div>
+  );
+}
+
 // v1.175.0 — Rappel affiché avant de démarrer un nouveau plan : produits d'un plan récent restés à appliquer.
 function CatchupReminderModal({ lang, items, positions, total, onStart, onCancel }) {
   const t = useT(lang);
@@ -24418,14 +24712,14 @@ function CatchupReminderModal({ lang, items, positions, total, onStart, onCancel
   const paramName = (k) => { const key = "param_" + k; const v = t(key); return v !== key ? v.replace(/ \(mg\/L\)| \(°C\)| \(µg\/L\)/, "") : k; };
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 420, background: "rgba(10,30,60,0.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-      <div data-testid="catchup-modal" style={{ background: "#fff", borderRadius: 16, width: "100%", maxWidth: 420, maxHeight: "88dvh", overflowY: "auto", padding: "20px 18px", boxSizing: "border-box" }}>
+      <div data-testid="catchup-modal" style={{ background: "var(--bg-ffffff,#fff)", borderRadius: 16, width: "100%", maxWidth: 420, maxHeight: "88dvh", overflowY: "auto", padding: "20px 18px", boxSizing: "border-box" }}>
         <div style={{ fontSize: 16, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 6 }}>{t("catchup_title")}</div>
         <div style={{ fontSize: 12.5, color: "var(--brand-text-secondary)", lineHeight: 1.5, marginBottom: 12 }}>{t("catchup_intro")}</div>
         {items.map((it, i) => (
-          <div key={it.action} data-testid={"catchup-item-" + i} style={{ background: "#fff8e8", border: "1.5px solid #e6a817", borderRadius: 10, padding: "10px 12px", marginBottom: 10 }}>
-            <div style={{ fontSize: 14, fontWeight: 800, color: "#7a5800" }}>{t("catchup_line", { product: it.productName || "", amount: formatDose(it.missing, it.unit || "g") })}</div>
-            <div style={{ fontSize: 12, color: "#7a5800", marginTop: 2 }}>{t("catchup_detail", { status: t("catchup_status_" + it.status), date: formatDate(it.planAt) })}</div>
-            <div style={{ fontSize: 12, color: "#7a5800", marginTop: 2 }}>{t("catchup_param_missing", { param: it.params.map(paramName).join(" / ") })}</div>
+          <div key={it.action} data-testid={"catchup-item-" + i} style={{ background: "var(--bg-fff8e8,#fff8e8)", border: "1.5px solid #e6a817", borderRadius: 10, padding: "10px 12px", marginBottom: 10 }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: "var(--tx-7a5800,#7a5800)" }}>{t("catchup_line", { product: it.productName || "", amount: formatDose(it.missing, it.unit || "g") })}</div>
+            <div style={{ fontSize: 12, color: "var(--tx-7a5800,#7a5800)", marginTop: 2 }}>{t("catchup_detail", { status: t("catchup_status_" + it.status), date: formatDate(it.planAt) })}</div>
+            <div style={{ fontSize: 12, color: "var(--tx-7a5800,#7a5800)", marginTop: 2 }}>{t("catchup_param_missing", { param: it.params.map(paramName).join(" / ") })}</div>
             <div data-testid={"catchup-pos-" + i} style={{ fontSize: 12.5, fontWeight: 700, color: include ? "var(--brand-primary)" : "var(--brand-text-muted)", marginTop: 6 }}>
               {include ? t("catchup_position", { n: positions[i], total }) : t("catchup_excluded")}
             </div>
@@ -24668,7 +24962,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
             <button type="button" data-testid="wiz-prev" aria-label={t("wizard_nav_prev")} disabled={shownIdx <= 0} onClick={() => goToStep(shownIdx - 1)} style={arrowStyle(shownIdx <= 0)}><span style={{ fontSize: 20, lineHeight: 1 }}>‹</span></button>
             <span data-testid="wiz-title">{t("wizard_step")} {shownIdx + 1} {t("wizard_of")} {totalSteps}</span>
             <button type="button" data-testid="wiz-next" aria-label={t("wizard_nav_next")} disabled={shownIdx >= totalSteps - 1} onClick={() => goToStep(shownIdx + 1)} style={arrowStyle(shownIdx >= totalSteps - 1)}><span style={{ fontSize: 20, lineHeight: 1 }}>›</span></button>
-            <span data-testid="wiz-state" data-state={shownState} style={{ marginLeft: 4, fontSize: 10.5, fontWeight: 800, color: shownState === "upcoming" ? "#3a5a78" : "#fff", background: shownState === "skipped" ? "#8a98a5" : STATE_COLOR[shownState], borderRadius: 99, padding: "2px 8px" }}>
+            <span data-testid="wiz-state" data-state={shownState} style={{ marginLeft: 4, fontSize: 10.5, fontWeight: 800, color: shownState === "upcoming" ? "var(--tx-3a5a78,#3a5a78)" : "#fff", background: shownState === "skipped" ? "#8a98a5" : STATE_COLOR[shownState], borderRadius: 99, padding: "2px 8px" }}>
               {t("wizard_state_" + shownState)}
             </span>
           </span>
@@ -24925,17 +25219,17 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
     return (
       <div style={{ position: "fixed", inset: 0, zIndex: 400, background: "rgba(10,30,60,0.55)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
         <div {...swipeHandlers} data-testid="wizard-preview" data-state={vstate} style={{
-          background: "#fff", borderTop: "5px solid " + (vstate === "skipped" ? "#8a98a5" : STATE_COLOR[vstate]),
+          background: "var(--bg-ffffff,#fff)", borderTop: "5px solid " + (vstate === "skipped" ? "#8a98a5" : STATE_COLOR[vstate]),
           borderRadius: "20px 20px 0 0", width: "100%", maxWidth: 480,
           padding: "20px 18px 32px", boxSizing: "border-box", maxHeight: "92dvh", overflowY: "auto",
         }}>
           {renderChrome()}
           <div style={{ fontSize: 18, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 4 }}>
             {vs.isComplement && (
-              <div style={{ fontSize: 11.5, fontWeight: 700, color: "#a8721a", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 2 }}>{t("wizard_complement_badge")}</div>
+              <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--tx-a8721a,#a8721a)", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 2 }}>{t("wizard_complement_badge")}</div>
             )}
             {vs.isCatchup && (
-              <div style={{ fontSize: 11.5, fontWeight: 700, color: "#a8721a", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 2 }}>{t("wizard_catchup_badge")}</div>
+              <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--tx-a8721a,#a8721a)", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 2 }}>{t("wizard_catchup_badge")}</div>
             )}
             {vName}
           </div>
@@ -24943,15 +25237,15 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
             <div style={{ fontSize: 13, color: "var(--brand-text-secondary)", marginBottom: 8 }}>{vs.title}</div>
           )}
           {vstate === "applied" && (
-            <div data-testid="wiz-view-status" style={{ ...boxStyle, background: "#e8f6ee", color: "#1d6b3e" }}>
+            <div data-testid="wiz-view-status" style={{ ...boxStyle, background: "var(--bg-e8f6ee,#e8f6ee)", color: "var(--tx-1d6b3e,#1d6b3e)" }}>
               ✓ {vInfo ? t("wizard_state_applied") + (vs.appliedAt ? " — " + formatDate(vs.appliedAt) : "") : t("wizard_view_applied_on", { date: vs.appliedAt ? formatDate(vs.appliedAt) : "—", amount: vApplied })}
             </div>
           )}
           {vstate === "skipped" && (
-            <div data-testid="wiz-view-status" style={{ ...boxStyle, background: "#eef1f4", color: "#52606d" }}>⊘ {t("wizard_view_skipped_long")}</div>
+            <div data-testid="wiz-view-status" style={{ ...boxStyle, background: "var(--bg-eef1f4,#eef1f4)", color: "var(--tx-52606d,#52606d)" }}>⊘ {t("wizard_view_skipped_long")}</div>
           )}
           {vstate === "upcoming" && (
-            <div data-testid="wiz-view-status" style={{ ...boxStyle, background: "#eaf4fb", color: "var(--brand-primary)" }}>
+            <div data-testid="wiz-view-status" style={{ ...boxStyle, background: "var(--bg-eaf4fb,#eaf4fb)", color: "var(--brand-primary)" }}>
               {t("wizard_state_upcoming")}{vs.scheduledAt ? " — " + new Date(vs.scheduledAt).toLocaleString(lang, { day: "2-digit", month: "2-digit", ...HM }) : ""}
             </div>
           )}
@@ -24964,8 +25258,8 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
             </div>
           )}
           {vs.note && (
-            <div style={{ background: "#fff8e8", border: "1.5px solid #e6a817", borderRadius: 8, padding: "10px 14px", marginBottom: 12 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 700, color: "#7a5800", lineHeight: 1.4 }}>{vs.note}</div>
+            <div style={{ background: "var(--bg-fff8e8,#fff8e8)", border: "1.5px solid #e6a817", borderRadius: 8, padding: "10px 14px", marginBottom: 12 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--tx-7a5800,#7a5800)", lineHeight: 1.4 }}>{vs.note}</div>
             </div>
           )}
           <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginBottom: 14 }}>{t("wizard_view_readonly")}</div>
@@ -24986,7 +25280,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
       display: "flex", alignItems: "flex-end", justifyContent: "center",
     }}>
       <div {...swipeHandlers} data-testid="wizard-current" style={{
-        background: isInfoStep ? "#fff" : "#fff7f2",
+        background: isInfoStep ? "var(--bg-ffffff,#fff)" : "var(--bg-fff7f2,#fff7f2)",
         borderTop: isInfoStep ? "5px solid var(--brand-primary)" : "5px solid #c4502f",
         borderRadius: "20px 20px 0 0",
         width: "100%", maxWidth: 480,
@@ -24998,17 +25292,17 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
         {/* Titre étape */}
         <div style={{ fontSize: 18, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 4 }}>
           {step.isComplement && (
-            <div style={{ fontSize: 11.5, fontWeight: 700, color: "#a8721a", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 2 }}>
+            <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--tx-a8721a,#a8721a)", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 2 }}>
               {t("wizard_complement_badge")}
             </div>
           )}
           {step.isCatchup && (
-            <div data-testid="wiz-catchup-badge" style={{ fontSize: 11.5, fontWeight: 700, color: "#a8721a", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 2 }}>
+            <div data-testid="wiz-catchup-badge" style={{ fontSize: 11.5, fontWeight: 700, color: "var(--tx-a8721a,#a8721a)", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 2 }}>
               {t("wizard_catchup_badge")}
             </div>
           )}
           {usingGenericProduct && (
-            <div style={{ fontSize: 11.5, fontWeight: 700, color: "#c0392b", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 2 }}>
+            <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--tx-c0392b,#c0392b)", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 2 }}>
               {t("generic_product_badge")}
             </div>
           )}
@@ -25021,7 +25315,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
         {/* Countdown / horaire */}
         {!isReady && remaining !== null && (
           <div style={{
-            background: "#eaf4fb", borderRadius: 10, padding: "10px 14px",
+            background: "var(--bg-eaf4fb,#eaf4fb)", borderRadius: 10, padding: "10px 14px",
             marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between",
           }}>
             <div>
@@ -25039,30 +25333,30 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
         )}
         {isReady && !isInfoStep && (
           <div style={{
-            background: "#e8f8f0", borderRadius: 10, padding: "8px 14px",
-            marginBottom: 14, fontSize: 13, fontWeight: 700, color: "#1a8fd1",
+            background: "var(--bg-e8f8f0,#e8f8f0)", borderRadius: 10, padding: "8px 14px",
+            marginBottom: 14, fontSize: 13, fontWeight: 700, color: "var(--tx-1a8fd1,#1a8fd1)",
           }}>
             ✓ {t("countdown_done")}
           </div>
         )}
         {step.timingTip && (
-          <div style={{ background: "#eef6fc", borderRadius: 8, padding: "8px 14px", marginBottom: 12, fontSize: 12.5, color: "#3a5a78" }}>
+          <div style={{ background: "var(--bg-eef6fc,#eef6fc)", borderRadius: 8, padding: "8px 14px", marginBottom: 12, fontSize: 12.5, color: "var(--tx-3a5a78,#3a5a78)" }}>
             🌙 {step.timingTip}
           </div>
         )}
 
         {/* Note produit */}
         {displayNote && (
-          <div style={{ background: "#fff8e8", border: "1.5px solid #e6a817", borderRadius: 8, padding: "10px 14px", marginBottom: 12 }}>
-            <div style={{ fontSize: 14, fontWeight: 800, color: "#7a5800", lineHeight: 1.4 }}>{displayNote}</div>
+          <div style={{ background: "var(--bg-fff8e8,#fff8e8)", border: "1.5px solid #e6a817", borderRadius: 8, padding: "10px 14px", marginBottom: 12 }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: "var(--tx-7a5800,#7a5800)", lineHeight: 1.4 }}>{displayNote}</div>
           </div>
         )}
 
         {/* Stock vide */}
         {stockEmpty && (
-          <div style={{ background: "#fdf0ef", border: "1px solid #f5c6c2", borderRadius: 8, padding: "8px 12px", marginBottom: 12, fontSize: 12, color: "#c0392b", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ background: "var(--bg-fdf0ef,#fdf0ef)", border: "1px solid var(--bd-f5c6c2,#f5c6c2)", borderRadius: 8, padding: "8px 12px", marginBottom: 12, fontSize: 12, color: "var(--tx-c0392b,#c0392b)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span><AlertTriangle size={12} style={{ marginRight: 4 }} />{t("stock_empty")}</span>
-            <button type="button" onClick={onWantAddProduct} style={{ background: "none", border: "none", color: "#c0392b", fontWeight: 700, fontSize: 12, cursor: "pointer", textDecoration: "underline" }}>
+            <button type="button" onClick={onWantAddProduct} style={{ background: "none", border: "none", color: "var(--tx-c0392b,#c0392b)", fontWeight: 700, fontSize: 12, cursor: "pointer", textDecoration: "underline" }}>
               {t("add_arrow")}
             </button>
           </div>
@@ -25102,7 +25396,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
                   const { value } = toDisplayUnit(scaled.amount, scaled.unit, newProdObj);
                   setEditAmount(value != null && value !== "" ? String(value) : "");
                 }}
-                style={{ width: "100%", boxSizing: "border-box", fontSize: 14, fontWeight: 600, color: "var(--brand-text-strong)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 12px", outline: "none", background: "#fff" }}
+                style={{ width: "100%", boxSizing: "border-box", fontSize: 14, fontWeight: 600, color: "var(--brand-text-strong)", border: "2px solid var(--bd-d0e4f5,#d0e4f5)", borderRadius: 10, padding: "10px 12px", outline: "none", background: "var(--bg-ffffff,#fff)" }}
               >
                 {sortedCandidates.map(p => (
                   <option key={p.id || p.name} value={p.name}>
@@ -25121,7 +25415,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
           );
         })()}
         {usingGenericProduct && (
-          <div style={{ fontSize: 12, color: "#c0392b", marginBottom: 8 }}>{t("no_stock_generic_hint")}</div>
+          <div style={{ fontSize: 12, color: "var(--tx-c0392b,#c0392b)", marginBottom: 8 }}>{t("no_stock_generic_hint")}</div>
         )}
 
         {/* Quantité — masquée pour la carte entretien (rien à saisir).
@@ -25129,14 +25423,14 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
             (cas très rare, catalogue générique ne couvre pas l'action). */}
         {!isInfoStep && !isPercentDose && manageStock && sortedCandidates.length === 0 && genericCandidates.length === 0 && (
           <div style={{ marginBottom: 6 }}>
-            <div style={{ fontSize: 12, color: "#c0392b", marginBottom: 8 }}>{t("no_stock_category_hint")}</div>
+            <div style={{ fontSize: 12, color: "var(--tx-c0392b,#c0392b)", marginBottom: 8 }}>{t("no_stock_category_hint")}</div>
             <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
               {["kg", "unites"].map((m) => (
                 <button key={m} type="button" onClick={() => setFreeUnitMode(m)}
                   style={{
                     flex: 1, padding: "6px 0", borderRadius: 8, cursor: "pointer",
-                    border: freeUnitMode === m ? "2px solid var(--brand-primary)" : "1.5px solid #d0e4f5",
-                    background: freeUnitMode === m ? "var(--brand-bg-tint)" : "#fff",
+                    border: freeUnitMode === m ? "2px solid var(--brand-primary)" : "1.5px solid var(--bd-d0e4f5,#d0e4f5)",
+                    background: freeUnitMode === m ? "var(--brand-bg-tint)" : "var(--bg-ffffff,#fff)",
                     color: "var(--brand-text-strong)", fontWeight: 700, fontSize: 13,
                   }}>
                   {t(m === "kg" ? "quantity_unit_mode_kg" : "quantity_unit_mode_units")}
@@ -25155,7 +25449,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
                 type="number"
                 value={editAmount ?? ""}
                 onChange={(e) => setEditAmount(e.target.value)}
-                style={{ flex: 1, fontSize: 22, fontWeight: 700, color: "var(--brand-text-strong)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 12px", textAlign: "center", outline: "none" }}
+                style={{ flex: 1, fontSize: 22, fontWeight: 700, color: "var(--brand-text-strong)", border: "2px solid var(--bd-d0e4f5,#d0e4f5)", borderRadius: 10, padding: "10px 12px", textAlign: "center", outline: "none" }}
                 step={isPercentDose ? "1" : (manageStock && sortedCandidates.length === 0 && genericCandidates.length === 0 && freeUnitMode === "unites") || selectedProductObj?.packagingType === "galets" ? "1" : "0.01"}
               />
               <div style={{ fontSize: 16, fontWeight: 700, color: "var(--brand-text-secondary)", minWidth: 32 }}>
@@ -25169,8 +25463,8 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
           </div>
         )}
         {stockShortfall && (
-          <div style={{ background: "#fff8e8", border: "1.5px solid #e6a817", borderRadius: 10, padding: "10px 12px", marginBottom: 12 }}>
-            <div style={{ fontSize: 13, color: "#7a5800", fontWeight: 600, lineHeight: 1.4, marginBottom: 8 }}>
+          <div style={{ background: "var(--bg-fff8e8,#fff8e8)", border: "1.5px solid #e6a817", borderRadius: 10, padding: "10px 12px", marginBottom: 12 }}>
+            <div style={{ fontSize: 13, color: "var(--tx-7a5800,#7a5800)", fontWeight: 600, lineHeight: 1.4, marginBottom: 8 }}>
               <AlertTriangle size={13} style={{ marginRight: 4, verticalAlign: "-2px" }} />
               {t("stock_insufficient_msg", { remaining: stockShortfall.remainingText, needed: stockShortfall.neededText })}
             </div>
@@ -25184,7 +25478,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
           </div>
         )}
         {isInfoStep && step.doseText && (
-          <div style={{ background: "#eaf4fb", borderRadius: 10, padding: "12px 14px", marginBottom: 12, fontSize: 14, fontWeight: 700, color: "var(--brand-primary)" }}>
+          <div style={{ background: "var(--bg-eaf4fb,#eaf4fb)", borderRadius: 10, padding: "12px 14px", marginBottom: 12, fontSize: 14, fontWeight: 700, color: "var(--brand-primary)" }}>
             {step.doseText}
           </div>
         )}
@@ -25202,18 +25496,18 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
               min={localDateValue(Date.now() - WIZARD_APPLY_MAX_AGE_DAYS * 864e5)}
               onChange={(e) => setEditDate(e.target.value)}
               aria-label={t("wizard_apply_datetime")}
-              style={{ flex: 1.3, minWidth: 0, boxSizing: "border-box", fontSize: 16, fontWeight: 700, color: "var(--brand-primary)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 10px", outline: "none" }}
+              style={{ flex: 1.3, minWidth: 0, boxSizing: "border-box", fontSize: 16, fontWeight: 700, color: "var(--brand-primary)", border: "2px solid var(--bd-d0e4f5,#d0e4f5)", borderRadius: 10, padding: "10px 10px", outline: "none" }}
             />
             <input
               type="time"
               value={editTime}
               onChange={(e) => setEditTime(e.target.value)}
               aria-label={t("wizard_apply_time")}
-              style={{ flex: 1, minWidth: 0, boxSizing: "border-box", fontSize: 18, fontWeight: 700, color: "var(--brand-primary)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 10px", outline: "none" }}
+              style={{ flex: 1, minWidth: 0, boxSizing: "border-box", fontSize: 18, fontWeight: 700, color: "var(--brand-primary)", border: "2px solid var(--bd-d0e4f5,#d0e4f5)", borderRadius: 10, padding: "10px 10px", outline: "none" }}
             />
           </div>
           {applyProblem && (
-            <div style={{ fontSize: 12, color: "#c0392b", marginTop: 6, lineHeight: 1.4 }}>
+            <div style={{ fontSize: 12, color: "var(--tx-c0392b,#c0392b)", marginTop: 6, lineHeight: 1.4 }}>
               {t(applyProblem, { time: prevAppliedMs ? formatDate(new Date(prevAppliedMs).toISOString()) : "" })}
             </div>
           )}
@@ -25240,7 +25534,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
               déjà appliquées) : directement si une seule, sinon via un sélecteur. */}
           {editablePrev.length > 0 && !editingPrev && !pickingPrev && (
             <button
-              style={{ background: "none", border: "1px solid #d0e4f5", borderRadius: 8, color: "var(--brand-text-secondary)", fontSize: 12, cursor: "pointer", padding: "7px 12px", display: "flex", alignItems: "center", gap: 5 }}
+              style={{ background: "none", border: "1px solid var(--bd-d0e4f5,#d0e4f5)", borderRadius: 8, color: "var(--brand-text-secondary)", fontSize: 12, cursor: "pointer", padding: "7px 12px", display: "flex", alignItems: "center", gap: 5 }}
               onClick={() => (editablePrev.length === 1 ? openPrevEditor(editablePrev[0].i) : setPickingPrev(true))}
             >
               ← {t(editablePrev.length === 1 ? "wizard_edit_prev" : "wizard_edit_prev_any")}
@@ -25249,7 +25543,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
         </div>
 
         {pickingPrev && (
-          <div style={{ marginTop: 14, padding: "12px 14px", background: "var(--brand-bg-tint)", borderRadius: 12, border: "1px solid #d0e4f5" }}>
+          <div style={{ marginTop: 14, padding: "12px 14px", background: "var(--brand-bg-tint)", borderRadius: 12, border: "1px solid var(--bd-d0e4f5,#d0e4f5)" }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: "var(--brand-text-strong)", marginBottom: 8 }}>{t("wizard_pick_prev")}</div>
             {editablePrev.map(({ s: ps, i }) => {
               const d = new Date(ps.appliedAt);
@@ -25257,7 +25551,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
                 <button
                   key={i}
                   onClick={() => openPrevEditor(i)}
-                  style={{ display: "block", width: "100%", textAlign: "left", marginBottom: 6, padding: "8px 10px", background: "#fff", border: "1px solid #d0e4f5", borderRadius: 8, cursor: "pointer", fontSize: 13, color: "var(--brand-text-strong)" }}
+                  style={{ display: "block", width: "100%", textAlign: "left", marginBottom: 6, padding: "8px 10px", background: "var(--bg-ffffff,#fff)", border: "1px solid var(--bd-d0e4f5,#d0e4f5)", borderRadius: 8, cursor: "pointer", fontSize: 13, color: "var(--brand-text-strong)" }}
                 >
                   <span style={{ fontWeight: 700 }}>{i + 1}. {ps.productName || ps.title}</span>
                   <span style={{ color: "var(--brand-text-secondary)" }}>
@@ -25267,7 +25561,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
               );
             })}
             <button
-              style={{ marginTop: 2, padding: "7px 0", width: "100%", borderRadius: 9, border: "1px solid #d0e4f5", background: "#fff", color: "var(--brand-text-secondary)", fontWeight: 600, fontSize: 12, cursor: "pointer" }}
+              style={{ marginTop: 2, padding: "7px 0", width: "100%", borderRadius: 9, border: "1px solid var(--bd-d0e4f5,#d0e4f5)", background: "var(--bg-ffffff,#fff)", color: "var(--brand-text-secondary)", fontWeight: 600, fontSize: 12, cursor: "pointer" }}
               onClick={() => setPickingPrev(false)}
             >
               {t("cancel")}
@@ -25284,7 +25578,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
           const prodOptions = [...getSortedCandidates(prev.action), ...getGenericCandidates(prev.action)];
           const optList = prodOptions.some((p) => p.name === prevProduct) ? prodOptions : [{ name: prevProduct, __missing: true }, ...prodOptions];
           return (
-            <div style={{ marginTop: 14, padding: "12px 14px", background: "var(--brand-bg-tint)", borderRadius: 12, border: "1px solid #d0e4f5" }}>
+            <div style={{ marginTop: 14, padding: "12px 14px", background: "var(--brand-bg-tint)", borderRadius: 12, border: "1px solid var(--bd-d0e4f5,#d0e4f5)" }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: "var(--brand-text-strong)", marginBottom: 10 }}>
                 ← {prev.productName || prev.title}
               </div>
@@ -25294,7 +25588,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
                   <select
                     value={prevProduct}
                     onChange={(e) => setPrevProduct(e.target.value)}
-                    style={{ width: "100%", boxSizing: "border-box", fontSize: 14, fontWeight: 600, color: "var(--brand-text-strong)", border: "1.5px solid #d0e4f5", borderRadius: 8, padding: "8px 10px", marginBottom: 10, background: "#fff" }}
+                    style={{ width: "100%", boxSizing: "border-box", fontSize: 14, fontWeight: 600, color: "var(--brand-text-strong)", border: "1.5px solid var(--bd-d0e4f5,#d0e4f5)", borderRadius: 8, padding: "8px 10px", marginBottom: 10, background: "var(--bg-ffffff,#fff)" }}
                   >
                     {optList.map((p) => (
                       <option key={p.id || p.name} value={p.name}>
@@ -25310,7 +25604,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
                   type="number"
                   value={prevAmount}
                   onChange={(e) => setPrevAmount(e.target.value)}
-                  style={{ flex: 1, fontSize: 18, fontWeight: 700, color: "var(--brand-text-strong)", border: "1.5px solid #d0e4f5", borderRadius: 8, padding: "8px 10px", textAlign: "center", outline: "none" }}
+                  style={{ flex: 1, fontSize: 18, fontWeight: 700, color: "var(--brand-text-strong)", border: "1.5px solid var(--bd-d0e4f5,#d0e4f5)", borderRadius: 8, padding: "8px 10px", textAlign: "center", outline: "none" }}
                   step="0.01"
                 />
                 <span style={{ fontSize: 14, fontWeight: 700, color: "var(--brand-text-secondary)" }}>{du}</span>
@@ -25323,14 +25617,14 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
                 min={localDateValue(Date.now() - WIZARD_APPLY_MAX_AGE_DAYS * 864e5)}
                 onChange={(e) => setPrevDate(e.target.value)}
                 aria-label={t("wizard_apply_datetime")}
-                style={{ width: "100%", boxSizing: "border-box", fontSize: 16, fontWeight: 700, color: "var(--brand-primary)", border: "1.5px solid #d0e4f5", borderRadius: 8, padding: "8px 10px", outline: "none", marginBottom: 8 }}
+                style={{ width: "100%", boxSizing: "border-box", fontSize: 16, fontWeight: 700, color: "var(--brand-primary)", border: "1.5px solid var(--bd-d0e4f5,#d0e4f5)", borderRadius: 8, padding: "8px 10px", outline: "none", marginBottom: 8 }}
               />
               <input
                 type="time"
                 value={prevTime}
                 onChange={(e) => setPrevTime(e.target.value)}
                 aria-label={t("wizard_apply_time")}
-                style={{ width: "100%", boxSizing: "border-box", fontSize: 16, fontWeight: 700, color: "var(--brand-primary)", border: "1.5px solid #d0e4f5", borderRadius: 8, padding: "8px 10px", outline: "none", marginBottom: 10 }}
+                style={{ width: "100%", boxSizing: "border-box", fontSize: 16, fontWeight: 700, color: "var(--brand-primary)", border: "1.5px solid var(--bd-d0e4f5,#d0e4f5)", borderRadius: 8, padding: "8px 10px", outline: "none", marginBottom: 10 }}
               />
               <div style={{ display: "flex", gap: 8 }}>
                 <button
@@ -25358,7 +25652,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
                   {t("save")}
                 </button>
                 <button
-                  style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: "1px solid #d0e4f5", background: "#fff", color: "var(--brand-text-secondary)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
+                  style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: "1px solid var(--bd-d0e4f5,#d0e4f5)", background: "var(--bg-ffffff,#fff)", color: "var(--brand-text-secondary)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
                   onClick={() => { setEditingPrev(false); setPrevIdx(null); }}
                 >
                   {t("cancel")}
@@ -25370,7 +25664,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
 
         {/* Aperçu des étapes suivantes */}
         {plan.steps.slice(currentIdx + 1).some((s) => !s.skipped && !s.appliedAt) && (
-          <div style={{ marginTop: 16, borderTop: "1px solid #eaf4fb", paddingTop: 12 }}>
+          <div style={{ marginTop: 16, borderTop: "1px solid var(--bd-eaf4fb,#eaf4fb)", paddingTop: 12 }}>
             <div style={{ fontSize: 11, color: "var(--brand-text-muted)", fontWeight: 600, marginBottom: 8 }}>ÉTAPES SUIVANTES</div>
             {/* v1.109.1 — Index réel dans plan.steps conservé (pas juste celui du
                 tableau filtré) pour retrouver waitHours de l'étape PRÉCÉDENTE
@@ -25411,7 +25705,7 @@ function TreatmentWizard({ plan, products, manageStock, lang, onApplyStep, onSki
         display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
       }}>
         <div style={{
-          background: "#fff", borderRadius: 16, width: "100%", maxWidth: 380,
+          background: "var(--bg-ffffff,#fff)", borderRadius: 16, width: "100%", maxWidth: 380,
           padding: "22px 20px", boxSizing: "border-box",
         }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: "var(--brand-text-primary)", marginBottom: 8 }}>
@@ -25508,13 +25802,13 @@ function ManualApplyModal({ products, onClose, onSave, lang }) {
       ) : (
         <>
           {isGeneric && (
-            <div style={{ fontSize: 12, color: "#c0392b", marginBottom: 8 }}>{t("no_stock_generic_hint")}</div>
+            <div style={{ fontSize: 12, color: "var(--tx-c0392b,#c0392b)", marginBottom: 8 }}>{t("no_stock_generic_hint")}</div>
           )}
           <label style={styles.fieldLabel}>{t("product_col")}</label>
           <select
             value={selectedName}
             onChange={(e) => { setSelectedName(e.target.value); setAmount(""); }}
-            style={{ width: "100%", boxSizing: "border-box", fontSize: 14, fontWeight: 600, color: "var(--brand-text-strong)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 12px", outline: "none", background: "#fff", marginBottom: 14 }}
+            style={{ width: "100%", boxSizing: "border-box", fontSize: 14, fontWeight: 600, color: "var(--brand-text-strong)", border: "2px solid var(--bd-d0e4f5,#d0e4f5)", borderRadius: 10, padding: "10px 12px", outline: "none", background: "var(--bg-ffffff,#fff)", marginBottom: 14 }}
           >
             {realCandidates.map((p) => (
               <option key={p.id || p.name} value={p.name}>
@@ -25532,7 +25826,7 @@ function ManualApplyModal({ products, onClose, onSave, lang }) {
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              style={{ flex: 1, fontSize: 22, fontWeight: 700, color: "var(--brand-text-strong)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 12px", textAlign: "center", outline: "none" }}
+              style={{ flex: 1, fontSize: 22, fontWeight: 700, color: "var(--brand-text-strong)", border: "2px solid var(--bd-d0e4f5,#d0e4f5)", borderRadius: 10, padding: "10px 12px", textAlign: "center", outline: "none" }}
               step={isGalets ? "1" : "0.01"}
             />
             <div style={{ fontSize: 16, fontWeight: 700, color: "var(--brand-text-secondary)", minWidth: 32 }}>
@@ -25545,7 +25839,7 @@ function ManualApplyModal({ products, onClose, onSave, lang }) {
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            style={{ width: "100%", boxSizing: "border-box", fontSize: 16, fontWeight: 700, color: "var(--brand-primary)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 12px", outline: "none", marginBottom: 14 }}
+            style={{ width: "100%", boxSizing: "border-box", fontSize: 16, fontWeight: 700, color: "var(--brand-primary)", border: "2px solid var(--bd-d0e4f5,#d0e4f5)", borderRadius: 10, padding: "10px 12px", outline: "none", marginBottom: 14 }}
           />
 
           <label style={styles.fieldLabel}>{t("wizard_apply_time")}</label>
@@ -25553,7 +25847,7 @@ function ManualApplyModal({ products, onClose, onSave, lang }) {
             type="time"
             value={time}
             onChange={(e) => setTime(e.target.value)}
-            style={{ width: "100%", boxSizing: "border-box", fontSize: 18, fontWeight: 700, color: "var(--brand-primary)", border: "2px solid #d0e4f5", borderRadius: 10, padding: "10px 12px", outline: "none", marginBottom: 16 }}
+            style={{ width: "100%", boxSizing: "border-box", fontSize: 18, fontWeight: 700, color: "var(--brand-primary)", border: "2px solid var(--bd-d0e4f5,#d0e4f5)", borderRadius: 10, padding: "10px 12px", outline: "none", marginBottom: 16 }}
           />
 
           <button
@@ -25651,14 +25945,14 @@ function ValidateApplicationModal({ measure, recs, existingApplication, onClose,
                 alignItems: "center",
                 gap: 12,
                 cursor: "pointer",
-                border: selected[i] ? "2px solid var(--brand-primary)" : "1.5px solid #d0e4f5",
-                background: selected[i] ? "#e8f4fd" : "#f8fafd",
+                border: selected[i] ? "2px solid var(--brand-primary)" : "1.5px solid var(--bd-d0e4f5,#d0e4f5)",
+                background: selected[i] ? "var(--bg-e8f4fd,#e8f4fd)" : "var(--bg-f8fafd,#f8fafd)",
                 textAlign: "left",
               }}
             >
               <div style={{
                 width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-                border: selected[i] ? "2px solid var(--brand-primary)" : "2px solid #b0c4d8",
+                border: selected[i] ? "2px solid var(--brand-primary)" : "2px solid var(--bd-b0c4d8,#b0c4d8)",
                 background: selected[i] ? "var(--brand-primary)" : "transparent",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>
@@ -25698,9 +25992,9 @@ function ValidateApplicationModal({ measure, recs, existingApplication, onClose,
               <div style={styles.applyStepProduct}>{r.productName}</div>
               {manageStock && products && r.productAvailable &&
                 !products.find((p) => p.name === r.productName && (p.stockPercent ?? 100) > 0) && (
-                <div style={{ padding: "8px 10px", borderRadius: 8, background: "#fdf0ef", border: "1px solid #f5c6c2", marginBottom: 8, fontSize: 12, color: "#c0392b", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ padding: "8px 10px", borderRadius: 8, background: "var(--bg-fdf0ef,#fdf0ef)", border: "1px solid var(--bd-f5c6c2,#f5c6c2)", marginBottom: 8, fontSize: 12, color: "var(--tx-c0392b,#c0392b)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span><AlertTriangle size={12} style={{ marginRight: 4 }} />{t("stock_empty")}</span>
-                  <button type="button" onClick={onWantAddProduct} style={{ background: "none", border: "none", color: "#c0392b", fontWeight: 700, fontSize: 12, cursor: "pointer", textDecoration: "underline" }}>
+                  <button type="button" onClick={onWantAddProduct} style={{ background: "none", border: "none", color: "var(--tx-c0392b,#c0392b)", fontWeight: 700, fontSize: 12, cursor: "pointer", textDecoration: "underline" }}>
                     {t("add_arrow")}
                   </button>
                 </div>
@@ -25734,7 +26028,7 @@ function ValidateApplicationModal({ measure, recs, existingApplication, onClose,
         <button style={styles.primaryBtn} onClick={handleSave}>
           {t("validate_btn")}
         </button>
-        <button style={{ ...styles.primaryBtn, background: "var(--brand-bg-tint)", color: "var(--brand-primary)", border: "1px solid #d0e4f5" }}
+        <button style={{ ...styles.primaryBtn, background: "var(--brand-bg-tint)", color: "var(--brand-primary)", border: "1px solid var(--bd-d0e4f5,#d0e4f5)" }}
           onClick={() => setStep("select")}>
           {t("back_btn")}
         </button>
@@ -25752,11 +26046,11 @@ function ProductsView({ products, onEdit, onAddNew, onDelete, onResetAll, isPrem
     return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "60px 24px", gap: 16, textAlign: "center" }}>
         {/* v1.71.0 — Écran de vente Premium : reste en bleu, non thémé, même en mode gratuit (aperçu de ce qu'on achète) */}
-        <div style={{ width: 56, height: 56, borderRadius: 16, background: "#f0f6fb", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ width: 56, height: 56, borderRadius: 16, background: "var(--bg-f0f6fb,#f0f6fb)", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <Lock size={26} color="#1ca7d1" />
         </div>
-        <div style={{ fontSize: 17, fontWeight: 700, color: "#0d2b4e" }}>{t("my_products")}</div>
-        <div style={{ fontSize: 14, color: "#4a6480", lineHeight: 1.5, maxWidth: 300 }}>{t("products_locked")}</div>
+        <div style={{ fontSize: 17, fontWeight: 700, color: "var(--tx-0d2b4e,#0d2b4e)" }}>{t("my_products")}</div>
+        <div style={{ fontSize: 14, color: "var(--tx-4a6480,#4a6480)", lineHeight: 1.5, maxWidth: 300 }}>{t("products_locked")}</div>
         <button
           style={{ marginTop: 8, padding: "13px 28px", borderRadius: 12, border: "none", background: PREMIUM_BLUE, color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" }}
           onClick={onWantPremium}
@@ -25802,12 +26096,12 @@ function ProductsView({ products, onEdit, onAddNew, onDelete, onResetAll, isPrem
             onClick={onWantProductsToBuy}
             style={{
               display: "flex", alignItems: "center", justifyContent: "space-between",
-              width: "100%", boxSizing: "border-box", background: "#fff7f2",
-              border: "1px solid #f3d9c8", borderRadius: 12, padding: "12px 14px",
+              width: "100%", boxSizing: "border-box", background: "var(--bg-fff7f2,#fff7f2)",
+              border: "1px solid var(--bd-f3d9c8,#f3d9c8)", borderRadius: 12, padding: "12px 14px",
               marginBottom: 14, cursor: "pointer", textAlign: "left",
             }}
           >
-            <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 700, color: "#c4502f" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 700, color: "var(--tx-c4502f,#c4502f)" }}>
               <AlertTriangle size={16} />
               {t("products_to_buy")}
             </span>
@@ -25860,14 +26154,14 @@ function ProductsView({ products, onEdit, onAddNew, onDelete, onResetAll, isPrem
                     return (
                       <div style={{ marginTop: 6 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
-                          <span style={{ fontSize: 11, color: low ? "#c0392b" : "var(--brand-text-secondary)", fontWeight: 600 }}>
+                          <span style={{ fontSize: 11, color: low ? "var(--tx-c0392b,#c0392b)" : "var(--brand-text-secondary)", fontWeight: 600 }}>
                             {t("stock_label")} {pct} %
                           </span>
-                          <span style={{ fontSize: 11, color: low ? "#c0392b" : "var(--brand-text-muted)" }}>
+                          <span style={{ fontSize: 11, color: low ? "var(--tx-c0392b,#c0392b)" : "var(--brand-text-muted)" }}>
                             ≈ {displayVal} {cUnit} {t("stock_remaining")}
                           </span>
                         </div>
-                        <div style={{ height: 5, borderRadius: 99, background: "#e8f0f8", overflow: "hidden" }}>
+                        <div style={{ height: 5, borderRadius: 99, background: "var(--bg-e8f0f8,#e8f0f8)", overflow: "hidden" }}>
                           <div style={{
                             height: "100%",
                             width: `${pct}%`,
@@ -26014,12 +26308,12 @@ function ProductsToBuyView({ products, plan, latest, recentMeasures, recentAppli
                   )}
                   <div style={{ flex: 1, textAlign: "left" }}>
                     <div style={styles.productName}>{p.name}</div>
-                    <div style={{ fontSize: 11, color: "#c0392b", fontWeight: 600, marginTop: 3 }}>
+                    <div style={{ fontSize: 11, color: "var(--tx-c0392b,#c0392b)", fontWeight: 600, marginTop: 3 }}>
                       {t("stock_label")} {p.stockPercent ?? 100} %
                     </div>
                     <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
                       {reasons.map((r) => (
-                        <span key={r} style={{ fontSize: 10.5, fontWeight: 700, color: "#c4502f", background: "#fff0e8", border: "1px solid #f3d9c8", borderRadius: 99, padding: "3px 8px" }}>
+                        <span key={r} style={{ fontSize: 10.5, fontWeight: 700, color: "var(--tx-c4502f,#c4502f)", background: "var(--bg-fff0e8,#fff0e8)", border: "1px solid var(--bd-f3d9c8,#f3d9c8)", borderRadius: 99, padding: "3px 8px" }}>
                           {t(r === "low_stock" ? "reason_low_stock" : "reason_insufficient_plan")}
                         </span>
                       ))}
@@ -26797,8 +27091,8 @@ function ProductModal({ product, onClose, onSave, onLinkCommonProduct, isPremium
               (palier semi-mature/mature/recheck — voir handleAnalyzePhoto).
               Affiché uniquement quand un match exact a été trouvé. */}
           {commonProductTier && commonProductTier !== "immature" && (
-            <div style={{ ...styles.photoHintBox, background: "#eef6ff", border: "1px solid #a9cdf5", marginTop: 8, display: "flex", alignItems: "center", gap: 8 }}>
-              <CheckCircle2 size={15} style={{ flexShrink: 0, color: "#3574c9" }} />
+            <div style={{ ...styles.photoHintBox, background: "var(--bg-eef6ff,#eef6ff)", border: "1px solid var(--bd-a9cdf5,#a9cdf5)", marginTop: 8, display: "flex", alignItems: "center", gap: 8 }}>
+              <CheckCircle2 size={15} style={{ flexShrink: 0, color: "var(--tx-3574c9,#3574c9)" }} />
               <span style={{ fontSize: 12.5 }}>{t("common_product_badge", { count: commonProductUsageCount })}</span>
             </div>
           )}
@@ -26810,7 +27104,7 @@ function ProductModal({ product, onClose, onSave, onLinkCommonProduct, isPremium
               code-barre ou score insuffisant). Choix explicite demandé plutôt
               que de créer un doublon silencieusement à la sauvegarde. */}
           {commonMatch?.matchType === "fuzzy_candidates" && commonMatch.candidates?.length > 0 && (
-            <div style={{ ...styles.photoHintBox, background: "#fff8ea", border: "1px solid #f0c96a", marginTop: 8 }}>
+            <div style={{ ...styles.photoHintBox, background: "var(--bg-fff8ea,#fff8ea)", border: "1px solid #f0c96a", marginTop: 8 }}>
               <div style={{ width: "100%" }}>
                 <div style={{ fontWeight: 700, marginBottom: 6 }}>{t("common_product_candidate_title")}</div>
                 {commonMatch.candidates.map((c) => (
@@ -27055,7 +27349,7 @@ function ProductModal({ product, onClose, onSave, onLinkCommonProduct, isPremium
             <div style={styles.stockSliderWrap}>
               <input type="range" min="0" max="100" value={stockPercent}
                 onChange={(e) => setStockPercent(Number(e.target.value))} style={{ flex: 1 }} />
-              <span style={{ ...styles.stockPercentLabel, color: stockPercent <= 20 ? "#c0392b" : "var(--brand-text-strong)", fontWeight: 700 }}>
+              <span style={{ ...styles.stockPercentLabel, color: stockPercent <= 20 ? "var(--tx-c0392b,#c0392b)" : "var(--brand-text-strong)", fontWeight: 700 }}>
                 {stockPercent} %
                 {/* v1.111.4 — Quantité restante en clair à côté du %, dans l'unité
                     du contenant (déjà en kg/L, pas de conversion nécessaire). */}
@@ -27143,7 +27437,7 @@ function AccountDataRequestScreen({ lang, authUser, onClose, onSubmit }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 3150, background: "rgba(60,20,20,0.94)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-      <div style={{ background: "#fff", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", boxShadow: "0 8px 32px #00000033" }}>
+      <div style={{ background: "var(--bg-ffffff,#fff)", borderRadius: 20, padding: 28, maxWidth: 380, width: "100%", boxShadow: "0 8px 32px #00000033" }}>
         <div style={{ fontSize: 17, fontWeight: 800, color: "var(--brand-text-strong)", marginBottom: 8, textAlign: "center" }}>{t("data_request_title")}</div>
         <div style={{ fontSize: 13, color: "var(--brand-text-secondary)", marginBottom: 18, lineHeight: 1.5, textAlign: "center" }}>{t("data_request_desc")}</div>
 
@@ -27155,8 +27449,8 @@ function AccountDataRequestScreen({ lang, authUser, onClose, onSubmit }) {
                   key={opt.value}
                   style={{
                     display: "flex", alignItems: "center", gap: 10, padding: "12px 14px",
-                    borderRadius: 12, border: action === opt.value ? "1.5px solid var(--brand-primary)" : "1.5px solid #e6ebe9",
-                    background: action === opt.value ? "#eaf4fc" : "#fff", cursor: "pointer",
+                    borderRadius: 12, border: action === opt.value ? "1.5px solid var(--brand-primary)" : "1.5px solid var(--bd-e6ebe9,#e6ebe9)",
+                    background: action === opt.value ? "var(--bg-eaf4fc,#eaf4fc)" : "var(--bg-ffffff,#fff)", cursor: "pointer",
                   }}
                 >
                   <input
@@ -27172,7 +27466,7 @@ function AccountDataRequestScreen({ lang, authUser, onClose, onSubmit }) {
             </div>
 
             {status === "error" && (
-              <div style={{ fontSize: 12.5, color: "#c0392b", marginBottom: 14, textAlign: "center" }}>{t("data_request_error")}</div>
+              <div style={{ fontSize: 12.5, color: "var(--tx-c0392b,#c0392b)", marginBottom: 14, textAlign: "center" }}>{t("data_request_error")}</div>
             )}
 
             <button
@@ -27198,7 +27492,7 @@ function AccountDataRequestScreen({ lang, authUser, onClose, onSubmit }) {
             <div style={{ fontSize: 13.5, color: "var(--brand-text-strong)", marginBottom: 20, textAlign: "center", lineHeight: 1.5 }}>{t("data_request_sent")}</div>
             <button
               onClick={onClose}
-              style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "1.5px solid var(--brand-primary)", background: "#fff", color: "var(--brand-primary)", fontWeight: 700, fontSize: 14.5, cursor: "pointer" }}
+              style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "1.5px solid var(--brand-primary)", background: "var(--bg-ffffff,#fff)", color: "var(--brand-primary)", fontWeight: 700, fontSize: 14.5, cursor: "pointer" }}
             >
               {t("close")}
             </button>
@@ -27209,7 +27503,7 @@ function AccountDataRequestScreen({ lang, authUser, onClose, onSubmit }) {
   );
 }
 
-function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, viewContext, onDeleteAllMeasures: onDeleteAllMeasuresRaw, orphanedCount, onRepairOrphanedData, poolMeasureCount, onGenerateReport, onWantPremiumForReport, onWantPremium, isPremium, setIsPremium, onWantManageSubscription, testerUntil, onToggleTesterPremium, onRedeemTesterCode, portalBusy, portalError, onReplayOnboarding, aiEnabled, setAiEnabled, calibrationContribution, setCalibrationContribution, stripTester, setStripTester, lang, setLang, authUser, onSignOut, onSignIn, onDeleteAccount, dataConsent, onRevokeDataConsent, cguAcceptedDate, myPseudo, tempUnit, onChangeTempUnit, openPoolEdit, onPoolEditHandled }) {
+function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitchPool, onWantAddPool, viewContext, onDeleteAllMeasures: onDeleteAllMeasuresRaw, orphanedCount, onRepairOrphanedData, poolMeasureCount, onGenerateReport, onWantPremiumForReport, onWantPremium, isPremium, setIsPremium, onWantManageSubscription, testerUntil, onToggleTesterPremium, onRedeemTesterCode, portalBusy, portalError, onReplayOnboarding, aiEnabled, setAiEnabled, calibrationContribution, setCalibrationContribution, stripTester, setStripTester, lang, setLang, authUser, onSignOut, onSignIn, onDeleteAccount, dataConsent, onRevokeDataConsent, cguAcceptedDate, myPseudo, tempUnit, onChangeTempUnit, themeMode, onChangeThemeMode, openPoolEdit, onPoolEditHandled }) {
   const [editingPool, setEditingPool] = useState(null);
   const [editFocusSection, setEditFocusSection] = useState(null); // "filtration" | "thermal" | null
   // Demande de la carte « Filtration du jour » : ouvre directement le formulaire du bassin, sur la section demandée.
@@ -27301,11 +27595,11 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
   return (
     <div>
       {orphanedCount > 0 && (
-        <div style={{ background: "#fff4e5", border: "1.5px solid #f0c36d", borderRadius: 12, padding: "12px 14px", marginBottom: 14 }}>
-          <div style={{ fontSize: 13.5, fontWeight: 700, color: "#8a5a00", marginBottom: 4 }}>
+        <div style={{ background: "var(--bg-fff4e5,#fff4e5)", border: "1.5px solid #f0c36d", borderRadius: 12, padding: "12px 14px", marginBottom: 14 }}>
+          <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--tx-8a5a00,#8a5a00)", marginBottom: 4 }}>
             {t("repair_orphaned_title", { count: orphanedCount })}
           </div>
-          <div style={{ fontSize: 12, color: "#8a5a00", marginBottom: 10, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 12, color: "var(--tx-8a5a00,#8a5a00)", marginBottom: 10, lineHeight: 1.5 }}>
             {t("repair_orphaned_desc")}
           </div>
           <button
@@ -27341,8 +27635,8 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
             onClick={() => onChangeTempUnit && onChangeTempUnit(u)}
             style={{
               flex: 1, padding: "11px 0", borderRadius: 11, fontSize: 14, cursor: "pointer",
-              border: "1.5px solid " + (tempUnit === u ? "var(--brand-primary)" : "#d0e4f5"),
-              background: tempUnit === u ? "var(--brand-bg-tint)" : "#fafcfb",
+              border: "1.5px solid " + (tempUnit === u ? "var(--brand-primary)" : "var(--bd-d0e4f5,#d0e4f5)"),
+              background: tempUnit === u ? "var(--brand-bg-tint)" : "var(--bg-fafcfb,#fafcfb)",
               color: tempUnit === u ? "var(--brand-primary)" : "var(--brand-text-strong)",
               fontWeight: tempUnit === u ? 700 : 500,
             }}
@@ -27351,6 +27645,31 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
           </button>
         ))}
       </div>
+
+      <div style={styles.sectionRow}>
+        <span style={styles.sectionLabel}>{t("theme_label")}</span>
+      </div>
+      <div style={{ display: "flex", gap: 8 }} data-testid="theme-choice">
+        {[["light", "theme_light"], ["dark", "theme_dark"], ["auto", "theme_auto"]].map(([m, k]) => (
+          <button
+            key={m}
+            type="button"
+            data-testid={"theme-" + m}
+            aria-pressed={themeMode === m}
+            onClick={() => onChangeThemeMode && onChangeThemeMode(m)}
+            style={{
+              flex: 1, padding: "11px 0", borderRadius: 11, fontSize: 14, cursor: "pointer",
+              border: "1.5px solid " + (themeMode === m ? "var(--brand-primary)" : "var(--bd-d0e4f5,#d0e4f5)"),
+              background: themeMode === m ? "var(--brand-bg-tint)" : "var(--bg-fafcfb,#fafcfb)",
+              color: themeMode === m ? "var(--brand-primary)" : "var(--brand-text-strong)",
+              fontWeight: themeMode === m ? 700 : 500,
+            }}
+          >
+            {t(k)}
+          </button>
+        ))}
+      </div>
+      <div style={{ fontSize: 12, color: "var(--brand-text-muted)", lineHeight: 1.5, marginTop: 6 }}>{t("theme_auto_hint")}</div>
 
       {showLangPicker && (
         <div style={styles.langPickerOverlay} onClick={() => setShowLangPicker(false)}>
@@ -27398,8 +27717,8 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
         onClick={onReplayOnboarding}
         style={{
           display: "flex", alignItems: "center", gap: 8, width: "100%",
-          padding: "12px 14px", borderRadius: 12, border: "1px solid var(--border, #e2e8ef)",
-          background: "#fff", color: "var(--brand-primary)", fontWeight: 600, fontSize: 13.5,
+          padding: "12px 14px", borderRadius: 12, border: "1px solid var(--border, var(--bd-e2e8ef,#e2e8ef))",
+          background: "var(--bg-ffffff,#fff)", color: "var(--brand-primary)", fontWeight: 600, fontSize: 13.5,
           cursor: "pointer", marginBottom: 14,
         }}
       >
@@ -27419,7 +27738,7 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
               {authUser.displayName && <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginTop: 2 }}>{authUser.email}</div>}
             </div>
             <button
-              style={{ padding: "8px 14px", borderRadius: 10, border: "1.5px solid #d0e4f5", background: "#fff", color: "#c0392b", fontWeight: 600, fontSize: 12, cursor: "pointer", flexShrink: 0 }}
+              style={{ padding: "8px 14px", borderRadius: 10, border: "1.5px solid var(--bd-d0e4f5,#d0e4f5)", background: "var(--bg-ffffff,#fff)", color: "var(--tx-c0392b,#c0392b)", fontWeight: 600, fontSize: 12, cursor: "pointer", flexShrink: 0 }}
               onClick={onSignOut}
             >
               {t("sign_out")}
@@ -27460,7 +27779,7 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
           </div>
           <div style={{ fontSize: 11, color: "#8a9aa8", marginBottom: pseudoMsg ? 4 : 0 }}>{t("pseudo_invalid")}</div>
           {pseudoMsg && (
-            <div style={{ fontSize: 12, color: pseudoMsg.type === "error" ? "#c0392b" : "#1a7a4a", marginTop: 2 }}>
+            <div style={{ fontSize: 12, color: pseudoMsg.type === "error" ? "var(--tx-c0392b,#c0392b)" : "var(--tx-1a7a4a,#1a7a4a)", marginTop: 2 }}>
               {pseudoMsg.text}
             </div>
           )}
@@ -27493,7 +27812,7 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
             type="button"
             onClick={onWantManageSubscription}
             disabled={portalBusy}
-            style={{ padding: "8px 14px", borderRadius: 10, border: "1.5px solid var(--brand-primary)", background: "#fff", color: "var(--brand-primary)", fontWeight: 600, fontSize: 12.5, cursor: portalBusy ? "default" : "pointer", whiteSpace: "nowrap", opacity: portalBusy ? 0.6 : 1 }}
+            style={{ padding: "8px 14px", borderRadius: 10, border: "1.5px solid var(--brand-primary)", background: "var(--bg-ffffff,#fff)", color: "var(--brand-primary)", fontWeight: 600, fontSize: 12.5, cursor: portalBusy ? "default" : "pointer", whiteSpace: "nowrap", opacity: portalBusy ? 0.6 : 1 }}
           >
             {portalBusy ? "…" : t("manage_subscription_btn")}
           </button>
@@ -27502,7 +27821,7 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
         )}
       </div>
       {portalError && (
-        <div style={{ fontSize: 12, color: "#c0392b", marginTop: -8, marginBottom: 10 }}>{portalError}</div>
+        <div style={{ fontSize: 12, color: "var(--tx-c0392b,#c0392b)", marginTop: -8, marginBottom: 10 }}>{portalError}</div>
       )}
       {testerUntil && (
         <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginTop: -4, marginBottom: 12 }}>{t("tester_toggle_hint")}</div>
@@ -27541,7 +27860,7 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
         </div>
       )}
       {testerMsg && (
-        <div style={{ fontSize: 12, color: testerMsg.type === "error" ? "#c0392b" : "#1a7a4a", marginTop: -6, marginBottom: 10 }}>
+        <div style={{ fontSize: 12, color: testerMsg.type === "error" ? "var(--tx-c0392b,#c0392b)" : "var(--tx-1a7a4a,#1a7a4a)", marginTop: -6, marginBottom: 10 }}>
           {testerMsg.text}
         </div>
       )}
@@ -27565,7 +27884,7 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
             key={p.id}
             style={{
               ...styles.poolListRow,
-              borderColor: p.id === activePoolId ? "var(--brand-primary)" : "#e6ebe9",
+              borderColor: p.id === activePoolId ? "var(--brand-primary)" : "var(--bd-e6ebe9,#e6ebe9)",
             }}
           >
             <button style={styles.poolListMain} onClick={() => onSwitchPool(p.id)}>
@@ -27686,7 +28005,7 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
             <span style={styles.sectionLabel}>{t("disclaimer_title")}</span>
           </div>
           <button
-            style={{ width: "100%", padding: "11px 0", borderRadius: 10, border: "1.5px solid #f5c6c2", background: "#fdf0ef", color: "#c0392b", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
+            style={{ width: "100%", padding: "11px 0", borderRadius: 10, border: "1.5px solid var(--bd-f5c6c2,#f5c6c2)", background: "var(--bg-fdf0ef,#fdf0ef)", color: "var(--tx-c0392b,#c0392b)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
             onClick={() => { if (window.confirm(t("revoke_data_confirm"))) onRevokeDataConsent(); }}
           >
             {t("revoke_data_consent")}
@@ -27787,27 +28106,27 @@ function AccountDataBlock({ lang, accountState, subscriptionActive, onRequest, o
     catch (e) { setMsg({ ok: false, text: t("acct_action_error") }); }
     setBusy(null);
   }
-  const linkBtn = { display: "flex", alignItems: "center", justifyContent: "center", gap: 6, width: "100%", padding: "10px 0", borderRadius: 10, border: "1.5px solid var(--brand-primary)", background: "#fff", color: "var(--brand-primary)", fontWeight: 700, fontSize: 13, cursor: "pointer", marginBottom: 8 };
+  const linkBtn = { display: "flex", alignItems: "center", justifyContent: "center", gap: 6, width: "100%", padding: "10px 0", borderRadius: 10, border: "1.5px solid var(--brand-primary)", background: "var(--bg-ffffff,#fff)", color: "var(--brand-primary)", fontWeight: 700, fontSize: 13, cursor: "pointer", marginBottom: 8 };
   return (
     <div data-testid="account-data-block" style={{ marginTop: 6 }}>
       {pending && (
-        <div data-testid="account-pending" style={{ background: "#fff4f0", border: "1.5px solid #e0a58f", borderRadius: 12, padding: "12px 14px", marginBottom: 12 }}>
-          <div style={{ fontSize: 14, fontWeight: 800, color: "#a23c1f", marginBottom: 4 }}>{t(accountState.kind === "data" ? "acct_pending_title_data" : "acct_pending_title_account")}</div>
-          <div style={{ fontSize: 12.5, color: "#7a3a28", lineHeight: 1.5, marginBottom: 10 }}>{t("acct_pending_body", { requested: fmt(accountState.requestedAt), purge: fmt(accountState.purgeAt) })}</div>
+        <div data-testid="account-pending" style={{ background: "var(--bg-fff4f0,#fff4f0)", border: "1.5px solid var(--bd-e0a58f,#e0a58f)", borderRadius: 12, padding: "12px 14px", marginBottom: 12 }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: "var(--tx-a23c1f,#a23c1f)", marginBottom: 4 }}>{t(accountState.kind === "data" ? "acct_pending_title_data" : "acct_pending_title_account")}</div>
+          <div style={{ fontSize: 12.5, color: "var(--tx-7a3a28,#7a3a28)", lineHeight: 1.5, marginBottom: 10 }}>{t("acct_pending_body", { requested: fmt(accountState.requestedAt), purge: fmt(accountState.purgeAt) })}</div>
           <button type="button" data-testid="acct-cancel" disabled={busy === "cancel"} onClick={cancelRequest} style={{ ...linkBtn, background: "var(--brand-primary)", color: "#fff", border: "none", marginBottom: 8 }}>
             {t(accountState.kind === "data" ? "acct_cancel_data" : "acct_cancel_account")}
           </button>
         </div>
       )}
       {accountState?.status === "purged" && accountState.kind === "data" && (
-        <div style={{ fontSize: 12.5, color: "#1d6b3e", background: "#e8f6ee", borderRadius: 10, padding: "8px 12px", marginBottom: 10 }}>{t("acct_purged_data")}</div>
+        <div style={{ fontSize: 12.5, color: "var(--tx-1d6b3e,#1d6b3e)", background: "var(--bg-e8f6ee,#e8f6ee)", borderRadius: 10, padding: "8px 12px", marginBottom: 10 }}>{t("acct_purged_data")}</div>
       )}
       <div style={{ fontSize: 12, color: "var(--brand-text-secondary)", lineHeight: 1.5, marginBottom: 8 }}>{t("acct_get_data_hint", { days: 7 })}</div>
       <button type="button" data-testid="acct-get-data" disabled={busy === "email"} onClick={sendByEmail} style={linkBtn}>{t("acct_get_data_btn")}</button>
       {pending && (
         <button type="button" data-testid="acct-download" disabled={busy === "download"} onClick={downloadNow} style={linkBtn}>{t("acct_download_btn")}</button>
       )}
-      {msg && <div data-testid="acct-msg" style={{ fontSize: 12.5, color: msg.ok ? "#1d6b3e" : "#c0392b", margin: "4px 0 8px", lineHeight: 1.5 }}>{msg.text}</div>}
+      {msg && <div data-testid="acct-msg" style={{ fontSize: 12.5, color: msg.ok ? "var(--tx-1d6b3e,#1d6b3e)" : "var(--tx-c0392b,#c0392b)", margin: "4px 0 8px", lineHeight: 1.5 }}>{msg.text}</div>}
       {!pending && (
         <>
           <button type="button" data-testid="acct-erase" style={styles.dangerLinkBtn} onClick={() => setModal("data")}><Trash2 size={14} /> {t("acct_erase_data_btn")}</button>
@@ -27819,12 +28138,12 @@ function AccountDataBlock({ lang, accountState, subscriptionActive, onRequest, o
           <div data-testid="acct-modal">
             <p style={{ fontSize: 13, color: "var(--brand-text-secondary)", lineHeight: 1.55, marginTop: 0 }}>{t(modal === "data" ? "acct_modal_body_data" : "acct_modal_body_account", { days: 30 })}</p>
             {subscriptionActive && (
-              <p data-testid="acct-sub-warning" style={{ fontSize: 12.5, color: "#7a5800", background: "#fff8e8", border: "1.5px solid #e6a817", borderRadius: 10, padding: "8px 12px", lineHeight: 1.5 }}>{t("acct_sub_warning")}</p>
+              <p data-testid="acct-sub-warning" style={{ fontSize: 12.5, color: "var(--tx-7a5800,#7a5800)", background: "var(--bg-fff8e8,#fff8e8)", border: "1.5px solid #e6a817", borderRadius: 10, padding: "8px 12px", lineHeight: 1.5 }}>{t("acct_sub_warning")}</p>
             )}
             <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--brand-text-strong)", margin: "10px 0 6px" }}>{t("acct_modal_keep")}</div>
             <button type="button" data-testid="acct-modal-download" disabled={busy === "download"} onClick={downloadNow} style={linkBtn}>{t("acct_download_btn")}</button>
             <button type="button" data-testid="acct-modal-email" disabled={busy === "email"} onClick={sendByEmail} style={linkBtn}>{t("acct_get_data_btn")}</button>
-            {msg && <div style={{ fontSize: 12.5, color: msg.ok ? "#1d6b3e" : "#c0392b", margin: "0 0 8px", lineHeight: 1.5 }}>{msg.text}</div>}
+            {msg && <div style={{ fontSize: 12.5, color: msg.ok ? "var(--tx-1d6b3e,#1d6b3e)" : "var(--tx-c0392b,#c0392b)", margin: "0 0 8px", lineHeight: 1.5 }}>{msg.text}</div>}
             <button type="button" data-testid="acct-confirm" onClick={() => { const k = modal; setModal(null); onRequest(k); }}
               style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "#c4502f", color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: "pointer", marginTop: 6 }}>
               {t(modal === "data" ? "acct_confirm_data" : "acct_confirm_account")}
@@ -27857,7 +28176,7 @@ function DangerZoneSection({ lang, activePoolName, poolMeasureCount, onDeleteAll
       <div style={styles.sectionRow}>
         <span style={styles.sectionLabel}>{t("legal_notices")}</span>
       </div>
-      <div style={{ background: "#f5f8fc", borderRadius: 10, padding: "10px 14px", marginBottom: 12, fontSize: 12, color: "var(--brand-text-secondary)" }}>
+      <div style={{ background: "var(--bg-f5f8fc,#f5f8fc)", borderRadius: 10, padding: "10px 14px", marginBottom: 12, fontSize: 12, color: "var(--brand-text-secondary)" }}>
         <div>{t("cgu_version_label")} : <strong>CGU {CGU_VERSION}</strong></div>
         {cguAcceptedDate && <div>{t("cgu_accepted_on")} : {new Date(cguAcceptedDate).toLocaleDateString()}</div>}
       </div>
@@ -27870,12 +28189,12 @@ function DangerZoneSection({ lang, activePoolName, poolMeasureCount, onDeleteAll
 
       {showLegalModal && (
         <div style={{ position: "fixed", inset: 0, zIndex: 500, background: "rgba(10,30,60,0.55)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
-          <div style={{ background: "#fff", borderRadius: "20px 20px 0 0", width: "100%", maxWidth: 480, padding: "20px 18px 32px", boxSizing: "border-box", maxHeight: "90dvh", display: "flex", flexDirection: "column" }}>
+          <div style={{ background: "var(--bg-ffffff,#fff)", borderRadius: "20px 20px 0 0", width: "100%", maxWidth: 480, padding: "20px 18px 32px", boxSizing: "border-box", maxHeight: "90dvh", display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
               <span style={{ fontSize: 15, fontWeight: 800, color: "var(--brand-text-strong)" }}>{t("legal_notices")} — CGU {CGU_VERSION}</span>
               <button onClick={() => setShowLegalModal(false)} style={{ background: "none", border: "none", cursor: "pointer" }}><X size={20} /></button>
             </div>
-            <div style={{ flex: 1, overflowY: "auto", fontSize: 12, color: "#2d4a6e", lineHeight: 1.7, background: "#f5f8fc", borderRadius: 10, padding: "12px 14px" }}>
+            <div style={{ flex: 1, overflowY: "auto", fontSize: 12, color: "var(--tx-2d4a6e,#2d4a6e)", lineHeight: 1.7, background: "var(--bg-f5f8fc,#f5f8fc)", borderRadius: 10, padding: "12px 14px" }}>
               <CguLegalContent lang={lang} />
             </div>
           </div>
@@ -27905,7 +28224,7 @@ function ToggleSwitch({ checked, onChange }) {
         height: 26,
         borderRadius: 99,
         border: "none",
-        background: checked ? "var(--brand-primary)" : "#d8e2df",
+        background: checked ? "var(--brand-primary)" : "var(--bg-d8e2df,#d8e2df)",
         position: "relative",
         cursor: "pointer",
         flexShrink: 0,
@@ -27920,7 +28239,7 @@ function ToggleSwitch({ checked, onChange }) {
           width: 20,
           height: 20,
           borderRadius: 99,
-          background: "#ffffff",
+          background: "var(--bg-ffffff,#ffffff)",
           transition: "left .15s",
           boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
         }}
@@ -27949,7 +28268,7 @@ function DeleteReauthModal({ onClose, onConfirm, busy, error, lang, title }) {
         onKeyDown={(e) => e.key === "Enter" && password && !busy && onConfirm(password)}
       />
       {error && (
-        <div style={{ marginTop: 8, fontSize: 12.5, color: "#c0392b" }}>{error}</div>
+        <div style={{ marginTop: 8, fontSize: 12.5, color: "var(--tx-c0392b,#c0392b)" }}>{error}</div>
       )}
       <button
         style={{ ...styles.primaryBtn, background: "#c0392b", marginTop: 14 }}
@@ -27997,7 +28316,7 @@ function OnboardingWizard({ onDone, lang }) {
   const s = steps[step];
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 1900, background: "rgba(13,43,78,0.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-      <div style={{ width: "100%", maxWidth: 360, background: "#fff", borderRadius: 20, overflow: "hidden" }}>
+      <div style={{ width: "100%", maxWidth: 360, background: "var(--bg-ffffff,#fff)", borderRadius: 20, overflow: "hidden" }}>
         {s.dark ? (
           <div style={{
             padding: "32px 24px 28px",
@@ -28013,7 +28332,7 @@ function OnboardingWizard({ onDone, lang }) {
           </div>
         ) : (
           <>
-            <div style={{ background: "#eef2f6", padding: 12 }}>
+            <div style={{ background: "var(--bg-eef2f6,#eef2f6)", padding: 12 }}>
               <img
                 src={s.img}
                 alt={s.title}
@@ -28021,15 +28340,15 @@ function OnboardingWizard({ onDone, lang }) {
               />
             </div>
             <div style={{ padding: "20px 24px 4px", textAlign: "center" }}>
-              <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 8, color: "#0d2b4e" }}>{s.title}</div>
-              <div style={{ fontSize: 13.5, color: "#4a6480", lineHeight: 1.5, whiteSpace: "pre-line" }}>{s.text}</div>
+              <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 8, color: "var(--tx-0d2b4e,#0d2b4e)" }}>{s.title}</div>
+              <div style={{ fontSize: 13.5, color: "var(--tx-4a6480,#4a6480)", lineHeight: 1.5, whiteSpace: "pre-line" }}>{s.text}</div>
             </div>
           </>
         )}
         <div style={{ padding: "20px 24px 24px" }}>
           <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 20, flexWrap: "wrap" }}>
             {steps.map((_, i) => (
-              <div key={i} style={{ width: 16, height: 4, borderRadius: 2, background: i === step ? "var(--brand-primary)" : "#e2e8ef" }} />
+              <div key={i} style={{ width: 16, height: 4, borderRadius: 2, background: i === step ? "var(--brand-primary)" : "var(--bg-e2e8ef,#e2e8ef)" }} />
             ))}
           </div>
           <button
@@ -28040,7 +28359,7 @@ function OnboardingWizard({ onDone, lang }) {
           </button>
           {!s.last && (
             <button
-              style={{ width: "100%", padding: "10px 0", marginTop: 4, border: "none", background: "transparent", color: "#6a7d90", fontSize: 13, cursor: "pointer" }}
+              style={{ width: "100%", padding: "10px 0", marginTop: 4, border: "none", background: "transparent", color: "var(--tx-6a7d90,#6a7d90)", fontSize: 13, cursor: "pointer" }}
               onClick={onDone}
             >
               {t("onboarding_skip")}
@@ -28077,7 +28396,7 @@ function PaywallModal({ onClose, onActivate, lang, source, busy, error }) {
       {hasContext && (
         // v1.71.0 — Reste en bleu littéral : le mur Premium n'est jamais thémé
         // en vert, même consulté depuis le mode gratuit (aperçu de l'achat).
-        <p style={{ fontSize: 13.5, color: "#4a6480", margin: "0 0 4px", lineHeight: 1.4 }}>
+        <p style={{ fontSize: 13.5, color: "var(--tx-4a6480,#4a6480)", margin: "0 0 4px", lineHeight: 1.4 }}>
           {contextText}
         </p>
       )}
@@ -28115,7 +28434,7 @@ function PaywallModal({ onClose, onActivate, lang, source, busy, error }) {
         ))}
       </div>
       {error && (
-        <div style={{ fontSize: 12.5, color: "#c0392b", background: "#fdf0ef", border: "1px solid #f3c9c4", borderRadius: 10, padding: "8px 12px", marginBottom: 12, textAlign: "left" }}>
+        <div style={{ fontSize: 12.5, color: "var(--tx-c0392b,#c0392b)", background: "var(--bg-fdf0ef,#fdf0ef)", border: "1px solid var(--bd-f3c9c4,#f3c9c4)", borderRadius: 10, padding: "8px 12px", marginBottom: 12, textAlign: "left" }}>
           {error}
         </div>
       )}
@@ -28168,7 +28487,7 @@ function PremiumDowngradeConfirmModal({ onClose, onConfirm, lang }) {
       <button
         style={{
           width: "100%", padding: "13px 0", marginTop: 10, borderRadius: 12,
-          border: "1.5px solid #d6dde3", background: "#fff", color: "#3f5a73",
+          border: "1.5px solid var(--bd-d6dde3,#d6dde3)", background: "var(--bg-ffffff,#fff)", color: "var(--tx-3f5a73,#3f5a73)",
           fontWeight: 600, fontSize: 13.5, cursor: "pointer",
         }}
         onClick={onConfirm}
@@ -28432,8 +28751,8 @@ function LocationAutocomplete({ value, onChange, lang, placeholder }) {
           title={t("location_use_gps")}
           style={{
             display: "flex", alignItems: "center", justifyContent: "center",
-            width: 44, borderRadius: 11, border: "1.5px solid #d0e4f5",
-            background: "#fafcfb", color: "var(--brand-primary)", cursor: gpsLoading ? "default" : "pointer",
+            width: 44, borderRadius: 11, border: "1.5px solid var(--bd-d0e4f5,#d0e4f5)",
+            background: "var(--bg-fafcfb,#fafcfb)", color: "var(--brand-primary)", cursor: gpsLoading ? "default" : "pointer",
             flexShrink: 0,
           }}
         >
@@ -28443,7 +28762,7 @@ function LocationAutocomplete({ value, onChange, lang, placeholder }) {
       {showDropdown && (
         <div style={{
           position: "absolute", top: "calc(100% + 4px)", left: 0, right: 52,
-          background: "#fff", border: "1.5px solid #d0e4f5", borderRadius: 11,
+          background: "var(--bg-ffffff,#fff)", border: "1.5px solid var(--bd-d0e4f5,#d0e4f5)", borderRadius: 11,
           boxShadow: "0 6px 18px rgba(10,50,90,0.14)", zIndex: 50, overflow: "hidden",
         }}>
           {searching && (
@@ -28452,7 +28771,7 @@ function LocationAutocomplete({ value, onChange, lang, placeholder }) {
             </div>
           )}
           {!searching && searchError && (
-            <div style={{ padding: "10px 12px", fontSize: 12.5, color: "#b23b3b" }}>{t("location_search_error")}</div>
+            <div style={{ padding: "10px 12px", fontSize: 12.5, color: "var(--tx-b23b3b,#b23b3b)" }}>{t("location_search_error")}</div>
           )}
           {!searching && !searchError && results.length === 0 && (
             <div style={{ padding: "10px 12px", fontSize: 12.5, color: "var(--brand-text-muted)" }}>{t("location_no_results")}</div>
@@ -28464,7 +28783,7 @@ function LocationAutocomplete({ value, onChange, lang, placeholder }) {
               onClick={() => handleSelect(r)}
               style={{
                 padding: "10px 12px", fontSize: 13.5, color: "var(--brand-text-strong)", cursor: "pointer",
-                borderTop: i > 0 ? "1px solid #eef3f6" : "none",
+                borderTop: i > 0 ? "1px solid var(--bd-eef3f6,#eef3f6)" : "none",
                 display: "flex", alignItems: "center", gap: 7,
               }}
             >
@@ -28475,7 +28794,7 @@ function LocationAutocomplete({ value, onChange, lang, placeholder }) {
         </div>
       )}
       {gpsError && (
-        <div style={{ fontSize: 11.5, color: "#b23b3b", marginTop: 4 }}>{t("location_gps_error")}</div>
+        <div style={{ fontSize: 11.5, color: "var(--tx-b23b3b,#b23b3b)", marginTop: 4 }}>{t("location_gps_error")}</div>
       )}
     </div>
   );
@@ -28499,7 +28818,7 @@ function MonthChips({ value, onChange, lang }) {
           const on = sel.has(m);
           return (
             <button key={m} type="button" aria-pressed={on} onClick={() => toggle(m)}
-              style={{ padding: "5px 9px", borderRadius: 14, fontSize: 12, fontWeight: 600, border: "1.5px solid " + (on ? "var(--brand-primary)" : "#d0e4f5"), background: on ? "var(--brand-primary)" : "#fff", color: on ? "#fff" : "var(--brand-text-secondary)", cursor: "pointer" }}>
+              style={{ padding: "5px 9px", borderRadius: 14, fontSize: 12, fontWeight: 600, border: "1.5px solid " + (on ? "var(--brand-primary)" : "var(--bd-d0e4f5,#d0e4f5)"), background: on ? "var(--brand-primary)" : "var(--bg-ffffff,#fff)", color: on ? "#fff" : "var(--brand-text-secondary)", cursor: "pointer" }}>
               {n}
             </button>
           );
@@ -28709,7 +29028,7 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced, focusSectio
       <FieldLabel>{t("pool_name")}</FieldLabel>
       <input
         ref={nameInputRef}
-        style={{ ...styles.input, ...((showErrors || name.trim()) && nameInvalid ? { borderColor: "#c0392b", background: "#fdf0ef" } : {}) }}
+        style={{ ...styles.input, ...((showErrors || name.trim()) && nameInvalid ? { borderColor: "#c0392b", background: "var(--bg-fdf0ef,#fdf0ef)" } : {}) }}
         value={name}
         onChange={e => setName(e.target.value)}
         placeholder={t("pool_name_placeholder")}
@@ -28721,7 +29040,7 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced, focusSectio
         aria-invalid={(showErrors || !!name.trim()) && nameInvalid}
       />
       {(showErrors || name.trim()) && nameInvalid && (
-        <div data-testid="pool-name-taken" style={{ fontSize: 12, color: "#c0392b", marginTop: 4, marginBottom: 10 }}>{t("pool_name_taken")}</div>
+        <div data-testid="pool-name-taken" style={{ fontSize: 12, color: "var(--tx-c0392b,#c0392b)", marginTop: 4, marginBottom: 10 }}>{t("pool_name_taken")}</div>
       )}
 
       {/* Type de bassin (v1.151.0) */}
@@ -28750,7 +29069,7 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced, focusSectio
         <LocationAutocomplete value={location} onChange={handleLocationChange} lang={lang || "fr"} placeholder={t("pool_location_placeholder")} />
       </div>
       {showErrors && locationInvalid && (
-        <div style={{ fontSize: 12, color: "#c0392b", marginTop: 4, marginBottom: 10 }}>{t("pool_location_required")}</div>
+        <div style={{ fontSize: 12, color: "var(--tx-c0392b,#c0392b)", marginTop: 4, marginBottom: 10 }}>{t("pool_location_required")}</div>
       )}
 
       {/* Volume */}
@@ -28758,13 +29077,13 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced, focusSectio
       <input
         ref={volumeInputRef}
         type="number"
-        style={{ ...styles.input, ...(showErrors && volumeInvalid ? { borderColor: "#c0392b", background: "#fdf0ef" } : {}) }}
+        style={{ ...styles.input, ...(showErrors && volumeInvalid ? { borderColor: "#c0392b", background: "var(--bg-fdf0ef,#fdf0ef)" } : {}) }}
         value={volume}
         onChange={e => setVolume(e.target.value)}
         aria-invalid={showErrors && volumeInvalid}
       />
       {showErrors && volumeInvalid && (
-        <div style={{ fontSize: 12, color: "#c0392b", marginTop: 4, marginBottom: 10 }}>{t("pool_volume_required")}</div>
+        <div style={{ fontSize: 12, color: "var(--tx-c0392b,#c0392b)", marginTop: 4, marginBottom: 10 }}>{t("pool_volume_required")}</div>
       )}
 
       {/* Lot B (v1.33.0) — Méthode de mesure préférée */}
@@ -28792,7 +29111,7 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced, focusSectio
         <div ref={thermalSectionRef}>
           <label style={styles.fieldLabel}>{t("thermal_section")}</label>
           <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginTop: -6, marginBottom: 8 }}>{t("thermal_hint")}</div>
-          <div style={{ border: "1.5px solid #d0e4f5", borderRadius: 11, padding: "10px 12px", marginBottom: 12, background: "#fafcfb" }}>
+          <div style={{ border: "1.5px solid var(--bd-d0e4f5,#d0e4f5)", borderRadius: 11, padding: "10px 12px", marginBottom: 12, background: "var(--bg-fafcfb,#fafcfb)" }}>
             <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5, fontWeight: 600, color: "var(--brand-text-strong)" }}>
               <input type="checkbox" checked={heatEnabled} onChange={e => setHeatEnabled(e.target.checked)} /> {t("thermal_heated")}
             </label>
@@ -28801,7 +29120,7 @@ function AddPoolModal({ onClose, onSave, lang, existingPool, forced, focusSectio
               <input type="number" step="0.5" inputMode="decimal" style={styles.input} value={heatSetpoint} onChange={e => setHeatSetpoint(e.target.value)} placeholder={TEMP_UNIT === "F" ? "82" : "28"} />
               <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", margin: "0 0 4px" }}>{t("thermal_heating_months")}</div>
               <MonthChips value={heatMonths} onChange={setHeatMonths} lang={lang || "fr"} />
-              {(!heatMonths.length || !String(heatSetpoint).trim()) && <div style={{ fontSize: 11.5, color: "#8a5a00", marginTop: 6, lineHeight: 1.4 }}>{t("thermal_months_needed")}</div>}
+              {(!heatMonths.length || !String(heatSetpoint).trim()) && <div style={{ fontSize: 11.5, color: "var(--tx-8a5a00,#8a5a00)", marginTop: 6, lineHeight: 1.4 }}>{t("thermal_months_needed")}</div>}
             </>)}
             <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", margin: "12px 0 3px" }}>{t("thermal_cover")}</div>
             <select style={styles.input} value={coverType} onChange={e => setCoverType(e.target.value)}>
@@ -29030,24 +29349,24 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
   const chartParamsBase = [
     // v1.129.0 — Ordre des pastilles : chaque paramètre projeté précède son
     // paramètre mesuré (demande Arnaud).
-    { key: "phProjected",  color: "#2f9e44", label: t("ph_projected_chart_label"),  axis: "left", projected: true },
-    { key: "pH",     color: "#2f9e44", label: "pH",                                          axis: "left", dashed: true  },
-    { key: "fclProjected", color: "#2b7fd9", label: t("fcl_projected_chart_label"), axis: "left", projected: true },
-    { key: "fCl",    color: "#2b7fd9", label: "FCL",                                         axis: "left", dashed: true  },
-    { key: "tacProjected", color: "#d98c2b", label: t("tac_projected_chart_label"), axis: "right", projected: true },
-    { key: "tac",    color: "#d98c2b", label: t("tac_col"),                                  axis: "right", dashed: true },
-    { key: "cya",    color: "#c4502f", label: t("cya_col"),                                  axis: "right" },
+    { key: "phProjected",  color: "var(--tx-2f9e44,#2f9e44)", label: t("ph_projected_chart_label"),  axis: "left", projected: true },
+    { key: "pH",     color: "var(--tx-2f9e44,#2f9e44)", label: "pH",                                          axis: "left", dashed: true  },
+    { key: "fclProjected", color: "var(--tx-2b7fd9,#2b7fd9)", label: t("fcl_projected_chart_label"), axis: "left", projected: true },
+    { key: "fCl",    color: "var(--tx-2b7fd9,#2b7fd9)", label: "FCL",                                         axis: "left", dashed: true  },
+    { key: "tacProjected", color: "var(--tx-d98c2b,#d98c2b)", label: t("tac_projected_chart_label"), axis: "right", projected: true },
+    { key: "tac",    color: "var(--tx-d98c2b,#d98c2b)", label: t("tac_col"),                                  axis: "right", dashed: true },
+    { key: "cya",    color: "var(--tx-c4502f,#c4502f)", label: t("cya_col"),                                  axis: "right" },
     { key: "tCl",    color: "#8a6fd1", label: "TCL",                                         axis: "left"  },
-    { key: "ccl",    color: "#5b3fa0", label: "CCL",                                         axis: "left"  },
-    { key: "hardProjected", color: "#2e8b57", label: t("hard_projected_chart_label"), axis: "right", projected: true },
-    { key: "hard",   color: "#2e8b57", label: t("hard_col"),                                 axis: "right", dashed: true },
+    { key: "ccl",    color: "var(--tx-5b3fa0,#5b3fa0)", label: "CCL",                                         axis: "left"  },
+    { key: "hardProjected", color: "var(--tx-2e8b57,#2e8b57)", label: t("hard_projected_chart_label"), axis: "right", projected: true },
+    { key: "hard",   color: "var(--tx-2e8b57,#2e8b57)", label: t("hard_col"),                                 axis: "right", dashed: true },
     { key: "phosProjected", color: "#9b59b6", label: t("phos_projected_chart_label"), axis: "right", projected: true },
     { key: "phos",   color: "#9b59b6", label: t("phos_col"),                                 axis: "right", dashed: true },
-    { key: "copper", color: "#b5651d", label: t("copper_col"),                               axis: "right" },
-    { key: "iron",   color: "#c0392b", label: t("iron_col"),                                 axis: "right" },
+    { key: "copper", color: "var(--tx-b5651d,#b5651d)", label: t("copper_col"),                               axis: "right" },
+    { key: "iron",   color: "var(--tx-c0392b,#c0392b)", label: t("iron_col"),                                 axis: "right" },
     { key: "temp",   color: "#e0578a", label: t("temp_col"),                                 axis: "right" },
-    { key: "filtReco",    color: "#00897b", label: t("filt_hist_reco"),    axis: "right", dashed: true, noSuffix: true },
-    { key: "filtApplied", color: "#00897b", label: t("filt_hist_applied"), axis: "right", noSuffix: true },
+    { key: "filtReco",    color: "var(--tx-00897b,#00897b)", label: t("filt_hist_reco"),    axis: "right", dashed: true, noSuffix: true },
+    { key: "filtApplied", color: "var(--tx-00897b,#00897b)", label: t("filt_hist_applied"), axis: "right", noSuffix: true },
   ].filter((cp) => !FILT_CHART_KEYS.includes(cp.key) || hasFiltData)
    .map((cp) => (cp.projected || cp.noSuffix ? cp : { ...cp, label: `${cp.label} (${t("measured_suffix")})` }));
 
@@ -29808,7 +30127,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           {t("share_report")}
         </button>
         {pdfError && (
-          <div className="no-print" style={{ fontSize: 11, color: "#c0392b", padding: "4px 8px", background: "#fdf0ef", borderRadius: 6 }}>
+          <div className="no-print" style={{ fontSize: 11, color: "var(--tx-c0392b,#c0392b)", padding: "4px 8px", background: "var(--bg-fdf0ef,#fdf0ef)", borderRadius: 6 }}>
             {pdfError}
           </div>
         )}
@@ -29829,7 +30148,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
             <img
               src={pool.photo}
               alt={pool?.name}
-              style={{ width: 56, height: 56, borderRadius: 10, objectFit: "cover", border: "1.5px solid #d0e4f5", flexShrink: 0 }}
+              style={{ width: 56, height: 56, borderRadius: 10, objectFit: "cover", border: "1.5px solid var(--bd-d0e4f5,#d0e4f5)", flexShrink: 0 }}
             />
           )}
         </div>
@@ -29841,9 +30160,9 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
             style={{
               ...styles.chip,
               ...styles.chipAll,
-              background: allReportActive ? "var(--brand-primary)" : "#f1f4f3",
-              borderColor: allReportActive ? "var(--brand-primary)" : "#d0e4f5",
-              color: allReportActive ? "#ffffff" : "#2d4a6e",
+              background: allReportActive ? "var(--brand-primary)" : "var(--bg-f1f4f3,#f1f4f3)",
+              borderColor: allReportActive ? "var(--brand-primary)" : "var(--bd-d0e4f5,#d0e4f5)",
+              color: allReportActive ? "#ffffff" : "var(--tx-2d4a6e,#2d4a6e)",
             }}
           >
             {allReportActive ? t("hide_all_params") : t("show_all_params")}
@@ -29912,7 +30231,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
               data={chartRenderData}
               margin={{ top: showValues ? 24 : 8, right: 16, left: 0, bottom: 0 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e6ebe9" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--bd-e6ebe9,#e6ebe9)" />
               <XAxis
                 dataKey="timestamp"
                 type="number"
@@ -29920,13 +30239,13 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                 scale="time"
                 height={36}
                 ticks={axisTicks}
-                tick={<DateTimeAxisTick fontSize={10} fill="#2d4a6e" />}
+                tick={<DateTimeAxisTick fontSize={10} fill="var(--tx-2d4a6e,#2d4a6e)" />}
               />
               <YAxis
                 yAxisId="left"
                 domain={leftBounds.domain}
                 ticks={leftBounds.ticks}
-                tick={{ fontSize: 12, fill: "#2d4a6e" }}
+                tick={{ fontSize: 12, fill: "var(--tx-2d4a6e,#2d4a6e)" }}
                 width={30}
                 allowDecimals
               />
@@ -29936,7 +30255,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                   orientation="right"
                   domain={rightBounds.domain}
                   ticks={rightBounds.ticks}
-                  tick={{ fontSize: 12, fill: "#2d4a6e" }}
+                  tick={{ fontSize: 12, fill: "var(--tx-2d4a6e,#2d4a6e)" }}
                   width={30}
                   allowDecimals
                 />
@@ -29983,7 +30302,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "8px 16px", marginTop: 8, padding: "0 8px" }}>
             {chartParams.filter(cp => activeReportParams.includes(cp.key) && chartDataWithProjections.some(d => d[cp.key] != null)).map((cp) => (
-              <div key={cp.key} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: "#2d4a6e" }}>
+              <div key={cp.key} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: "var(--tx-2d4a6e,#2d4a6e)" }}>
                 <svg width="16" height="4"><line x1="0" y1="2" x2="16" y2="2" stroke={cp.color} strokeWidth="2" strokeDasharray={cp.dashed ? "3 2" : undefined}/><circle cx="8" cy="2" r="2" fill={cp.color}/></svg>
                 {cp.label}
               </div>
@@ -30040,7 +30359,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                 if (item.progEntry) {
                   const e = item.e;
                   return [(
-                    <tr key={`prog-${e.id}`} style={{ background: i % 2 === 0 ? "#f8fafd" : "#ffffff" }}>
+                    <tr key={`prog-${e.id}`} style={{ background: i % 2 === 0 ? "var(--bg-f8fafd,#f8fafd)" : "var(--bg-ffffff,#ffffff)" }}>
                       <td style={{ ...styles.reportTdCell, fontWeight: 600, color: "var(--brand-text-strong)" }}>{formatDate(e.date)}</td>
                       <td colSpan={10} style={{ ...styles.reportTdCell, fontStyle: "italic", color: "var(--brand-text-secondary)" }}>⚙️ {t("filt_hist_prog_entry")}</td>
                       <td style={styles.reportTdCell}>—</td>
@@ -30054,7 +30373,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                   const e = item.e;
                   const fh = filtrationHistoryForMeasure(pool, e);
                   return [(
-                    <tr key={`temp-${e.id}`} style={{ background: i % 2 === 0 ? "#f8fafd" : "#ffffff" }}>
+                    <tr key={`temp-${e.id}`} style={{ background: i % 2 === 0 ? "var(--bg-f8fafd,#f8fafd)" : "var(--bg-ffffff,#ffffff)" }}>
                       <td style={{ ...styles.reportTdCell, fontWeight: 600, color: "var(--brand-text-strong)" }}>{formatDate(e.date)}</td>
                       <td colSpan={10} style={{ ...styles.reportTdCell, fontStyle: "italic", color: "var(--brand-text-secondary)" }}>🌡️ {t("filt_hist_temp_entry")}</td>
                       <td style={styles.reportTdCell}>{e.temp}</td>
@@ -30068,9 +30387,9 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                   const a = item.app;
                   const prod = products.find((p) => p.name === a.productName);
                   return [(
-                    <tr key={`manual-${a.id}`} style={{ background: i % 2 === 0 ? "#f8fafd" : "#ffffff" }}>
+                    <tr key={`manual-${a.id}`} style={{ background: i % 2 === 0 ? "var(--bg-f8fafd,#f8fafd)" : "var(--bg-ffffff,#ffffff)" }}>
                       <td colSpan={showFiltCols ? 14 : 12} style={{ ...styles.reportTdCell, fontWeight: 600, color: "var(--brand-text-strong)" }}>
-                        {formatDate(a.appliedAt)} · <span style={{ fontStyle: "italic", color: "#c4502f" }}>🔧 {t("reason_manual_maintenance")}</span>
+                        {formatDate(a.appliedAt)} · <span style={{ fontStyle: "italic", color: "var(--tx-c4502f,#c4502f)" }}>🔧 {t("reason_manual_maintenance")}</span>
                       </td>
                       <td style={styles.reportTdCell}>{a.productName}</td>
                       <td style={{ ...styles.reportTdCell, color: "var(--brand-text-secondary)" }}>—</td>
@@ -30078,7 +30397,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                       <td style={{ ...styles.reportTdCell, color: "var(--brand-text-secondary)" }}>
                         {formatDateShort(a.appliedAt)} {fmtHM(new Date(a.appliedAt))}
                       </td>
-                      {manageStock && <td style={{ ...styles.reportTdCell, color: prod && (prod.stockPercent ?? 100) <= 20 ? "#c0392b" : "var(--brand-text-secondary)", fontWeight: 600 }}>
+                      {manageStock && <td style={{ ...styles.reportTdCell, color: prod && (prod.stockPercent ?? 100) <= 20 ? "var(--tx-c0392b,#c0392b)" : "var(--brand-text-secondary)", fontWeight: 600 }}>
                         {prod ? formatDose(Math.round((prod.stockPercent ?? 100) / 100 * (prod.containerAmount ?? 1) * 10) / 10, prod.containerUnit || "kg") : "—"}
                       </td>}
                     </tr>
@@ -30098,7 +30417,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                   // v1.109.4 — productRealName plutôt que productName — voir RecoCard.missingFromStock.
                   const prod = step ? products.find((p) => p.name === (step.productRealName ?? step.productName)) : null;
                   return (
-                    <tr key={`${i}-${j}`} style={{ background: i % 2 === 0 ? "#f8fafd" : "#ffffff" }}>
+                    <tr key={`${i}-${j}`} style={{ background: i % 2 === 0 ? "var(--bg-f8fafd,#f8fafd)" : "var(--bg-ffffff,#ffffff)" }}>
                       {j === 0 && (
                         <>
                           <td style={{ ...styles.reportTdCell, fontWeight: 600, color: "var(--brand-text-strong)" }} rowSpan={totalRowSpan}>{formatDate(measure.date)}</td>
@@ -30137,7 +30456,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                           if (!step || step.skipped) return "—";
                           if (step.appliedAmount != null) return formatDose(step.appliedAmount, step.doseUnit || "g");
                           const pending = unappliedStepLabel(step, activePlan?.measureId === measure.id, t);
-                          return pending ? <span style={{ fontWeight: 600, color: "#a8721a" }}>{pending}</span> : "—";
+                          return pending ? <span style={{ fontWeight: 600, color: "var(--tx-a8721a,#a8721a)" }}>{pending}</span> : "—";
                         })()}
                       </td>
                       <td style={{ ...styles.reportTdCell, color: "var(--brand-text-secondary)" }}>
@@ -30147,7 +30466,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                             partielle/reliquat). */}
                         {step?.appliedAt ? `${formatDateShort(step.appliedAt)} ${fmtHM(new Date(step.appliedAt))}` : "—"}
                       </td>
-                      {manageStock && <td style={{ ...styles.reportTdCell, color: prod && (prod.stockPercent ?? 100) <= 20 ? "#c0392b" : "var(--brand-text-secondary)", fontWeight: 600 }}>
+                      {manageStock && <td style={{ ...styles.reportTdCell, color: prod && (prod.stockPercent ?? 100) <= 20 ? "var(--tx-c0392b,#c0392b)" : "var(--brand-text-secondary)", fontWeight: 600 }}>
                         {prod ? formatDose(Math.round((prod.stockPercent ?? 100) / 100 * (prod.containerAmount ?? 1) * 10) / 10, prod.containerUnit || "kg") : "—"}
                       </td>}
                     </tr>
@@ -30156,7 +30475,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
 
                 // Ligne note fusionnée
                 const noteRow = hasNote ? (
-                  <tr key={`${i}-note`} style={{ background: i % 2 === 0 ? "var(--brand-bg-tint)" : "#f8fafd" }}>
+                  <tr key={`${i}-note`} style={{ background: i % 2 === 0 ? "var(--brand-bg-tint)" : "var(--bg-f8fafd,#f8fafd)" }}>
                     <td colSpan={prodColSpan} style={{ ...styles.reportTdCell, fontStyle: "italic", color: "var(--brand-text-secondary)", fontSize: 11, paddingLeft: 10 }}>
                       📝 {measure.note}
                     </td>
@@ -30170,7 +30489,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
         )}
 
         {/* Légende des abréviations et cibles */}
-        <div style={{ marginTop: 16, padding: "10px 14px", background: "var(--brand-bg-tint)", borderRadius: 10, border: "1px solid #d0e4f5" }}>
+        <div style={{ marginTop: 16, padding: "10px 14px", background: "var(--brand-bg-tint)", borderRadius: 10, border: "1px solid var(--bd-d0e4f5,#d0e4f5)" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "var(--brand-text-strong)", marginBottom: 6 }}>{t("legend_title")}</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 16px" }}>
             {[
@@ -30250,7 +30569,7 @@ function ReportView({ pool, measures, applications, products, onClose, manageSto
                   </div>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     {allPhotos.map((src, j) => (
-                      <img key={j} src={src} alt="" style={{ height: 120, borderRadius: 8, objectFit: "cover", border: "1px solid #d0e4f5" }} />
+                      <img key={j} src={src} alt="" style={{ height: 120, borderRadius: 8, objectFit: "cover", border: "1px solid var(--bd-d0e4f5,#d0e4f5)" }} />
                     ))}
                   </div>
                 </div>
@@ -30268,7 +30587,7 @@ function FieldLabel({ children, required, style }) {
   return (
     <label style={style || styles.fieldLabel}>
       {children}
-      {required && <span style={{ color: "#c0392b" }}> *</span>}
+      {required && <span style={{ color: "var(--tx-c0392b,#c0392b)" }}> *</span>}
     </label>
   );
 }
@@ -30373,7 +30692,7 @@ const styles = {
   reportOverlay: {
     position: "fixed",
     inset: 0,
-    background: "#ffffff",
+    background: "var(--bg-ffffff,#ffffff)",
     zIndex: 200,
     overflowY: "auto",
   },
@@ -30456,7 +30775,7 @@ const styles = {
     marginBottom: 12,
   },
   reportChartWrap: {
-    background: "#fafcfb",
+    background: "var(--bg-fafcfb,#fafcfb)",
     borderRadius: 12,
     padding: 8,
     width: "100%",
@@ -30473,13 +30792,13 @@ const styles = {
     fontWeight: 700,
     color: "var(--brand-text-muted)",
     textTransform: "uppercase",
-    borderBottom: "2px solid #e2d9f3",
+    borderBottom: "2px solid var(--bd-e2d9f3,#e2d9f3)",
   },
   diagHistTd: {
     padding: "8px 6px",
     fontSize: 12,
-    color: "#2d1b69",
-    borderBottom: "1px solid #f0eaf8",
+    color: "var(--tx-2d1b69,#2d1b69)",
+    borderBottom: "1px solid var(--bd-f0eaf8,#f0eaf8)",
     verticalAlign: "top",
     wordBreak: "break-word",
   },
@@ -30490,18 +30809,18 @@ const styles = {
     fontWeight: 700,
     color: "var(--brand-text-muted)",
     textTransform: "uppercase",
-    borderBottom: "2px solid #d0e4f5",
+    borderBottom: "2px solid var(--bd-d0e4f5,#d0e4f5)",
     whiteSpace: "nowrap",
   },
   reportTdCell: {
     padding: "6px 8px",
     fontSize: 11,
-    color: "#2d4a6e",
-    borderBottom: "1px solid #e8f0f8",
+    color: "var(--tx-2d4a6e,#2d4a6e)",
+    borderBottom: "1px solid var(--bd-e8f0f8,#e8f0f8)",
     verticalAlign: "top",
   },
   reportTableCell: {
-    border: "1px solid #d0e4f5",
+    border: "1px solid var(--bd-d0e4f5,#d0e4f5)",
     padding: "7px 10px",
     textAlign: "left",
     verticalAlign: "top",
@@ -30517,10 +30836,10 @@ const styles = {
   },
   reportConseilText: { fontSize: 12.5, color: "var(--brand-text-muted)", fontStyle: "italic" },
   reportConseilList: { margin: 0, paddingLeft: 18 },
-  reportConseilItem: { fontSize: 12.5, color: "#2d4a6e", lineHeight: 1.6 },
-  reportAppliedTag: { color: "#1a8fd1", fontWeight: 600 },
-  reportNotAppliedTag: { color: "#a8721a", fontStyle: "italic" },
-  reportDivider: { height: 1, background: "#d0e4f5", marginTop: 16 },
+  reportConseilItem: { fontSize: 12.5, color: "var(--tx-2d4a6e,#2d4a6e)", lineHeight: 1.6 },
+  reportAppliedTag: { color: "var(--tx-1a8fd1,#1a8fd1)", fontWeight: 600 },
+  reportNotAppliedTag: { color: "var(--tx-a8721a,#a8721a)", fontStyle: "italic" },
+  reportDivider: { height: 1, background: "var(--bg-d0e4f5,#d0e4f5)", marginTop: 16 },
   app: {
     fontFamily:
       "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
@@ -30545,7 +30864,7 @@ const styles = {
     alignItems: "center",
     gap: 12,
     padding: "20px 18px 16px",
-    background: "linear-gradient(135deg, var(--brand-primary), var(--brand-primary-dark))",
+    background: "linear-gradient(135deg, var(--hdr-from, var(--brand-primary)), var(--hdr-to, var(--brand-primary-dark)))",
   },
   headerIcon: {
     width: 38,
@@ -30577,7 +30896,7 @@ const styles = {
     alignItems: "center",
     gap: 4,
     background: "#f5d999",
-    color: "#3a2a0a",
+    color: "var(--tx-3a2a0a,#3a2a0a)",
     fontSize: 11,
     fontWeight: 800,
     padding: "5px 9px",
@@ -30595,7 +30914,7 @@ const styles = {
     left: 18,
     width: 280,
     maxWidth: "calc(100vw - 36px)",
-    background: "#ffffff",
+    background: "var(--bg-ffffff,#ffffff)",
     borderRadius: 14,
     padding: "10px 10px 12px",
     boxShadow: "0 12px 30px rgba(15,30,28,0.28)",
@@ -30654,7 +30973,7 @@ const styles = {
     fontSize: 11.5,
     fontWeight: 700,
     color: "var(--brand-primary)",
-    background: "#e9f6f1",
+    background: "var(--bg-e9f6f1,#e9f6f1)",
     padding: "4px 10px",
     borderRadius: 99,
     marginBottom: 12,
@@ -30663,7 +30982,7 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: 4,
-    background: "#ffffff",
+    background: "var(--bg-ffffff,#ffffff)",
     border: "1.5px solid",
     borderRadius: 12,
     paddingRight: 6,
@@ -30684,8 +31003,8 @@ const styles = {
     height: 30,
     borderRadius: 9,
     border: "none",
-    background: "#fde8e1",
-    color: "#c4502f",
+    background: "var(--bg-fde8e1,#fde8e1)",
+    color: "var(--tx-c4502f,#c4502f)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -30699,7 +31018,7 @@ const styles = {
     justifyContent: "space-between",
     margin: "4px 2px 10px",
   },
-  sectionLabel: { fontSize: 13, fontWeight: 700, color: "#2d4a6e", textTransform: "uppercase", letterSpacing: 0.4 },
+  sectionLabel: { fontSize: 13, fontWeight: 700, color: "var(--tx-2d4a6e,#2d4a6e)", textTransform: "uppercase", letterSpacing: 0.4 },
   sectionDate: { fontSize: 12.5, color: "var(--brand-text-muted)" },
   grid: {
     display: "grid",
@@ -30708,14 +31027,14 @@ const styles = {
     marginBottom: 14,
   },
   paramCard: {
-    background: "#ffffff",
+    background: "var(--bg-ffffff,#ffffff)",
     borderRadius: 14,
     padding: "12px 14px",
     border: "1px solid",
     boxShadow: "0 1px 2px rgba(15,94,86,0.04)",
   },
   paramTop: { display: "flex", alignItems: "center", justifyContent: "space-between" },
-  paramLabel: { fontSize: 12, color: "#5d6e6a", fontWeight: 600 },
+  paramLabel: { fontSize: 12, color: "var(--tx-5d6e6a,#5d6e6a)", fontWeight: 600 },
   paramDot: { width: 8, height: 8, borderRadius: 99 },
   paramValue: { fontSize: 24, fontWeight: 800, marginTop: 4, color: "var(--brand-text-strong)" },
   paramUnit: { fontSize: 12, fontWeight: 600, color: "var(--brand-text-muted)", marginLeft: 3 },
@@ -30762,7 +31081,7 @@ const styles = {
     maxHeight: 180,
     objectFit: "cover",
     borderRadius: 14,
-    border: "1px solid #e6ebe9",
+    border: "1px solid var(--bd-e6ebe9,#e6ebe9)",
   },
   measureThumb: {
     width: 32,
@@ -30783,8 +31102,8 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: 10,
-    background: "#e9f6f1",
-    border: "1px solid #c9e8dc",
+    background: "var(--bg-e9f6f1,#e9f6f1)",
+    border: "1px solid var(--bd-c9e8dc,#c9e8dc)",
     borderRadius: 14,
     padding: "14px 14px",
   },
@@ -30823,8 +31142,8 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: 9,
-    background: "#e9f6f1",
-    border: "1px solid #c9e8dc",
+    background: "var(--bg-e9f6f1,#e9f6f1)",
+    border: "1px solid var(--bd-c9e8dc,#c9e8dc)",
     borderRadius: 12,
     padding: "11px 14px",
     fontSize: 12.5,
@@ -30833,8 +31152,8 @@ const styles = {
     marginTop: 4,
   },
   recoCard: {
-    background: "#fff7f2",
-    border: "1px solid #f3d9c8",
+    background: "var(--bg-fff7f2,#fff7f2)",
+    border: "1px solid var(--bd-f3d9c8,#f3d9c8)",
     borderRadius: 14,
     padding: "13px 14px",
   },
@@ -30842,8 +31161,8 @@ const styles = {
   // appliquer, ex. chlore/dureté trop haut) : évite le style "à traiter"
   // rouge/orange qui suggère à tort une action en attente.
   recoCardInfo: {
-    background: "#eaf4fb",
-    border: "1px solid #c8e0f5",
+    background: "var(--bg-eaf4fb,#eaf4fb)",
+    border: "1px solid var(--bd-c8e0f5,#c8e0f5)",
     borderRadius: 14,
     padding: "13px 14px",
   },
@@ -30861,7 +31180,7 @@ const styles = {
     justifyContent: "center",
     flexShrink: 0,
   },
-  recoParam: { fontSize: 13.5, fontWeight: 700, color: "#8a3a1f" },
+  recoParam: { fontSize: 13.5, fontWeight: 700, color: "var(--tx-8a3a1f,#8a3a1f)" },
   recoStepBadgeInfo: {
     width: 20,
     height: 20,
@@ -30882,9 +31201,9 @@ const styles = {
     gap: 5,
     fontSize: 11.5,
     fontWeight: 700,
-    color: "#a8721a",
-    background: "#fdf6e6",
-    border: "1px solid #f0d9a8",
+    color: "var(--tx-a8721a,#a8721a)",
+    background: "var(--bg-fdf6e6,#fdf6e6)",
+    border: "1px solid var(--bd-f0d9a8,#f0d9a8)",
     borderRadius: 8,
     padding: "5px 8px",
     marginBottom: 7,
@@ -30900,7 +31219,7 @@ const styles = {
     borderRadius: 8,
     objectFit: "cover",
     flexShrink: 0,
-    border: "1px solid #d0e4f5",
+    border: "1px solid var(--bd-d0e4f5,#d0e4f5)",
   },
   recoProduct: {
     fontSize: 13,
@@ -30918,23 +31237,23 @@ const styles = {
     gap: 3,
     fontSize: 10.5,
     fontWeight: 700,
-    color: "#c4502f",
-    background: "#fde8e1",
+    color: "var(--tx-c4502f,#c4502f)",
+    background: "var(--bg-fde8e1,#fde8e1)",
     padding: "2px 7px",
     borderRadius: 99,
   },
-  recoDose: { fontSize: 13, color: "#2d4a6e" },
+  recoDose: { fontSize: 13, color: "var(--tx-2d4a6e,#2d4a6e)" },
   recoParts: {
     marginTop: 6,
     padding: "7px 10px",
-    background: "#f4f9fe",
-    border: "1px solid #d6e6f5",
+    background: "var(--bg-f4f9fe,#f4f9fe)",
+    border: "1px solid var(--bd-d6e6f5,#d6e6f5)",
     borderRadius: 8,
     display: "flex",
     flexDirection: "column",
     gap: 3,
   },
-  recoPartsHeader: { fontSize: 12, fontWeight: 700, color: "#3a5a78", marginBottom: 2 },
+  recoPartsHeader: { fontSize: 12, fontWeight: 700, color: "var(--tx-3a5a78,#3a5a78)", marginBottom: 2 },
   recoPartLine: { display: "flex", flexWrap: "wrap", alignItems: "baseline", gap: 6, fontSize: 13 },
   recoWait: {
     display: "flex",
@@ -30953,9 +31272,9 @@ const styles = {
     gap: 5,
     fontSize: 11.5,
     fontWeight: 700,
-    color: "#2d6a9a",
-    background: "#dcedf9",
-    border: "1px solid #b8d8ef",
+    color: "var(--tx-2d6a9a,#2d6a9a)",
+    background: "var(--bg-dcedf9,#dcedf9)",
+    border: "1px solid var(--bd-b8d8ef,#b8d8ef)",
     borderRadius: 8,
     padding: "5px 8px",
     marginTop: 7,
@@ -30971,9 +31290,9 @@ const styles = {
     gap: 5,
     fontSize: 11.5,
     fontWeight: 700,
-    color: "#a8721a",
-    background: "#fdf3e0",
-    border: "1px solid #f0d9a8",
+    color: "var(--tx-a8721a,#a8721a)",
+    background: "var(--bg-fdf3e0,#fdf3e0)",
+    border: "1px solid var(--bd-f0d9a8,#f0d9a8)",
     borderRadius: 8,
     padding: "5px 8px",
     marginTop: 7,
@@ -30998,7 +31317,7 @@ const styles = {
     padding: "11px 0",
     background: "transparent",
     border: "none",
-    color: "#c4502f",
+    color: "var(--tx-c4502f,#c4502f)",
     fontSize: 13,
     fontWeight: 600,
     cursor: "pointer",
@@ -31010,7 +31329,7 @@ const styles = {
     width: "100%",
     padding: "12px 14px",
     borderRadius: 12,
-    border: "1.5px solid #d0e4f5",
+    border: "1.5px solid var(--bd-d0e4f5,#d0e4f5)",
     background: "var(--brand-bg-tint)",
     color: "var(--brand-text-strong)",
     fontSize: 14,
@@ -31028,7 +31347,7 @@ const styles = {
     zIndex: 200,
   },
   langPickerSheet: {
-    background: "#ffffff",
+    background: "var(--bg-ffffff,#ffffff)",
     borderRadius: "20px 20px 0 0",
     padding: "20px 18px 32px",
     width: "100%",
@@ -31102,8 +31421,8 @@ const styles = {
     gap: 4,
     padding: 3,
     borderRadius: 99,
-    background: "#eaf2fa",
-    border: "1px solid #d0e4f5",
+    background: "var(--bg-eaf2fa,#eaf2fa)",
+    border: "1px solid var(--bd-d0e4f5,#d0e4f5)",
   },
   chipAxisTag: {
     fontSize: 9,
@@ -31121,10 +31440,10 @@ const styles = {
   },
   axisLegendItem: { display: "inline-flex", gap: 3 },
   chartCard: {
-    background: "#ffffff",
+    background: "var(--bg-ffffff,#ffffff)",
     borderRadius: 14,
     padding: "10px 6px 4px",
-    border: "1px solid #e6ebe9",
+    border: "1px solid var(--bd-e6ebe9,#e6ebe9)",
     marginBottom: 20,
   },
   smallAddBtn: {
@@ -31140,9 +31459,9 @@ const styles = {
     cursor: "pointer",
   },
   measureRow: {
-    background: "#ffffff",
+    background: "var(--bg-ffffff,#ffffff)",
     borderRadius: 12,
-    border: "1px solid #e6ebe9",
+    border: "1px solid var(--bd-e6ebe9,#e6ebe9)",
     overflow: "hidden",
   },
   measureRowHeader: {
@@ -31164,7 +31483,7 @@ const styles = {
     padding: "4px 9px",
     borderRadius: 99,
     border: "1px solid",
-    background: "#fafcfb",
+    background: "var(--bg-fafcfb,#fafcfb)",
   },
   measureNote: { fontSize: 12, color: "var(--brand-text-muted)", marginBottom: 8, fontStyle: "italic" },
   deleteBtn: {
@@ -31172,7 +31491,7 @@ const styles = {
     alignItems: "center",
     gap: 5,
     fontSize: 12,
-    color: "#c4502f",
+    color: "var(--tx-c4502f,#c4502f)",
     background: "transparent",
     border: "none",
     padding: 0,
@@ -31206,8 +31525,8 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: 10,
-    background: "#ffffff",
-    border: "1px solid #e6ebe9",
+    background: "var(--bg-ffffff,#ffffff)",
+    border: "1px solid var(--bd-e6ebe9,#e6ebe9)",
     borderRadius: 12,
     padding: "12px 14px",
     cursor: "pointer",
@@ -31226,7 +31545,7 @@ const styles = {
     width: 40,
     height: 40,
     borderRadius: 9,
-    background: "#eef5f3",
+    background: "var(--bg-eef5f3,#eef5f3)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -31234,8 +31553,8 @@ const styles = {
   },
   tabBar: {
     display: "flex",
-    background: "#ffffff",
-    borderTop: "1px solid #e6ebe9",
+    background: "var(--bg-ffffff,#ffffff)",
+    borderTop: "1px solid var(--bd-e6ebe9,#e6ebe9)",
     width: "100%",
     alignItems: "center",
     zIndex: 10,
@@ -31273,7 +31592,7 @@ const styles = {
     zIndex: 300,
   },
   modalSheet: {
-    background: "#ffffff",
+    background: "var(--bg-ffffff,#ffffff)",
     width: "100%",
     maxWidth: 480,
     maxHeight: "88vh",
@@ -31288,7 +31607,7 @@ const styles = {
     padding: "16px 18px 8px",
     position: "sticky",
     top: 0,
-    background: "#ffffff",
+    background: "var(--bg-ffffff,#ffffff)",
   },
   modalTitle: { fontSize: 16, fontWeight: 800, color: "var(--brand-text-strong)" },
   modalCloseBtn: {
@@ -31296,47 +31615,47 @@ const styles = {
     height: 30,
     borderRadius: 99,
     border: "none",
-    background: "#f1f4f3",
+    background: "var(--bg-f1f4f3,#f1f4f3)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     cursor: "pointer",
-    color: "#2d4a6e",
+    color: "var(--tx-2d4a6e,#2d4a6e)",
   },
   modalDeleteBtn: {
     width: 30,
     height: 30,
     borderRadius: 99,
     border: "none",
-    background: "#fde8e1",
+    background: "var(--bg-fde8e1,#fde8e1)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     cursor: "pointer",
-    color: "#c4502f",
+    color: "var(--tx-c4502f,#c4502f)",
   },
   modalBody: { padding: "8px 18px 0" },
   modalStickyFooter: {
     position: "sticky",
     bottom: 0,
-    background: "#ffffff",
+    background: "var(--bg-ffffff,#ffffff)",
     padding: "12px 18px 18px",
-    borderTop: "1px solid #eef1f0",
+    borderTop: "1px solid var(--bd-eef1f0,#eef1f0)",
     marginTop: 12,
   },
   fieldLabel: {
     display: "block",
     fontSize: 12,
     fontWeight: 700,
-    color: "#5d6e6a",
+    color: "var(--tx-5d6e6a,#5d6e6a)",
     margin: "12px 2px 5px",
   },
   fieldGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 },
   applyStepCard: {
-    background: "#f5f9f8",
+    background: "var(--bg-f5f9f8,#f5f9f8)",
     borderRadius: 12,
     padding: "12px 14px",
-    border: "1px solid #e6ebe9",
+    border: "1px solid var(--bd-e6ebe9,#e6ebe9)",
   },
   applyStepTitle: { fontSize: 13.5, fontWeight: 700, color: "var(--brand-text-strong)", marginBottom: 2 },
   applyStepProduct: { fontSize: 12.5, color: "var(--brand-text-muted)", marginBottom: 8 },
@@ -31345,10 +31664,10 @@ const styles = {
     alignItems: "center",
     height: 42,
     padding: "0 12px",
-    background: "#edf4fb",
+    background: "var(--bg-edf4fb,#edf4fb)",
     borderRadius: 10,
     fontSize: 13.5,
-    color: "#2d4a6e",
+    color: "var(--tx-2d4a6e,#2d4a6e)",
     fontWeight: 600,
     boxSizing: "border-box",
   },
@@ -31364,7 +31683,7 @@ const styles = {
   helpTextSmall: { fontSize: 12.5, color: "var(--brand-text-muted)", lineHeight: 1.5 },
   segmentedControl: {
     display: "flex",
-    background: "#edf4fb",
+    background: "var(--bg-edf4fb,#edf4fb)",
     borderRadius: 12,
     padding: 3,
     gap: 3,
@@ -31383,7 +31702,7 @@ const styles = {
     transition: "all .15s",
   },
   segmentedBtnActive: {
-    background: "#ffffff",
+    background: "var(--bg-ffffff,#ffffff)",
     color: "var(--brand-primary)",
     boxShadow: "0 1px 4px rgba(10,30,28,.14)",
   },
@@ -31400,7 +31719,7 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 9,
-    border: "1px solid #d0e4f5",
+    border: "1px solid var(--bd-d0e4f5,#d0e4f5)",
     background: "var(--brand-bg-tint)",
     color: "var(--brand-text-secondary)",
     cursor: "pointer",
@@ -31408,9 +31727,9 @@ const styles = {
   aiSection: {
     marginTop: 22,
     padding: "14px 16px",
-    background: "#f8f4fc",
+    background: "var(--bg-f8f4fc,#f8f4fc)",
     borderRadius: 14,
-    border: "1px solid #e2d9f3",
+    border: "1px solid var(--bd-e2d9f3,#e2d9f3)",
   },
   aiSectionTitle: {
     display: "flex",
@@ -31418,7 +31737,7 @@ const styles = {
     gap: 6,
     fontSize: 13,
     fontWeight: 800,
-    color: "#7a3fa0",
+    color: "var(--tx-7a3fa0,#7a3fa0)",
     marginBottom: 10,
     textTransform: "uppercase",
     letterSpacing: 0.3,
@@ -31445,9 +31764,9 @@ const styles = {
   aiCommentBox: {
     marginTop: 12,
     padding: "12px 14px",
-    background: "#ffffff",
+    background: "var(--bg-ffffff,#ffffff)",
     borderRadius: 10,
-    border: "1px solid #e2d9f3",
+    border: "1px solid var(--bd-e2d9f3,#e2d9f3)",
     fontSize: 13.5,
     color: "var(--brand-text-strong)",
     lineHeight: 1.65,
@@ -31456,11 +31775,11 @@ const styles = {
   aiErrorBox: {
     marginTop: 10,
     padding: "10px 12px",
-    background: "#fff5f3",
+    background: "var(--bg-fff5f3,#fff5f3)",
     borderRadius: 10,
-    border: "1px solid #f0c0b8",
+    border: "1px solid var(--bd-f0c0b8,#f0c0b8)",
     fontSize: 12.5,
-    color: "#c4502f",
+    color: "var(--tx-c4502f,#c4502f)",
   },
   aiKeyMissing: {
     display: "flex",
@@ -31475,13 +31794,13 @@ const styles = {
     textAlign: "left",
     padding: "12px 14px",
     borderRadius: 12,
-    border: "1.5px solid #d0e4f5",
-    background: "#ffffff",
+    border: "1.5px solid var(--bd-d0e4f5,#d0e4f5)",
+    background: "var(--bg-ffffff,#ffffff)",
     cursor: "pointer",
   },
   treatmentOptionActive: {
     border: "1.5px solid var(--brand-primary)",
-    background: "#eaf5fd",
+    background: "var(--bg-eaf5fd,#eaf5fd)",
   },
   treatmentOptionTop: {
     display: "flex",
@@ -31508,8 +31827,8 @@ const styles = {
   filtrationOption: {
     padding: "11px 8px",
     borderRadius: 10,
-    border: "1.5px solid #d0e4f5",
-    background: "#ffffff",
+    border: "1.5px solid var(--bd-d0e4f5,#d0e4f5)",
+    background: "var(--bg-ffffff,#ffffff)",
     color: "var(--brand-text-secondary)",
     fontSize: 13,
     fontWeight: 600,
@@ -31518,7 +31837,7 @@ const styles = {
   },
   filtrationOptionActive: {
     border: "1.5px solid var(--brand-primary)",
-    background: "#eaf5fd",
+    background: "var(--bg-eaf5fd,#eaf5fd)",
     color: "var(--brand-primary)",
   },
   stripHint: {
@@ -31528,7 +31847,7 @@ const styles = {
     padding: "8px 12px",
     background: "var(--brand-bg-tint)",
     borderRadius: 9,
-    border: "1px solid #e6ebe9",
+    border: "1px solid var(--bd-e6ebe9,#e6ebe9)",
     marginBottom: 4,
   },
   input: {
@@ -31536,10 +31855,10 @@ const styles = {
     boxSizing: "border-box",
     padding: "11px 12px",
     borderRadius: 11,
-    border: "1.5px solid #d0e4f5",
+    border: "1.5px solid var(--bd-d0e4f5,#d0e4f5)",
     fontSize: 14,
     fontFamily: "inherit",
-    background: "#fafcfb",
+    background: "var(--bg-fafcfb,#fafcfb)",
     color: "var(--brand-text-strong)",
     outline: "none",
   },
@@ -31572,7 +31891,7 @@ const styles = {
     padding: "13px 0",
     borderRadius: 12,
     border: "1.5px dashed var(--brand-icon-light)",
-    background: "#f5f9f8",
+    background: "var(--bg-f5f9f8,#f5f9f8)",
     color: "var(--brand-primary)",
     fontWeight: 600,
     fontSize: 13.5,
@@ -31612,8 +31931,8 @@ const styles = {
     gap: 8,
     padding: "10px 12px",
     borderRadius: 10,
-    background: "#e8f4fd",
-    border: "1px solid #90c4e8",
+    background: "var(--bg-e8f4fd,#e8f4fd)",
+    border: "1px solid var(--bd-90c4e8,#90c4e8)",
     color: "var(--brand-text-strong)",
     fontSize: 13,
     lineHeight: 1.5,
@@ -31631,7 +31950,7 @@ const styles = {
     height: 80,
     borderRadius: 10,
     overflow: "hidden",
-    border: "1.5px solid #d0e4f5",
+    border: "1.5px solid var(--bd-d0e4f5,#d0e4f5)",
     flexShrink: 0,
   },
   photoThumb: {
@@ -31659,8 +31978,8 @@ const styles = {
   confirmAnalyzeBox: {
     padding: "12px 14px",
     borderRadius: 12,
-    background: "#e8f4fd",
-    border: "1px solid #90c4e8",
+    background: "var(--bg-e8f4fd,#e8f4fd)",
+    border: "1px solid var(--bd-90c4e8,#90c4e8)",
     fontSize: 13.5,
     color: "var(--brand-text-strong)",
   },
@@ -31683,8 +32002,8 @@ const styles = {
     flex: 1,
     padding: "9px 0",
     borderRadius: 9,
-    border: "1px solid #90c4e8",
-    background: "#fff",
+    border: "1px solid var(--bd-90c4e8,#90c4e8)",
+    background: "var(--bg-ffffff,#fff)",
     color: "var(--brand-primary)",
     fontWeight: 600,
     fontSize: 13,
@@ -31695,11 +32014,11 @@ const styles = {
     padding: "9px 13px",
     borderRadius: 10,
     background: "var(--brand-bg-tint)",
-    border: "1px solid #d0e4f5",
+    border: "1px solid var(--bd-d0e4f5,#d0e4f5)",
   },
   latestNoteText: {
     fontSize: 13,
-    color: "#2d4a6e",
+    color: "var(--tx-2d4a6e,#2d4a6e)",
     fontStyle: "italic",
   },
   stockInitRow: {
@@ -31711,7 +32030,7 @@ const styles = {
     flex: 1,
     padding: "10px 0",
     borderRadius: 10,
-    border: "1.5px solid #d0e4f5",
+    border: "1.5px solid var(--bd-d0e4f5,#d0e4f5)",
     background: "var(--brand-bg-tint)",
     color: "var(--brand-primary)",
     fontWeight: 600,
@@ -31742,9 +32061,9 @@ const styles = {
     padding: "12px 14px",
     borderRadius: 10,
     background: "var(--brand-bg-tint)",
-    border: "1px solid #d0e4f5",
+    border: "1px solid var(--bd-d0e4f5,#d0e4f5)",
     fontSize: 13,
-    color: "#2d4a6e",
+    color: "var(--tx-2d4a6e,#2d4a6e)",
     display: "flex",
     flexDirection: "column",
     gap: 8,
@@ -31767,7 +32086,7 @@ const styles = {
     padding: "6px 10px",
     borderRadius: 8,
     background: "var(--brand-bg-tint)",
-    border: "1px solid #d0e4f5",
+    border: "1px solid var(--bd-d0e4f5,#d0e4f5)",
   },
   consumptionDate: {
     fontSize: 12,
@@ -31801,8 +32120,8 @@ const styles = {
     maxHeight: 200,
     objectFit: "contain",
     borderRadius: 12,
-    border: "1px solid #d0e4f5",
-    background: "#f0f4f8",
+    border: "1px solid var(--bd-d0e4f5,#d0e4f5)",
+    background: "var(--bg-f0f4f8,#f0f4f8)",
     cursor: "zoom-in",
   },
   photoRemoveBtn: {
@@ -31811,7 +32130,7 @@ const styles = {
     alignItems: "center",
     gap: 5,
     fontSize: 12,
-    color: "#c4502f",
+    color: "var(--tx-c4502f,#c4502f)",
     background: "transparent",
     border: "none",
     padding: 0,
@@ -31821,8 +32140,8 @@ const styles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    background: "#ffffff",
-    border: "1px solid #e6ebe9",
+    background: "var(--bg-ffffff,#ffffff)",
+    border: "1px solid var(--bd-e6ebe9,#e6ebe9)",
     borderRadius: 14,
     padding: "13px 14px",
     marginBottom: 10,
@@ -31835,14 +32154,14 @@ const styles = {
     padding: "14px 0 6px",
     textAlign: "center",
   },
-  paywallPrice: { fontSize: 22, fontWeight: 800, color: "#0d2b4e", marginTop: 6 }, // v1.71.0 — usage exclusif PaywallModal : reste bleu, non thémé
-  paywallPriceSub: { fontSize: 12.5, color: "#6a7d90" }, // v1.71.0 — idem
+  paywallPrice: { fontSize: 22, fontWeight: 800, color: "var(--tx-0d2b4e,#0d2b4e)", marginTop: 6 }, // v1.71.0 — usage exclusif PaywallModal : reste bleu, non thémé
+  paywallPriceSub: { fontSize: 12.5, color: "var(--tx-6a7d90,#6a7d90)" }, // v1.71.0 — idem
   paywallPerk: {
     display: "flex",
     alignItems: "center",
     gap: 9,
     fontSize: 13.5,
-    color: "#2d4a6e",
+    color: "var(--tx-2d4a6e,#2d4a6e)",
     fontWeight: 500,
   },
 };
@@ -32064,9 +32383,9 @@ class AppErrorBoundary extends React.Component {
       const tt = getFatalOverlayTexts();
       return React.createElement(
         "div",
-        { style: { position: "fixed", inset: 0, background: "#f4f8fb", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32, textAlign: "center", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" } },
-        React.createElement("div", { style: { fontSize: 19, fontWeight: 800, color: "#1a2b3c", marginBottom: 10 } }, tt.title),
-        React.createElement("div", { style: { fontSize: 14, color: "#5a6b7c", marginBottom: 24, maxWidth: 320, lineHeight: 1.5 } }, tt.desc),
+        { style: { position: "fixed", inset: 0, background: "var(--bg-f4f8fb,#f4f8fb)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32, textAlign: "center", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" } },
+        React.createElement("div", { style: { fontSize: 19, fontWeight: 800, color: "var(--tx-1a2b3c,#1a2b3c)", marginBottom: 10 } }, tt.title),
+        React.createElement("div", { style: { fontSize: 14, color: "var(--tx-5a6b7c,#5a6b7c)", marginBottom: 24, maxWidth: 320, lineHeight: 1.5 } }, tt.desc),
         React.createElement(
           "button",
           {

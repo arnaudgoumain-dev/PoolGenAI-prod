@@ -9,7 +9,7 @@
 
 // v1.168.1 — v2 : index.html (coquille servie cache d'abord) a change (delai de demarrage 30 s, message en anglais) ; changer ce nom force le
 // precache a nouveau et purge les anciens caches a l'activation.
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v3";
 const STATIC_CACHE = `poolgenai-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `poolgenai-runtime-${CACHE_VERSION}`;
 
