@@ -9,7 +9,7 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.184.2";
+const APP_VERSION = "1.184.3";
 const CGU_VERSION = "1.8"; // v1.8 : article « Crédits d'analyses IA supplémentaires » (pack de 50, sans date de validité, perte à la fin de l'abonnement, rétractation) et limite de 30 analyses par mois précisée dans l'article Premium — ré-acceptation requise ; v1.7 : texte complet réaligné (version gratuite et Premium payant : abonnement, renouvellement, résiliation ; 16 articles, 6 langues ; hébergement GitHub, Inc. / Google Cloud EMEA / Cloudflare) — ré-acceptation requise ; v1.6 : sections « Données de filtration enregistrées » (températures saisies, programmations, historique de l'air, configuration thermique, coefficient d'inertie) et « Bilan et estimations d'économies » (hypothèses, prix d'achat, estimations indicatives) ; v1.5 : section 6 complétée (altitude du bassin : IGN, Open Topo Data) ; v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
@@ -9798,8 +9798,17 @@ const PROXY_BASE_URL = PROXY_URLS[detectPoolGenAIEnv()] || PROXY_URLS.prod;
 // d'abonnement sur Play Billing plutôt que Stripe (voir handleStartCheckout,
 // handleOpenPortal). IDs produits identiques à ceux créés dans Play Console
 // (voir poolgenai-proxy.js, mêmes constantes côté Worker).
+// v1.184.3 — détection persistante : le référent « android-app:// » n'existe qu'au lancement de la TWA (il disparaît au
+// rechargement ou après une navigation) ; on le mémorise donc pour la session de l'onglet (sessionStorage, pas localStorage :
+// la TWA partage son stockage avec Chrome) et on s'appuie aussi sur la Digital Goods API, exposée uniquement dans une TWA.
 function isTWAEnvironment() {
-  return typeof document !== "undefined" && !!document.referrer && document.referrer.startsWith("android-app://");
+  if (typeof document === "undefined") return false;
+  const fromTwa = !!document.referrer && document.referrer.startsWith("android-app://" + ANDROID_PACKAGE_NAME);
+  try {
+    if (fromTwa) sessionStorage.setItem("pool:twa", "1");
+    else if (sessionStorage.getItem("pool:twa") === "1") return true;
+  } catch (e) {}
+  return fromTwa || (typeof window !== "undefined" && typeof window.getDigitalGoodsService === "function");
 }
 const ANDROID_PACKAGE_NAME = "com.poolgenai.app.twa";
 const PLAY_BILLING_PRODUCT_MONTHLY = "premium_monthly";
