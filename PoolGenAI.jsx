@@ -9,8 +9,8 @@ const {
 } = LucideReact;
 
 // ---------- Constantes / cibles ----------
-const APP_VERSION = "1.178.6";
-const CGU_VERSION = "1.7"; // v1.7 : texte complet réaligné (version gratuite et Premium payant : abonnement, renouvellement, résiliation ; 16 articles, 6 langues ; hébergement GitHub, Inc. / Google Cloud EMEA / Cloudflare) — ré-acceptation requise ; v1.6 : sections « Données de filtration enregistrées » (températures saisies, programmations, historique de l'air, configuration thermique, coefficient d'inertie) et « Bilan et estimations d'économies » (hypothèses, prix d'achat, estimations indicatives) ; v1.5 : section 6 complétée (altitude du bassin : IGN, Open Topo Data) ; v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
+const APP_VERSION = "1.184.1";
+const CGU_VERSION = "1.8"; // v1.8 : article « Crédits d'analyses IA supplémentaires » (pack de 50, sans date de validité, perte à la fin de l'abonnement, rétractation) et limite de 30 analyses par mois précisée dans l'article Premium — ré-acceptation requise ; v1.7 : texte complet réaligné (version gratuite et Premium payant : abonnement, renouvellement, résiliation ; 16 articles, 6 langues ; hébergement GitHub, Inc. / Google Cloud EMEA / Cloudflare) — ré-acceptation requise ; v1.6 : sections « Données de filtration enregistrées » (températures saisies, programmations, historique de l'air, configuration thermique, coefficient d'inertie) et « Bilan et estimations d'économies » (hypothèses, prix d'achat, estimations indicatives) ; v1.5 : section 6 complétée (altitude du bassin : IGN, Open Topo Data) ; v1.4 : section 6 « Météo et durée de filtration » (coordonnées approximatives transmises à MET Norway) ; v1.3 : clause 5 corrigée (clé API proxy, éditeur sous-traitant RGPD), article 12 - contribution photo base commune
 // v1.95.0 — Plafond de bassins actifs pour un compte Premium (contrôle
 // client ; la vraie limite est imposée par firestore.rules côté serveur).
 const MAX_POOLS_CLIENT = 3;
@@ -742,13 +742,14 @@ const TRANSLATIONS = {
     reco_fallback_sel: "Sel de piscine (NaCl pur)",
     stock_empty_badge: "stock épuisé",
     paywall_perk1: "Mesures illimitées (au lieu d'1 par jour)",
-    paywall_perk2: "Photos photomètre/bandelette avec analyse IA",
+    paywall_perk2: "Photos photomètre/bandelette avec analyse IA (30 analyses par mois, packs d'analyses en option)",
     paywall_perk3: "Photos du bassin attachées à chaque mesure",
     paywall_perk4: "Photo de chaque produit (étiquette, dosage)",
 
     paywall_perk5: "Historique illimité + rapport PDF",
     paywall_perk6: "Gestion du stock de produits",
     paywall_perk7: "Jusqu'à 3 bassins, 2 invités par bassin",
+    paywall_perk8: "Plan de traitement pas à pas : quantité et moment de chaque ajout, résultat attendu, cause probable des écarts",
     paywall_test_note: "Paiement sécurisé via Stripe. Résiliable à tout moment.",
     paywall_price_monthly: "2,99 € / mois",
     paywall_price_yearly: "24,99 € / an",
@@ -759,6 +760,72 @@ const TRANSLATIONS = {
     manage_subscription_btn: "Gérer mon abonnement",
     tester_toggle_hint: "Mode testeur : active ou désactive le Premium pour tester l'application en mode standard ou en mode Premium.",
     ai_err_daily_limit: "Limite quotidienne d'analyses IA atteinte (50 par jour). Réessaie demain.",
+    ai_err_monthly_limit: "Quota de 30 analyses IA atteint pour ce mois. Il sera remis à zéro le 1er du mois prochain ; vous pouvez aussi acheter des analyses supplémentaires dans Réglages. Le reste de l'application reste utilisable.",
+    ai_quota_line: "Analyses IA ce mois-ci : {used} / {limit}",
+    ai_quota_reset: "Remise à zéro le {date}",
+    credits_line: "Crédits achetés : {n}",
+    credits_buy: "Acheter {n} analyses — {price}",
+    credits_price: "2,99 €",
+    credits_title: "Acheter des analyses IA",
+    credits_body: "{n} analyses IA supplémentaires, utilisées une fois vos {limit} analyses mensuelles épuisées.",
+    credits_validity: "Sans date limite. Perdues si votre abonnement Premium prend fin.",
+    credits_consent: "Je demande l'exécution immédiate de ma commande et je reconnais perdre mon droit de rétractation dès que les crédits sont ajoutés à mon compte.",
+    credits_refund_note: "Achat non remboursable une fois les crédits utilisés, sauf obligation légale. En cas de problème : support@poolgenai.com.",
+    credits_pay: "Payer {price}",
+    credits_close: "Fermer",
+    credits_success: "Merci ! {n} analyses IA ont été ajoutées à votre compte.",
+    credits_pending: "Paiement reçu : ajout des crédits en cours…",
+    credits_cancelled: "Achat annulé. Aucun paiement n'a été effectué.",
+    credits_error: "Impossible de finaliser l'achat. Réessayez plus tard ou écrivez à support@poolgenai.com.",
+    cgu_scroll_hint: "Faites défiler le texte jusqu'à la fin pour pouvoir accepter.",
+    plan_validated_by: "par {name}",
+    plan_conflict_title: "Étape déjà traitée",
+    plan_conflict_done: "{name} vient de valider cette étape ({time}). Votre saisie n'a pas été enregistrée et aucun produit n'a été décompté du stock.",
+    plan_conflict_skipped: "{name} vient de passer cette étape ({time}). Votre saisie n'a pas été enregistrée.",
+    plan_conflict_changed: "Le plan a été modifié par une autre personne. Vérifiez l'étape en cours avant d'appliquer un produit.",
+    plan_conflict_someone: "Une autre personne",
+    plan_conflict_ok: "Compris",
+    reco_parts_summary_max: "En {n} applications (maximum {max} par ajout)",
+    reco_parts_summary: "En {n} applications",
+    reco_parts_locked: "Quantité et moment de chaque ajout : avec Premium",
+    plan_banner_title: "Plan complet avec Premium",
+    plan_banner_body: "Quantité de chaque ajout, valeur attendue après traitement, cause probable des écarts, suivi du stock et historique des traitements.",
+    proj_title: "Après le traitement (estimation)",
+    proj_target: "cible {min}–{max}",
+    proj_in_target: "dans la cible",
+    proj_near_target: "proche de la cible",
+    proj_off_target: "reste hors cible : à reprendre au contrôle",
+    proj_shock: "traitement choc : le chlore redescendra de lui-même",
+    proj_control_date: "Mesure de contrôle conseillée : {date}",
+    proj_control_after: "Mesure de contrôle conseillée : environ {h} h après le début du traitement",
+    proj_disclaimer: "Estimation fondée sur les doses du plan : le résultat réel dépend du brassage, de la filtration et de votre bassin. Remesurez avant de poursuivre.",
+    cause_title: "Cause probable des écarts",
+    cause_note: "Hypothèses tirées de vos mesures, des produits appliqués et de la température de l'air : à confirmer, ce n'est pas un diagnostic.",
+    cause_ph_tacplus: "Le bicarbonate (TAC+) ajouté depuis la dernière mesure fait remonter le pH.",
+    cause_ph_shock: "Le chlore choc appliqué depuis la dernière mesure (hypochlorite) fait monter le pH.",
+    cause_ph_tac_high: "Un TAC élevé ({tac} mg/L) pousse le pH à remonter : il se corrige en même temps que le pH.",
+    cause_ph_rise: "Le pH est passé de {from} à {to} en {days} j sans produit qui l'explique : il remonte naturellement.",
+    cause_ph_warm: "L'eau chaude (air ≈ {air} °C ces derniers jours) accélère le dégazage du CO₂, ce qui fait monter le pH.",
+    cause_ph_degas: "Sans correction, le pH d'une piscine tend à monter seul : le CO₂ s'échappe de l'eau (jets, cascade, brassage, chaleur).",
+    cause_ph_after_minus: "Le pH- appliqué depuis la dernière mesure a pu agir plus fort que prévu.",
+    cause_ph_trichlor: "Les galets ou le chlore stabilisé appliqués depuis la dernière mesure (acide trichloroisocyanurique) font baisser le pH.",
+    cause_ph_tac_low: "Un TAC bas ({tac} mg/L) rend le pH instable : il chute facilement.",
+    cause_ph_drop: "Le pH est passé de {from} à {to} en {days} j : une pluie ou un appoint d'eau douce peuvent l'expliquer.",
+    cause_ph_low_generic: "La pluie, un appoint d'eau douce ou du chlore stabilisé font baisser le pH.",
+    cause_cl_drop: "Le chlore libre est passé de {from} à {to} mg/L en {days} j.",
+    cause_cl_nochlorine: "Aucun chlore ajouté depuis {days} j : le chlore libre se consomme chaque jour.",
+    cause_cl_heat: "Chaleur ({t} °C) : le chlore se consomme plus vite quand il fait chaud.",
+    cause_cl_low_cya: "Stabilisant (CYA) bas ({cya} mg/L) : le soleil détruit le chlore beaucoup plus vite.",
+    cause_cl_combined: "Le chlore combiné ({cc} mg/L) mobilise du chlore libre pour se dégrader.",
+    cause_cl_generic: "Soleil (UV), baigneurs, feuilles et pollens consomment du chlore libre en continu.",
+    cause_clhigh_applied: "Du chlore a été ajouté depuis la dernière mesure : le taux va redescendre seul.",
+    cause_clhigh_generic: "Peu de baigneurs ou un temps couvert : le chlore se consomme lentement.",
+    cause_cc_high: "Le chlore combiné ({cc} mg/L) vient des baigneurs, de la transpiration et des matières organiques, qui forment des chloramines.",
+    cause_cc_lowfree: "Un chlore libre insuffisant laisse les chloramines s'accumuler.",
+    cause_tac_after_acid: "Les produits acides (pH-) appliqués depuis la dernière mesure font baisser le TAC.",
+    cause_tac_low_generic: "La pluie, un appoint d'eau douce ou un renouvellement d'eau diluent le TAC.",
+    cause_tac_after_plus: "Le bicarbonate (TAC+) ajouté depuis la dernière mesure a fait monter le TAC.",
+    cause_tac_high_generic: "Un appoint avec une eau très alcaline ou un excès de TAC+ fait monter le TAC.",
     ai_err_tester_user: "Quota IA testeur atteint pour aujourd'hui (10 analyses par jour). Le reste de l'application reste utilisable ; réessaie demain.",
     ai_err_tester_day: "Le quota IA partagé entre testeurs est atteint pour aujourd'hui. Le reste de l'application reste utilisable ; réessaie demain.",
     ai_err_tester_total: "Le budget IA prévu pour la période de test est épuisé. Les autres fonctions de l'application restent disponibles.",
@@ -1877,13 +1944,14 @@ const TRANSLATIONS = {
     reco_fallback_sel: "Pool salt (pure NaCl)",
     stock_empty_badge: "out of stock",
     paywall_perk1: "Unlimited readings (instead of 1 per day)",
-    paywall_perk2: "Photometer/strip photos with AI analysis",
+    paywall_perk2: "Photometer/strip photos with AI analysis (30 analyses per month, optional extra packs)",
     paywall_perk3: "Pool photos attached to each reading",
     paywall_perk4: "Photo of each product (label, dosage)",
 
     paywall_perk5: "Unlimited history + PDF report",
     paywall_perk6: "Product stock management",
     paywall_perk7: "Up to 3 pools, 2 invites per pool",
+    paywall_perk8: "Step-by-step treatment plan: amount and timing of each addition, expected result, probable cause of deviations",
     paywall_test_note: "Secure payment via Stripe. Cancel anytime.",
     paywall_price_monthly: "€2.99 / month",
     paywall_price_yearly: "€24.99 / year",
@@ -1894,6 +1962,72 @@ const TRANSLATIONS = {
     manage_subscription_btn: "Manage subscription",
     tester_toggle_hint: "Tester mode: switch Premium on or off to try the app in standard or Premium mode.",
     ai_err_daily_limit: "Daily AI analysis limit reached (50 per day). Try again tomorrow.",
+    ai_err_monthly_limit: "Monthly quota of 30 AI analyses reached. It resets on the 1st of next month; you can also buy extra analyses in Settings. The rest of the app stays available.",
+    ai_quota_line: "AI analyses this month: {used} / {limit}",
+    ai_quota_reset: "Resets on {date}",
+    credits_line: "Purchased credits: {n}",
+    credits_buy: "Buy {n} analyses — {price}",
+    credits_price: "€2.99",
+    credits_title: "Buy AI analyses",
+    credits_body: "{n} extra AI analyses, used once your {limit} monthly analyses are used up.",
+    credits_validity: "No expiry date. Lost if your Premium subscription ends.",
+    credits_consent: "I request immediate performance of my order and acknowledge that I lose my right of withdrawal as soon as the credits are added to my account.",
+    credits_refund_note: "Not refundable once credits are used, except where required by law. Any problem: support@poolgenai.com.",
+    credits_pay: "Pay {price}",
+    credits_close: "Close",
+    credits_success: "Thank you! {n} AI analyses were added to your account.",
+    credits_pending: "Payment received: adding your credits…",
+    credits_cancelled: "Purchase cancelled. No payment was made.",
+    credits_error: "The purchase could not be completed. Try again later or write to support@poolgenai.com.",
+    cgu_scroll_hint: "Scroll to the end of the text to be able to accept.",
+    plan_validated_by: "by {name}",
+    plan_conflict_title: "Step already handled",
+    plan_conflict_done: "{name} just validated this step ({time}). Your entry was not saved and no product was deducted from stock.",
+    plan_conflict_skipped: "{name} just skipped this step ({time}). Your entry was not saved.",
+    plan_conflict_changed: "The plan was changed by someone else. Check the current step before applying a product.",
+    plan_conflict_someone: "Someone else",
+    plan_conflict_ok: "Got it",
+    reco_parts_summary_max: "In {n} applications (maximum {max} per addition)",
+    reco_parts_summary: "In {n} applications",
+    reco_parts_locked: "Amount and timing of each addition: with Premium",
+    plan_banner_title: "Full plan with Premium",
+    plan_banner_body: "Amount of each addition, expected value after treatment, probable cause of deviations, stock tracking and treatment history.",
+    proj_title: "After treatment (estimate)",
+    proj_target: "target {min}–{max}",
+    proj_in_target: "within target",
+    proj_near_target: "close to target",
+    proj_off_target: "stays out of target: to redo at the check",
+    proj_shock: "shock treatment: chlorine will come back down by itself",
+    proj_control_date: "Recommended check measurement: {date}",
+    proj_control_after: "Recommended check measurement: about {h} h after the treatment starts",
+    proj_disclaimer: "Estimate based on the plan's doses: the actual result depends on circulation, filtration and your pool. Re-test before going further.",
+    cause_title: "Probable cause of the deviations",
+    cause_note: "Hypotheses drawn from your readings, the products applied and the air temperature: to be confirmed, not a diagnosis.",
+    cause_ph_tacplus: "The bicarbonate (TAC+) added since the last reading raises the pH.",
+    cause_ph_shock: "The shock chlorine (hypochlorite) applied since the last reading raises the pH.",
+    cause_ph_tac_high: "A high alkalinity ({tac} mg/L) pushes the pH up: it is corrected along with the pH.",
+    cause_ph_rise: "The pH went from {from} to {to} in {days} d with no product to explain it: it rises naturally.",
+    cause_ph_warm: "Warm water (air ≈ {air} °C lately) speeds up CO₂ outgassing, which raises the pH.",
+    cause_ph_degas: "Left alone, a pool's pH tends to rise: CO₂ escapes from the water (jets, waterfall, circulation, heat).",
+    cause_ph_after_minus: "The pH- applied since the last reading may have acted stronger than expected.",
+    cause_ph_trichlor: "Chlorine tablets or stabilised chlorine applied since the last reading (trichloroisocyanuric acid) lower the pH.",
+    cause_ph_tac_low: "A low alkalinity ({tac} mg/L) makes the pH unstable: it drops easily.",
+    cause_ph_drop: "The pH went from {from} to {to} in {days} d: rain or a fresh-water top-up may explain it.",
+    cause_ph_low_generic: "Rain, a fresh-water top-up or stabilised chlorine lower the pH.",
+    cause_cl_drop: "Free chlorine went from {from} to {to} mg/L in {days} d.",
+    cause_cl_nochlorine: "No chlorine added for {days} d: free chlorine is consumed every day.",
+    cause_cl_heat: "Heat ({t} °C): chlorine is consumed faster when it is hot.",
+    cause_cl_low_cya: "Low stabiliser (CYA, {cya} mg/L): the sun destroys chlorine much faster.",
+    cause_cl_combined: "Combined chlorine ({cc} mg/L) ties up free chlorine as it breaks down.",
+    cause_cl_generic: "Sun (UV), swimmers, leaves and pollen consume free chlorine continuously.",
+    cause_clhigh_applied: "Chlorine was added since the last reading: the level will come down by itself.",
+    cause_clhigh_generic: "Few swimmers or overcast weather: chlorine is consumed slowly.",
+    cause_cc_high: "Combined chlorine ({cc} mg/L) comes from swimmers, sweat and organic matter, which form chloramines.",
+    cause_cc_lowfree: "Insufficient free chlorine lets chloramines build up.",
+    cause_tac_after_acid: "Acid products (pH-) applied since the last reading lower the alkalinity.",
+    cause_tac_low_generic: "Rain, a fresh-water top-up or a water renewal dilute the alkalinity.",
+    cause_tac_after_plus: "The bicarbonate (TAC+) added since the last reading raised the alkalinity.",
+    cause_tac_high_generic: "A top-up with very alkaline water or too much TAC+ raises the alkalinity.",
     ai_err_tester_user: "Tester AI quota reached for today (10 analyses per day). The rest of the app stays available; try again tomorrow.",
     ai_err_tester_day: "The AI quota shared by all testers is used up for today. The rest of the app stays available; try again tomorrow.",
     ai_err_tester_total: "The AI budget for the test period is used up. The other features of the app remain available.",
@@ -3008,13 +3142,14 @@ const TRANSLATIONS = {
     reco_fallback_sel: "Poolsalz (reines NaCl)",
     stock_empty_badge: "nicht vorrätig",
     paywall_perk1: "Unbegrenzte Messungen (statt 1 pro Tag)",
-    paywall_perk2: "Fotometer-/Teststreifen-Fotos mit KI-Analyse",
+    paywall_perk2: "Fotometer-/Teststreifen-Fotos mit KI-Analyse (30 Analysen pro Monat, optionale Zusatzpakete)",
     paywall_perk3: "Beckenfotos zu jeder Messung",
     paywall_perk4: "Foto jedes Produkts (Etikett, Dosierung)",
 
     paywall_perk5: "Unbegrenzte Historie + PDF-Bericht",
     paywall_perk6: "Produktlagerverwaltung",
     paywall_perk7: "Bis zu 3 Becken, 2 Einladungen pro Becken",
+    paywall_perk8: "Schrittweiser Behandlungsplan: Menge und Zeitpunkt jeder Zugabe, erwartetes Ergebnis, wahrscheinliche Ursache der Abweichungen",
     paywall_test_note: "Sichere Zahlung über Stripe. Jederzeit kündbar.",
     paywall_price_monthly: "2,99 € / Monat",
     paywall_price_yearly: "24,99 € / Jahr",
@@ -3025,6 +3160,72 @@ const TRANSLATIONS = {
     manage_subscription_btn: "Abo verwalten",
     tester_toggle_hint: "Tester-Modus: Premium ein- oder ausschalten, um die App im Standard- oder Premium-Modus zu testen.",
     ai_err_daily_limit: "Tageslimit für KI-Analysen erreicht (50 pro Tag). Versuche es morgen erneut.",
+    ai_err_monthly_limit: "Monatskontingent von 30 KI-Analysen erreicht. Es wird am 1. des nächsten Monats zurückgesetzt; Sie können in den Einstellungen auch zusätzliche Analysen kaufen. Der Rest der App bleibt nutzbar.",
+    ai_quota_line: "KI-Analysen diesen Monat: {used} / {limit}",
+    ai_quota_reset: "Zurücksetzung am {date}",
+    credits_line: "Gekaufte Guthaben: {n}",
+    credits_buy: "{n} Analysen kaufen — {price}",
+    credits_price: "2,99 €",
+    credits_title: "KI-Analysen kaufen",
+    credits_body: "{n} zusätzliche KI-Analysen, die genutzt werden, sobald Ihre {limit} monatlichen Analysen aufgebraucht sind.",
+    credits_validity: "Ohne Ablaufdatum. Verfallen, wenn Ihr Premium-Abonnement endet.",
+    credits_consent: "Ich verlange die sofortige Ausführung meiner Bestellung und erkenne an, dass ich mein Widerrufsrecht verliere, sobald die Guthaben meinem Konto gutgeschrieben werden.",
+    credits_refund_note: "Nach Nutzung der Guthaben nicht erstattbar, außer bei gesetzlicher Pflicht. Bei Problemen: support@poolgenai.com.",
+    credits_pay: "{price} zahlen",
+    credits_close: "Schließen",
+    credits_success: "Danke! {n} KI-Analysen wurden Ihrem Konto gutgeschrieben.",
+    credits_pending: "Zahlung erhalten: Guthaben werden hinzugefügt…",
+    credits_cancelled: "Kauf abgebrochen. Es wurde keine Zahlung vorgenommen.",
+    credits_error: "Der Kauf konnte nicht abgeschlossen werden. Versuchen Sie es später erneut oder schreiben Sie an support@poolgenai.com.",
+    cgu_scroll_hint: "Scrollen Sie bis zum Ende des Textes, um zustimmen zu können.",
+    plan_validated_by: "von {name}",
+    plan_conflict_title: "Schritt bereits bearbeitet",
+    plan_conflict_done: "{name} hat diesen Schritt gerade bestätigt ({time}). Ihre Eingabe wurde nicht gespeichert und es wurde kein Produkt vom Bestand abgezogen.",
+    plan_conflict_skipped: "{name} hat diesen Schritt gerade übersprungen ({time}). Ihre Eingabe wurde nicht gespeichert.",
+    plan_conflict_changed: "Der Plan wurde von jemand anderem geändert. Prüfen Sie den aktuellen Schritt, bevor Sie ein Produkt anwenden.",
+    plan_conflict_someone: "Eine andere Person",
+    plan_conflict_ok: "Verstanden",
+    reco_parts_summary_max: "In {n} Anwendungen (maximal {max} pro Zugabe)",
+    reco_parts_summary: "In {n} Anwendungen",
+    reco_parts_locked: "Menge und Zeitpunkt jeder Zugabe: mit Premium",
+    plan_banner_title: "Vollständiger Plan mit Premium",
+    plan_banner_body: "Menge jeder Zugabe, erwarteter Wert nach der Behandlung, wahrscheinliche Ursache der Abweichungen, Bestandsverfolgung und Behandlungsverlauf.",
+    proj_title: "Nach der Behandlung (Schätzung)",
+    proj_target: "Ziel {min}–{max}",
+    proj_in_target: "im Zielbereich",
+    proj_near_target: "nahe am Zielbereich",
+    proj_off_target: "bleibt außerhalb des Ziels: bei der Kontrolle erneut behandeln",
+    proj_shock: "Stoßbehandlung: das Chlor sinkt von selbst wieder",
+    proj_control_date: "Empfohlene Kontrollmessung: {date}",
+    proj_control_after: "Empfohlene Kontrollmessung: etwa {h} h nach Behandlungsbeginn",
+    proj_disclaimer: "Schätzung anhand der Dosen des Plans: das tatsächliche Ergebnis hängt von Umwälzung, Filtration und Ihrem Becken ab. Vor dem Weitermachen erneut messen.",
+    cause_title: "Wahrscheinliche Ursache der Abweichungen",
+    cause_note: "Annahmen aus Ihren Messungen, den angewendeten Produkten und der Lufttemperatur: zu überprüfen, keine Diagnose.",
+    cause_ph_tacplus: "Das seit der letzten Messung zugegebene Bicarbonat (TAC+) hebt den pH-Wert.",
+    cause_ph_shock: "Das seit der letzten Messung angewendete Stoßchlor (Hypochlorit) hebt den pH-Wert.",
+    cause_ph_tac_high: "Eine hohe Karbonathärte ({tac} mg/L) treibt den pH-Wert nach oben: sie wird zusammen mit dem pH-Wert korrigiert.",
+    cause_ph_rise: "Der pH-Wert stieg in {days} T. von {from} auf {to}, ohne dass ein Produkt dies erklärt: er steigt von selbst.",
+    cause_ph_warm: "Warmes Wasser (Luft ≈ {air} °C in den letzten Tagen) beschleunigt das Ausgasen von CO₂ und hebt den pH-Wert.",
+    cause_ph_degas: "Ohne Korrektur steigt der pH-Wert eines Pools von selbst: CO₂ entweicht aus dem Wasser (Düsen, Wasserfall, Umwälzung, Wärme).",
+    cause_ph_after_minus: "Das seit der letzten Messung angewendete pH-Minus kann stärker gewirkt haben als erwartet.",
+    cause_ph_trichlor: "Seit der letzten Messung angewendete Chlortabletten oder stabilisiertes Chlor (Trichlorisocyanursäure) senken den pH-Wert.",
+    cause_ph_tac_low: "Eine niedrige Karbonathärte ({tac} mg/L) macht den pH-Wert instabil: er fällt leicht.",
+    cause_ph_drop: "Der pH-Wert sank in {days} T. von {from} auf {to}: Regen oder Nachfüllen mit Frischwasser können das erklären.",
+    cause_ph_low_generic: "Regen, Nachfüllen mit Frischwasser oder stabilisiertes Chlor senken den pH-Wert.",
+    cause_cl_drop: "Das freie Chlor sank in {days} T. von {from} auf {to} mg/L.",
+    cause_cl_nochlorine: "Seit {days} T. kein Chlor zugegeben: freies Chlor wird täglich verbraucht.",
+    cause_cl_heat: "Hitze ({t} °C): Chlor wird bei Wärme schneller verbraucht.",
+    cause_cl_low_cya: "Niedriger Stabilisator (CYA, {cya} mg/L): die Sonne zerstört Chlor viel schneller.",
+    cause_cl_combined: "Gebundenes Chlor ({cc} mg/L) bindet freies Chlor beim Abbau.",
+    cause_cl_generic: "Sonne (UV), Badegäste, Laub und Pollen verbrauchen ständig freies Chlor.",
+    cause_clhigh_applied: "Seit der letzten Messung wurde Chlor zugegeben: der Wert sinkt von selbst.",
+    cause_clhigh_generic: "Wenige Badegäste oder bedecktes Wetter: Chlor wird langsam verbraucht.",
+    cause_cc_high: "Gebundenes Chlor ({cc} mg/L) stammt von Badegästen, Schweiß und organischen Stoffen, die Chloramine bilden.",
+    cause_cc_lowfree: "Zu wenig freies Chlor lässt Chloramine ansteigen.",
+    cause_tac_after_acid: "Seit der letzten Messung angewendete saure Produkte (pH-Minus) senken die Karbonathärte.",
+    cause_tac_low_generic: "Regen, Nachfüllen mit Frischwasser oder ein Wasserwechsel verdünnen die Karbonathärte.",
+    cause_tac_after_plus: "Das seit der letzten Messung zugegebene Bicarbonat (TAC+) hat die Karbonathärte erhöht.",
+    cause_tac_high_generic: "Nachfüllen mit sehr alkalischem Wasser oder zu viel TAC+ erhöht die Karbonathärte.",
     ai_err_tester_user: "KI-Kontingent für Tester für heute erreicht (10 Analysen pro Tag). Der Rest der App bleibt nutzbar; versuche es morgen erneut.",
     ai_err_tester_day: "Das gemeinsame KI-Kontingent aller Tester ist für heute aufgebraucht. Der Rest der App bleibt nutzbar; versuche es morgen erneut.",
     ai_err_tester_total: "Das KI-Budget für den Testzeitraum ist aufgebraucht. Die übrigen Funktionen der App bleiben verfügbar.",
@@ -4138,13 +4339,14 @@ const TRANSLATIONS = {
     reco_fallback_sel: "Sale da piscina (NaCl puro)",
     stock_empty_badge: "esaurito",
     paywall_perk1: "Misurazioni illimitate (invece di 1 al giorno)",
-    paywall_perk2: "Foto fotometro/strisce con analisi IA",
+    paywall_perk2: "Foto fotometro/strisce con analisi IA (30 analisi al mese, pacchetti extra opzionali)",
     paywall_perk3: "Foto vasca allegate a ogni misurazione",
     paywall_perk4: "Foto di ogni prodotto (etichetta, dosaggio)",
 
     paywall_perk5: "Storico illimitato + report PDF",
     paywall_perk6: "Gestione stock prodotti",
     paywall_perk7: "Fino a 3 vasche, 2 inviti per vasca",
+    paywall_perk8: "Piano di trattamento passo passo: quantità e momento di ogni aggiunta, risultato atteso, causa probabile degli scostamenti",
     paywall_test_note: "Pagamento sicuro tramite Stripe. Annullabile in qualsiasi momento.",
     paywall_price_monthly: "2,99 € / mese",
     paywall_price_yearly: "24,99 € / anno",
@@ -4155,6 +4357,72 @@ const TRANSLATIONS = {
     manage_subscription_btn: "Gestisci abbonamento",
     tester_toggle_hint: "Modalità tester: attiva o disattiva Premium per provare l'app in modalità standard o Premium.",
     ai_err_daily_limit: "Limite giornaliero di analisi IA raggiunto (50 al giorno). Riprova domani.",
+    ai_err_monthly_limit: "Quota mensile di 30 analisi IA raggiunta. Verrà azzerata il 1° del mese prossimo; puoi anche acquistare analisi aggiuntive in Impostazioni. Il resto dell'app resta utilizzabile.",
+    ai_quota_line: "Analisi IA questo mese: {used} / {limit}",
+    ai_quota_reset: "Azzeramento il {date}",
+    credits_line: "Crediti acquistati: {n}",
+    credits_buy: "Acquista {n} analisi — {price}",
+    credits_price: "2,99 €",
+    credits_title: "Acquista analisi IA",
+    credits_body: "{n} analisi IA aggiuntive, utilizzate quando le tue {limit} analisi mensili sono esaurite.",
+    credits_validity: "Senza data di scadenza. Perse se il tuo abbonamento Premium termina.",
+    credits_consent: "Richiedo l'esecuzione immediata del mio ordine e riconosco di perdere il diritto di recesso non appena i crediti sono aggiunti al mio account.",
+    credits_refund_note: "Non rimborsabile una volta che i crediti sono usati, salvo obbligo di legge. In caso di problemi: support@poolgenai.com.",
+    credits_pay: "Paga {price}",
+    credits_close: "Chiudi",
+    credits_success: "Grazie! {n} analisi IA sono state aggiunte al tuo account.",
+    credits_pending: "Pagamento ricevuto: aggiunta dei crediti in corso…",
+    credits_cancelled: "Acquisto annullato. Nessun pagamento effettuato.",
+    credits_error: "Impossibile completare l'acquisto. Riprova più tardi o scrivi a support@poolgenai.com.",
+    cgu_scroll_hint: "Scorri il testo fino alla fine per poter accettare.",
+    plan_validated_by: "da {name}",
+    plan_conflict_title: "Passaggio già gestito",
+    plan_conflict_done: "{name} ha appena convalidato questo passaggio ({time}). Il vostro inserimento non è stato salvato e nessun prodotto è stato scalato dalle scorte.",
+    plan_conflict_skipped: "{name} ha appena saltato questo passaggio ({time}). Il vostro inserimento non è stato salvato.",
+    plan_conflict_changed: "Il piano è stato modificato da un'altra persona. Controllate il passaggio corrente prima di applicare un prodotto.",
+    plan_conflict_someone: "Un'altra persona",
+    plan_conflict_ok: "Ho capito",
+    reco_parts_summary_max: "In {n} applicazioni (massimo {max} per aggiunta)",
+    reco_parts_summary: "In {n} applicazioni",
+    reco_parts_locked: "Quantità e momento di ogni aggiunta: con Premium",
+    plan_banner_title: "Piano completo con Premium",
+    plan_banner_body: "Quantità di ogni aggiunta, valore atteso dopo il trattamento, causa probabile degli scostamenti, monitoraggio delle scorte e storico dei trattamenti.",
+    proj_title: "Dopo il trattamento (stima)",
+    proj_target: "obiettivo {min}–{max}",
+    proj_in_target: "nell'intervallo obiettivo",
+    proj_near_target: "vicino all'obiettivo",
+    proj_off_target: "resta fuori obiettivo: da riprendere al controllo",
+    proj_shock: "trattamento d'urto: il cloro scenderà da solo",
+    proj_control_date: "Misurazione di controllo consigliata: {date}",
+    proj_control_after: "Misurazione di controllo consigliata: circa {h} h dopo l'inizio del trattamento",
+    proj_disclaimer: "Stima basata sulle dosi del piano: il risultato reale dipende da ricircolo, filtrazione e dalla vostra vasca. Rimisurare prima di proseguire.",
+    cause_title: "Causa probabile degli scostamenti",
+    cause_note: "Ipotesi tratte dalle vostre misurazioni, dai prodotti applicati e dalla temperatura dell'aria: da verificare, non è una diagnosi.",
+    cause_ph_tacplus: "Il bicarbonato (TAC+) aggiunto dall'ultima misurazione fa salire il pH.",
+    cause_ph_shock: "Il cloro d'urto (ipoclorito) applicato dall'ultima misurazione fa salire il pH.",
+    cause_ph_tac_high: "Un TAC alto ({tac} mg/L) spinge il pH a salire: si corregge insieme al pH.",
+    cause_ph_rise: "Il pH è passato da {from} a {to} in {days} g senza un prodotto che lo spieghi: sale naturalmente.",
+    cause_ph_warm: "L'acqua calda (aria ≈ {air} °C negli ultimi giorni) accelera la fuoriuscita di CO₂, che fa salire il pH.",
+    cause_ph_degas: "Senza correzione, il pH di una piscina tende a salire da solo: la CO₂ esce dall'acqua (getti, cascata, ricircolo, caldo).",
+    cause_ph_after_minus: "Il pH- applicato dall'ultima misurazione può aver agito più del previsto.",
+    cause_ph_trichlor: "Le pastiglie o il cloro stabilizzato applicati dall'ultima misurazione (acido tricloroisocianurico) abbassano il pH.",
+    cause_ph_tac_low: "Un TAC basso ({tac} mg/L) rende il pH instabile: scende facilmente.",
+    cause_ph_drop: "Il pH è passato da {from} a {to} in {days} g: una pioggia o un rabbocco con acqua dolce possono spiegarlo.",
+    cause_ph_low_generic: "La pioggia, un rabbocco con acqua dolce o il cloro stabilizzato abbassano il pH.",
+    cause_cl_drop: "Il cloro libero è passato da {from} a {to} mg/L in {days} g.",
+    cause_cl_nochlorine: "Nessun cloro aggiunto da {days} g: il cloro libero si consuma ogni giorno.",
+    cause_cl_heat: "Caldo ({t} °C): il cloro si consuma più in fretta quando fa caldo.",
+    cause_cl_low_cya: "Stabilizzante (CYA) basso ({cya} mg/L): il sole distrugge il cloro molto più in fretta.",
+    cause_cl_combined: "Il cloro combinato ({cc} mg/L) impegna cloro libero per degradarsi.",
+    cause_cl_generic: "Sole (UV), bagnanti, foglie e pollini consumano continuamente cloro libero.",
+    cause_clhigh_applied: "È stato aggiunto cloro dall'ultima misurazione: il livello scenderà da solo.",
+    cause_clhigh_generic: "Pochi bagnanti o tempo coperto: il cloro si consuma lentamente.",
+    cause_cc_high: "Il cloro combinato ({cc} mg/L) deriva da bagnanti, sudore e materia organica, che formano cloroammine.",
+    cause_cc_lowfree: "Un cloro libero insufficiente lascia accumulare le cloroammine.",
+    cause_tac_after_acid: "I prodotti acidi (pH-) applicati dall'ultima misurazione abbassano il TAC.",
+    cause_tac_low_generic: "La pioggia, un rabbocco con acqua dolce o un ricambio d'acqua diluiscono il TAC.",
+    cause_tac_after_plus: "Il bicarbonato (TAC+) aggiunto dall'ultima misurazione ha fatto salire il TAC.",
+    cause_tac_high_generic: "Un rabbocco con acqua molto alcalina o troppo TAC+ fa salire il TAC.",
     ai_err_tester_user: "Quota IA tester raggiunta per oggi (10 analisi al giorno). Il resto dell'app resta utilizzabile; riprova domani.",
     ai_err_tester_day: "La quota IA condivisa tra i tester è esaurita per oggi. Il resto dell'app resta utilizzabile; riprova domani.",
     ai_err_tester_total: "Il budget IA previsto per il periodo di test è esaurito. Le altre funzioni dell'app restano disponibili.",
@@ -5268,13 +5536,14 @@ const TRANSLATIONS = {
     reco_fallback_sel: "Sal de piscina (NaCl puro)",
     stock_empty_badge: "sin stock",
     paywall_perk1: "Mediciones ilimitadas (en lugar de 1 por día)",
-    paywall_perk2: "Fotos fotómetro/tiras con análisis IA",
+    paywall_perk2: "Fotos fotómetro/tiras con análisis IA (30 análisis al mes, paquetes extra opcionales)",
     paywall_perk3: "Fotos de piscina adjuntas a cada medición",
     paywall_perk4: "Foto de cada producto (etiqueta, dosaje)",
 
     paywall_perk5: "Historial ilimitado + informe PDF",
     paywall_perk6: "Gestión de stock de productos",
     paywall_perk7: "Hasta 3 piscinas, 2 invitaciones por piscina",
+    paywall_perk8: "Plan de tratamiento paso a paso: cantidad y momento de cada adición, resultado esperado, causa probable de las desviaciones",
     paywall_test_note: "Pago seguro a través de Stripe. Cancelable en cualquier momento.",
     paywall_price_monthly: "2,99 € / mes",
     paywall_price_yearly: "24,99 € / año",
@@ -5285,6 +5554,72 @@ const TRANSLATIONS = {
     manage_subscription_btn: "Gestionar suscripción",
     tester_toggle_hint: "Modo probador: activa o desactiva Premium para probar la app en modo estándar o Premium.",
     ai_err_daily_limit: "Límite diario de análisis de IA alcanzado (50 al día). Inténtalo mañana.",
+    ai_err_monthly_limit: "Cuota mensual de 30 análisis de IA alcanzada. Se restablecerá el día 1 del mes que viene; también puedes comprar análisis adicionales en Ajustes. El resto de la app sigue disponible.",
+    ai_quota_line: "Análisis de IA este mes: {used} / {limit}",
+    ai_quota_reset: "Se restablece el {date}",
+    credits_line: "Créditos comprados: {n}",
+    credits_buy: "Comprar {n} análisis — {price}",
+    credits_price: "2,99 €",
+    credits_title: "Comprar análisis de IA",
+    credits_body: "{n} análisis de IA adicionales, que se usan cuando se agotan tus {limit} análisis mensuales.",
+    credits_validity: "Sin fecha de caducidad. Se pierden si tu suscripción Premium termina.",
+    credits_consent: "Solicito la ejecución inmediata de mi pedido y reconozco que pierdo mi derecho de desistimiento en cuanto los créditos se añadan a mi cuenta.",
+    credits_refund_note: "No reembolsable una vez usados los créditos, salvo obligación legal. Si hay algún problema: support@poolgenai.com.",
+    credits_pay: "Pagar {price}",
+    credits_close: "Cerrar",
+    credits_success: "¡Gracias! Se han añadido {n} análisis de IA a tu cuenta.",
+    credits_pending: "Pago recibido: añadiendo los créditos…",
+    credits_cancelled: "Compra cancelada. No se ha realizado ningún pago.",
+    credits_error: "No se pudo completar la compra. Inténtalo más tarde o escribe a support@poolgenai.com.",
+    cgu_scroll_hint: "Desplázate hasta el final del texto para poder aceptar.",
+    plan_validated_by: "por {name}",
+    plan_conflict_title: "Paso ya tratado",
+    plan_conflict_done: "{name} acaba de validar este paso ({time}). Su entrada no se guardó y no se descontó ningún producto del stock.",
+    plan_conflict_skipped: "{name} acaba de omitir este paso ({time}). Su entrada no se guardó.",
+    plan_conflict_changed: "El plan fue modificado por otra persona. Compruebe el paso actual antes de aplicar un producto.",
+    plan_conflict_someone: "Otra persona",
+    plan_conflict_ok: "Entendido",
+    reco_parts_summary_max: "En {n} aplicaciones (máximo {max} por adición)",
+    reco_parts_summary: "En {n} aplicaciones",
+    reco_parts_locked: "Cantidad y momento de cada adición: con Premium",
+    plan_banner_title: "Plan completo con Premium",
+    plan_banner_body: "Cantidad de cada adición, valor esperado tras el tratamiento, causa probable de las desviaciones, seguimiento de existencias e historial de tratamientos.",
+    proj_title: "Después del tratamiento (estimación)",
+    proj_target: "objetivo {min}–{max}",
+    proj_in_target: "dentro del objetivo",
+    proj_near_target: "cerca del objetivo",
+    proj_off_target: "sigue fuera del objetivo: a retomar en el control",
+    proj_shock: "tratamiento de choque: el cloro bajará solo",
+    proj_control_date: "Medición de control recomendada: {date}",
+    proj_control_after: "Medición de control recomendada: unas {h} h después de empezar el tratamiento",
+    proj_disclaimer: "Estimación basada en las dosis del plan: el resultado real depende de la recirculación, la filtración y de su piscina. Vuelva a medir antes de continuar.",
+    cause_title: "Causa probable de las desviaciones",
+    cause_note: "Hipótesis basadas en sus mediciones, los productos aplicados y la temperatura del aire: por confirmar, no es un diagnóstico.",
+    cause_ph_tacplus: "El bicarbonato (TAC+) añadido desde la última medición hace subir el pH.",
+    cause_ph_shock: "El cloro de choque (hipoclorito) aplicado desde la última medición hace subir el pH.",
+    cause_ph_tac_high: "Un TAC alto ({tac} mg/L) empuja el pH hacia arriba: se corrige junto con el pH.",
+    cause_ph_rise: "El pH pasó de {from} a {to} en {days} d sin ningún producto que lo explique: sube de forma natural.",
+    cause_ph_warm: "El agua caliente (aire ≈ {air} °C estos días) acelera la salida del CO₂, lo que hace subir el pH.",
+    cause_ph_degas: "Sin corrección, el pH de una piscina tiende a subir solo: el CO₂ escapa del agua (chorros, cascada, recirculación, calor).",
+    cause_ph_after_minus: "El pH- aplicado desde la última medición pudo actuar con más fuerza de la prevista.",
+    cause_ph_trichlor: "Las pastillas o el cloro estabilizado aplicados desde la última medición (ácido tricloroisocianúrico) bajan el pH.",
+    cause_ph_tac_low: "Un TAC bajo ({tac} mg/L) vuelve inestable el pH: cae con facilidad.",
+    cause_ph_drop: "El pH pasó de {from} a {to} en {days} d: una lluvia o un relleno con agua dulce pueden explicarlo.",
+    cause_ph_low_generic: "La lluvia, un relleno con agua dulce o el cloro estabilizado bajan el pH.",
+    cause_cl_drop: "El cloro libre pasó de {from} a {to} mg/L en {days} d.",
+    cause_cl_nochlorine: "Ningún cloro añadido desde hace {days} d: el cloro libre se consume cada día.",
+    cause_cl_heat: "Calor ({t} °C): el cloro se consume más rápido cuando hace calor.",
+    cause_cl_low_cya: "Estabilizante (CYA) bajo ({cya} mg/L): el sol destruye el cloro mucho más rápido.",
+    cause_cl_combined: "El cloro combinado ({cc} mg/L) inmoviliza cloro libre al degradarse.",
+    cause_cl_generic: "El sol (UV), los bañistas, las hojas y el polen consumen cloro libre de forma continua.",
+    cause_clhigh_applied: "Se añadió cloro desde la última medición: el nivel bajará solo.",
+    cause_clhigh_generic: "Pocos bañistas o tiempo nublado: el cloro se consume lentamente.",
+    cause_cc_high: "El cloro combinado ({cc} mg/L) procede de los bañistas, el sudor y la materia orgánica, que forman cloraminas.",
+    cause_cc_lowfree: "Un cloro libre insuficiente deja que se acumulen las cloraminas.",
+    cause_tac_after_acid: "Los productos ácidos (pH-) aplicados desde la última medición bajan el TAC.",
+    cause_tac_low_generic: "La lluvia, un relleno con agua dulce o una renovación de agua diluyen el TAC.",
+    cause_tac_after_plus: "El bicarbonato (TAC+) añadido desde la última medición ha subido el TAC.",
+    cause_tac_high_generic: "Un relleno con agua muy alcalina o un exceso de TAC+ sube el TAC.",
     ai_err_tester_user: "Cuota de IA de probador alcanzada por hoy (10 análisis al día). El resto de la app sigue disponible; inténtalo mañana.",
     ai_err_tester_day: "La cuota de IA compartida entre probadores se ha agotado por hoy. El resto de la app sigue disponible; inténtalo mañana.",
     ai_err_tester_total: "El presupuesto de IA previsto para el periodo de prueba se ha agotado. Las demás funciones de la app siguen disponibles.",
@@ -6398,13 +6733,14 @@ const TRANSLATIONS = {
     reco_fallback_sel: "Sal de piscina (NaCl puro)",
     stock_empty_badge: "sem stock",
     paywall_perk1: "Medições ilimitadas (em vez de 1 por dia)",
-    paywall_perk2: "Fotos de fotómetro/tiras com análise IA",
+    paywall_perk2: "Fotos de fotómetro/tiras com análise IA (30 análises por mês, pacotes extra opcionais)",
     paywall_perk3: "Fotos da piscina anexadas a cada medição",
     paywall_perk4: "Foto de cada produto (rótulo, dosagem)",
 
     paywall_perk5: "Histórico ilimitado + relatório PDF",
     paywall_perk6: "Gestão de stock de produtos",
     paywall_perk7: "Até 3 piscinas, 2 convites por piscina",
+    paywall_perk8: "Plano de tratamento passo a passo: quantidade e momento de cada adição, resultado esperado, causa provável dos desvios",
     paywall_test_note: "Pagamento seguro via Stripe. Cancelável a qualquer momento.",
     paywall_price_monthly: "2,99 € / mês",
     paywall_price_yearly: "24,99 € / ano",
@@ -6415,6 +6751,72 @@ const TRANSLATIONS = {
     manage_subscription_btn: "Gerir assinatura",
     tester_toggle_hint: "Modo testador: ativa ou desativa o Premium para testar a app em modo padrão ou Premium.",
     ai_err_daily_limit: "Limite diário de análises de IA atingido (50 por dia). Tenta novamente amanhã.",
+    ai_err_monthly_limit: "Quota mensal de 30 análises de IA atingida. Será reposta a zero no dia 1 do mês seguinte; também pode comprar análises adicionais em Configurações. O resto da app continua disponível.",
+    ai_quota_line: "Análises de IA este mês: {used} / {limit}",
+    ai_quota_reset: "Reposição a zero em {date}",
+    credits_line: "Créditos comprados: {n}",
+    credits_buy: "Comprar {n} análises — {price}",
+    credits_price: "2,99 €",
+    credits_title: "Comprar análises de IA",
+    credits_body: "{n} análises de IA adicionais, usadas quando as suas {limit} análises mensais se esgotarem.",
+    credits_validity: "Sem data de validade. Perdem-se se a sua subscrição Premium terminar.",
+    credits_consent: "Solicito a execução imediata da minha encomenda e reconheço que perco o direito de livre resolução assim que os créditos forem adicionados à minha conta.",
+    credits_refund_note: "Não reembolsável depois de os créditos serem usados, salvo obrigação legal. Em caso de problema: support@poolgenai.com.",
+    credits_pay: "Pagar {price}",
+    credits_close: "Fechar",
+    credits_success: "Obrigado! Foram adicionadas {n} análises de IA à sua conta.",
+    credits_pending: "Pagamento recebido: a adicionar os créditos…",
+    credits_cancelled: "Compra cancelada. Nenhum pagamento foi efetuado.",
+    credits_error: "Não foi possível concluir a compra. Tente novamente mais tarde ou escreva para support@poolgenai.com.",
+    cgu_scroll_hint: "Desloque o texto até ao fim para poder aceitar.",
+    plan_validated_by: "por {name}",
+    plan_conflict_title: "Passo já tratado",
+    plan_conflict_done: "{name} acabou de validar este passo ({time}). A sua entrada não foi guardada e nenhum produto foi descontado do stock.",
+    plan_conflict_skipped: "{name} acabou de saltar este passo ({time}). A sua entrada não foi guardada.",
+    plan_conflict_changed: "O plano foi alterado por outra pessoa. Verifique o passo atual antes de aplicar um produto.",
+    plan_conflict_someone: "Outra pessoa",
+    plan_conflict_ok: "Entendido",
+    reco_parts_summary_max: "Em {n} aplicações (máximo {max} por adição)",
+    reco_parts_summary: "Em {n} aplicações",
+    reco_parts_locked: "Quantidade e momento de cada adição: com Premium",
+    plan_banner_title: "Plano completo com Premium",
+    plan_banner_body: "Quantidade de cada adição, valor esperado após o tratamento, causa provável dos desvios, acompanhamento do stock e histórico de tratamentos.",
+    proj_title: "Depois do tratamento (estimativa)",
+    proj_target: "alvo {min}–{max}",
+    proj_in_target: "dentro do alvo",
+    proj_near_target: "perto do alvo",
+    proj_off_target: "continua fora do alvo: a retomar no controlo",
+    proj_shock: "tratamento de choque: o cloro baixará sozinho",
+    proj_control_date: "Medição de controlo recomendada: {date}",
+    proj_control_after: "Medição de controlo recomendada: cerca de {h} h após o início do tratamento",
+    proj_disclaimer: "Estimativa baseada nas doses do plano: o resultado real depende da recirculação, da filtração e da sua piscina. Meça de novo antes de continuar.",
+    cause_title: "Causa provável dos desvios",
+    cause_note: "Hipóteses tiradas das suas medições, dos produtos aplicados e da temperatura do ar: a confirmar, não é um diagnóstico.",
+    cause_ph_tacplus: "O bicarbonato (TAC+) adicionado desde a última medição faz subir o pH.",
+    cause_ph_shock: "O cloro de choque (hipoclorito) aplicado desde a última medição faz subir o pH.",
+    cause_ph_tac_high: "Um TAC alto ({tac} mg/L) empurra o pH para cima: corrige-se em conjunto com o pH.",
+    cause_ph_rise: "O pH passou de {from} para {to} em {days} d sem nenhum produto que o explique: sobe naturalmente.",
+    cause_ph_warm: "A água quente (ar ≈ {air} °C nestes dias) acelera a saída do CO₂, o que faz subir o pH.",
+    cause_ph_degas: "Sem correção, o pH de uma piscina tende a subir sozinho: o CO₂ escapa-se da água (jatos, cascata, recirculação, calor).",
+    cause_ph_after_minus: "O pH- aplicado desde a última medição pode ter atuado com mais força do que o previsto.",
+    cause_ph_trichlor: "As pastilhas ou o cloro estabilizado aplicados desde a última medição (ácido tricloroisocianúrico) baixam o pH.",
+    cause_ph_tac_low: "Um TAC baixo ({tac} mg/L) torna o pH instável: cai com facilidade.",
+    cause_ph_drop: "O pH passou de {from} para {to} em {days} d: uma chuva ou um reabastecimento com água doce podem explicá-lo.",
+    cause_ph_low_generic: "A chuva, um reabastecimento com água doce ou o cloro estabilizado baixam o pH.",
+    cause_cl_drop: "O cloro livre passou de {from} para {to} mg/L em {days} d.",
+    cause_cl_nochlorine: "Nenhum cloro adicionado há {days} d: o cloro livre é consumido todos os dias.",
+    cause_cl_heat: "Calor ({t} °C): o cloro é consumido mais depressa quando está calor.",
+    cause_cl_low_cya: "Estabilizante (CYA) baixo ({cya} mg/L): o sol destrói o cloro muito mais depressa.",
+    cause_cl_combined: "O cloro combinado ({cc} mg/L) imobiliza cloro livre ao degradar-se.",
+    cause_cl_generic: "O sol (UV), os banhistas, as folhas e o pólen consomem cloro livre continuamente.",
+    cause_clhigh_applied: "Foi adicionado cloro desde a última medição: o nível vai baixar sozinho.",
+    cause_clhigh_generic: "Poucos banhistas ou tempo nublado: o cloro é consumido lentamente.",
+    cause_cc_high: "O cloro combinado ({cc} mg/L) vem dos banhistas, do suor e da matéria orgânica, que formam cloraminas.",
+    cause_cc_lowfree: "Um cloro livre insuficiente deixa as cloraminas acumular-se.",
+    cause_tac_after_acid: "Os produtos ácidos (pH-) aplicados desde a última medição baixam o TAC.",
+    cause_tac_low_generic: "A chuva, um reabastecimento com água doce ou uma renovação de água diluem o TAC.",
+    cause_tac_after_plus: "O bicarbonato (TAC+) adicionado desde a última medição subiu o TAC.",
+    cause_tac_high_generic: "Um reabastecimento com água muito alcalina ou excesso de TAC+ sobe o TAC.",
     ai_err_tester_user: "Quota de IA de testador atingida para hoje (10 análises por dia). O resto da app continua disponível; tenta novamente amanhã.",
     ai_err_tester_day: "A quota de IA partilhada entre testadores esgotou-se por hoje. O resto da app continua disponível; tenta novamente amanhã.",
     ai_err_tester_total: "O orçamento de IA previsto para o período de teste esgotou-se. As outras funções da app continuam disponíveis.",
@@ -6835,6 +7237,7 @@ function detectDeviceLang() {
   }
 }
 const AI_ERROR_CODE_KEYS = {
+  monthly_limit: "ai_err_monthly_limit",
   daily_limit: "ai_err_daily_limit",
   tester_quota_user: "ai_err_tester_user",
   tester_quota_day: "ai_err_tester_day",
@@ -7790,7 +8193,7 @@ const THEME_DARK_VARS = {
 // ── THEME VARS (fin) ──
 
 // ── CGU TEXTE COMPLET (début) ── v1.178.4 : articles contractuels (6 langues) + sections des mentions légales ; sert à l'inscription et à la fenêtre « Mentions légales ».
-const CGU_CONTRACT = {"fr":[["Nature de l'application","PoolGenAI est un outil d'aide à la gestion de la chimie de piscine à usage strictement personnel. Les recommandations générées (dosages, durée de filtration, estimations de température de l'eau, de météo et d'économies) sont automatiques et indicatives ; elles ne constituent pas un avis professionnel, technique ou sanitaire."],["Version gratuite et Premium payant","PoolGenAI propose une version gratuite et une version Premium payante, par abonnement mensuel ou annuel. La version gratuite est limitée (1 bassin, aucun invité, 1 mesure par jour, fonctions Premium verrouillées). Le Premium donne notamment accès à jusqu'à 3 bassins, 2 invités par bassin, aux mesures sans limite, aux photos sur les mesures et les produits, à l'analyse par IA, à la gestion du stock et aux plans de traitement guidés, à la Filtration, à la Météo et au Bilan. Le prix et la périodicité sont affichés avant la souscription ; le paiement est géré par Stripe (version web) ou Google Play (application Android), qui conservent les données de paiement. L'abonnement se renouvelle automatiquement à chaque échéance jusqu'à sa résiliation, que l'utilisateur peut demander à tout moment (Réglages > Gérer mon abonnement, ou depuis Google Play) ; elle prend effet à la fin de la période déjà payée. Les droits que la loi reconnaît au consommateur (notamment le droit de rétractation et les remboursements prévus par la loi) restent applicables."],["Limitation de responsabilité","Dans les limites autorisées par la loi applicable, la responsabilité de l'éditeur est limitée au montant effectivement versé par l'utilisateur pour l'accès au service au cours des douze derniers mois (soit zéro euro pour la version gratuite). L'éditeur ne saurait être tenu responsable des dommages indirects, immatériels, consécutifs ou punitifs, y compris la perte de données, la perte de profits ou tout préjudice résultant de l'application de traitements chimiques ou de réglages de filtration basés sur les recommandations de l'application."],["Responsabilité de l'utilisateur","L'utilisateur est seul responsable de la vérification des dosages recommandés, de la programmation de sa filtration, du respect des notices d'utilisation des produits chimiques, des réglementations locales relatives au traitement de l'eau, et de la sécurité des personnes fréquentant le bassin traité."],["Produits chimiques","Les produits de traitement de l'eau peuvent être dangereux. L'utilisateur doit lire les fiches de données de sécurité (FDS) et respecter les précautions d'emploi, de stockage et d'élimination prescrites par les fabricants."],["Intelligence artificielle (analyse par IA)","Lorsque l'utilisateur active la fonctionnalité d'analyse par intelligence artificielle, les données saisies (valeurs de mesure et photos) sont transmises au fournisseur d'IA via l'infrastructure technique de l'éditeur (serveur intermédiaire), qui utilise une clé API souscrite par l'éditeur. L'éditeur prend en charge les coûts de traitement IA, et ne conserve ni ne journalise le contenu transmis sur son serveur intermédiaire. Le fournisseur d'IA (actuellement Anthropic) traite ces données uniquement pour le compte de l'éditeur et selon ses instructions, en qualité de sous-traitant au sens du RGPD ; selon ses conditions commerciales, il n'utilise pas ces contenus pour entraîner ses modèles et les supprime de ses serveurs dans un délai maximal de 30 jours, sauf obligation légale ou manquement à sa politique d'utilisation. L'éditeur se réserve le droit de faire évoluer le fournisseur d'IA utilisé sans que cela nécessite une modification des présentes CGU. L'utilisateur reste responsable du contenu des photos qu'il transmet."],["Photos et données personnelles","L'utilisateur s'engage à ne soumettre à l'analyse par intelligence artificielle que des photos du matériel de mesure (photomètre, bandelettes), de l'eau du bassin, ou de produits de traitement. Sont strictement exclus : toute image permettant d'identifier des personnes, de localiser un domicile (façade, plaque d'immatriculation, rue visible) ou contenant des données personnelles visibles. L'éditeur décline toute responsabilité quant au contenu des photos soumises par l'utilisateur."],["Usage réservé","L'utilisation de PoolGenAI est réservée aux traitements d'eau de bassins de type piscine ou spa. Tout autre usage est exclu de la présente licence."],["Professionnels","Les professionnels utilisant PoolGenAI pour des prestations réalisées pour le compte de tiers sont tenus d'informer les propriétaires des bassins traités des conditions du présent document et d'obtenir leur accord exprès avant toute collecte de données les concernant."],["Absence de garantie","L'application est fournie « en l'état », sans garantie d'aucune sorte, expresse ou implicite, quant à son exactitude, sa fiabilité ou son adéquation à un usage particulier ; les estimations (température de l'eau, météo, durée de filtration, économies) sont indicatives."]],"en":[["Nature of the application","PoolGenAI is a personal pool chemistry management tool. Generated recommendations (dosages, filtration time, water temperature, weather and savings estimates) are automatic and indicative; they do not constitute professional, technical or health advice."],["Free version and paid Premium","PoolGenAI offers a free version and a paid Premium version, by monthly or yearly subscription. The free version is limited (1 pool, no guests, 1 measurement per day, Premium features locked). Premium gives access in particular to up to 3 pools, 2 guests per pool, unlimited measurements, photos on measurements and products, AI analysis, stock management and guided treatment plans, Filtration, Weather and the Results tab. The price and billing period are shown before you subscribe; payment is handled by Stripe (web version) or Google Play (Android app), which keep the payment data. The subscription renews automatically at each term until cancelled; the user can cancel at any time (Settings > Manage my subscription, or from Google Play) and cancellation takes effect at the end of the period already paid. The rights that the law grants to consumers (in particular the right of withdrawal and the refunds provided for by law) remain applicable."],["Limitation of liability","To the extent permitted by applicable law, the publisher's liability is limited to the amount actually paid by the user for access to the service over the last twelve months (i.e. zero euros for the free version). The publisher shall not be liable for indirect, intangible, consequential or punitive damages, including loss of data, loss of profits or any harm resulting from applying chemical treatments or filtration settings based on the application's recommendations."],["User responsibility","The user is solely responsible for checking the recommended dosages, for programming their own filtration, for following the usage instructions of chemical products, for local water treatment regulations, and for the safety of people using the treated pool."],["Chemical products","Water treatment products can be hazardous. The user must read the safety data sheets (SDS) and follow the precautions for use, storage and disposal prescribed by the manufacturers."],["Artificial intelligence (AI analysis)","When the user enables the artificial intelligence analysis feature, the data entered (measurement values and photos) is sent to the AI provider through the publisher's technical infrastructure (intermediary server), which uses an API key subscribed by the publisher. The publisher bears the AI processing costs, and neither stores nor logs the content passing through its intermediary server. The AI provider (currently Anthropic) processes this data solely on the publisher's behalf and on its instructions, as a processor within the meaning of the GDPR; under its commercial terms, it does not use this content to train its models and deletes it from its servers within 30 days at most, unless required by law or in case of a breach of its usage policy. The publisher reserves the right to change the AI provider used without this requiring an amendment to these Terms. The user remains responsible for the content of the photos they send."],["Photos and personal data","The user undertakes to submit to AI analysis only photos of measuring equipment (photometer, test strips), of the pool water, or of treatment products. Strictly excluded: any image that identifies people, locates a home (facade, licence plate, visible street) or contains visible personal data. The publisher accepts no liability for the content of photos submitted by the user."],["Restricted use","PoolGenAI may only be used to treat the water of swimming pools or spas. Any other use is excluded from this licence."],["Professionals","Professionals using PoolGenAI for services performed on behalf of third parties must inform the owners of the treated pools of the terms of this document and obtain their express consent before collecting any data concerning them."],["No warranty","The application is provided “as is”, without warranty of any kind, express or implied, as to its accuracy, reliability or fitness for a particular purpose; the estimates (water temperature, weather, filtration time, savings) are indicative."]],"de":[["Art der Anwendung","PoolGenAI ist ein Werkzeug zur Unterstützung der Poolchemie-Verwaltung für den ausschließlich persönlichen Gebrauch. Die erzeugten Empfehlungen (Dosierungen, Filterlaufzeit, Schätzungen von Wassertemperatur, Wetter und Einsparungen) sind automatisch und unverbindlich; sie stellen keine fachliche, technische oder gesundheitliche Beratung dar."],["Kostenlose Version und kostenpflichtiges Premium","PoolGenAI bietet eine kostenlose Version und eine kostenpflichtige Premium-Version im Monats- oder Jahresabonnement. Die kostenlose Version ist eingeschränkt (1 Pool, keine Gäste, 1 Messung pro Tag, Premium-Funktionen gesperrt). Premium bietet insbesondere bis zu 3 Pools, 2 Gäste pro Pool, unbegrenzte Messungen, Fotos zu Messungen und Produkten, KI-Analyse, Bestandsverwaltung und geführte Behandlungspläne, Filterung, Wetter und Bilanz. Preis und Abrechnungszeitraum werden vor dem Abschluss angezeigt; die Zahlung wird von Stripe (Web-Version) oder Google Play (Android-App) abgewickelt, die die Zahlungsdaten aufbewahren. Das Abonnement verlängert sich zu jedem Termin automatisch bis zur Kündigung; der Nutzer kann jederzeit kündigen (Einstellungen > Abonnement verwalten oder über Google Play), die Kündigung wird am Ende des bereits bezahlten Zeitraums wirksam. Die gesetzlichen Verbraucherrechte (insbesondere das Widerrufsrecht und die gesetzlich vorgesehenen Erstattungen) bleiben unberührt."],["Haftungsbeschränkung","Soweit nach geltendem Recht zulässig, ist die Haftung des Herausgebers auf den Betrag begrenzt, den der Nutzer in den letzten zwölf Monaten tatsächlich für den Zugang zum Dienst gezahlt hat (also null Euro für die kostenlose Version). Der Herausgeber haftet nicht für mittelbare, immaterielle, Folge- oder Strafschäden, einschließlich Datenverlust, entgangenem Gewinn oder Schäden aus der Anwendung chemischer Behandlungen oder Filtereinstellungen auf Grundlage der Empfehlungen der Anwendung."],["Verantwortung des Nutzers","Der Nutzer ist allein verantwortlich für die Überprüfung der empfohlenen Dosierungen, die Programmierung seiner Filterung, die Beachtung der Gebrauchsanweisungen der Chemikalien, die örtlichen Vorschriften zur Wasseraufbereitung und die Sicherheit der Personen, die den behandelten Pool nutzen."],["Chemische Produkte","Produkte zur Wasseraufbereitung können gefährlich sein. Der Nutzer muss die Sicherheitsdatenblätter lesen und die von den Herstellern vorgeschriebenen Vorsichtsmaßnahmen für Gebrauch, Lagerung und Entsorgung beachten."],["Künstliche Intelligenz (KI-Analyse)","Aktiviert der Nutzer die Funktion zur Analyse durch künstliche Intelligenz, werden die eingegebenen Daten (Messwerte und Fotos) über die technische Infrastruktur des Herausgebers (Vermittlungsserver), der einen vom Herausgeber abonnierten API-Schlüssel verwendet, an den KI-Anbieter übermittelt. Der Herausgeber trägt die Kosten der KI-Verarbeitung und speichert und protokolliert die über seinen Vermittlungsserver laufenden Inhalte nicht. Der KI-Anbieter (derzeit Anthropic) verarbeitet diese Daten ausschließlich im Auftrag und nach Weisung des Herausgebers als Auftragsverarbeiter im Sinne der DSGVO; nach seinen Geschäftsbedingungen verwendet er diese Inhalte nicht zum Training seiner Modelle und löscht sie spätestens innerhalb von 30 Tagen von seinen Servern, außer bei gesetzlicher Pflicht oder Verstoß gegen seine Nutzungsrichtlinie. Der Herausgeber behält sich vor, den verwendeten KI-Anbieter zu wechseln, ohne dass dies eine Änderung dieser Bedingungen erfordert. Der Nutzer bleibt für den Inhalt der von ihm übermittelten Fotos verantwortlich."],["Fotos und personenbezogene Daten","Der Nutzer verpflichtet sich, der KI-Analyse nur Fotos von Messgeräten (Photometer, Teststreifen), vom Poolwasser oder von Behandlungsprodukten zu übermitteln. Ausdrücklich ausgeschlossen sind Bilder, die Personen identifizieren, einen Wohnort erkennen lassen (Fassade, Kennzeichen, sichtbare Straße) oder sichtbare personenbezogene Daten enthalten. Der Herausgeber übernimmt keine Haftung für den Inhalt der vom Nutzer übermittelten Fotos."],["Beschränkte Nutzung","PoolGenAI darf nur zur Wasserbehandlung von Schwimmbecken oder Whirlpools verwendet werden. Jede andere Nutzung ist von dieser Lizenz ausgeschlossen."],["Gewerbliche Nutzer","Gewerbliche Nutzer, die PoolGenAI für Leistungen im Auftrag Dritter einsetzen, müssen die Eigentümer der behandelten Pools über die Bedingungen dieses Dokuments informieren und vor jeder Erhebung sie betreffender Daten deren ausdrückliche Zustimmung einholen."],["Keine Gewährleistung","Die Anwendung wird „wie besehen“ ohne jede ausdrückliche oder stillschweigende Gewährleistung hinsichtlich Genauigkeit, Zuverlässigkeit oder Eignung für einen bestimmten Zweck bereitgestellt; die Schätzungen (Wassertemperatur, Wetter, Filterlaufzeit, Einsparungen) sind unverbindlich."]],"it":[["Natura dell'applicazione","PoolGenAI è uno strumento di aiuto alla gestione della chimica della piscina per uso strettamente personale. Le raccomandazioni generate (dosaggi, durata di filtrazione, stime di temperatura dell'acqua, meteo e risparmi) sono automatiche e indicative; non costituiscono un parere professionale, tecnico o sanitario."],["Versione gratuita e Premium a pagamento","PoolGenAI offre una versione gratuita e una versione Premium a pagamento, con abbonamento mensile o annuale. La versione gratuita è limitata (1 piscina, nessun ospite, 1 misurazione al giorno, funzioni Premium bloccate). Il Premium dà accesso in particolare a un massimo di 3 piscine, 2 ospiti per piscina, misurazioni illimitate, foto su misurazioni e prodotti, analisi con IA, gestione delle scorte e piani di trattamento guidati, Filtrazione, Meteo e Bilancio. Il prezzo e la periodicità sono indicati prima della sottoscrizione; il pagamento è gestito da Stripe (versione web) o Google Play (app Android), che conservano i dati di pagamento. L'abbonamento si rinnova automaticamente a ogni scadenza fino alla disdetta, che l'utente può richiedere in qualsiasi momento (Impostazioni > Gestisci abbonamento, oppure da Google Play); la disdetta ha effetto al termine del periodo già pagato. Restano applicabili i diritti che la legge riconosce al consumatore (in particolare il diritto di recesso e i rimborsi previsti dalla legge)."],["Limitazione di responsabilità","Nei limiti consentiti dalla legge applicabile, la responsabilità dell'editore è limitata all'importo effettivamente versato dall'utente per l'accesso al servizio nei dodici mesi precedenti (cioè zero euro per la versione gratuita). L'editore non può essere ritenuto responsabile di danni indiretti, immateriali, consequenziali o punitivi, inclusi la perdita di dati, la perdita di profitti o qualsiasi pregiudizio derivante dall'applicazione di trattamenti chimici o di impostazioni di filtrazione basati sulle raccomandazioni dell'applicazione."],["Responsabilità dell'utente","L'utente è l'unico responsabile della verifica dei dosaggi raccomandati, della programmazione della propria filtrazione, del rispetto delle istruzioni d'uso dei prodotti chimici, delle normative locali sul trattamento dell'acqua e della sicurezza delle persone che frequentano la piscina trattata."],["Prodotti chimici","I prodotti per il trattamento dell'acqua possono essere pericolosi. L'utente deve leggere le schede di dati di sicurezza (SDS) e rispettare le precauzioni d'uso, conservazione e smaltimento prescritte dai produttori."],["Intelligenza artificiale (analisi con IA)","Quando l'utente attiva la funzione di analisi con intelligenza artificiale, i dati inseriti (valori di misura e foto) vengono trasmessi al fornitore di IA tramite l'infrastruttura tecnica dell'editore (server intermediario), che utilizza una chiave API sottoscritta dall'editore. L'editore si fa carico dei costi di elaborazione IA e non conserva né registra il contenuto che transita sul proprio server intermediario. Il fornitore di IA (attualmente Anthropic) tratta tali dati esclusivamente per conto dell'editore e secondo le sue istruzioni, in qualità di responsabile del trattamento ai sensi del GDPR; secondo le proprie condizioni commerciali, non utilizza tali contenuti per addestrare i propri modelli e li elimina dai propri server entro un massimo di 30 giorni, salvo obbligo di legge o violazione della propria politica d'uso. L'editore si riserva il diritto di cambiare il fornitore di IA utilizzato senza che ciò richieda una modifica delle presenti CGU. L'utente rimane responsabile del contenuto delle foto che trasmette."],["Foto e dati personali","L'utente si impegna a sottoporre all'analisi con intelligenza artificiale solo foto dell'attrezzatura di misura (fotometro, strisce reattive), dell'acqua della piscina o dei prodotti di trattamento. Sono rigorosamente escluse le immagini che permettono di identificare persone, di localizzare un'abitazione (facciata, targa, via visibile) o che contengono dati personali visibili. L'editore declina ogni responsabilità per il contenuto delle foto inviate dall'utente."],["Uso riservato","L'uso di PoolGenAI è riservato al trattamento dell'acqua di piscine o spa. Ogni altro uso è escluso dalla presente licenza."],["Professionisti","I professionisti che usano PoolGenAI per prestazioni svolte per conto di terzi sono tenuti a informare i proprietari delle piscine trattate delle condizioni del presente documento e a ottenere il loro consenso esplicito prima di qualsiasi raccolta di dati che li riguardano."],["Assenza di garanzia","L'applicazione è fornita «così com'è», senza garanzia di alcun tipo, espressa o implicita, quanto alla sua accuratezza, affidabilità o idoneità a un uso particolare; le stime (temperatura dell'acqua, meteo, durata di filtrazione, risparmi) sono indicative."]],"es":[["Naturaleza de la aplicación","PoolGenAI es una herramienta de ayuda para gestionar la química de la piscina de uso estrictamente personal. Las recomendaciones generadas (dosis, duración de la filtración, estimaciones de temperatura del agua, del tiempo y de ahorros) son automáticas e indicativas; no constituyen un asesoramiento profesional, técnico ni sanitario."],["Versión gratuita y Premium de pago","PoolGenAI ofrece una versión gratuita y una versión Premium de pago, mediante suscripción mensual o anual. La versión gratuita es limitada (1 piscina, sin invitados, 1 medición al día, funciones Premium bloqueadas). El Premium da acceso en particular a hasta 3 piscinas, 2 invitados por piscina, mediciones ilimitadas, fotos en mediciones y productos, análisis con IA, gestión de existencias y planes de tratamiento guiados, Filtración, Tiempo y Balance. El precio y la periodicidad se muestran antes de suscribirse; el pago lo gestiona Stripe (versión web) o Google Play (aplicación Android), que conservan los datos de pago. La suscripción se renueva automáticamente en cada vencimiento hasta su cancelación, que el usuario puede solicitar en cualquier momento (Ajustes > Gestionar mi suscripción, o desde Google Play); la cancelación surte efecto al final del período ya pagado. Siguen siendo aplicables los derechos que la ley reconoce al consumidor (en particular el derecho de desistimiento y los reembolsos previstos por la ley)."],["Limitación de responsabilidad","Dentro de los límites permitidos por la ley aplicable, la responsabilidad del editor se limita al importe efectivamente abonado por el usuario por el acceso al servicio durante los últimos doce meses (es decir, cero euros para la versión gratuita). El editor no será responsable de daños indirectos, inmateriales, consecuentes o punitivos, incluidos la pérdida de datos, la pérdida de beneficios o cualquier perjuicio derivado de aplicar tratamientos químicos o ajustes de filtración basados en las recomendaciones de la aplicación."],["Responsabilidad del usuario","El usuario es el único responsable de verificar las dosis recomendadas, de programar su filtración, de respetar las instrucciones de uso de los productos químicos, de la normativa local sobre tratamiento del agua y de la seguridad de las personas que utilicen la piscina tratada."],["Productos químicos","Los productos de tratamiento del agua pueden ser peligrosos. El usuario debe leer las fichas de datos de seguridad (FDS) y respetar las precauciones de uso, almacenamiento y eliminación prescritas por los fabricantes."],["Inteligencia artificial (análisis con IA)","Cuando el usuario activa la función de análisis con inteligencia artificial, los datos introducidos (valores de medición y fotos) se transmiten al proveedor de IA a través de la infraestructura técnica del editor (servidor intermediario), que utiliza una clave API contratada por el editor. El editor asume los costes de procesamiento de IA y no conserva ni registra el contenido que pasa por su servidor intermediario. El proveedor de IA (actualmente Anthropic) trata estos datos únicamente por cuenta del editor y según sus instrucciones, en calidad de encargado del tratamiento en el sentido del RGPD; según sus condiciones comerciales, no utiliza estos contenidos para entrenar sus modelos y los elimina de sus servidores en un plazo máximo de 30 días, salvo obligación legal o incumplimiento de su política de uso. El editor se reserva el derecho de cambiar el proveedor de IA utilizado sin que ello requiera modificar estas CGU. El usuario sigue siendo responsable del contenido de las fotos que envía."],["Fotos y datos personales","El usuario se compromete a someter al análisis con inteligencia artificial únicamente fotos del material de medición (fotómetro, tiras reactivas), del agua de la piscina o de productos de tratamiento. Quedan estrictamente excluidas las imágenes que permitan identificar personas, localizar un domicilio (fachada, matrícula, calle visible) o que contengan datos personales visibles. El editor declina toda responsabilidad por el contenido de las fotos enviadas por el usuario."],["Uso reservado","El uso de PoolGenAI está reservado al tratamiento del agua de piscinas o spas. Cualquier otro uso queda excluido de esta licencia."],["Profesionales","Los profesionales que utilicen PoolGenAI para servicios prestados por cuenta de terceros deben informar a los propietarios de las piscinas tratadas de las condiciones de este documento y obtener su consentimiento expreso antes de recopilar cualquier dato que les concierna."],["Ausencia de garantía","La aplicación se proporciona «tal cual», sin garantía de ningún tipo, expresa o implícita, en cuanto a su exactitud, fiabilidad o idoneidad para un uso concreto; las estimaciones (temperatura del agua, tiempo, duración de la filtración, ahorros) son indicativas."]],"pt":[["Natureza da aplicação","A PoolGenAI é uma ferramenta de apoio à gestão da química da piscina para uso estritamente pessoal. As recomendações geradas (doses, duração da filtração, estimativas de temperatura da água, do tempo e de poupanças) são automáticas e indicativas; não constituem aconselhamento profissional, técnico ou sanitário."],["Versão gratuita e Premium pago","A PoolGenAI oferece uma versão gratuita e uma versão Premium paga, por subscrição mensal ou anual. A versão gratuita é limitada (1 piscina, sem convidados, 1 medição por dia, funcionalidades Premium bloqueadas). O Premium dá acesso nomeadamente a até 3 piscinas, 2 convidados por piscina, medições ilimitadas, fotos nas medições e nos produtos, análise por IA, gestão de stock e planos de tratamento guiados, Filtração, Tempo e Balanço. O preço e a periodicidade são apresentados antes da subscrição; o pagamento é gerido pela Stripe (versão web) ou pelo Google Play (aplicação Android), que conservam os dados de pagamento. A subscrição renova-se automaticamente a cada vencimento até ser cancelada, o que o utilizador pode fazer a qualquer momento (Definições > Gerir a minha subscrição, ou através do Google Play); o cancelamento produz efeitos no fim do período já pago. Mantêm-se aplicáveis os direitos que a lei reconhece ao consumidor (nomeadamente o direito de livre resolução e os reembolsos previstos na lei)."],["Limitação de responsabilidade","Dentro dos limites permitidos pela lei aplicável, a responsabilidade do editor limita-se ao montante efetivamente pago pelo utilizador pelo acesso ao serviço nos últimos doze meses (ou seja, zero euros para a versão gratuita). O editor não pode ser responsabilizado por danos indiretos, imateriais, consequenciais ou punitivos, incluindo a perda de dados, a perda de lucros ou qualquer prejuízo resultante da aplicação de tratamentos químicos ou de definições de filtração baseados nas recomendações da aplicação."],["Responsabilidade do utilizador","O utilizador é o único responsável por verificar as doses recomendadas, por programar a sua filtração, por respeitar as instruções de utilização dos produtos químicos, pelas regulamentações locais de tratamento da água e pela segurança das pessoas que utilizam a piscina tratada."],["Produtos químicos","Os produtos de tratamento da água podem ser perigosos. O utilizador deve ler as fichas de dados de segurança (FDS) e respeitar as precauções de utilização, armazenamento e eliminação prescritas pelos fabricantes."],["Inteligência artificial (análise por IA)","Quando o utilizador ativa a funcionalidade de análise por inteligência artificial, os dados introduzidos (valores de medição e fotos) são transmitidos ao fornecedor de IA através da infraestrutura técnica do editor (servidor intermediário), que utiliza uma chave API subscrita pelo editor. O editor suporta os custos de processamento de IA e não conserva nem regista o conteúdo que transita pelo seu servidor intermediário. O fornecedor de IA (atualmente a Anthropic) trata estes dados exclusivamente por conta do editor e segundo as suas instruções, na qualidade de subcontratante na aceção do RGPD; de acordo com as suas condições comerciais, não utiliza estes conteúdos para treinar os seus modelos e elimina-os dos seus servidores no prazo máximo de 30 dias, salvo obrigação legal ou violação da sua política de utilização. O editor reserva-se o direito de alterar o fornecedor de IA utilizado sem que isso exija uma alteração das presentes CGU. O utilizador continua responsável pelo conteúdo das fotos que envia."],["Fotos e dados pessoais","O utilizador compromete-se a submeter à análise por inteligência artificial apenas fotos do material de medição (fotómetro, tiras de teste), da água da piscina ou de produtos de tratamento. Estão estritamente excluídas as imagens que permitam identificar pessoas, localizar uma morada (fachada, matrícula, rua visível) ou que contenham dados pessoais visíveis. O editor declina qualquer responsabilidade quanto ao conteúdo das fotos submetidas pelo utilizador."],["Utilização reservada","A utilização da PoolGenAI está reservada ao tratamento da água de piscinas ou spas. Qualquer outra utilização está excluída da presente licença."],["Profissionais","Os profissionais que utilizem a PoolGenAI para serviços prestados por conta de terceiros devem informar os proprietários das piscinas tratadas das condições do presente documento e obter o seu acordo expresso antes de qualquer recolha de dados que lhes digam respeito."],["Ausência de garantia","A aplicação é fornecida «no estado em que se encontra», sem garantia de qualquer tipo, expressa ou implícita, quanto à sua exatidão, fiabilidade ou adequação a um uso específico; as estimativas (temperatura da água, tempo, duração da filtração, poupanças) são indicativas."]],"closing":{"fr":"En créant un compte, l'utilisateur reconnaît avoir pris connaissance de l'intégralité du présent document (CGU v{v}) et en accepte les termes.","en":"By creating an account, the user acknowledges having read this document in full (Terms v{v}) and accepts its terms.","de":"Mit der Erstellung eines Kontos bestätigt der Nutzer, dieses Dokument (AGB v{v}) vollständig gelesen zu haben, und akzeptiert dessen Bedingungen.","it":"Creando un account, l'utente riconosce di aver letto integralmente il presente documento (CGU v{v}) e ne accetta i termini.","es":"Al crear una cuenta, el usuario reconoce haber leído íntegramente este documento (CGU v{v}) y acepta sus términos.","pt":"Ao criar uma conta, o utilizador reconhece ter lido integralmente o presente documento (CGU v{v}) e aceita os seus termos."}};
+const CGU_CONTRACT = {"fr":[["Nature de l'application","PoolGenAI est un outil d'aide à la gestion de la chimie de piscine à usage strictement personnel. Les recommandations générées (dosages, durée de filtration, estimations de température de l'eau, de météo et d'économies) sont automatiques et indicatives ; elles ne constituent pas un avis professionnel, technique ou sanitaire."],["Version gratuite et Premium payant","PoolGenAI propose une version gratuite et une version Premium payante, par abonnement mensuel ou annuel. La version gratuite est limitée (1 bassin, aucun invité, 1 mesure par jour, fonctions Premium verrouillées). Le Premium donne notamment accès à jusqu'à 3 bassins, 2 invités par bassin, aux mesures sans limite, aux photos sur les mesures et les produits, à l'analyse par IA (limitée à 30 analyses par mois et par compte, remises à zéro le 1er de chaque mois), à la gestion du stock et aux plans de traitement guidés, à la Filtration, à la Météo et au Bilan. Le prix et la périodicité sont affichés avant la souscription ; le paiement est géré par Stripe (version web) ou Google Play (application Android), qui conservent les données de paiement. L'abonnement se renouvelle automatiquement à chaque échéance jusqu'à sa résiliation, que l'utilisateur peut demander à tout moment (Réglages > Gérer mon abonnement, ou depuis Google Play) ; elle prend effet à la fin de la période déjà payée. Les droits que la loi reconnaît au consommateur (notamment le droit de rétractation et les remboursements prévus par la loi) restent applicables."],["Crédits d'analyses IA supplémentaires","Les abonnés Premium peuvent acheter des crédits d'analyses IA supplémentaires, par pack de 50 analyses, au prix affiché avant le paiement (2,99 € TTC à la date des présentes CGU). Les crédits s'ajoutent aux 30 analyses mensuelles incluses dans le Premium : ils ne sont utilisés qu'une fois ces 30 analyses épuisées, en commençant par le pack le plus ancien. Les crédits n'ont pas de date limite de validité : ils restent utilisables tant que l'abonnement Premium est actif. Les crédits sont rattachés au compte, ne sont pas transférables, et sont perdus si l'abonnement Premium prend fin. Le paiement est géré par Stripe (version web) ou Google Play (application Android). L'exécution de la commande commençant immédiatement à la demande de l'utilisateur, celui-ci reconnaît perdre son droit de rétractation dès que les crédits sont ajoutés à son compte. Les crédits payés mais non reçus, un double paiement ou une erreur technique donnent lieu à un remboursement ; les crédits en partie utilisés ne sont pas remboursés, sauf obligation légale. Pour toute demande : support@poolgenai.com."],["Limitation de responsabilité","Dans les limites autorisées par la loi applicable, la responsabilité de l'éditeur est limitée au montant effectivement versé par l'utilisateur pour l'accès au service au cours des douze derniers mois (soit zéro euro pour la version gratuite). L'éditeur ne saurait être tenu responsable des dommages indirects, immatériels, consécutifs ou punitifs, y compris la perte de données, la perte de profits ou tout préjudice résultant de l'application de traitements chimiques ou de réglages de filtration basés sur les recommandations de l'application."],["Responsabilité de l'utilisateur","L'utilisateur est seul responsable de la vérification des dosages recommandés, de la programmation de sa filtration, du respect des notices d'utilisation des produits chimiques, des réglementations locales relatives au traitement de l'eau, et de la sécurité des personnes fréquentant le bassin traité."],["Produits chimiques","Les produits de traitement de l'eau peuvent être dangereux. L'utilisateur doit lire les fiches de données de sécurité (FDS) et respecter les précautions d'emploi, de stockage et d'élimination prescrites par les fabricants."],["Intelligence artificielle (analyse par IA)","Lorsque l'utilisateur active la fonctionnalité d'analyse par intelligence artificielle, les données saisies (valeurs de mesure et photos) sont transmises au fournisseur d'IA via l'infrastructure technique de l'éditeur (serveur intermédiaire), qui utilise une clé API souscrite par l'éditeur. L'éditeur prend en charge les coûts de traitement IA, et ne conserve ni ne journalise le contenu transmis sur son serveur intermédiaire. Le fournisseur d'IA (actuellement Anthropic) traite ces données uniquement pour le compte de l'éditeur et selon ses instructions, en qualité de sous-traitant au sens du RGPD ; selon ses conditions commerciales, il n'utilise pas ces contenus pour entraîner ses modèles et les supprime de ses serveurs dans un délai maximal de 30 jours, sauf obligation légale ou manquement à sa politique d'utilisation. L'éditeur se réserve le droit de faire évoluer le fournisseur d'IA utilisé sans que cela nécessite une modification des présentes CGU. L'utilisateur reste responsable du contenu des photos qu'il transmet."],["Photos et données personnelles","L'utilisateur s'engage à ne soumettre à l'analyse par intelligence artificielle que des photos du matériel de mesure (photomètre, bandelettes), de l'eau du bassin, ou de produits de traitement. Sont strictement exclus : toute image permettant d'identifier des personnes, de localiser un domicile (façade, plaque d'immatriculation, rue visible) ou contenant des données personnelles visibles. L'éditeur décline toute responsabilité quant au contenu des photos soumises par l'utilisateur."],["Usage réservé","L'utilisation de PoolGenAI est réservée aux traitements d'eau de bassins de type piscine ou spa. Tout autre usage est exclu de la présente licence."],["Professionnels","Les professionnels utilisant PoolGenAI pour des prestations réalisées pour le compte de tiers sont tenus d'informer les propriétaires des bassins traités des conditions du présent document et d'obtenir leur accord exprès avant toute collecte de données les concernant."],["Absence de garantie","L'application est fournie « en l'état », sans garantie d'aucune sorte, expresse ou implicite, quant à son exactitude, sa fiabilité ou son adéquation à un usage particulier ; les estimations (température de l'eau, météo, durée de filtration, économies) sont indicatives."]],"en":[["Nature of the application","PoolGenAI is a personal pool chemistry management tool. Generated recommendations (dosages, filtration time, water temperature, weather and savings estimates) are automatic and indicative; they do not constitute professional, technical or health advice."],["Free version and paid Premium","PoolGenAI offers a free version and a paid Premium version, by monthly or yearly subscription. The free version is limited (1 pool, no guests, 1 measurement per day, Premium features locked). Premium gives access in particular to up to 3 pools, 2 guests per pool, unlimited measurements, photos on measurements and products, AI analysis (limited to 30 analyses per month per account, reset on the 1st of each month), stock management and guided treatment plans, Filtration, Weather and the Results tab. The price and billing period are shown before you subscribe; payment is handled by Stripe (web version) or Google Play (Android app), which keep the payment data. The subscription renews automatically at each term until cancelled; the user can cancel at any time (Settings > Manage my subscription, or from Google Play) and cancellation takes effect at the end of the period already paid. The rights that the law grants to consumers (in particular the right of withdrawal and the refunds provided for by law) remain applicable."],["Additional AI analysis credits","Premium subscribers can buy additional AI analysis credits, in packs of 50 analyses, at the price shown before payment (€2.99 including VAT at the date of these Terms). Credits are added to the 30 monthly analyses included in Premium: they are used only once those 30 analyses are used up, starting with the oldest pack. Credits have no expiry date: they remain usable as long as the Premium subscription is active. Credits are attached to the account, are not transferable, and are lost if the Premium subscription ends. Payment is handled by Stripe (web version) or Google Play (Android app). As performance of the order starts immediately at the user's request, the user acknowledges losing the right of withdrawal as soon as the credits are added to the account. Credits paid for but not received, a double payment or a technical error give rise to a refund; partly used credits are not refunded, except where required by law. For any request: support@poolgenai.com."],["Limitation of liability","To the extent permitted by applicable law, the publisher's liability is limited to the amount actually paid by the user for access to the service over the last twelve months (i.e. zero euros for the free version). The publisher shall not be liable for indirect, intangible, consequential or punitive damages, including loss of data, loss of profits or any harm resulting from applying chemical treatments or filtration settings based on the application's recommendations."],["User responsibility","The user is solely responsible for checking the recommended dosages, for programming their own filtration, for following the usage instructions of chemical products, for local water treatment regulations, and for the safety of people using the treated pool."],["Chemical products","Water treatment products can be hazardous. The user must read the safety data sheets (SDS) and follow the precautions for use, storage and disposal prescribed by the manufacturers."],["Artificial intelligence (AI analysis)","When the user enables the artificial intelligence analysis feature, the data entered (measurement values and photos) is sent to the AI provider through the publisher's technical infrastructure (intermediary server), which uses an API key subscribed by the publisher. The publisher bears the AI processing costs, and neither stores nor logs the content passing through its intermediary server. The AI provider (currently Anthropic) processes this data solely on the publisher's behalf and on its instructions, as a processor within the meaning of the GDPR; under its commercial terms, it does not use this content to train its models and deletes it from its servers within 30 days at most, unless required by law or in case of a breach of its usage policy. The publisher reserves the right to change the AI provider used without this requiring an amendment to these Terms. The user remains responsible for the content of the photos they send."],["Photos and personal data","The user undertakes to submit to AI analysis only photos of measuring equipment (photometer, test strips), of the pool water, or of treatment products. Strictly excluded: any image that identifies people, locates a home (facade, licence plate, visible street) or contains visible personal data. The publisher accepts no liability for the content of photos submitted by the user."],["Restricted use","PoolGenAI may only be used to treat the water of swimming pools or spas. Any other use is excluded from this licence."],["Professionals","Professionals using PoolGenAI for services performed on behalf of third parties must inform the owners of the treated pools of the terms of this document and obtain their express consent before collecting any data concerning them."],["No warranty","The application is provided “as is”, without warranty of any kind, express or implied, as to its accuracy, reliability or fitness for a particular purpose; the estimates (water temperature, weather, filtration time, savings) are indicative."]],"de":[["Art der Anwendung","PoolGenAI ist ein Werkzeug zur Unterstützung der Poolchemie-Verwaltung für den ausschließlich persönlichen Gebrauch. Die erzeugten Empfehlungen (Dosierungen, Filterlaufzeit, Schätzungen von Wassertemperatur, Wetter und Einsparungen) sind automatisch und unverbindlich; sie stellen keine fachliche, technische oder gesundheitliche Beratung dar."],["Kostenlose Version und kostenpflichtiges Premium","PoolGenAI bietet eine kostenlose Version und eine kostenpflichtige Premium-Version im Monats- oder Jahresabonnement. Die kostenlose Version ist eingeschränkt (1 Pool, keine Gäste, 1 Messung pro Tag, Premium-Funktionen gesperrt). Premium bietet insbesondere bis zu 3 Pools, 2 Gäste pro Pool, unbegrenzte Messungen, Fotos zu Messungen und Produkten, KI-Analyse (begrenzt auf 30 Analysen pro Monat und Konto, jeweils am 1. des Monats zurückgesetzt), Bestandsverwaltung und geführte Behandlungspläne, Filterung, Wetter und Bilanz. Preis und Abrechnungszeitraum werden vor dem Abschluss angezeigt; die Zahlung wird von Stripe (Web-Version) oder Google Play (Android-App) abgewickelt, die die Zahlungsdaten aufbewahren. Das Abonnement verlängert sich zu jedem Termin automatisch bis zur Kündigung; der Nutzer kann jederzeit kündigen (Einstellungen > Abonnement verwalten oder über Google Play), die Kündigung wird am Ende des bereits bezahlten Zeitraums wirksam. Die gesetzlichen Verbraucherrechte (insbesondere das Widerrufsrecht und die gesetzlich vorgesehenen Erstattungen) bleiben unberührt."],["Zusätzliche KI-Analyse-Guthaben","Premium-Abonnenten können zusätzliche KI-Analyse-Guthaben in Paketen zu 50 Analysen zu dem vor der Zahlung angezeigten Preis kaufen (2,99 € inkl. MwSt. zum Datum dieser Bedingungen). Die Guthaben werden zu den 30 im Premium enthaltenen Monatsanalysen hinzugefügt: Sie werden erst verbraucht, wenn diese 30 Analysen aufgebraucht sind, beginnend mit dem ältesten Paket. Die Guthaben haben kein Ablaufdatum: Sie bleiben nutzbar, solange das Premium-Abonnement aktiv ist. Die Guthaben sind an das Konto gebunden, nicht übertragbar und verfallen, wenn das Premium-Abonnement endet. Die Zahlung wird von Stripe (Webversion) oder Google Play (Android-App) abgewickelt. Da die Ausführung der Bestellung auf Wunsch des Nutzers sofort beginnt, erkennt dieser an, sein Widerrufsrecht zu verlieren, sobald die Guthaben seinem Konto gutgeschrieben werden. Bezahlte, aber nicht erhaltene Guthaben, eine doppelte Zahlung oder ein technischer Fehler führen zu einer Erstattung; teilweise genutzte Guthaben werden nicht erstattet, außer bei gesetzlicher Pflicht. Für Anfragen: support@poolgenai.com."],["Haftungsbeschränkung","Soweit nach geltendem Recht zulässig, ist die Haftung des Herausgebers auf den Betrag begrenzt, den der Nutzer in den letzten zwölf Monaten tatsächlich für den Zugang zum Dienst gezahlt hat (also null Euro für die kostenlose Version). Der Herausgeber haftet nicht für mittelbare, immaterielle, Folge- oder Strafschäden, einschließlich Datenverlust, entgangenem Gewinn oder Schäden aus der Anwendung chemischer Behandlungen oder Filtereinstellungen auf Grundlage der Empfehlungen der Anwendung."],["Verantwortung des Nutzers","Der Nutzer ist allein verantwortlich für die Überprüfung der empfohlenen Dosierungen, die Programmierung seiner Filterung, die Beachtung der Gebrauchsanweisungen der Chemikalien, die örtlichen Vorschriften zur Wasseraufbereitung und die Sicherheit der Personen, die den behandelten Pool nutzen."],["Chemische Produkte","Produkte zur Wasseraufbereitung können gefährlich sein. Der Nutzer muss die Sicherheitsdatenblätter lesen und die von den Herstellern vorgeschriebenen Vorsichtsmaßnahmen für Gebrauch, Lagerung und Entsorgung beachten."],["Künstliche Intelligenz (KI-Analyse)","Aktiviert der Nutzer die Funktion zur Analyse durch künstliche Intelligenz, werden die eingegebenen Daten (Messwerte und Fotos) über die technische Infrastruktur des Herausgebers (Vermittlungsserver), der einen vom Herausgeber abonnierten API-Schlüssel verwendet, an den KI-Anbieter übermittelt. Der Herausgeber trägt die Kosten der KI-Verarbeitung und speichert und protokolliert die über seinen Vermittlungsserver laufenden Inhalte nicht. Der KI-Anbieter (derzeit Anthropic) verarbeitet diese Daten ausschließlich im Auftrag und nach Weisung des Herausgebers als Auftragsverarbeiter im Sinne der DSGVO; nach seinen Geschäftsbedingungen verwendet er diese Inhalte nicht zum Training seiner Modelle und löscht sie spätestens innerhalb von 30 Tagen von seinen Servern, außer bei gesetzlicher Pflicht oder Verstoß gegen seine Nutzungsrichtlinie. Der Herausgeber behält sich vor, den verwendeten KI-Anbieter zu wechseln, ohne dass dies eine Änderung dieser Bedingungen erfordert. Der Nutzer bleibt für den Inhalt der von ihm übermittelten Fotos verantwortlich."],["Fotos und personenbezogene Daten","Der Nutzer verpflichtet sich, der KI-Analyse nur Fotos von Messgeräten (Photometer, Teststreifen), vom Poolwasser oder von Behandlungsprodukten zu übermitteln. Ausdrücklich ausgeschlossen sind Bilder, die Personen identifizieren, einen Wohnort erkennen lassen (Fassade, Kennzeichen, sichtbare Straße) oder sichtbare personenbezogene Daten enthalten. Der Herausgeber übernimmt keine Haftung für den Inhalt der vom Nutzer übermittelten Fotos."],["Beschränkte Nutzung","PoolGenAI darf nur zur Wasserbehandlung von Schwimmbecken oder Whirlpools verwendet werden. Jede andere Nutzung ist von dieser Lizenz ausgeschlossen."],["Gewerbliche Nutzer","Gewerbliche Nutzer, die PoolGenAI für Leistungen im Auftrag Dritter einsetzen, müssen die Eigentümer der behandelten Pools über die Bedingungen dieses Dokuments informieren und vor jeder Erhebung sie betreffender Daten deren ausdrückliche Zustimmung einholen."],["Keine Gewährleistung","Die Anwendung wird „wie besehen“ ohne jede ausdrückliche oder stillschweigende Gewährleistung hinsichtlich Genauigkeit, Zuverlässigkeit oder Eignung für einen bestimmten Zweck bereitgestellt; die Schätzungen (Wassertemperatur, Wetter, Filterlaufzeit, Einsparungen) sind unverbindlich."]],"it":[["Natura dell'applicazione","PoolGenAI è uno strumento di aiuto alla gestione della chimica della piscina per uso strettamente personale. Le raccomandazioni generate (dosaggi, durata di filtrazione, stime di temperatura dell'acqua, meteo e risparmi) sono automatiche e indicative; non costituiscono un parere professionale, tecnico o sanitario."],["Versione gratuita e Premium a pagamento","PoolGenAI offre una versione gratuita e una versione Premium a pagamento, con abbonamento mensile o annuale. La versione gratuita è limitata (1 piscina, nessun ospite, 1 misurazione al giorno, funzioni Premium bloccate). Il Premium dà accesso in particolare a un massimo di 3 piscine, 2 ospiti per piscina, misurazioni illimitate, foto su misurazioni e prodotti, analisi con IA (limitata a 30 analisi al mese per account, azzerate il 1° di ogni mese), gestione delle scorte e piani di trattamento guidati, Filtrazione, Meteo e Bilancio. Il prezzo e la periodicità sono indicati prima della sottoscrizione; il pagamento è gestito da Stripe (versione web) o Google Play (app Android), che conservano i dati di pagamento. L'abbonamento si rinnova automaticamente a ogni scadenza fino alla disdetta, che l'utente può richiedere in qualsiasi momento (Impostazioni > Gestisci abbonamento, oppure da Google Play); la disdetta ha effetto al termine del periodo già pagato. Restano applicabili i diritti che la legge riconosce al consumatore (in particolare il diritto di recesso e i rimborsi previsti dalla legge)."],["Crediti di analisi IA aggiuntivi","Gli abbonati Premium possono acquistare crediti di analisi IA aggiuntivi, in pacchetti da 50 analisi, al prezzo indicato prima del pagamento (2,99 € IVA inclusa alla data delle presenti CGU). I crediti si aggiungono alle 30 analisi mensili incluse nel Premium: vengono utilizzati solo quando queste 30 analisi sono esaurite, a partire dal pacchetto più vecchio. I crediti non hanno una data di scadenza: restano utilizzabili finché l'abbonamento Premium è attivo. I crediti sono associati all'account, non sono trasferibili e vengono persi se l'abbonamento Premium termina. Il pagamento è gestito da Stripe (versione web) o Google Play (app Android). Poiché l'esecuzione dell'ordine inizia immediatamente su richiesta dell'utente, questi riconosce di perdere il diritto di recesso non appena i crediti sono aggiunti al suo account. I crediti pagati ma non ricevuti, un doppio pagamento o un errore tecnico danno luogo a un rimborso; i crediti parzialmente utilizzati non sono rimborsati, salvo obbligo di legge. Per ogni richiesta: support@poolgenai.com."],["Limitazione di responsabilità","Nei limiti consentiti dalla legge applicabile, la responsabilità dell'editore è limitata all'importo effettivamente versato dall'utente per l'accesso al servizio nei dodici mesi precedenti (cioè zero euro per la versione gratuita). L'editore non può essere ritenuto responsabile di danni indiretti, immateriali, consequenziali o punitivi, inclusi la perdita di dati, la perdita di profitti o qualsiasi pregiudizio derivante dall'applicazione di trattamenti chimici o di impostazioni di filtrazione basati sulle raccomandazioni dell'applicazione."],["Responsabilità dell'utente","L'utente è l'unico responsabile della verifica dei dosaggi raccomandati, della programmazione della propria filtrazione, del rispetto delle istruzioni d'uso dei prodotti chimici, delle normative locali sul trattamento dell'acqua e della sicurezza delle persone che frequentano la piscina trattata."],["Prodotti chimici","I prodotti per il trattamento dell'acqua possono essere pericolosi. L'utente deve leggere le schede di dati di sicurezza (SDS) e rispettare le precauzioni d'uso, conservazione e smaltimento prescritte dai produttori."],["Intelligenza artificiale (analisi con IA)","Quando l'utente attiva la funzione di analisi con intelligenza artificiale, i dati inseriti (valori di misura e foto) vengono trasmessi al fornitore di IA tramite l'infrastruttura tecnica dell'editore (server intermediario), che utilizza una chiave API sottoscritta dall'editore. L'editore si fa carico dei costi di elaborazione IA e non conserva né registra il contenuto che transita sul proprio server intermediario. Il fornitore di IA (attualmente Anthropic) tratta tali dati esclusivamente per conto dell'editore e secondo le sue istruzioni, in qualità di responsabile del trattamento ai sensi del GDPR; secondo le proprie condizioni commerciali, non utilizza tali contenuti per addestrare i propri modelli e li elimina dai propri server entro un massimo di 30 giorni, salvo obbligo di legge o violazione della propria politica d'uso. L'editore si riserva il diritto di cambiare il fornitore di IA utilizzato senza che ciò richieda una modifica delle presenti CGU. L'utente rimane responsabile del contenuto delle foto che trasmette."],["Foto e dati personali","L'utente si impegna a sottoporre all'analisi con intelligenza artificiale solo foto dell'attrezzatura di misura (fotometro, strisce reattive), dell'acqua della piscina o dei prodotti di trattamento. Sono rigorosamente escluse le immagini che permettono di identificare persone, di localizzare un'abitazione (facciata, targa, via visibile) o che contengono dati personali visibili. L'editore declina ogni responsabilità per il contenuto delle foto inviate dall'utente."],["Uso riservato","L'uso di PoolGenAI è riservato al trattamento dell'acqua di piscine o spa. Ogni altro uso è escluso dalla presente licenza."],["Professionisti","I professionisti che usano PoolGenAI per prestazioni svolte per conto di terzi sono tenuti a informare i proprietari delle piscine trattate delle condizioni del presente documento e a ottenere il loro consenso esplicito prima di qualsiasi raccolta di dati che li riguardano."],["Assenza di garanzia","L'applicazione è fornita «così com'è», senza garanzia di alcun tipo, espressa o implicita, quanto alla sua accuratezza, affidabilità o idoneità a un uso particolare; le stime (temperatura dell'acqua, meteo, durata di filtrazione, risparmi) sono indicative."]],"es":[["Naturaleza de la aplicación","PoolGenAI es una herramienta de ayuda para gestionar la química de la piscina de uso estrictamente personal. Las recomendaciones generadas (dosis, duración de la filtración, estimaciones de temperatura del agua, del tiempo y de ahorros) son automáticas e indicativas; no constituyen un asesoramiento profesional, técnico ni sanitario."],["Versión gratuita y Premium de pago","PoolGenAI ofrece una versión gratuita y una versión Premium de pago, mediante suscripción mensual o anual. La versión gratuita es limitada (1 piscina, sin invitados, 1 medición al día, funciones Premium bloqueadas). El Premium da acceso en particular a hasta 3 piscinas, 2 invitados por piscina, mediciones ilimitadas, fotos en mediciones y productos, análisis con IA (limitado a 30 análisis al mes por cuenta, que se restablecen el día 1 de cada mes), gestión de existencias y planes de tratamiento guiados, Filtración, Tiempo y Balance. El precio y la periodicidad se muestran antes de suscribirse; el pago lo gestiona Stripe (versión web) o Google Play (aplicación Android), que conservan los datos de pago. La suscripción se renueva automáticamente en cada vencimiento hasta su cancelación, que el usuario puede solicitar en cualquier momento (Ajustes > Gestionar mi suscripción, o desde Google Play); la cancelación surte efecto al final del período ya pagado. Siguen siendo aplicables los derechos que la ley reconoce al consumidor (en particular el derecho de desistimiento y los reembolsos previstos por la ley)."],["Créditos de análisis de IA adicionales","Los suscriptores Premium pueden comprar créditos de análisis de IA adicionales, en paquetes de 50 análisis, al precio indicado antes del pago (2,99 € IVA incluido en la fecha de estas CGU). Los créditos se suman a los 30 análisis mensuales incluidos en el Premium: solo se utilizan cuando esos 30 análisis se han agotado, empezando por el paquete más antiguo. Los créditos no tienen fecha de caducidad: siguen siendo utilizables mientras la suscripción Premium esté activa. Los créditos están vinculados a la cuenta, no son transferibles y se pierden si la suscripción Premium termina. El pago lo gestiona Stripe (versión web) o Google Play (aplicación Android). Como la ejecución del pedido comienza inmediatamente a petición del usuario, este reconoce que pierde su derecho de desistimiento en cuanto los créditos se añaden a su cuenta. Los créditos pagados pero no recibidos, un pago duplicado o un error técnico dan lugar a un reembolso; los créditos parcialmente utilizados no se reembolsan, salvo obligación legal. Para cualquier solicitud: support@poolgenai.com."],["Limitación de responsabilidad","Dentro de los límites permitidos por la ley aplicable, la responsabilidad del editor se limita al importe efectivamente abonado por el usuario por el acceso al servicio durante los últimos doce meses (es decir, cero euros para la versión gratuita). El editor no será responsable de daños indirectos, inmateriales, consecuentes o punitivos, incluidos la pérdida de datos, la pérdida de beneficios o cualquier perjuicio derivado de aplicar tratamientos químicos o ajustes de filtración basados en las recomendaciones de la aplicación."],["Responsabilidad del usuario","El usuario es el único responsable de verificar las dosis recomendadas, de programar su filtración, de respetar las instrucciones de uso de los productos químicos, de la normativa local sobre tratamiento del agua y de la seguridad de las personas que utilicen la piscina tratada."],["Productos químicos","Los productos de tratamiento del agua pueden ser peligrosos. El usuario debe leer las fichas de datos de seguridad (FDS) y respetar las precauciones de uso, almacenamiento y eliminación prescritas por los fabricantes."],["Inteligencia artificial (análisis con IA)","Cuando el usuario activa la función de análisis con inteligencia artificial, los datos introducidos (valores de medición y fotos) se transmiten al proveedor de IA a través de la infraestructura técnica del editor (servidor intermediario), que utiliza una clave API contratada por el editor. El editor asume los costes de procesamiento de IA y no conserva ni registra el contenido que pasa por su servidor intermediario. El proveedor de IA (actualmente Anthropic) trata estos datos únicamente por cuenta del editor y según sus instrucciones, en calidad de encargado del tratamiento en el sentido del RGPD; según sus condiciones comerciales, no utiliza estos contenidos para entrenar sus modelos y los elimina de sus servidores en un plazo máximo de 30 días, salvo obligación legal o incumplimiento de su política de uso. El editor se reserva el derecho de cambiar el proveedor de IA utilizado sin que ello requiera modificar estas CGU. El usuario sigue siendo responsable del contenido de las fotos que envía."],["Fotos y datos personales","El usuario se compromete a someter al análisis con inteligencia artificial únicamente fotos del material de medición (fotómetro, tiras reactivas), del agua de la piscina o de productos de tratamiento. Quedan estrictamente excluidas las imágenes que permitan identificar personas, localizar un domicilio (fachada, matrícula, calle visible) o que contengan datos personales visibles. El editor declina toda responsabilidad por el contenido de las fotos enviadas por el usuario."],["Uso reservado","El uso de PoolGenAI está reservado al tratamiento del agua de piscinas o spas. Cualquier otro uso queda excluido de esta licencia."],["Profesionales","Los profesionales que utilicen PoolGenAI para servicios prestados por cuenta de terceros deben informar a los propietarios de las piscinas tratadas de las condiciones de este documento y obtener su consentimiento expreso antes de recopilar cualquier dato que les concierna."],["Ausencia de garantía","La aplicación se proporciona «tal cual», sin garantía de ningún tipo, expresa o implícita, en cuanto a su exactitud, fiabilidad o idoneidad para un uso concreto; las estimaciones (temperatura del agua, tiempo, duración de la filtración, ahorros) son indicativas."]],"pt":[["Natureza da aplicação","A PoolGenAI é uma ferramenta de apoio à gestão da química da piscina para uso estritamente pessoal. As recomendações geradas (doses, duração da filtração, estimativas de temperatura da água, do tempo e de poupanças) são automáticas e indicativas; não constituem aconselhamento profissional, técnico ou sanitário."],["Versão gratuita e Premium pago","A PoolGenAI oferece uma versão gratuita e uma versão Premium paga, por subscrição mensal ou anual. A versão gratuita é limitada (1 piscina, sem convidados, 1 medição por dia, funcionalidades Premium bloqueadas). O Premium dá acesso nomeadamente a até 3 piscinas, 2 convidados por piscina, medições ilimitadas, fotos nas medições e nos produtos, análise por IA (limitada a 30 análises por mês por conta, repostas a zero no dia 1 de cada mês), gestão de stock e planos de tratamento guiados, Filtração, Tempo e Balanço. O preço e a periodicidade são apresentados antes da subscrição; o pagamento é gerido pela Stripe (versão web) ou pelo Google Play (aplicação Android), que conservam os dados de pagamento. A subscrição renova-se automaticamente a cada vencimento até ser cancelada, o que o utilizador pode fazer a qualquer momento (Definições > Gerir a minha subscrição, ou através do Google Play); o cancelamento produz efeitos no fim do período já pago. Mantêm-se aplicáveis os direitos que a lei reconhece ao consumidor (nomeadamente o direito de livre resolução e os reembolsos previstos na lei)."],["Créditos de análise de IA adicionais","Os subscritores Premium podem comprar créditos de análise de IA adicionais, em pacotes de 50 análises, ao preço indicado antes do pagamento (2,99 € com IVA à data das presentes CGU). Os créditos somam-se às 30 análises mensais incluídas no Premium: só são utilizados depois de essas 30 análises se esgotarem, começando pelo pacote mais antigo. Os créditos não têm data de validade: continuam utilizáveis enquanto a subscrição Premium estiver ativa. Os créditos ficam associados à conta, não são transferíveis e perdem-se se a subscrição Premium terminar. O pagamento é gerido pela Stripe (versão web) ou pelo Google Play (aplicação Android). Como a execução da encomenda começa imediatamente a pedido do utilizador, este reconhece que perde o direito de livre resolução assim que os créditos forem adicionados à sua conta. Os créditos pagos mas não recebidos, um pagamento duplicado ou um erro técnico dão lugar a reembolso; os créditos parcialmente utilizados não são reembolsados, salvo obrigação legal. Para qualquer pedido: support@poolgenai.com."],["Limitação de responsabilidade","Dentro dos limites permitidos pela lei aplicável, a responsabilidade do editor limita-se ao montante efetivamente pago pelo utilizador pelo acesso ao serviço nos últimos doze meses (ou seja, zero euros para a versão gratuita). O editor não pode ser responsabilizado por danos indiretos, imateriais, consequenciais ou punitivos, incluindo a perda de dados, a perda de lucros ou qualquer prejuízo resultante da aplicação de tratamentos químicos ou de definições de filtração baseados nas recomendações da aplicação."],["Responsabilidade do utilizador","O utilizador é o único responsável por verificar as doses recomendadas, por programar a sua filtração, por respeitar as instruções de utilização dos produtos químicos, pelas regulamentações locais de tratamento da água e pela segurança das pessoas que utilizam a piscina tratada."],["Produtos químicos","Os produtos de tratamento da água podem ser perigosos. O utilizador deve ler as fichas de dados de segurança (FDS) e respeitar as precauções de utilização, armazenamento e eliminação prescritas pelos fabricantes."],["Inteligência artificial (análise por IA)","Quando o utilizador ativa a funcionalidade de análise por inteligência artificial, os dados introduzidos (valores de medição e fotos) são transmitidos ao fornecedor de IA através da infraestrutura técnica do editor (servidor intermediário), que utiliza uma chave API subscrita pelo editor. O editor suporta os custos de processamento de IA e não conserva nem regista o conteúdo que transita pelo seu servidor intermediário. O fornecedor de IA (atualmente a Anthropic) trata estes dados exclusivamente por conta do editor e segundo as suas instruções, na qualidade de subcontratante na aceção do RGPD; de acordo com as suas condições comerciais, não utiliza estes conteúdos para treinar os seus modelos e elimina-os dos seus servidores no prazo máximo de 30 dias, salvo obrigação legal ou violação da sua política de utilização. O editor reserva-se o direito de alterar o fornecedor de IA utilizado sem que isso exija uma alteração das presentes CGU. O utilizador continua responsável pelo conteúdo das fotos que envia."],["Fotos e dados pessoais","O utilizador compromete-se a submeter à análise por inteligência artificial apenas fotos do material de medição (fotómetro, tiras de teste), da água da piscina ou de produtos de tratamento. Estão estritamente excluídas as imagens que permitam identificar pessoas, localizar uma morada (fachada, matrícula, rua visível) ou que contenham dados pessoais visíveis. O editor declina qualquer responsabilidade quanto ao conteúdo das fotos submetidas pelo utilizador."],["Utilização reservada","A utilização da PoolGenAI está reservada ao tratamento da água de piscinas ou spas. Qualquer outra utilização está excluída da presente licença."],["Profissionais","Os profissionais que utilizem a PoolGenAI para serviços prestados por conta de terceiros devem informar os proprietários das piscinas tratadas das condições do presente documento e obter o seu acordo expresso antes de qualquer recolha de dados que lhes digam respeito."],["Ausência de garantia","A aplicação é fornecida «no estado em que se encontra», sem garantia de qualquer tipo, expressa ou implícita, quanto à sua exatidão, fiabilidade ou adequação a um uso específico; as estimativas (temperatura da água, tempo, duração da filtração, poupanças) são indicativas."]],"closing":{"fr":"En créant un compte, l'utilisateur reconnaît avoir pris connaissance de l'intégralité du présent document (CGU v{v}) et en accepte les termes.","en":"By creating an account, the user acknowledges having read this document in full (Terms v{v}) and accepts its terms.","de":"Mit der Erstellung eines Kontos bestätigt der Nutzer, dieses Dokument (AGB v{v}) vollständig gelesen zu haben, und akzeptiert dessen Bedingungen.","it":"Creando un account, l'utente riconosce di aver letto integralmente il presente documento (CGU v{v}) e ne accetta i termini.","es":"Al crear una cuenta, el usuario reconoce haber leído íntegramente este documento (CGU v{v}) y acepta sus términos.","pt":"Ao criar uma conta, o utilizador reconhece ter lido integralmente o presente documento (CGU v{v}) e aceita os seus termos."}};
 function cguSections(lang) {
   const L = CGU_CONTRACT[lang] && lang !== "closing" ? lang : "en";
   const tr = (k) => (TRANSLATIONS[L] && TRANSLATIONS[L][k]) || TRANSLATIONS.en[k] || "";
@@ -9401,6 +9804,7 @@ function isTWAEnvironment() {
 const ANDROID_PACKAGE_NAME = "com.poolgenai.app.twa";
 const PLAY_BILLING_PRODUCT_MONTHLY = "premium_monthly";
 const PLAY_BILLING_PRODUCT_YEARLY = "premium_annual";
+const PLAY_BILLING_PRODUCT_CREDITS = "credits_ia_50"; // v1.180.0 — produit ponctuel consommable (pack de 50 analyses IA)
 
 async function lookupCommonProduct({ idToken, barcode, name, activeSubstance }) {
   const res = await fetch(`${PROXY_BASE_URL}/product-lookup`, {
@@ -9956,6 +10360,11 @@ const FB = {
     return data;
   },
   accountStatus: () => FB.accountApi("/account/status"),
+  // v1.179.0 — Quota IA mensuel (lecture seule) : { limit, used, remaining, resetsAt }
+  aiQuota: () => FB.accountApi("/ai/quota"),
+  // v1.180.0 — Rachat de crédits : session Stripe Checkout (web) ou vérification d'un achat Google Play (TWA)
+  creditsCheckout: (lang) => FB.accountApi("/credits/checkout", { lang }),
+  creditsVerifyPlay: (purchaseToken) => FB.accountApi("/playbilling/verify-credits", { purchaseToken }),
   accountRequest: (kind, lang) => FB.accountApi("/account/request", { kind, lang }),
   accountCancel: () => FB.accountApi("/account/cancel"),
   accountExport: (lang) => FB.accountApi("/account/export", { lang }),
@@ -10023,6 +10432,15 @@ const FB = {
     if (!window._fbDb || !window._fbGetDoc) return null;
     const snap = await window._fbGetDoc(window._fbDoc(window._fbDb, "users", uid, "config", "main"));
     return snap.exists() ? snap.data() : null;
+  },
+  // v1.184.0 — Plan partagé : « première validation gagne ». Dans une transaction, relit l'étape du plan dans le cloud et ne l'écrit
+  // que si elle est encore en attente ; sinon renvoie le conflit (qui l'a validée, quand). N'écrit QUE l'étape concernée (le plan complet
+  // suit par la synchro habituelle). Aucune règle Firestore nouvelle : un invité peut déjà écrire activePlan de son propre bassin.
+  claimPlanStep: async (uid, poolId, measureId, stepIdx, title, patch) => {
+    if (!window._fbDb || !window._fbRunTransaction || !window._fbDoc) return { ok: true, unguarded: true };
+    const ref = window._fbDoc(window._fbDb, "users", uid, "config", "main");
+    const run = window._fbRunTransaction(window._fbDb, (tx) => planStepClaimTransaction(tx, ref, poolId, measureId, stepIdx, title, patch));
+    return Promise.race([run, new Promise((r) => setTimeout(() => r({ ok: true, unguarded: true, timeout: true }), 5000))]);
   },
   // v1.70.0 — errCb optionnel : Firestore n'appelle jamais cb() en cas de
   // permission-denied (accès secondaire révoqué), l'écoute restait donc
@@ -10314,15 +10732,15 @@ function LoginScreen({ lang, onSkip, onConsentChange, detectedLang, onChangeLang
             <div style={{ fontSize: 15, fontWeight: 800, color: "var(--brand-text-strong)" }}>{tDisc("disclaimer_title")}</div>
             <button onClick={() => setMode("signup")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--brand-text-muted)" }}><X size={20} /></button>
           </div>
-          <div style={{ flex: 1, overflowY: "auto", fontSize: 12, color: "var(--tx-2d4a6e,#2d4a6e)", lineHeight: 1.7, whiteSpace: "pre-wrap", background: "var(--bg-f5f8fc,#f5f8fc)", borderRadius: 10, padding: "12px 14px", marginBottom: 16 }}>
-            {text}
-          </div>
-          <button
-            style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" }}
-            onClick={() => { setCguAccepted(true); setMode("signup"); }}
+          <CguScrollAccept
+            lang={lang || detectedLang}
+            label={tDisc("disclaimer_cgu")}
+            onAccept={() => { setCguAccepted(true); setMode("signup"); }}
+            boxStyle={{ flex: 1, overflowY: "auto", fontSize: 12, color: "var(--tx-2d4a6e,#2d4a6e)", lineHeight: 1.7, whiteSpace: "pre-wrap", background: "var(--bg-f5f8fc,#f5f8fc)", borderRadius: 10, padding: "12px 14px", marginBottom: 16 }}
+            buttonStyle={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 15 }}
           >
-            {tDisc("disclaimer_cgu")}
-          </button>
+            {text}
+          </CguScrollAccept>
           <button
             onClick={() => setMode("signup")}
             style={{ background: "none", border: "none", color: "#9ab0c4", fontSize: 12, cursor: "pointer", marginTop: 10, textAlign: "center" }}
@@ -11066,6 +11484,15 @@ function PoolGenAIApp() {
   // plus haut dans le composant provoquait un ReferenceError/TDZ au chargement,
   // "Cannot access 'awaitingStripeActivation' before initialization").
   useEffect(() => {
+    // v1.180.0 — Retour d'un achat de crédits (?credits=success|cancel) : le résultat est lu par la ligne
+    // de quota des Réglages (AiQuotaLine), qui attend la confirmation du Worker (webhook Stripe).
+    const creditsParam = new URLSearchParams(window.location.search).get("credits");
+    if (creditsParam === "success" || creditsParam === "cancel") {
+      try { localStorage.setItem("pool:creditsReturn", creditsParam); } catch (e) {}
+      setTab("settings");
+      window.history.replaceState({}, "", window.location.origin + window.location.pathname);
+      return;
+    }
     const stripeParam = new URLSearchParams(window.location.search).get("stripe");
     if (!stripeParam) return;
     if (stripeParam === "success") {
@@ -11304,6 +11731,36 @@ function PoolGenAIApp() {
   function setActivePlan(value) {
     setActivePlanByPool((prev) => ({ ...prev, [activePoolId]: value }));
   }
+  // v1.184.0 — Plan partagé : le propriétaire connaît ses invités actifs ; un invité (viewContext) est toujours en plan partagé. Seul un
+  // plan partagé enregistre l'auteur de chaque validation et passe par la transaction « première validation gagne » ; sans invité, le
+  // comportement reste exactement celui d'avant.
+  const [ownerGuests, setOwnerGuests] = useState([]);
+  const [planConflict, setPlanConflict] = useState(null);
+  useEffect(() => {
+    if (!authUser?.uid || viewContext || !FB.ready()) { setOwnerGuests([]); return undefined; }
+    return FB.onSecondaryUsers(authUser.uid, setOwnerGuests);
+  }, [authUser?.uid, !!viewContext]);
+  const planShared = !!viewContext || ownerGuests.some((g) => g.status === "active" && g.poolId === activePoolId);
+  function sharedActor() {
+    if (!planShared || !authUser?.uid) return null;
+    return { appliedBy: authUser.uid, appliedByName: String(myPseudo || (authUser.email || "").split("@")[0] || "").slice(0, 40) };
+  }
+  // Renvoie true si l'étape peut être traitée ; false (et affiche l'information) si une autre personne l'a traitée avant.
+  async function claimSharedStep(stepIdx, patch) {
+    if (!planShared || !activePlan || !dataUid || !FB.ready()) return true;
+    try {
+      const res = await FB.claimPlanStep(dataUid, activePoolId, activePlan.measureId, stepIdx, activePlan.steps[stepIdx] && activePlan.steps[stepIdx].title, patch);
+      if (res && res.conflict) {
+        setPlanConflict(res);
+        if (res.plan && Array.isArray(res.plan.steps)) {
+          const idx = res.plan.steps.findIndex((st) => !(st.skipped || st.appliedAt));
+          setActivePlan({ ...res.plan, currentStepIdx: idx >= 0 ? idx : res.plan.currentStepIdx });
+        }
+        return false;
+      }
+    } catch (e) { /* hors ligne ou refus : on continue comme avant */ }
+    return true;
+  }
   // v1.146.3 — Plans déjà en cours dont une étape a été passée avant ce
   // correctif : l'horaire de la suite est recalé (voir rescheduleAfterSkips).
   useEffect(() => {
@@ -11371,7 +11828,6 @@ function PoolGenAIApp() {
   // v1.85.0 — Permet de consulter le texte complet des CGU directement depuis
   // l'écran de validation obligatoire (needsCguAcceptance), plutôt que de forcer
   // une acceptation sans possibilité de lecture.
-  const [showFullCguInGate, setShowFullCguInGate] = useState(false);
   const [cguAcceptedDate, setCguAcceptedDate] = useState(null);
   // v1.83.0 — Dérivé (pas un flag manuel) : couvre à la fois "jamais accepté"
   // (comptes Google, cguVersion cloud absent) et "version dépassée" (re-acceptation).
@@ -12858,6 +13314,8 @@ function PoolGenAIApp() {
       doseUnit: s.doseUnit,
       appliedAt: s.appliedAt, skipped: s.skipped, scheduledAt: s.scheduledAt,
       mode: s.mode, doseText: s.doseText,
+      // v1.184.0 — Plan partagé : auteur de la validation.
+      ...(s.appliedBy ? { appliedBy: s.appliedBy, appliedByName: s.appliedByName || "" } : {}),
       // v1.124.0 — Conserve le marquage des étapes de complément (voir
       // applyWizardStep) dans l'application enregistrée, pour que la carte
       // "Complément" du plan reste correctement associée à son étape mère.
@@ -13029,10 +13487,19 @@ function PoolGenAIApp() {
   }
 
   // Valide une étape du wizard — version sans appel de setter dans setter
-  function applyWizardStep(stepIdx, amount, appliedAt, productName, wantsSplit) {
+  async function applyWizardStep(stepIdx, amount, appliedAt, productName, wantsSplit) {
     if (!activePlan) return;
     const now = appliedAt || new Date().toISOString();
     const origStep = activePlan.steps[stepIdx];
+    // v1.184.0 — Plan partagé : auteur de la validation + première validation gagne (avant tout effet : stock, historique, plan).
+    const actor = sharedActor();
+    if (actor) {
+      const claimed = await claimSharedStep(stepIdx, {
+        appliedAt: now, appliedAmount: amount, skipped: false, ...actor,
+        ...(productName && productName !== origStep.productName ? { appliedProductName: productName } : {}),
+      });
+      if (!claimed) return;
+    }
 
     // v1.113.0 — Application partielle : certains produits imposent une dose
     // maximale par prise (ex. pH- liquide concentré : 500 mL max en une fois
@@ -13094,7 +13561,7 @@ function PoolGenAIApp() {
     }
     const needsSplit = !doSubstitute && laterRun.length === 0 && rawRemainder > epsilon && !!wantsSplit;
 
-    const newSteps = doSubstitute
+    const newStepsBase = doSubstitute
       ? buildSubstitutionSteps(activePlan.steps, stepIdx, amount, now, subCtx, activePool?.volume || 0, tFn)
       : activePlan.steps.map((s, i) => {
       if (i !== stepIdx) return s;
@@ -13115,6 +13582,7 @@ function PoolGenAIApp() {
         } : {}),
       };
     });
+    const newSteps = actor ? newStepsBase.map((st, i) => (i === stepIdx ? { ...st, ...actor } : st)) : newStepsBase;
 
     let stepsWithSplit = newSteps;
     if (laterRun.length > 0) {
@@ -13339,10 +13807,13 @@ function PoolGenAIApp() {
   }
 
   // Passe une étape
-  function skipWizardStep(stepIdx) {
+  async function skipWizardStep(stepIdx) {
     if (!activePlan) return;
+    const skipAt = new Date().toISOString();
+    const actor = sharedActor();
+    if (actor && !(await claimSharedStep(stepIdx, { skipped: true, appliedAt: skipAt, ...actor }))) return;
     let newSteps = activePlan.steps.map((s, i) =>
-      i === stepIdx ? { ...s, skipped: true, appliedAt: new Date().toISOString() } : s
+      i === stepIdx ? { ...s, skipped: true, appliedAt: skipAt, ...(actor || {}) } : s
     );
     // v1.146.2/3 — Une étape passée n'a rien changé à l'eau : le délai avant la
     // suite ne court que depuis la dernière étape RÉELLEMENT appliquée.
@@ -13760,7 +14231,7 @@ function PoolGenAIApp() {
             products={poolProducts}
             manageStock={!!activePool?.manageStock}
             lang={lang}
-            onWantPremium={() => openPaywall()}
+            onWantPremium={(source) => openPaywall(typeof source === "string" ? source : undefined)}
             onAddMeasure={handleOpenAddMeasure}
             onEditMeasure={handleEditMeasure}
             onValidateApplication={handleValidateApplication}
@@ -13778,6 +14249,8 @@ function PoolGenAIApp() {
             onResumePlanForMeasure={resumePlanForMeasure}
             onOpenManualApply={() => setShowManualApply(true)}
             authUid={dataUid}
+            airDaily={activePool?.airDaily}
+            meUid={authUser?.uid}
           />
         )}
         {tab === "filtration" && activePool && (
@@ -14631,20 +15104,10 @@ function PoolGenAIApp() {
             <div style={{ fontSize: 11, color: "#9ab0c4", textAlign: "center", marginBottom: 16 }}>
               CGU {CGU_VERSION}
             </div>
-            <button
-              style={{ width: "100%", background: "none", border: "none", color: "var(--brand-primary)", fontSize: 12.5, fontWeight: 600, cursor: "pointer", textAlign: "center", marginBottom: 14, textDecoration: "underline" }}
-              onClick={() => setShowFullCguInGate((v) => !v)}
-            >
-              {tFn(showFullCguInGate ? "cgu_hide_full_text" : "cgu_read_full_text")}
-            </button>
-            {showFullCguInGate && (
-              <div style={{ maxHeight: 260, overflowY: "auto", fontSize: 11.5, color: "var(--tx-2d4a6e,#2d4a6e)", lineHeight: 1.6, background: "var(--bg-f5f8fc,#f5f8fc)", borderRadius: 10, padding: "12px 14px", marginBottom: 16 }}>
-                <CguLegalContent lang={lang} />
-              </div>
-            )}
-            <button
-              style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" }}
-              onClick={() => {
+            <CguScrollAccept
+              lang={lang}
+              label={tFn("disclaimer_cgu")}
+              onAccept={() => {
                 const now = new Date().toISOString();
                 setAcceptedCguVersion(CGU_VERSION);
                 setCguAcceptedDate(now);
@@ -14652,9 +15115,11 @@ function PoolGenAIApp() {
                   FB.saveUser(authUser.uid, { cguVersion: CGU_VERSION, cguAcceptedDate: now }).catch(() => {});
                 }
               }}
+              boxStyle={{ maxHeight: 300, overflowY: "auto", fontSize: 11.5, color: "var(--tx-2d4a6e,#2d4a6e)", lineHeight: 1.6, background: "var(--bg-f5f8fc,#f5f8fc)", borderRadius: 10, padding: "12px 14px", marginBottom: 12 }}
+              buttonStyle={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 15 }}
             >
-              {tFn("disclaimer_cgu")}
-            </button>
+              <CguLegalContent lang={lang} />
+            </CguScrollAccept>
           </div>
         </div>
       )}
@@ -14691,6 +15156,8 @@ function PoolGenAIApp() {
           onWantAddProduct={() => { setShowWizard(false); setTab("products"); }}
         />
       )}
+
+      {planConflict && <PlanConflictModal conflict={planConflict} lang={lang} onClose={() => setPlanConflict(null)} />}
 
       {showManualApply && (
         <ManualApplyModal
@@ -17967,7 +18434,7 @@ function ProductPriceSection({ prix, onChange, defaultSize, defaultUnit, lang })
   );
 }
 
-function Dashboard({ latest, recentApplications, volume, products, manageStock, onAddMeasure, onEditMeasure, onValidateApplication, applicationForLatest, blockedByLimit, isPremium, onWantPremium, apiKey, apiProvider, recentMeasures, effectiveTargets, activeParamKeys, lang, activePlan, onResumePlan, onResumePlanForMeasure, onOpenManualApply, authUid }) {
+function Dashboard({ latest, recentApplications, volume, products, manageStock, onAddMeasure, onEditMeasure, onValidateApplication, applicationForLatest, blockedByLimit, isPremium, onWantPremium, apiKey, apiProvider, recentMeasures, effectiveTargets, activeParamKeys, lang, activePlan, onResumePlan, onResumePlanForMeasure, onOpenManualApply, authUid, airDaily, meUid }) {
   const t = useT(lang);
   const [aiComment, setAiComment] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -18057,6 +18524,16 @@ Réponds directement en français, sans titre ni introduction.`;
   const recs = useMemo(
     () => (latest ? computeRecommendations(latest, volume, products, effectiveTargets, activeParamKeys, t, computeParamTrends(recentMeasures, latest, recentApplications, products, volume)) : []),
     [latest, volume, products, effectiveTargets, activeParamKeys, recentMeasures, recentApplications]
+  );
+  // v1.183.0 — Premium : valeur attendue après traitement et cause probable des écarts (voir computePlanProjection / computeCauseHints).
+  const insightTargets = effectiveTargets || getEffectiveTargets("chlore");
+  const projection = useMemo(
+    () => (isPremium && latest ? computePlanProjection(latest, recs, products, volume, insightTargets) : []),
+    [isPremium, latest, recs, products, volume, effectiveTargets]
+  );
+  const causeHints = useMemo(
+    () => (isPremium && latest ? computeCauseHints(latest, recentMeasures, recentApplications, insightTargets, airDaily) : []),
+    [isPremium, latest, recentMeasures, recentApplications, effectiveTargets, airDaily]
   );
 
   if (!latest) {
@@ -18164,6 +18641,7 @@ Réponds directement en français, sans titre ni introduction.`;
 
         return (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {isPremium && causeHints.length > 0 && <PlanCauseCard hints={causeHints} lang={lang} />}
             {recs.orderExplanation && (
               <p style={styles.helpText}>{recs.orderExplanation}</p>
             )}
@@ -18216,6 +18694,9 @@ Réponds directement en français, sans titre ni introduction.`;
                     lang={lang}
                     appliedStep={groups[i]?.main || null}
                     parts={buildCardParts(g.main, g.extras, groups[i]?.main || null, groups[i]?.complements || [])}
+                    isPremium={isPremium}
+                    onWantPremium={onWantPremium}
+                    meUid={meUid}
                   />
                   {(groups[i]?.subs || []).map((sub, k) => {
                     const sr = substituteReco(g.main, sub.main, sub.complements, products);
@@ -18229,12 +18710,24 @@ Réponds directement en français, sans titre ni introduction.`;
                         lang={lang}
                         appliedStep={sub.main}
                         parts={sr.parts}
+                        isPremium={isPremium}
+                        onWantPremium={onWantPremium}
+                        meUid={meUid}
                       />
                     );
                   })}
                 </React.Fragment>
               ));
             })()}
+
+            {isPremium && projection.length > 0 && (
+              <PlanProjectionCard
+                projection={projection}
+                controlHours={computeControlDelayHours(recs)}
+                controlAt={computeControlAt((planForLatest || applicationForLatest)?.steps || [])}
+                lang={lang}
+              />
+            )}
 
             {(() => {
               if (applicationForLatest && !planForLatest) {
@@ -18264,6 +18757,13 @@ Réponds directement en français, sans titre ni introduction.`;
               }
               return (
                 <div>
+                  {!isPremium && (
+                    <button type="button" data-testid="plan-premium-banner" onClick={() => onWantPremium && onWantPremium("start_plan")}
+                      style={{ display: "block", width: "100%", boxSizing: "border-box", textAlign: "left", background: "var(--bg-fff8e8,#fff8e8)", border: "1.5px solid #e6a817", borderRadius: 12, padding: "10px 14px", marginBottom: 10, cursor: "pointer" }}>
+                      <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13.5, fontWeight: 700, color: "var(--tx-7a5800,#7a5800)" }}><Crown size={14} /> {t("plan_banner_title")}</span>
+                      <span style={{ display: "block", fontSize: 12.5, color: "var(--tx-7a5800,#7a5800)", lineHeight: 1.5, marginTop: 3 }}>{t("plan_banner_body")}</span>
+                    </button>
+                  )}
                   {!latest?.importedFromPdf && (
                     <button
                       style={{
@@ -18660,6 +19160,8 @@ function buildCardParts(mainRec, extraRecs, planMain, planComplements) {
       skipped: !!st.skipped,
       appliedAt: st.appliedAt || null,
       scheduledAt: usePlan ? (st.scheduledAt || null) : null,
+      byName: st.appliedByName || null,
+      byUid: st.appliedBy || null,
       afterHours: cumul,
     };
     cumul += st.waitHours || 0;
@@ -18672,8 +19174,86 @@ function buildCardParts(mainRec, extraRecs, planMain, planComplements) {
   return parts;
 }
 
-function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep, parts }) {
+// v1.183.0 — Nombre affiché selon la langue (virgule décimale hors anglais).
+function insightNum(x, dec, lang) {
+  const v = dec == null ? String(Math.round(x * 100) / 100) : (Math.round(x * Math.pow(10, dec)) / Math.pow(10, dec)).toFixed(dec);
+  return lang === "en" ? v : v.replace(".", ",");
+}
+function insightParamLabel(param, t) {
+  const key = "param_" + param.toLowerCase();
+  const label = t(key);
+  return label !== key ? label.replace(/ \((mg\/L|°C|µg\/L)\)/, "") : param;
+}
+const INSIGHT_CARD_STYLE = { background: "var(--bg-ffffff,#fff)", border: "1.5px solid var(--bd-d0e4f5,#d0e4f5)", borderRadius: 14, padding: "12px 14px" };
+const INSIGHT_TITLE_STYLE = { fontSize: 12.5, fontWeight: 700, color: "var(--tx-3a5a78,#3a5a78)", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 8, display: "flex", alignItems: "center", gap: 6 };
+
+// v1.183.0 — Valeur attendue après traitement (Premium) : fourchette par paramètre + mesure de contrôle conseillée.
+function PlanProjectionCard({ projection, controlHours, controlAt, lang }) {
   const t = useT(lang || "fr");
+  const colorOf = (st) => (st === "ok" ? "#2e8b57" : st === "near" ? "#a8721a" : "#c0392b");
+  return (
+    <div data-testid="plan-projection" style={INSIGHT_CARD_STYLE}>
+      <div style={INSIGHT_TITLE_STYLE}><Info size={14} /> {t("proj_title")}</div>
+      {projection.map((p) => {
+        const range = p.lo === p.hi ? insightNum(p.lo, p.dec, lang) : insightNum(p.lo, p.dec, lang) + "–" + insightNum(p.hi, p.dec, lang);
+        const stText = p.shock ? t("proj_shock") : p.status === "ok" ? t("proj_in_target") : p.status === "near" ? t("proj_near_target") : p.status === "off" ? t("proj_off_target") : null;
+        return (
+          <div key={p.param} data-testid={"proj-" + p.param} style={{ padding: "5px 0", borderTop: "1px solid var(--bd-eaf1f8,#eaf1f8)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "baseline", flexWrap: "wrap" }}>
+              <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--brand-text-strong)" }}>{insightParamLabel(p.param, t)}</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: "var(--brand-text-strong)" }}>{insightNum(p.base, p.dec, lang)} → {range}</span>
+            </div>
+            <div style={{ fontSize: 12, color: "var(--brand-text-muted)", marginTop: 1 }}>
+              {p.target && <span>{t("proj_target", { min: insightNum(p.target.min, null, lang), max: insightNum(p.target.max, null, lang) })}</span>}
+              {stText && <span style={{ color: p.shock ? "var(--brand-text-muted)" : colorOf(p.status), fontWeight: 600 }}>{p.target ? " · " : ""}{stText}</span>}
+            </div>
+          </div>
+        );
+      })}
+      {(controlAt || controlHours > 0) && (
+        <div data-testid="proj-control" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--tx-3a5a78,#3a5a78)", marginTop: 8, fontWeight: 600 }}>
+          <Clock size={13} />
+          {controlAt ? t("proj_control_date", { date: formatDate(controlAt) }) : t("proj_control_after", { h: Math.round(controlHours) })}
+        </div>
+      )}
+      <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginTop: 6, lineHeight: 1.45 }}>{t("proj_disclaimer")}</div>
+    </div>
+  );
+}
+
+// v1.183.0 — Cause probable des écarts (Premium), règles : voir computeCauseHints.
+function PlanCauseCard({ hints, lang }) {
+  const t = useT(lang || "fr");
+  const fmtVars = (v) => {
+    if (!v) return undefined;
+    const o = {};
+    Object.keys(v).forEach((k) => {
+      if (typeof v[k] !== "number") { o[k] = v[k]; return; }
+      const n = insightNum(v[k], null, lang);
+      o[k] = (k === "from" || k === "to") && !/[.,]/.test(n) ? insightNum(v[k], 1, lang) : n;
+    });
+    return o;
+  };
+  return (
+    <div data-testid="plan-cause" style={INSIGHT_CARD_STYLE}>
+      <div style={INSIGHT_TITLE_STYLE}><Info size={14} /> {t("cause_title")}</div>
+      {hints.map((h) => (
+        <div key={h.param} data-testid={"cause-" + h.param} style={{ padding: "5px 0", borderTop: "1px solid var(--bd-eaf1f8,#eaf1f8)" }}>
+          <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--brand-text-strong)" }}>{insightParamLabel(h.param, t)}</div>
+          {h.items.map((it, i) => (
+            <div key={i} style={{ fontSize: 13, color: "var(--tx-3a5a78,#3a5a78)", lineHeight: 1.45, marginTop: 2 }}>{t(it.k, fmtVars(it.v))}</div>
+          ))}
+        </div>
+      ))}
+      <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginTop: 6, lineHeight: 1.45 }}>{t("cause_note")}</div>
+    </div>
+  );
+}
+
+function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep, parts, isPremium = true, onWantPremium, meUid }) {
+  const t = useT(lang || "fr");
+  // v1.184.0 — Plan partagé : « · par {name} » quand une autre personne que moi a validé l'étape.
+  const byTxt = (name, uid) => (name && uid && uid !== meUid ? " · " + t("plan_validated_by", { name }) : "");
   const hasParts = !!parts && parts.length > 1;
   const isInfo = !!reco.noAction;
   // v1.123.7 — Une fois l'étape appliquée avec un AUTRE produit que celui du
@@ -18787,7 +19367,22 @@ function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep, part
         );
       })()}
       {cardDoseText && <div style={styles.recoDose}>{cardDoseText}</div>}
-      {hasParts && (
+      {/* v1.181.0 — Gratuit : seulement le total et le nombre d'applications (avec le maximum par ajout, consigne de sécurité) ;
+          la quantité et le moment de chaque ajout sont réservés au Premium (assistant pas à pas). */}
+      {hasParts && !isPremium && (
+        <div style={styles.recoParts}>
+          <div style={styles.recoPartsHeader}>
+            {reco.maxDoseAmount
+              ? t("reco_parts_summary_max", { n: parts.length, max: formatDose(reco.maxDoseAmount, reco.doseUnit || parts.unit) })
+              : t("reco_parts_summary", { n: parts.length })}
+          </div>
+          <button type="button" data-testid="reco-parts-locked" onClick={() => onWantPremium && onWantPremium("start_plan")}
+            style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", padding: "4px 0 0", color: "var(--brand-primary)", fontWeight: 600, fontSize: 12.5, cursor: "pointer", textAlign: "left" }}>
+            <Lock size={13} /> {t("reco_parts_locked")}
+          </button>
+        </div>
+      )}
+      {hasParts && isPremium && (
         <div style={styles.recoParts}>
           <div style={styles.recoPartsHeader}>
             {reco.maxDoseAmount
@@ -18799,8 +19394,8 @@ function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep, part
               <span style={{ fontWeight: 700, minWidth: 16 }}>{i + 1}.</span>
               <span style={{ fontWeight: 700, color: p.applied ? "var(--tx-1a8fd1,#1a8fd1)" : "var(--brand-text-strong)" }}>{formatDose(p.amount, p.unit)}</span>
               <span style={{ color: "var(--brand-text-secondary)" }}>
-                {p.skipped ? `— ⊘ ${t("treatment_skipped")}`
-                  : p.applied ? `— ✓ ${formatDate(p.appliedAt)}`
+                {p.skipped ? `— ⊘ ${t("treatment_skipped")}${byTxt(p.byName, p.byUid)}`
+                  : p.applied ? `— ✓ ${formatDate(p.appliedAt)}${byTxt(p.byName, p.byUid)}`
                   : p.scheduledAt ? `— ${t("complement_from", { date: formatDate(p.scheduledAt) })}`
                   : `— ${p.afterHours > 0 ? t("reco_part_after_h", { h: p.afterHours }) : t("reco_part_now")}`}
               </span>
@@ -18815,6 +19410,7 @@ function RecoCard({ reco, isLast, manageStock, products, lang, appliedStep, part
         <div style={{ fontSize: 13, fontWeight: 600, color: "var(--tx-1a8fd1,#1a8fd1)", marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
           <CheckCircle2 size={13} />
           {t("applied_amount", { amount: formatDose(appliedStep.appliedAmount, appliedStep.doseUnit || reco.doseUnit || "g") })}
+          {byTxt(appliedStep.appliedByName, appliedStep.appliedBy)}
         </div>
       )}
       {/* v1.108.3 — Garde-fou dose anormale (voir isDoseRateAnomalous) :
@@ -19177,6 +19773,192 @@ function computeParamTrends(measures, m, applications, products, volume) {
   return out;
 }
 
+// v1.183.0 — Projection « après traitement » (Premium, estimation) : valeur attendue de chaque paramètre corrigé si le plan est suivi.
+// Même modèle dose → effet que buildProjectedPoints (computeProjectedDelta) appliqué à la dose TOTALE de chaque produit du plan ;
+// le bicarbonate (TAC+) relève aussi légèrement le pH (même coefficient que computeRecommendations). Fourchette = effet ±25 % :
+// jamais une valeur unique, le résultat réel dépend du brassage, de la filtration et du bassin.
+const PROJECTION_ACTION_PARAM = { "ph-": "pH", "ph+": "pH", "chlore": "fCl", "chlore-stabilise": "fCl", "tac+": "tac", "tac-": "tac", "hard+": "hard", "phos-": "phos" };
+const PROJECTION_DECIMALS = { pH: 1, fCl: 1, tac: 0, hard: 0, phos: 0 };
+const PROJECTION_SPREAD = 0.25;
+const PROJECTION_TAC_PLUS_PH_PER_PPM = 0.1 / 30;
+function computePlanProjection(latest, recs, products, volume, targets) {
+  if (!latest || !Array.isArray(recs) || !(volume > 0)) return [];
+  const num = (v) => { const n = v !== undefined && v !== "" && v != null ? parseFloat(v) : null; return n != null && isNaN(n) ? null : n; };
+  const meas = {};
+  Object.keys(latest).forEach((k) => { meas[k.toLowerCase()] = latest[k]; });
+  const tg = {};
+  Object.keys(targets || {}).forEach((k) => { tg[k.toLowerCase()] = targets[k]; });
+  const byAction = {};
+  recs.forEach((r) => {
+    if (!r || r.noAction || !r.action || !PROJECTION_ACTION_PARAM[r.action] || r.computedDoseAmount == null || r.doseUnit === "%") return;
+    const a = byAction[r.action] || (byAction[r.action] = { action: r.action, total: 0, rec: r, shock: false });
+    a.total += r.computedDoseAmount;
+    if (r.isShock) a.shock = true;
+  });
+  const changes = {};
+  const shocks = {};
+  Object.keys(byAction).forEach((action) => {
+    const a = byAction[action];
+    const cands = (products || []).filter((p) => p.action === action);
+    const real = a.rec.productRealName ? cands.find((p) => p.name === a.rec.productRealName) : null;
+    const prod = real || cands.find((p) => !p.isDefault) || cands.find((p) => p.isDefault) || null;
+    const src = (prod && prod.doseAmount != null && prod.effectAmount != null && prod.effectPer != null) ? prod : (DEFAULT_PRODUCTS.find((d) => d.action === action) || null);
+    const delta = computeProjectedDelta(src, a.total, volume);
+    if (delta == null || isNaN(delta)) return;
+    const sign = (action === "ph-" || action === "tac-" || action === "phos-") ? -1 : 1;
+    const param = PROJECTION_ACTION_PARAM[action];
+    changes[param] = (changes[param] || 0) + sign * delta;
+    if (a.shock) shocks[param] = true;
+    if (action === "tac+") changes.pH = (changes.pH || 0) + delta * PROJECTION_TAC_PLUS_PH_PER_PPM;
+  });
+  const out = [];
+  ["pH", "fCl", "tac", "hard", "phos"].forEach((param) => {
+    const base = num(meas[param.toLowerCase()]);
+    const change = changes[param];
+    if (base == null || change == null || !isFinite(change)) return;
+    const dec = PROJECTION_DECIMALS[param];
+    const k = Math.pow(10, dec);
+    const rnd = (x) => Math.round(x * k) / k;
+    let a = base + change * (1 - PROJECTION_SPREAD);
+    let b = base + change * (1 + PROJECTION_SPREAD);
+    if (param === "pH") { a = Math.min(14, Math.max(0, a)); b = Math.min(14, Math.max(0, b)); } else { a = Math.max(0, a); b = Math.max(0, b); }
+    const lo = rnd(Math.min(a, b)), hi = rnd(Math.max(a, b));
+    const t = tg[param.toLowerCase()];
+    let status = null;
+    if (t && t.min != null && t.max != null) {
+      const eps = 1e-9;
+      status = (lo >= t.min - eps && hi <= t.max + eps) ? "ok" : (hi < t.min - eps || lo > t.max + eps) ? "off" : "near";
+    }
+    out.push({ param, base, lo, hi, dec, target: t && t.min != null && t.max != null ? { min: t.min, max: t.max } : null, status, shock: !!shocks[param] });
+  });
+  return out;
+}
+// Délai (h) avant la mesure de contrôle : fin de la dernière étape (début cumulé + attente), 0 si aucune attente.
+function computeControlDelayHours(recs) {
+  let h = 0;
+  (recs || []).forEach((r) => {
+    if (!r || r.noAction) return;
+    const end = (r.startsAfterHours || 0) + (r.waitHours || 0);
+    if (end > h) h = end;
+  });
+  return h;
+}
+// Date ISO de la mesure de contrôle quand elle est connue : dernière étape non passée du plan (appliquée ou programmée) + son attente.
+function computeControlAt(steps) {
+  const live = (steps || []).filter((st) => st && !st.skipped);
+  const last = live[live.length - 1];
+  if (!last) return null;
+  const ref = Date.parse(last.appliedAt || last.scheduledAt || "");
+  if (!ref) return null;
+  return new Date(ref + (last.waitHours || 0) * 3600e3).toISOString();
+}
+
+// v1.183.0 — Cause probable des écarts (Premium) : règles fondées sur l'historique des mesures, les produits appliqués depuis la mesure
+// précédente et la moyenne de l'air (pool.airDaily). Hypothèses, jamais un diagnostic. Deux causes au plus par paramètre, les plus
+// spécifiques d'abord (produit appliqué, évolution mesurée), la cause générique en dernier.
+const CAUSE_WARM_AIR_C = 25;
+const CAUSE_HOT_WATER_C = 27;
+function computeCauseHints(latest, measures, applications, targets, airDaily) {
+  if (!latest) return [];
+  const num = (v) => { const n = v !== undefined && v !== "" && v != null ? parseFloat(v) : null; return n != null && isNaN(n) ? null : n; };
+  const lower = (o) => { const r = {}; Object.keys(o || {}).forEach((k) => { r[k.toLowerCase()] = o[k]; }); return r; };
+  const L = lower(latest);
+  const T = lower(targets);
+  const mts = new Date(latest.date).getTime();
+  if (isNaN(mts)) return [];
+  const pid = latest.poolId || "default";
+  const prev = (measures || [])
+    .filter((x) => (x.poolId || "default") === pid && x.id !== latest.id && new Date(x.date).getTime() < mts)
+    .sort((x, y) => new Date(y.date) - new Date(x.date))[0] || null;
+  const pts = prev ? new Date(prev.date).getTime() : null;
+  const days = pts ? (mts - pts) / 864e5 : null;
+  const usePrev = !!prev && days > 0 && days <= 21;
+  const P = usePrev ? lower(prev) : null;
+  const windowStart = usePrev ? pts : mts - 5 * 864e5;
+  const applied = new Set();
+  if (usePrev) {
+    (applications || []).forEach((app) => (app && app.steps || []).forEach((st) => {
+      if (!st || st.skipped || !st.appliedAt) return;
+      const at = Date.parse(st.appliedAt);
+      if (at >= pts && at <= mts) applied.add(st.action);
+    }));
+  }
+  const dayKey = (ms) => { const d = new Date(ms); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+  const airVals = [];
+  if (airDaily) {
+    const k0 = dayKey(windowStart), k1 = dayKey(mts);
+    Object.keys(airDaily).forEach((k) => { if (k >= k0 && k <= k1 && Number.isFinite(airDaily[k])) airVals.push(airDaily[k]); });
+  }
+  const air = airVals.length >= 2 ? Math.round(airVals.reduce((a, b) => a + b, 0) / airVals.length) : null;
+  const water = num(L.temp);
+  const r1 = (x) => Math.round(x * 10) / 10;
+  const out = [];
+  const add = (param, items) => { if (items.length) out.push({ param, items: items.slice(0, 2) }); };
+
+  const ph = num(L.ph), phT = T.ph;
+  const tac = num(L.tac), tacT = T.tac;
+  const fcl = num(L.fcl), fclT = T.fcl;
+  const tcl = num(L.tcl);
+  const cya = num(L.cya);
+  const cc = fcl != null && tcl != null ? Math.max(0, tcl - fcl) : null;
+  const pPh = P ? num(P.ph) : null, pFcl = P ? num(P.fcl) : null;
+  const chlorineApplied = applied.has("chlore") || applied.has("chlore-stabilise");
+
+  if (ph != null && phT && ph > phT.max) {
+    const it = [];
+    if (applied.has("tac+")) it.push({ k: "cause_ph_tacplus" });
+    if (applied.has("chlore")) it.push({ k: "cause_ph_shock" });
+    if (tac != null && tacT && tac > tacT.max) it.push({ k: "cause_ph_tac_high", v: { tac } });
+    if (pPh != null && ph - pPh >= 0.15 && !applied.has("ph+")) it.push({ k: "cause_ph_rise", v: { from: pPh, to: ph, days: r1(days) } });
+    if ((air != null && air >= CAUSE_WARM_AIR_C) || (water != null && water >= CAUSE_HOT_WATER_C)) it.push({ k: "cause_ph_warm", v: { air: air != null ? air : Math.round(water) } });
+    it.push({ k: "cause_ph_degas" });
+    add("pH", it);
+  } else if (ph != null && phT && ph < phT.min) {
+    const it = [];
+    if (applied.has("ph-")) it.push({ k: "cause_ph_after_minus" });
+    if (applied.has("chlore-stabilise")) it.push({ k: "cause_ph_trichlor" });
+    if (tac != null && tacT && tac < tacT.min) it.push({ k: "cause_ph_tac_low", v: { tac } });
+    if (pPh != null && pPh - ph >= 0.15 && !applied.has("ph-")) it.push({ k: "cause_ph_drop", v: { from: pPh, to: ph, days: r1(days) } });
+    it.push({ k: "cause_ph_low_generic" });
+    add("pH", it);
+  }
+
+  if (fcl != null && fclT && fcl < fclT.min) {
+    const it = [];
+    if (pFcl != null && pFcl - fcl >= 0.3) it.push({ k: "cause_cl_drop", v: { from: pFcl, to: fcl, days: r1(days) } });
+    if (usePrev && !chlorineApplied && days >= 3) it.push({ k: "cause_cl_nochlorine", v: { days: Math.round(days) } });
+    if ((water != null && water >= CAUSE_HOT_WATER_C) || (air != null && air >= CAUSE_WARM_AIR_C + 1)) it.push({ k: "cause_cl_heat", v: { t: water != null && water >= CAUSE_HOT_WATER_C ? Math.round(water) : air } });
+    if (cya != null && cya < 20) it.push({ k: "cause_cl_low_cya", v: { cya } });
+    if (cc != null && cc > 0.5) it.push({ k: "cause_cl_combined", v: { cc: Math.round(cc * 100) / 100 } });
+    it.push({ k: "cause_cl_generic" });
+    add("fCl", it);
+  } else if (fcl != null && fclT && fcl > fclT.max) {
+    const it = [];
+    if (chlorineApplied) it.push({ k: "cause_clhigh_applied" });
+    it.push({ k: "cause_clhigh_generic" });
+    add("fCl", it);
+  }
+
+  if (cc != null && cc > 0.5) {
+    const it = [{ k: "cause_cc_high", v: { cc: Math.round(cc * 100) / 100 } }];
+    if (fcl != null && fclT && fcl < fclT.min) it.push({ k: "cause_cc_lowfree" });
+    add("ccl", it);
+  }
+
+  if (tac != null && tacT && tac < tacT.min) {
+    const it = [];
+    if (applied.has("ph-")) it.push({ k: "cause_tac_after_acid" });
+    it.push({ k: "cause_tac_low_generic" });
+    add("tac", it);
+  } else if (tac != null && tacT && tac > tacT.max) {
+    const it = [];
+    if (applied.has("tac+")) it.push({ k: "cause_tac_after_plus" });
+    it.push({ k: "cause_tac_high_generic" });
+    add("tac", it);
+  }
+  return out;
+}
+
 // ---------- Logique de recommandation ----------
 function computeRecommendations(latest, volume, products, effectiveTargets, activeParamKeys, t, trends) {
   // v1.131.0 — trends : voir computeParamTrends (optionnel, absent = milieu de zone).
@@ -19456,6 +20238,7 @@ function computeRecommendations(latest, volume, products, effectiveTargets, acti
         doseUnit: doseSrc?.doseUnit || null,
         doseAnomaly: isDoseRateAnomalous(prod, dp),
         note: _("reco_note_combined"),
+        isShock: true,
         timingTip: _("chlore_timing_tip"),
         waitHours: prod?.waitHours ?? DEFAULT_WAIT_HOURS["chlore"],
       });
@@ -27766,6 +28549,7 @@ function SettingsView({ pools, activePoolId, onUpdatePool, onDeletePool, onSwitc
       {portalError && (
         <div style={{ fontSize: 12, color: "var(--tx-c0392b,#c0392b)", marginTop: -8, marginBottom: 10 }}>{portalError}</div>
       )}
+      {isPremium && !testerUntil && authUser && !viewContext && <AiQuotaLine lang={lang} />}
       {testerUntil && (
         <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)", marginTop: -4, marginBottom: 12 }}>{t("tester_toggle_hint")}</div>
       )}
@@ -28005,6 +28789,168 @@ function CguLegalContent({ lang }) {
 }
 
 // v1.177.0 — Récupération des données (e-mail ou téléchargement), demande d'effacement des données / de suppression du compte, annulation.
+// v1.180.0 — CGU : le bouton d'acceptation reste désactivé tant que le texte n'a pas été
+// parcouru jusqu'à la fin (zone défilante). Un texte qui tient entièrement à l'écran
+// n'a pas besoin de défiler : il est considéré comme lu. Utilisé à l'inscription et
+// à l'écran de mise à jour des conditions.
+function CguScrollAccept({ lang, label, onAccept, boxStyle, buttonStyle, children }) {
+  const t = useT(lang);
+  const boxRef = useRef(null);
+  const [done, setDone] = useState(false);
+  const check = () => {
+    const el = boxRef.current;
+    if (el && el.scrollTop + el.clientHeight >= el.scrollHeight - 12) setDone(true);
+  };
+  useEffect(() => {
+    check();
+    const id = setTimeout(check, 400);
+    window.addEventListener("resize", check);
+    return () => { clearTimeout(id); window.removeEventListener("resize", check); };
+  }, []);
+  return (
+    <>
+      <div ref={boxRef} data-testid="cgu-scroll-box" tabIndex={0} onScroll={check} style={boxStyle}>{children}</div>
+      {!done && <div data-testid="cgu-scroll-hint" style={{ fontSize: 12, color: "var(--tx-7a5800,#7a5800)", background: "var(--bg-fff8e8,#fff8e8)", border: "1px solid #e6a817", borderRadius: 10, padding: "8px 12px", lineHeight: 1.5, marginBottom: 12, textAlign: "center" }}>{t("cgu_scroll_hint")}</div>}
+      <button data-testid="cgu-accept" disabled={!done} onClick={onAccept} style={{ ...buttonStyle, opacity: done ? 1 : 0.5, cursor: done ? "pointer" : "not-allowed" }}>{label}</button>
+    </>
+  );
+}
+
+// v1.179.0 — Ligne « Analyses IA ce mois-ci : X / 30 » (abonnés), lue sur le Worker (lecture seule).
+// v1.180.0 — + solde de crédits achetés, bouton « Acheter 50 analyses » (toujours présent) et fenêtre d'achat :
+// Stripe Checkout (web) ou Google Play Billing (application Android, voir isTWAEnvironment).
+async function buyCreditsWithPlayBilling(A) {
+  if (!window.getDigitalGoodsService) throw new Error("Digital Goods API indisponible");
+  const service = await window.getDigitalGoodsService("https://play.google.com/billing");
+  const details = await service.getDetails([PLAY_BILLING_PRODUCT_CREDITS]);
+  if (!details.length) throw new Error("Produit Play Billing introuvable : " + PLAY_BILLING_PRODUCT_CREDITS);
+  const request = new PaymentRequest(
+    [{ supportedMethods: "https://play.google.com/billing", data: { sku: PLAY_BILLING_PRODUCT_CREDITS } }],
+    { total: { label: "Total", amount: { currency: details[0].price.currency, value: details[0].price.value } } }
+  );
+  const response = await request.show();
+  const token = response.details?.purchaseToken || response.details?.token;
+  if (!token) { await response.complete("fail").catch(() => {}); throw new Error("Achat Play Billing sans purchaseToken"); }
+  let data;
+  try { data = await A.creditsVerifyPlay(token); } catch (e) { await response.complete("fail").catch(() => {}); throw e; }
+  if (!data || !data.success) { await response.complete("fail").catch(() => {}); throw new Error("Achat non vérifié"); }
+  await response.complete("success");
+  // Consomme le jeton (produit consommable) : autorise un nouvel achat. Le crédit est déjà ajouté.
+  try { await service.consume(token); } catch (e) { console.error("Consommation du jeton Play Billing échouée :", e); }
+}
+function AiQuotaLine({ lang, api }) {
+  const t = useT(lang);
+  const A = api || FB; // api : substitut pour les tests
+  const [q, setQ] = useState(null);
+  const [open, setOpen] = useState(false);
+  const [consent, setConsent] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState(null);
+  const [note, setNote] = useState(null); // { ok, text } : retour d'achat
+  useEffect(() => {
+    let cancelled = false;
+    A.aiQuota().then((d) => { if (!cancelled) setQ(d); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+  // Retour de Stripe Checkout : attend la confirmation du Worker (webhook) puis affiche le résultat.
+  useEffect(() => {
+    let flag = null; let before = 0;
+    try {
+      flag = localStorage.getItem("pool:creditsReturn"); before = Number(localStorage.getItem("pool:creditsBefore")) || 0;
+      localStorage.removeItem("pool:creditsReturn");
+    } catch (e) {}
+    if (flag === "cancel") { setNote({ ok: false, text: t("credits_cancelled") }); return; }
+    if (flag !== "success") return;
+    let stop = false; let tries = 0;
+    setNote({ ok: true, text: t("credits_pending") });
+    const tick = async () => {
+      const d = await A.aiQuota().catch(() => null);
+      if (stop) return;
+      if (d && d.credits && d.credits.balance > before) {
+        setQ(d); setNote({ ok: true, text: t("credits_success", { n: (d.offer && d.offer.pack) || 50 }) }); return;
+      }
+      if (++tries < 12) setTimeout(tick, 2000);
+    };
+    tick();
+    return () => { stop = true; };
+  }, []);
+  if (!q || typeof q.limit !== "number") return null;
+  let when = "";
+  try {
+    const [y, m, d] = String(q.resetsAt).split("-").map(Number);
+    when = new Date(y, m - 1, d).toLocaleDateString(lang || "fr", { day: "numeric", month: "long" });
+  } catch (e) {}
+  const empty = q.remaining <= 0;
+  const credits = q.credits || { balance: 0, lots: [] };
+  const offer = q.offer || null;
+  const twa = isTWAEnvironment();
+  const canBuy = !!offer && (twa ? offer.play : offer.stripe);
+  const pack = (offer && offer.pack) || 50;
+  const price = t("credits_price");
+  async function pay() {
+    setBusy(true); setErr(null);
+    try {
+      if (twa) {
+        await buyCreditsWithPlayBilling(A);
+        setOpen(false);
+        const d = await A.aiQuota().catch(() => null);
+        if (d) setQ(d);
+        setNote({ ok: true, text: t("credits_success", { n: pack }) });
+      } else {
+        try { localStorage.setItem("pool:creditsBefore", String(credits.balance || 0)); } catch (e) {}
+        const d = await A.creditsCheckout(lang);
+        if (!d || !d.url) throw new Error("Session de paiement absente");
+        window.location.href = d.url; // la page quitte l'app
+        return;
+      }
+    } catch (e) {
+      console.error("Achat de crédits échoué :", e);
+      setErr(t("credits_error"));
+    }
+    setBusy(false);
+  }
+  return (
+    <div data-testid="ai-quota-line" style={{ fontSize: 12.5, margin: "-4px 0 12px", color: empty ? "var(--tx-c0392b,#c0392b)" : "var(--brand-text-secondary)" }}>
+      <div style={{ fontWeight: 600 }}>{t("ai_quota_line", { used: q.used, limit: q.limit })}</div>
+      {when ? <div style={{ fontSize: 11.5, color: "var(--brand-text-muted)" }}>{t("ai_quota_reset", { date: when })}</div> : null}
+      {credits.balance > 0 && (
+        <div data-testid="ai-credits-line" style={{ marginTop: 6, color: "var(--brand-text-secondary)" }}>
+          <div style={{ fontWeight: 600 }}>{t("credits_line", { n: credits.balance })}</div>
+        </div>
+      )}
+      {note && <div data-testid="ai-credits-note" style={{ marginTop: 6, fontSize: 12, color: note.ok ? "var(--tx-1d6b3e,#1d6b3e)" : "var(--brand-text-muted)" }}>{note.text}</div>}
+      {canBuy && (
+        <button type="button" data-testid="ai-credits-buy" onClick={() => { setErr(null); setConsent(false); setOpen(true); }}
+          style={{ marginTop: 8, padding: "8px 14px", borderRadius: 10, border: "1.5px solid var(--brand-primary)", background: "var(--bg-ffffff,#fff)", color: "var(--brand-primary)", fontWeight: 600, fontSize: 12.5, cursor: "pointer" }}>
+          {t("credits_buy", { n: pack, price })}
+        </button>
+      )}
+      {open && (
+        <ModalShell onClose={() => { if (!busy) setOpen(false); }} title={t("credits_title")}>
+          <div data-testid="ai-credits-modal">
+            <p style={{ fontSize: 13, color: "var(--brand-text-secondary)", lineHeight: 1.55, marginTop: 0 }}>{t("credits_body", { n: pack, limit: q.limit })}</p>
+            <p data-testid="ai-credits-validity" style={{ fontSize: 12.5, color: "var(--brand-text-secondary)", lineHeight: 1.5 }}>{t("credits_validity")}</p>
+            <label style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 12.5, lineHeight: 1.5, color: "var(--brand-text-strong)", margin: "10px 0" }}>
+              <input type="checkbox" data-testid="ai-credits-consent" checked={consent} onChange={(e) => setConsent(e.target.checked)} style={{ marginTop: 3 }} />
+              <span>{t("credits_consent")}</span>
+            </label>
+            <p style={{ fontSize: 11.5, color: "var(--brand-text-muted)", lineHeight: 1.5 }}>{t("credits_refund_note")}</p>
+            {err && <div data-testid="ai-credits-error" style={{ fontSize: 12.5, color: "var(--tx-c0392b,#c0392b)", margin: "0 0 8px", lineHeight: 1.5 }}>{err}</div>}
+            <button type="button" data-testid="ai-credits-pay" disabled={!consent || busy} onClick={pay}
+              style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "var(--brand-primary)", color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: !consent || busy ? "default" : "pointer", opacity: !consent || busy ? 0.55 : 1, marginTop: 6 }}>
+              {busy ? "…" : t("credits_pay", { price })}
+            </button>
+            <button type="button" data-testid="ai-credits-close" disabled={busy} onClick={() => setOpen(false)}
+              style={{ width: "100%", padding: "11px 0", borderRadius: 12, border: "1px solid var(--brand-bg-tint)", background: "none", color: "var(--brand-text-secondary)", fontWeight: 600, fontSize: 14, cursor: "pointer", marginTop: 8 }}>
+              {t("credits_close")}
+            </button>
+          </div>
+        </ModalShell>
+      )}
+    </div>
+  );
+}
+
 function AccountDataBlock({ lang, accountState, subscriptionActive, onRequest, onCancel, api }) {
   const t = useT(lang);
   const A = api || FB; // api : substitut pour les tests
@@ -28305,11 +29251,42 @@ function OnboardingWizard({ onDone, lang }) {
   );
 }
 
+// v1.184.0 — Cœur de FB.claimPlanStep (voir plus haut) : tx = transaction Firestore (get/set), ref = config/main du propriétaire du bassin.
+async function planStepClaimTransaction(tx, ref, poolId, measureId, stepIdx, title, patch) {
+  const snap = await tx.get(ref);
+  const data = snap && snap.exists() ? snap.data() : null;
+  const plan = data && data.activePlan ? data.activePlan[poolId] : null;
+  if (!plan || !Array.isArray(plan.steps)) return { ok: true, unguarded: true }; // plan pas encore synchronisé : rien à protéger
+  if (plan.measureId !== measureId) return { conflict: "changed", plan };
+  const cur = plan.steps[stepIdx];
+  if (!cur || cur.title !== title) return { conflict: "changed", plan };
+  if (cur.appliedAt || cur.skipped) return { conflict: "done", by: cur.appliedByName || null, byUid: cur.appliedBy || null, at: cur.appliedAt || null, skipped: !!cur.skipped, plan };
+  const steps = plan.steps.map((st, i) => (i === stepIdx ? JSON.parse(JSON.stringify({ ...st, ...patch })) : st));
+  tx.set(ref, { activePlan: { [poolId]: { steps } }, updatedAt: new Date().toISOString() }, { merge: true });
+  return { ok: true };
+}
+
+// v1.184.0 — Information affichée quand une autre personne a traité l'étape avant nous (rien n'a été enregistré ni décompté).
+function PlanConflictModal({ conflict, lang, onClose }) {
+  const t = useT(lang || "fr");
+  const name = conflict.by || t("plan_conflict_someone");
+  const text = conflict.conflict === "done"
+    ? t(conflict.skipped ? "plan_conflict_skipped" : "plan_conflict_done", { name, time: conflict.at ? formatDate(conflict.at) : "" })
+    : t("plan_conflict_changed");
+  return (
+    <ModalShell onClose={onClose} title={t("plan_conflict_title")}>
+      <p data-testid="plan-conflict-text" style={{ fontSize: 14, lineHeight: 1.5, margin: "0 0 16px", color: "var(--brand-text-strong)" }}>{text}</p>
+      <button type="button" data-testid="plan-conflict-ok" style={styles.primaryBtn} onClick={onClose}>{t("plan_conflict_ok")}</button>
+    </ModalShell>
+  );
+}
+
 function PaywallModal({ onClose, onActivate, lang, source, busy, error }) {
   const t = useT(lang || "fr");
   const [plan, setPlan] = useState("monthly"); // v1.90.0 — mensuel présélectionné
   const perks = [
     t("paywall_perk1"),
+    t("paywall_perk8"),
     t("paywall_perk2"),
     t("paywall_perk3"),
     t("paywall_perk4"),
@@ -28362,7 +29339,7 @@ function PaywallModal({ onClose, onActivate, lang, source, busy, error }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 9, margin: "16px 2px" }}>
         {perks.map((perk, i) => (
           <div key={i} style={styles.paywallPerk}>
-            <CheckCircle2 size={16} color="#1a8fd1" />
+            <span style={{ display: "flex", flexShrink: 0 }}><CheckCircle2 size={16} color="#1a8fd1" /></span>
             <span>{perk}</span>
           </div>
         ))}
@@ -28387,7 +29364,7 @@ function PaywallModal({ onClose, onActivate, lang, source, busy, error }) {
 }
 
 // v1.70.0 — Confirmation avant désactivation du Premium : rappelle ce que
-// l'utilisateur perd (mêmes 7 points que le mur Premium, pour rester
+// l'utilisateur perd (mêmes 8 points que le mur Premium, pour rester
 // cohérent) avant de valider. "Annuler" reste l'option la plus visible
 // (bouton principal), la désactivation est un bouton secondaire — on ne
 // pousse pas vers la sortie.
@@ -28395,6 +29372,7 @@ function PremiumDowngradeConfirmModal({ onClose, onConfirm, lang }) {
   const t = useT(lang || "fr");
   const perks = [
     t("paywall_perk1"),
+    t("paywall_perk8"),
     t("paywall_perk2"),
     t("paywall_perk3"),
     t("paywall_perk4"),
@@ -28410,7 +29388,7 @@ function PremiumDowngradeConfirmModal({ onClose, onConfirm, lang }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 9, margin: "0 2px 20px" }}>
         {perks.map((perk, i) => (
           <div key={i} style={styles.paywallPerk}>
-            <Lock size={14} color="#8095a8" />
+            <span style={{ display: "flex", flexShrink: 0 }}><Lock size={14} color="#8095a8" /></span>
             <span>{perk}</span>
           </div>
         ))}

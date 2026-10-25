@@ -318,7 +318,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signInWithPopup, signInWithRedirect, signInWithCredential, getRedirectResult, GoogleAuthProvider, EmailAuthProvider, reauthenticateWithCredential, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification, deleteUser, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, getDocs, addDoc, onSnapshot, writeBatch, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, getDocs, addDoc, onSnapshot, writeBatch, runTransaction, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getAnalytics, logEvent, setUserId, setUserProperties } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
 
   // v1.79.0 — Séparation dev/test/prod : la config Firebase est choisie selon
@@ -395,6 +395,7 @@
   window._fbGetDocs = getDocs;
   window._fbAddDoc = addDoc;
   window._fbOnSnapshot = onSnapshot;
+  window._fbRunTransaction = runTransaction; // v1.184.0 — plan partagé : première validation gagne
   window._fbWriteBatch = writeBatch;
   window._fbQuery = query;
   window._fbWhere = where;
